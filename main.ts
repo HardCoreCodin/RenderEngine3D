@@ -62,24 +62,147 @@
 //     }
 // }
 
-
+import spaceship from './spaceship.js';
 interface rgba {r: number, g: number, b: number, a: number}
 interface vec2d {x: number, y: number}
-interface vec3d extends vec2d {x: number, y: number, z: number}
-type triangle = [vec3d, vec3d, vec3d];
-type mesh = triangle[];
+interface vec3d extends vec2d {x: number, y: number, z: number, col?: rgba}
 
-const copyVec3d = (v:vec3d) : vec3d => ({x: v.x, y: v.y, z: v.z});
-const copyTri = (t:triangle) : triangle => [copyVec3d(t[0]), copyVec3d(t[1]), copyVec3d(t[2])];
+const default_color: rgba = {r: 1, g:1, b:1, a:1};
 
-const default_color: rgba = {r: 1, g:1, b:0, a:1};
+type trianglePoints = [vec3d, vec3d, vec3d]
+interface triangle {p: trianglePoints, col?: rgba}
+
+const copyColor = (color: rgba) : rgba => ({r: color.r, g: color.g, b: color.b, a: color.a});
+const copyVec3d = (v: vec3d) : vec3d => ({x: v.x, y: v.y, z: v.z, col: v.col});
+const copyTriPoints = (t: trianglePoints) : trianglePoints => [copyVec3d(t[0]), copyVec3d(t[1]), copyVec3d(t[2])];
+const copyTri = (t: triangle) : triangle => ({p: copyTriPoints(t.p), col: t.col ? copyColor(t.col[3]) : default_color});
+const getColorStyle = (color: rgba) => `rgba(${color.r*255}, ${color.b*255}, ${color.b*255}, ${color.a*255})`;
+
+class mesh {
+    constructor(
+        public tris: triangle[]
+    ){}
+
+    loadObj(obj: string) : boolean {
+        const verts: vec3d[] = [];
+        let parts: string[];
+        for (const line of obj.split('\n')) {
+            if (line[0] === 'v') {
+                parts = line.split(' ');
+                verts.push({
+                    x: parseFloat(parts[1]),
+                    y: parseFloat(parts[2]),
+                    z: parseFloat(parts[3])
+                })
+            }
+
+            if (line[0] === 'f') {
+                parts = line.split(' ');
+                this.tris.push({
+                    p: [
+                        verts[parseInt(parts[1]) - 1],
+                        verts[parseInt(parts[2]) - 1],
+                        verts[parseInt(parts[3]) - 1]
+                    ]
+                });
+            }
+        }
+
+        return true;
+    }
+}
+
+interface endPoint {
+    x: number,
+    y: number,
+    z: number,
+
+    x_inc: number,
+    z_inc: number
+
+    other_stuff
+}
+
+// Scan conversion:
+// ================
+// Loop over each triangle and scan through it to map it's pixel coordinates.
+
+// Given the triangle ABC where:
+// A = [x1, y1, z1]
+// B = [x2, y2, z2]
+// C = [x3, y3, z3]
+//
+// The triangle could then be:
+// 1) Flat at the top.
+// 2) Flat at the bottom.
+// 3)
+// 2) There is a single vertex at the bottom, and a flat edge at the top.
+// 3) There is a single vertex at the top, and non-
+// 1.A) There is a flat edge at the bottom.
+// 1.B) There is no flat edge at the bottom.
+// 2) There is a single vertex at the bottom.
+// 2.A) There is a flat edge at the top.
+// 2.B) There is no flat edge at the top.
+
+// We first determine which vertex is the top one.
+// If there are 2 of the, we pick the left one.
+// For this example, we'll assume it's the vertex A.
+// There will then be 2 edges connecting to that top vertex.
+// going downward towards the other 2 vertices at points B and C.
+// The 2 edges may not have the same height in y, so one of them could be longer.
+// We pick the longer of the 2, and slide down along it, one unit of y at a time.
+// For each such horizontal scan-line, we'll scan from the pixel touching/on-it,
+// horizontally into the triangle, in single-pixel steps, until we reach the other edge.
+// For each pixel we'll determine it's corresponding x, y, x coordinates in camera-space,
+// as well as any other interpolated value.
+// Because there could be a shorter edge at the other end of the scan-line,
+// we'll often hit the other
+// We start from the top-most vertex (left of it if there are 2),
+// Then scan down the left edge.
+
+// Given top vertex: A (x1, y1, z1)
+// Scanning down towards: (x2, y2, z2)
+// We consider a right-triangle formed by the 2 vertices and some point horizontal to
+// We go along the edge, downwards to the next integer in y.
+// and consider the small right-triangle ABC where::
+// A = the point we're leaving from
+// B = the point right below us on the next integer of y
+// C = the next point on the edge
+// The line BC is horizontal as B and C have the same y coordinates
+// The triangle is "similar" to the once formed by the 2 vertices and a
+//
+// The coordinates of C will be:
+// Cx = (x1 - x2) / (y1 - y2)
+// The first right-triangle starts from the coordinates of the vertex:
+// A = [x1, y1. z1]     (the vertex coordinates)
+// B = [x1, floor(y1)]  (directly  below A, at the first integer of y)
+// C = []
+// The first initial point C sits x_
+// on the scan-line is:
+// x =
+
+
+// x = floor(x1)
+// y = floor(y1)
+// x_inc =
+// z_inc = (z1 - z2) / (y1 - y2)
+
+
+// Compute z_inc:
+// Let n be the normal vector of the triangle
+// (nx, ny, nz) . (1, 0, z_inc) = 0
+// nx + nz*z_inc = 0
+// z_inc = -nx / nz
+
+
+
 
 class Device {
     width: number;
     height: number;
 
     context: CanvasRenderingContext2D;
-    image_data: ImageData;
+    // image_data: ImageData;
 
     constructor(canvas) {
         this.width = canvas.width;
@@ -89,11 +212,13 @@ class Device {
 
     clear() {
         this.context.clearRect(0, 0, this.width, this.height);
-        this.image_data = this.context.getImageData(0, 0, this.width, this.height);
+        this.context.beginPath();
+        // this.image_data = this.context.getImageData(0, 0, this.width, this.height);
     }
 
     present() {
-        this.context.putImageData(this.image_data, 0, 0);
+        this.context.closePath();
+        // this.context.putImageData(this.image_data, 0, 0);
     }
 
     // project(vertex, matrix) {
@@ -105,179 +230,312 @@ class Device {
     //     // return new vec2(x >> 0, y >> 0)
     // }
 
-    putPixel(x, y, color) {
-        const data = this.image_data.data;
-        let index = this.width * y;
-        index += x;
-        index *= 4;
-
-        data[index] = color.r * 255;
-        data[index + 1] = color.g * 255;
-        data[index + 2] = color.b * 255;
-        data[index + 3] = color.a * 255;
-    }
-
-    drawPoint(point: vec2d, color: rgba = default_color) {
-        if (0 <= point.x && point.x < this.width &&
-            0 <= point.y && point.y < this.height)
-            this.putPixel(point.x, point.y, color);
-    }
-
-    drawLine(point0: vec2d, point1: vec2d, color: rgba = default_color) {
-        let x0 = point0.x >> 0;
-        let y0 = point0.y >> 0;
-
-        const x1 = point1.x >> 0;
-        const y1 = point1.y >> 0;
-
-        const x_diff = Math.abs(x1 - x0);
-        const y_diff = Math.abs(y1 - y0);
-
-        let x_step = (x0 < x1) ? 1 : -1;
-        let y_step = (y0 < y1) ? 1 : -1;
-
-        let error_amount = x_diff - y_diff;
-
-        while (true) {
-            this.drawPoint({x: x0, y: y0}, color);
-            if ((x0 == x1) && (y0 == y1)) break;
-
-            let error_amount_doubled = 2 * error_amount;
-
-            if (error_amount_doubled > -y_diff) {
-                error_amount -= y_diff;
-                x0 += x_step;
-            }
-
-            if (error_amount_doubled < x_diff) {
-                error_amount += x_diff;
-                y0 += y_step;
-            }
-        }
-    };
-
-    // drawLine(x1: number, y1: number, x2: number, y2: number) {
-    //     ctx.beginPath();
-    //     ctx.moveTo(x1, y1);
-    //     ctx.lineTo(x2, y2);
-    //     ctx.stroke();
+    // putPixel(x: number, y: number, color: rgba) {
+    //     if (!Number.isInteger(x)) x >>= 0;
+    //     if (!Number.isInteger(y)) y >>= 0;
+    //
+    //     const data = this.image_data.data;
+    //     let index = this.width * y;
+    //     index += x;
+    //     index *= 4;
+    //
+    //     data[index] = color.r * 255;
+    //     data[index + 1] = color.g * 255;
+    //     data[index + 2] = color.b * 255;
+    //     data[index + 3] = color.a * 255;
+    // }
+    //
+    // drawPoint(x: number, y: number, color: rgba = default_color) {
+    //     if (0 <= x && x < this.width &&
+    //         0 <= y && y < this.height)
+    //         this.putPixel(x, y, color);
     // }
 
-    drawTriangle(tri: triangle) {
-        this.drawLine(tri[0], tri[1]);
-        this.drawLine(tri[1], tri[2]);
-        this.drawLine(tri[2], tri[0]);
+    // drawLineNaive(point0: vec2d, point1: vec2d, color: rgba = default_color) {
+    //     const run = point1.x - point0.x;
+    //     if (run) {
+    //         // There is a horizontal distance between the points
+    //
+    //         const rise = point1.y - point0.y;
+    //         if (rise) {
+    //             // There is a vertical distance between the points
+    //
+    //             const slope = rise / run;
+    //             if (slope === 1 || slope === -1) {
+    //                 // The points are diagonal from each other - just draw a diagonal line
+    //
+    //             } else if ()
+    //         }
+    //     } else {
+    //         // The points are right on top of each other, just draw a vertical line:
+    //
+    //         let x_step = (x0 < x1) ? 1 : -1;
+    //         let y_step = (y0 < y1) ? 1 : -1;
+    //     }
+    // }
+    //
+    // drawLine(point0: vec2d, point1: vec2d, color: rgba = default_color) {
+    //     let x = point0.x >> 0;
+    //     let y = point0.y >> 0;
+    //
+    //     const x1 = point1.x >> 0;
+    //     const y1 = point1.y >> 0;
+    //
+    //     const x_diff = Math.abs(x1 - x);
+    //     const y_diff = Math.abs(y1 - y);
+    //
+    //     let x_step = (x < x1) ? 1 : -1;
+    //     let y_step = (y < y1) ? 1 : -1;
+    //
+    //     let diff = x_diff - y_diff;
+    //     let offset: number;
+    //
+    //     while (true) {
+    //         this.drawPoint(x, y, color);
+    //         if (x === x1 &&
+    //             y === y1)
+    //             break;
+    //
+    //         offset = diff + diff;
+    //
+    //         if (offset > -y_diff) {
+    //             diff -= y_diff;
+    //             x += x_step;
+    //         }
+    //
+    //         if (offset < x_diff) {
+    //             diff += x_diff;
+    //             y += y_step;
+    //         }
+    //     }
+    // };
+
+    drawLine(start: vec2d, end: vec2d, color: rgba = default_color) {
+        this.context.moveTo(start.x, start.y);
+        this.context.lineTo(end.x, end.y);
+
+        this.context.strokeStyle = getColorStyle(color);
+        this.context.stroke();
     }
 
-    render(meshes: mesh[], projection_matrix: mat4x4, matRotZ: mat4x4, matRotX: mat4x4) {
+    drawTriangle(tri: triangle) {
+        this.context.moveTo(tri.p[0].x, tri.p[0].y);
+        this.context.lineTo(tri.p[1].x, tri.p[1].y);
+        this.context.lineTo(tri.p[2].x, tri.p[2].y);
+        this.context.lineTo(tri.p[0].x, tri.p[0].y);
+
+        this.context.strokeStyle = getColorStyle(tri.col);
+        this.context.stroke();
+        // this.drawLine(tri.p[0].x, tri.p[1]);
+        // this.drawLine(tri.p[1].x, tri.p[2]);
+        // this.drawLine(tri.p[2].x, tri.p[0]);
+    }
+
+    fillTriangle(tri: triangle) {
+        this.context.beginPath();
+
+        this.context.moveTo(tri.p[0].x, tri.p[0].y);
+        this.context.lineTo(tri.p[1].x, tri.p[1].y);
+        this.context.lineTo(tri.p[2].x, tri.p[2].y);
+
+        this.context.fillStyle = getColorStyle(tri.col);
+        this.context.fill();
+
+        this.context.closePath();
+    }
+
+    render(meshes: mesh[], vCamera: vec3d, projection_matrix: mat4x4, matRotZ: mat4x4, matRotX: mat4x4) {
         for (const m of meshes) {
-            for (const tri of m) {
-                const triRotatedZ: triangle = [
+            const trianglesToRaster: triangle[] = [];
+
+            for (const tri of m.tris) {
+                const triRotatedZ: triangle = {p:[
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0}
-                ];
+                ]};
 
-                MultiplyMatrixVector(tri[0], triRotatedZ[0], matRotZ);
-                MultiplyMatrixVector(tri[1], triRotatedZ[1], matRotZ);
-                MultiplyMatrixVector(tri[2], triRotatedZ[2], matRotZ);
+                MultiplyMatrixVector(tri.p[0], triRotatedZ.p[0], matRotZ);
+                MultiplyMatrixVector(tri.p[1], triRotatedZ.p[1], matRotZ);
+                MultiplyMatrixVector(tri.p[2], triRotatedZ.p[2], matRotZ);
 
-                const triRotatedZX: triangle = [
+                const triRotatedZX: triangle = {p:[
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0}
-                ];
+                ]};
 
-                MultiplyMatrixVector(triRotatedZ[0], triRotatedZX[0], matRotX);
-                MultiplyMatrixVector(triRotatedZ[1], triRotatedZX[1], matRotX);
-                MultiplyMatrixVector(triRotatedZ[2], triRotatedZX[2], matRotX);
+                MultiplyMatrixVector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
+                MultiplyMatrixVector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
+                MultiplyMatrixVector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
 
                 const triTranslated: triangle = copyTri(triRotatedZX);
-                triTranslated[0].z += 3;
-                triTranslated[1].z += 3;
-                triTranslated[2].z += 3;
+                triTranslated.p[0].z += 8;
+                triTranslated.p[1].z += 8;
+                triTranslated.p[2].z += 8;
 
-                const line1: vec3d = {
-                    x: triTranslated[1].x - triTranslated[0].x,
-                    y: triTranslated[1].y - triTranslated[0].y,
-                    z: triTranslated[1].z - triTranslated[0].z,
+                const l1: vec3d = {
+                    x: triTranslated.p[1].x - triTranslated.p[0].x,
+                    y: triTranslated.p[1].y - triTranslated.p[0].y,
+                    z: triTranslated.p[1].z - triTranslated.p[0].z,
                 };
-                const line2: vec3d = {
-                    x: triTranslated[2].x - triTranslated[0].x,
-                    y: triTranslated[2].y - triTranslated[0].y,
-                    z: triTranslated[2].z - triTranslated[0].z,
+                const l2: vec3d = {
+                    x: triTranslated.p[2].x - triTranslated.p[0].x,
+                    y: triTranslated.p[2].y - triTranslated.p[0].y,
+                    z: triTranslated.p[2].z - triTranslated.p[0].z,
                 };
-                const normal: vec3d = {
-                    x: line1.y * line2.z - line1.z * line2.y,
-                    y: line1.z * line2.x - line1.x * line2.z,
-                    z: line1.x * line2.y - line1.y * line2.x,
+                const n: vec3d = {
+                    x: l1.y*l2.z - l1.z*l2.y,
+                    y: l1.z*l2.x - l1.x*l2.z,
+                    z: l1.x*l2.y - l1.y*l2.x,
                 };
-                const l = Math.sqrt(normal.x**2 + normal.y**2 + normal.z**2);
-                normal.x /= l;
-                normal.y /= l;
-                normal.z /= l;
+                let q = (
+                    n.x**2 +
+                    n.y**2 +
+                    n.z**2
+                );
+                let l = Math.sqrt(q);
+                n.x /= l;
+                n.y /= l;
+                n.z /= l;
 
-                const triProjected: triangle = [
+                if (n.x * (triTranslated.p[1].x - vCamera.x) +
+                    n.y * (triTranslated.p[1].y - vCamera.y) +
+                    n.z * (triTranslated.p[1].z - vCamera.z) >= 0)
+                    continue;
+
+                const light_direction: vec3d = {x:0, y:0, z:-1};
+                q = (
+                    light_direction.x**2 +
+                    light_direction.y**2 +
+                    light_direction.z**2
+                );
+                l = Math.sqrt(q);
+                light_direction.x /= l;
+                light_direction.y /= l;
+                light_direction.z /= l;
+
+                const dp = (
+                    n.x * light_direction.x +
+                    n.y * light_direction.y +
+                    n.z * light_direction.z
+                );
+                triTranslated.col = {r: dp, g: dp, b: dp, a: 1};
+
+                const triProjected: triangle = {p:[
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0},
                     {x:0, y:0, z:0}
-                    ];
+                    ]};
 
-                MultiplyMatrixVector(triTranslated[0], triProjected[0], projection_matrix);
-                MultiplyMatrixVector(triTranslated[1], triProjected[1], projection_matrix);
-                MultiplyMatrixVector(triTranslated[2], triProjected[2], projection_matrix);
+                MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], projection_matrix);
+                MultiplyMatrixVector(triTranslated.p[1], triProjected.p[1], projection_matrix);
+                MultiplyMatrixVector(triTranslated.p[2], triProjected.p[2], projection_matrix);
 
-                triProjected[0].x++;
-                triProjected[1].x++;
-                triProjected[2].x++;
+                triProjected.col = triTranslated.col;
 
-                triProjected[0].y++;
-                triProjected[1].y++;
-                triProjected[2].y++;
+                triProjected.p[0].x++;
+                triProjected.p[1].x++;
+                triProjected.p[2].x++;
 
-                triProjected[0].x *= 0.5 * this.width;
-                triProjected[1].x *= 0.5 * this.width;
-                triProjected[2].x *= 0.5 * this.width;
+                triProjected.p[0].y++;
+                triProjected.p[1].y++;
+                triProjected.p[2].y++;
 
-                triProjected[0].y *= 0.5 * this.height;
-                triProjected[1].y *= 0.5 * this.height;
-                triProjected[2].y *= 0.5 * this.height;
+                triProjected.p[0].x *= 0.5 * this.width;
+                triProjected.p[1].x *= 0.5 * this.width;
+                triProjected.p[2].x *= 0.5 * this.width;
 
-                this.drawTriangle(triProjected);
+                triProjected.p[0].y *= 0.5 * this.height;
+                triProjected.p[1].y *= 0.5 * this.height;
+                triProjected.p[2].y *= 0.5 * this.height;
+
+                trianglesToRaster.push(triProjected);
             }
-            // const matrix = mesh.transform_matrix.multiply(projection_matrix);
-            //
-            // for (const vertex of mesh.vertices)
-            //     this.drawPoint(this.project(vertex, matrix));
+
+            trianglesToRaster.sort((a: triangle, b: triangle) => (
+                ((a.p[0].z + a.p[1].z + a.p[2].z) / 3.0) >
+                ((b.p[0].z + b.p[1].z + b.p[2].z) / 3.0)
+            ) ? 0 : 1);
+
+            for (const tri of trianglesToRaster) {
+                this.drawTriangle(tri);
+                this.fillTriangle(tri);
+            }
         }
     }
 }
 
-const meshCube: mesh = [
-    // SOUTH
-    [{x:0, y:0, z:0}, {x:0, y:1, z:0}, {x:1, y:1, z:0}],
-    [{x:0, y:0, z:0}, {x:1, y:1, z:0}, {x:1, y:0, z:0}],
+const Vector_Add = (v1: vec3d, v2: vec3d) : vec3d => ({
+    x: v1.x + v2.x,
+    y: v1.x + v2.y,
+    z: v1.z + v2.z
+});
 
-    // EAST
-    [{x:1, y:0, z:0}, {x:1, y:1, z:0}, {x:1, y:1, z:1}],
-    [{x:1, y:0, z:0}, {x:1, y:1, z:1}, {x:1, y:0, z:1}],
+const Vector_Sub = (v1: vec3d, v2: vec3d) : vec3d => ({
+    x: v1.x - v2.x,
+    y: v1.x - v2.y,
+    z: v1.z - v2.z
+});
 
-    // NORTH
-    [{x:1, y:0, z:1}, {x:1, y:1, z:1}, {x:0, y:1, z:1}],
-    [{x:1, y:0, z:1}, {x:0, y:1, z:1}, {x:0, y:0, z:1}],
+const Vector_Mul = (v1: vec3d, k: number) : vec3d => ({
+    x: v1.x * k,
+    y: v1.x * k,
+    z: v1.z * k
+});
 
-    // EAST
-    [{x:0, y:0, z:1}, {x:0, y:1, z:1}, {x:0, y:1, z:0}],
-    [{x:0, y:0, z:1}, {x:0, y:1, z:0}, {x:0, y:0, z:0}],
+const Vector_Div = (v1: vec3d, k: number) : vec3d => ({
+    x: v1.x / k,
+    y: v1.x / k,
+    z: v1.z / k
+});
 
-    // TOP
-    [{x:0, y:1, z:0}, {x:0, y:1, z:1}, {x:1, y:1, z:1}],
-    [{x:0, y:1, z:0}, {x:1, y:1, z:1}, {x:1, y:1, z:0}],
+const Vector_DotProduct = (v1: vec3d, v2: vec3d) : number => (
+    v1.x * v2.x +
+    v1.x * v2.y +
+    v1.z * v2.z
+);
 
-    // BOTTOM
-    [{x:1, y:0, z:1}, {x:0, y:0, z:1}, {x:0, y:0, z:0}],
-    [{x:1, y:0, z:1}, {x:0, y:0, z:0}, {x:1, y:0, z:0}]
-];
+const Vector_CrossProduct = (v1: vec3d, v2: vec3d) : number => (
+    v1.x * v2.x +
+    v1.x * v2.y +
+    v1.z * v2.z
+);
+
+const Vector_Length = (v: vec3d) : number =>
+    Math.sqrt(Vector_DotProduct(v, v));
+
+const Vector_Normalize = (v: vec3d, k: number) : vec3d =>
+    Vector_Div(v, Vector_Length(v));
+
+
+
+const meshCube = new mesh([
+    // // SOUTH
+    //     {p:[{x:0, y:0, z:0}, {x:0, y:1, z:0}, {x:1, y:1, z:0}]},
+    //     {p:[{x:0, y:0, z:0}, {x:1, y:1, z:0}, {x:1, y:0, z:0}]},
+    //
+    // // EAST
+    //     {p:[{x:1, y:0, z:0}, {x:1, y:1, z:0}, {x:1, y:1, z:1}]},
+    //     {p:[{x:1, y:0, z:0}, {x:1, y:1, z:1}, {x:1, y:0, z:1}]},
+    //
+    // // NORTH
+    //     {p:[{x:1, y:0, z:1}, {x:1, y:1, z:1}, {x:0, y:1, z:1}]},
+    //     {p:[{x:1, y:0, z:1}, {x:0, y:1, z:1}, {x:0, y:0, z:1}]},
+    //
+    // // EAST
+    //     {p:[{x:0, y:0, z:1}, {x:0, y:1, z:1}, {x:0, y:1, z:0}]},
+    //     {p:[{x:0, y:0, z:1}, {x:0, y:1, z:0}, {x:0, y:0, z:0}]},
+    //
+    // // TOP
+    //     {p:[{x:0, y:1, z:0}, {x:0, y:1, z:1}, {x:1, y:1, z:1}]},
+    //     {p:[{x:0, y:1, z:0}, {x:1, y:1, z:1}, {x:1, y:1, z:0}]},
+    //
+    // // BOTTOM
+    // {p:[{x:1, y:0, z:1}, {x:0, y:0, z:1}, {x:0, y:0, z:0}]},
+    // {p:[{x:1, y:0, z:1}, {x:0, y:0, z:0}, {x:1, y:0, z:0}]}
+]);
+meshCube.loadObj(spaceship);
 
 type mat4x4column = [
     number,
@@ -323,7 +581,7 @@ function init() {
     ];
 
     let theta = 0;
-
+    let vCamera: vec3d = {x:0, y:0, z:0};
     const perfectFrameTime = 1000 / 60;
     let deltaTime = 0;
     let lastTimestamp = 0;
@@ -349,7 +607,7 @@ function init() {
         ];
 
         device.clear();
-        device.render([meshCube], matProj, matRotZ, matRotX);
+        device.render([meshCube], vCamera, matProj, matRotZ, matRotX);
         device.present();
 
         requestAnimationFrame(drawingLoop);
