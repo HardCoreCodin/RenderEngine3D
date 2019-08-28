@@ -1,5 +1,6 @@
 import {Mesh, triangle} from "./mesh.js";
 import {
+    mat,
     mat4x4,
     Matrix_MakeProjection,
     Matrix_MakeRotationX, Matrix_MakeRotationY,
@@ -20,9 +21,18 @@ import pressed from "./input.js";
 
 export default class Engine3D {
     private mesh: Mesh;
-    private matProj: mat4x4;	// Matrix that converts from view space to screen space
+
+    private matRotX = mat4x4.Identity();	// Rotation Matrix
+    private matRotZ = mat4x4.Identity();	// Rotation Matrix
+    private matTrans = mat4x4.Identity();	// Translation Matrix
+    private matWorld = mat4x4.Identity();	// World transform Matrix
+
+    private matProj = mat4x4.Identity();	// Matrix that converts from view space to screen space
+    private matView = mat4x4.Identity();	// Matrix that converts from view space to screen space
+
     private camera = new vec3d();	// Location of camera in world space
     private lookDir = new vec3d();	// Direction vector along the direction camera points
+
     private yaw: number = 0;		// FPS Camera rotation in XZ plane
     private theta: number = 0;	// Spins World transform
 
@@ -48,92 +58,29 @@ export default class Engine3D {
         );
     }
 
-    clearScreen() {
-        this.context.clearRect(0, 0, this.screen_width, this.screen_height);
-    }
-
-    drawTriangle(tri: triangle) {
-        this.context.beginPath();
-
-        this.context.moveTo(tri.p[0].x, tri.p[0].y);
-        this.context.lineTo(tri.p[1].x, tri.p[1].y);
-        this.context.lineTo(tri.p[2].x, tri.p[2].y);
-        this.context.lineTo(tri.p[0].x, tri.p[0].y);
-
-        this.context.closePath();
-
-        this.context.strokeStyle = `${tri.col}`;
-        this.context.stroke();
-    }
-
-    fillTriangle(tri: triangle) {
-        this.context.beginPath();
-
-        this.context.moveTo(tri.p[0].x, tri.p[0].y);
-        this.context.lineTo(tri.p[1].x, tri.p[1].y);
-        this.context.lineTo(tri.p[2].x, tri.p[2].y);
-
-        this.context.closePath();
-
-        this.context.fillStyle = `${tri.col}`;
-        this.context.fill();
-    }
-
     update(deltaTime) {
-        if (pressed.mu)
-            this.camera.y += this.movement_step;	// Travel Upwards
+        this.handleInput(deltaTime);
 
-        if (pressed.md)
-            this.camera.y -= this.movement_step;	// Travel Downwards
-
-        // Dont use these two in FPS mode, it is confusing :P
-        if (pressed.ml)
-            this.camera.x -= this.movement_step;	// Travel Along X-Axis
-
-        if (pressed.mr)
-            this.camera.x += this.movement_step;	// Travel Along X-Axis
-
-        const forward = Vector_Mul(this.lookDir, this.movement_step);
-
-        // Standard FPS Control scheme, but turn instead of strafe
-        if (pressed.mf)
-            this.camera = Vector_Add(this.camera, forward);
-
-        if (pressed.mb)
-            this.camera = Vector_Sub(this.camera, forward);
-
-        if (pressed.tl)
-            this.yaw -= this.rotation_angle;
-
-        if (pressed.tr)
-            this.yaw += this.rotation_angle;
-
-        // Set up "World Transform" though not updating theta
-        // makes this a bit redundant
-        let matRotZ: mat4x4;
-        let matRotX: mat4x4;
-
-        // this.theta += 0.01 * deltaTime; // Uncomment to spin me right round baby right round
-        matRotZ = Matrix_MakeRotationZ(this.theta * 0.5);
-        matRotX = Matrix_MakeRotationX(this.theta);
-
-        let matTrans: mat4x4;
-        matTrans = Matrix_MakeTranslation(0.0, 0.0, 5.0);
-
-        let matWorld: mat4x4;
-        matWorld = Matrix_MultiplyMatrix(matRotZ, matRotX); // Transform by rotation
-        matWorld = Matrix_MultiplyMatrix(matWorld, matTrans); // Transform by translation
+        this.matWorld.setTo(
+            this.matTrans.setTranslation(0.0, 0.0, 5.0)
+        ).mul(
+            this.matRotX.setRotationAroundX(this.theta)
+        ).mul(
+            this.matRotZ.setRotationAroundZ(this.theta * 0.5)
+        );
 
         // Create "Point At" Matrix for camera
         const up = new vec3d( 0,1,0 );
         let target = new vec3d( 0,0,1 );
+
         const matCameraRot = Matrix_MakeRotationY(this.yaw);
         this.lookDir = Matrix_MultiplyVector(matCameraRot, target);
         target = Vector_Add(this.camera, this.lookDir);
+
         const matCamera = Matrix_PointAt(this.camera, target, up);
 
         // Make view matrix from camera
-        const matView = Matrix_QuickInverse(matCamera);
+        const matView = matCamera;//Matrix_QuickInverse(matCamera);
 
         // Store triangles for rasterizining later
         const trianglesToRaster: triangle[] = [];
@@ -242,4 +189,51 @@ export default class Engine3D {
             this.fillTriangle(tri);
         }
     }
+
+    handleInput(deltaTime) {
+        // Dont use these two in FPS mode, it is confusing :P
+        if (pressed.ml) this.camera.x -= this.movement_step;	// Travel Along X-Axis
+        if (pressed.mr) this.camera.x += this.movement_step;	// Travel Along X-Axis
+        if (pressed.mu) this.camera.y += this.movement_step;	// Travel Upwards
+        if (pressed.md) this.camera.y -= this.movement_step;	// Travel Downwards
+
+        // Standard FPS Control scheme, but turn instead of strafe
+        const forward = Vector_Mul(this.lookDir, this.movement_step);
+        if (pressed.mf) this.camera = Vector_Add(this.camera, forward);
+        if (pressed.mb) this.camera = Vector_Sub(this.camera, forward);
+        if (pressed.tl) this.yaw -= this.rotation_angle;
+        if (pressed.tr) this.yaw += this.rotation_angle;
+    }
+
+    clearScreen() {
+        this.context.clearRect(0, 0, this.screen_width, this.screen_height);
+    }
+
+    drawTriangle(tri: triangle) {
+        this.context.beginPath();
+
+        this.context.moveTo(tri.p[0].x, tri.p[0].y);
+        this.context.lineTo(tri.p[1].x, tri.p[1].y);
+        this.context.lineTo(tri.p[2].x, tri.p[2].y);
+        this.context.lineTo(tri.p[0].x, tri.p[0].y);
+
+        this.context.closePath();
+
+        this.context.strokeStyle = `${tri.col}`;
+        this.context.stroke();
+    }
+
+    fillTriangle(tri: triangle) {
+        this.context.beginPath();
+
+        this.context.moveTo(tri.p[0].x, tri.p[0].y);
+        this.context.lineTo(tri.p[1].x, tri.p[1].y);
+        this.context.lineTo(tri.p[2].x, tri.p[2].y);
+
+        this.context.closePath();
+
+        this.context.fillStyle = `${tri.col}`;
+        this.context.fill();
+    }
+
 }
