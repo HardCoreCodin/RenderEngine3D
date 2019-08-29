@@ -1,7 +1,7 @@
-import {vec, vec3d} from "./vec.js";
+import Position from "./linalng/position.js";
 import rgb from "./color.js";
 
-type trianglePoints = [vec3d, vec3d, vec3d]
+type trianglePoints = [Position, Position, Position]
 
 export class triangle {
     p: trianglePoints;
@@ -26,14 +26,12 @@ export class Mesh {
 
     loadObj(obj: string){
         let parts: string[];
-        const vertices: vec3d[] = [];
+        const vertices: Position[] = [];
 
         for (const line of obj.split('\n')) {
             if (line[0] === 'v') {
                 parts = line.split(' ');
-                vertices.push(
-                    vec(+parts[1], +parts[2], +parts[3])
-                );
+                vertices.push(Position.of(+parts[1], +parts[2], +parts[3]));
             }
 
             if (line[0] === 'f') {
