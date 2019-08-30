@@ -1,8 +1,10 @@
-export const identity = (out?: Float32Array) : Float32Array => {
-    if (out instanceof Float32Array)
+import {Buffer, MatrixBufferLength, VectorBufferLength} from "./types.js";
+
+export const identity = (out?: Buffer) : Buffer => {
+    if (out instanceof Buffer)
         out.fill(0);
     else
-        out = new Float32Array(16);
+        out = new Buffer(MatrixBufferLength);
 
     out[0] = out[5] = out[10] = out[15] = 1;
 
@@ -10,9 +12,9 @@ export const identity = (out?: Float32Array) : Float32Array => {
 };
 
 export const inverse = (
-    _in: Float32Array,
-    out: Float32Array = new Float32Array(16)
-) : Float32Array => {
+    _in: Buffer,
+    out: Buffer = new Buffer(MatrixBufferLength)
+) : Buffer => {
     out[0] = _in[0];
     out[1] = _in[4];
     out[2] = _in[8];
@@ -48,10 +50,10 @@ export const inverse = (
     return out;
 };
 
-export const matMul = (
-    lhs: Float32Array,
-    rhs: Float32Array,
-    out = new Float32Array(16)
+export const matMatMul = (
+    lhs: Buffer,
+    rhs: Buffer,
+    out = new Buffer(MatrixBufferLength)
 ) => {
     out[0] = lhs[0] * rhs[0] + lhs[1] * rhs[4] + lhs[2] * rhs[8] + lhs[3] * rhs[12];
     out[1] = lhs[0] * rhs[1] + lhs[1] * rhs[5] + lhs[2] * rhs[9] + lhs[3] * rhs[13];
@@ -77,24 +79,34 @@ export const matMul = (
 };
 
 export const translation = (
-    x: number | Float32Array = 0,
+    x?: number | Buffer,
     y: number = 0,
     z: number = 0,
     reset = false,
-    out = new Float32Array(16)
-) : Float32Array => {
-    if (reset)
-        identity(out);
+    out = new Buffer(MatrixBufferLength)
+) : Buffer => {
+    if (x === undefined)
+        return identity(out);
 
-    if (x instanceof Float32Array) {
+    if (x instanceof Buffer && x.length === VectorBufferLength) {
+        if (reset)
+            identity(out);
+
         out.set(x, 12);
-        return out;
-    }
 
-    if (Number.isFinite(x)) {
+        out[15] = 1;
+
+        return out;
+    } else if (typeof x === 'number') {
+        if (reset)
+            identity(out);
+
         out[12] = x;
-        out[13] = y;
-        out[14] = z;
+
+        if (typeof y === 'number') out[13] = y;
+        if (typeof z === 'number') out[14] = z;
+
+        out[15] = 1;
 
         return out;
     }
@@ -111,8 +123,8 @@ function setSinCos(angle: number) {
 export const rotationAroundX = (
     angle: number,
     reset = true,
-    out = new Float32Array(16)
-) : Float32Array => {
+    out = new Buffer(MatrixBufferLength)
+) : Buffer => {
     setSinCos(angle);
     if (reset) identity(out);
 
@@ -126,8 +138,8 @@ export const rotationAroundX = (
 export const rotationAroundY = (
     angle: number,
     reset = true,
-    out = new Float32Array(16)
-) : Float32Array => {
+    out = new Buffer(MatrixBufferLength)
+) : Buffer => {
     setSinCos(angle);
     if (reset) identity(out);
 
@@ -141,8 +153,8 @@ export const rotationAroundY = (
 export const rotationAroundZ = (
     angle: number,
     reset = true,
-    out = new Float32Array(16)
-) : Float32Array => {
+    out = new Buffer(MatrixBufferLength)
+) : Buffer => {
     setSinCos(angle);
     if (reset) identity(out);
 
@@ -152,22 +164,22 @@ export const rotationAroundZ = (
 
     return out;
 };
-
-export const projection = (
-    fov: number,
-    aspect: number,
-    near: number,
-    far: number,
-    reset = false,
-    out = new Float32Array(16)
-) : Float32Array => {
-    if (reset) out.fill(0);
-
-    out[0] = out[5] = 1.0 / Math.tan(fov * 0.5 / 180 * Math.PI);
-    out[0] *= aspect;
-    out[10] = out[14] = 1.0 / (far - near);
-    out[10] *= far;
-    out[14] *= -far * near;
-
-    return out;
-};
+//
+// export const projection = (
+//     fov: number,
+//     aspect: number,
+//     near: number,
+//     far: number,
+//     reset = false,
+//     out = new Buffer(MatrixBufferLength)
+// ) : Buffer => {
+//     if (reset) out.fill(0);
+//
+//     out[0] = out[5] = 1.0 / Math.tan(fov * 0.5 / 180 * Math.PI);
+//     out[0] *= aspect;
+//     out[10] = out[14] = 1.0 / (far - near);
+//     out[10] *= far;
+//     out[14] *= -far * near;
+//
+//     return out;
+// };

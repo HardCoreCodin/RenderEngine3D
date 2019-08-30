@@ -56,3 +56,6 @@ export type MatrixVectorBuffers = [
     Buffer,
     Buffer
 ];
+
+const NUMBER_TYPE = 'number';
+export const isNumber = (x) : boolean => typeof x === NUMBER_TYPE;
