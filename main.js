@@ -16,12 +16,7 @@ let lastTimestamp = 0;
 function drawingLoop(timestamp) {
     deltaTime = (timestamp - lastTimestamp) / perfectFrameTime;
     lastTimestamp = timestamp;
-    try {
-        engine.update(deltaTime);
-    }
-    catch (error) {
-        console.error(error);
-    }
+    engine.update(deltaTime);
     requestAnimationFrame(drawingLoop);
 }
 requestAnimationFrame(drawingLoop);

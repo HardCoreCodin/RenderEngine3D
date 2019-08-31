@@ -247,25 +247,3 @@ export const rotationAroundZ = (
 
     return out;
 };
-
-export const projection = (
-    aspect: number = 1,
-    fov: number = 90,
-    near: number = 0.1,
-    far: number = 1000,
-    out = new Buffer(MatrixBufferLength)
-) : Buffer => {
-    out.fill(0);
-
-    out[0] = out[5] = 1.0 / Math.tan(fov * 0.5 / 180 * Math.PI);
-    out[0] *= aspect;
-
-    out[10] = out[14] = 1.0 / (far - near);
-    out[10] *= far;
-
-    out[14] *= -far * near;
-
-    out[11] = 1;
-
-    return out;
-};

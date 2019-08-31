@@ -8,13 +8,11 @@ import {col} from "./primitives/color.js";
 import {tri, Triangle} from "./primitives/triangle.js";
 import {pos4} from "./linalng/position.js";
 
-import {add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul} from "./linalng/arithmatic/vector.js";
-
 export default class Engine3D {
     public camera = new Camera();
     private cameraRay = new Direction();
 
-    private lightDirection = dir4( 0.0, 1.0, -1.0 ).normalize(); // Illumination
+    private lightDirection = dir4(0, 0, -1).normalize(); // Illumination
 
     private triColor = col(1 ,1 ,1 );
     private triWorld = tri(pos4(), pos4(), pos4(), this.triColor);
@@ -33,7 +31,7 @@ export default class Engine3D {
     private theta: number = 0;	// Spins World transform
 
     private movement_step = 0.2;
-    private rotation_angle = 0.1;
+    private rotation_angle = 0.03;
 
     private matProj;
 
@@ -41,7 +39,6 @@ export default class Engine3D {
         public screen: Screen,
         public meshes: Meshes = []
     ) {
-
         // Projection Matrix
         let fNear = 0.1;
         let fFar = 1000.0;
@@ -62,14 +59,16 @@ export default class Engine3D {
 
         this.theta += this.rotation_angle * deltaTime; // Uncomment to spin me right round baby right round
 
-        //
-        // // Make view matrix from camera
-        // this.camera.transform.matrix.inverse(this.worldToView); //Matrix_QuickInverse(matCamera);
-        //
-        // // Make projection matrix from camera
-        // this.viewToClip.setTo(this.camera.projection);
+        // Make view matrix from camera
+        this.worldToView.setTo(this.camera.transform.matrix.inverted);
 
-        // this.camera.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
+        // Make projection matrix from camera
+        this.viewToClip.setTo(
+            this.camera.setProjection(
+                this.screen.width,
+                this.screen.height
+            )
+        );
 
         // Set the NDC -> screen matrix
         this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
@@ -94,6 +93,13 @@ export default class Engine3D {
                 // Calculate triangle Normal
                 this.triNormal = this.triWorld.normal;
 
+                // Get Ray from triangle to camera
+                this.camera.position.to(this.triWorld.p0, this.cameraRay);
+
+                // If ray is aligned with normal, then triangle is visible
+                if (this.cameraRay.dot(this.triNormal) >= 0)
+                    continue;
+
                 // Project triangles from 3D --> 2D
                 this.triWorld.transformedBy(this.matProj, this.triClip);
 
@@ -103,46 +109,12 @@ export default class Engine3D {
                 // Scale into view
                 const triScreen = this.triNDC.transformedBy(this.NDCToScreen);
 
-
                 // How "aligned" are light direction and triangle surface normal?
                 triScreen.color = col();
                 triScreen.color.setGreyscale(Math.max(0.1, this.lightDirection.dot(this.triNormal)));
 
                 // Store triangle for sorting
                 this.trianglesToRaster.push(triScreen);
-                // this.screen.fillTriangle(triScreen);
-
-                //
-                // // World Matrix Transform
-                // triangle.transformedBy(mesh.transform.matrix, this.triWorld);
-                //
-                // // Calculate triangle Normal
-                // const world = this.triNormal = this.triWorld.normal;
-                //
-                // // Get Ray from triangle to camera
-                // this.camera.position.to(this.triWorld.p0, this.cameraRay);
-                //
-                // // If ray is aligned with normal, then triangle is visible
-                // if (this.cameraRay.dot(this.triNormal) < 0.0)
-                // {
-                //     // How "aligned" are light direction and triangle surface normal?
-                //     this.triColor.setGreyscale(Math.max(0.1, this.lightDirection.dot(this.triNormal)));
-                //
-                //     // Convert World Space --> View Space
-                //     this.triWorld.transformedBy(this.worldToView, this.triView);
-                //
-                //     // Project triangles from 3D --> 2D
-                //     this.triView.transformedBy(this.viewToClip, this.triClip);
-                //
-                //     // Convert to NDC
-                //     this.triClip.asNDC(this.triNDC);
-                //
-                //     // Offset verts into visible normalised space
-                //     this.triNDC.transformedBy(this.NDCToScreen, this.triScreen);
-                //
-                //     // Store triangle for sorting
-                //     trianglesToRaster.push(this.triScreen);
-                // }
             }
 
             // Sort triangles from back to front
