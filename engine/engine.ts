@@ -1,7 +1,7 @@
 import pressed from "./input.js";
 import Screen from "./screen.js";
 import Camera from "./primitives/camera.js";
-import Matrix, {mat4} from "./linalng/matrix.js";
+import Matrix from "./linalng/matrix.js";
 import Direction, {dir4} from "./linalng/direction.js";
 import {Meshes} from "./primitives/mesh.js";
 import {col} from "./primitives/color.js";
@@ -19,7 +19,6 @@ export default class Engine3D {
     private triView = tri(pos4(), pos4(), pos4(), this.triColor);
     private triClip = tri(pos4(), pos4(), pos4(), this.triColor);
     private triNDC = tri(pos4(), pos4(), pos4(), this.triColor);
-    // private triScreen = tri(pos4(), pos4(), pos4(), this.triColor);
     private triNormal = dir4();
     private trianglesToRaster: Triangle[] = [];
 
@@ -33,26 +32,10 @@ export default class Engine3D {
     private movement_step = 0.2;
     private rotation_angle = 0.03;
 
-    private matProj;
-
     constructor(
         public screen: Screen,
         public meshes: Meshes = []
-    ) {
-        // Projection Matrix
-        let fNear = 0.1;
-        let fFar = 1000.0;
-        let fFov = 90.0;
-        let fAspectRatio = this.screen.height / this.screen.width;
-        let fFovRad = 1.0 / Math.tan(fFov * 0.5 / 180.0 * Math.PI);
-
-        this.matProj = mat4(
-            fAspectRatio * fFovRad, 0, 0, 0,
-            0, fFovRad, 0, 0,
-            0, 0, fFar / (fFar - fNear), 1,
-            0, 0,  (-fFar * fNear) / (fFar - fNear), 0
-        );
-    }
+    ) {}
 
     update(deltaTime) {
         this.handleInput(deltaTime);
@@ -63,22 +46,19 @@ export default class Engine3D {
         this.worldToView.setTo(this.camera.transform.matrix.inverted);
 
         // Make projection matrix from camera
-        this.viewToClip.setTo(
-            this.camera.setProjection(
-                this.screen.width,
-                this.screen.height
-            )
-        );
+        if (this.camera.options.updateIfNeeded(
+            this.screen.width,
+            this.screen.height,
+        )) {
+            this.viewToClip.setTo(this.camera.setProjection());
 
-        // Set the NDC -> screen matrix
-        this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
-        this.NDCToScreen.j.y = this.NDCToScreen.t.y = this.screen.height * 0.5;
+            // Set the NDC -> screen matrix
+            this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
+            this.NDCToScreen.j.y = this.NDCToScreen.t.y = this.screen.height * 0.5;
+        }
 
         // Store triangles for rasterizining later
         this.trianglesToRaster.length = 0;
-
-        // Clear Screen
-        this.screen.clear();
 
         // Draw Meshes
         for (const mesh of this.meshes) {
@@ -101,7 +81,7 @@ export default class Engine3D {
                     continue;
 
                 // Project triangles from 3D --> 2D
-                this.triWorld.transformedBy(this.matProj, this.triClip);
+                this.triWorld.transformedBy(this.viewToClip, this.triClip);
 
                 // Convert to NDC
                 this.triClip.asNDC(this.triNDC);
@@ -124,6 +104,9 @@ export default class Engine3D {
                     -
                     ((t1.p0.z +  t1.p1.z + t1.p2.z) / 3)
             );
+
+            // Clear Screen
+            this.screen.clear();
 
             for (const tri of this.trianglesToRaster) {
                 // this.screen.drawTriangle(tri);
