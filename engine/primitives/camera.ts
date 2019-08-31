@@ -4,10 +4,13 @@ import Direction from "../linalng/direction.js";
 import Position from "../linalng/position.js";
 
 export default class Camera {
+    // The forward-direction in camera-space, with projection-matrix applied to it
+    public readonly projected_position = new Position();
     public readonly position: Position; // Location in world space
     public readonly forward: Direction; // The camera's forward direction
     private readonly up: Direction; // The camera's up direction
     private readonly right: Direction; // The camera's right direction
+
 
     public readonly transform: Transform = new Transform();
 
@@ -68,6 +71,10 @@ export default class Camera {
             0, 0, far / this.options.depth_span, 1,
             0, 0,  (-far * near) / this.options.depth_span, 0
         );
+
+        this.projected_position.w = 1;
+        this.projected_position.z = 0;
+        this.projected_position.mul(this.projection);
 
         return this.projection;
     }

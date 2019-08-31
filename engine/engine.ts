@@ -55,6 +55,7 @@ export default class Engine3D {
             // Set the NDC -> screen matrix
             this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
             this.NDCToScreen.j.y = this.NDCToScreen.t.y = this.screen.height * 0.5;
+            this.NDCToScreen.j.y *= -1;
         }
 
         // Store triangles for rasterizining later
@@ -63,25 +64,28 @@ export default class Engine3D {
         // Draw Meshes
         for (const mesh of this.meshes) {
 
-            mesh.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
+            // mesh.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
 
             // Draw Triangles
             for (const triangle of mesh.triangles) {
                 // World Matrix Transform
                 triangle.transformedBy(mesh.transform.matrix, this.triWorld);
 
+                // View Matrix Transform
+                this.triWorld.transformedBy(this.worldToView, this.triView);
+
                 // Calculate triangle Normal
-                this.triNormal = this.triWorld.normal;
+                this.triNormal = this.triView.normal;
 
                 // Get Ray from triangle to camera
-                this.camera.position.to(this.triWorld.p0, this.cameraRay);
+                this.camera.projected_position.to(this.triClip.p0, this.cameraRay);
 
                 // If ray is aligned with normal, then triangle is visible
                 if (this.cameraRay.dot(this.triNormal) >= 0)
                     continue;
 
                 // Project triangles from 3D --> 2D
-                this.triWorld.transformedBy(this.viewToClip, this.triClip);
+                this.triView.transformedBy(this.viewToClip, this.triClip);
 
                 // Convert to NDC
                 this.triClip.asNDC(this.triNDC);
@@ -117,10 +121,17 @@ export default class Engine3D {
 
     handleInput(deltaTime) {
         // Dont use these two in FPS mode, it is confusing :P
-        if (pressed.ml) this.camera.position.x -= this.movement_step;	// Travel Along X-Axis
-        if (pressed.mr) this.camera.position.x += this.movement_step;	// Travel Along X-Axis
-        if (pressed.mu) this.camera.position.y += this.movement_step;	// Travel Upwards
-        if (pressed.md) this.camera.position.y -= this.movement_step;	// Travel Downwards
+        if (pressed.ml)
+            this.camera.position.x -= this.movement_step;	// Travel Along X-Axis
+
+        if (pressed.mr)
+            this.camera.position.x += this.movement_step;	// Travel Along X-Axis
+
+        if (pressed.mu)
+            this.camera.position.y += this.movement_step;	// Travel Upwards
+
+        if (pressed.md)
+            this.camera.position.y -= this.movement_step;	// Travel Downwards
 
         // Standard FPS Control scheme, but turn instead of strafe
         if (pressed.mf)
@@ -133,6 +144,7 @@ export default class Engine3D {
             this.yaw -= this.rotation_angle;
         }
 
-        if (pressed.tr) this.yaw += this.rotation_angle;
+        if (pressed.tr)
+            this.yaw += this.rotation_angle;
     }
 }
