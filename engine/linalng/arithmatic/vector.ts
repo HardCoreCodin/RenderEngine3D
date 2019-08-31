@@ -114,6 +114,9 @@ export const cross = (
     rhs: Buffer,
     out: Buffer = new Buffer(VectorBufferLength)
 ) : Buffer => {
+    if (Object.is(out, lhs)) lhs = Buffer.from(lhs);
+    if (Object.is(out, rhs)) rhs = Buffer.from(rhs);
+
     out[0] = lhs[1]*rhs[2] - lhs[2]*rhs[1];
     out[1] = lhs[2]*rhs[0] - lhs[0]*rhs[2];
     out[2] = lhs[0]*rhs[1] - lhs[1]*rhs[0];
@@ -126,21 +129,13 @@ export const vecMatMul = (
     rhs: Buffer,
     out: Buffer = new Buffer(MatrixBufferLength)
 ) : Buffer => {
-    if (Object.is(out, lhs) || Object.is(out, rhs)) {
-        const x = lhs[0] * rhs[0] + lhs[1] * rhs[4] + lhs[2] * rhs[8] + lhs[3] * rhs[12];
-        const y = lhs[0] * rhs[1] + lhs[1] * rhs[5] + lhs[2] * rhs[9] + lhs[3] * rhs[13];
-        const z = lhs[0] * rhs[2] + lhs[1] * rhs[6] + lhs[2] * rhs[10] + lhs[3] * rhs[14];
-        const w = lhs[0] * rhs[3] + lhs[1] * rhs[7] + lhs[2] * rhs[11] + lhs[3] * rhs[15];
-        out[0] = x;
-        out[1] = y;
-        out[2] = z;
-        out[3] = w;
-    } else {
-        out[0] = lhs[0] * rhs[0] + lhs[1] * rhs[4] + lhs[2] * rhs[8] + lhs[3] * rhs[12];
-        out[1] = lhs[0] * rhs[1] + lhs[1] * rhs[5] + lhs[2] * rhs[9] + lhs[3] * rhs[13];
-        out[2] = lhs[0] * rhs[2] + lhs[1] * rhs[6] + lhs[2] * rhs[10] + lhs[3] * rhs[14];
-        out[3] = lhs[0] * rhs[3] + lhs[1] * rhs[7] + lhs[2] * rhs[11] + lhs[3] * rhs[15];
-    }
+    if (Object.is(out, lhs)) lhs = Buffer.from(lhs);
+    if (Object.is(out, rhs)) rhs = Buffer.from(rhs);
+
+    out[0] = lhs[0]*rhs[0] + lhs[1]*rhs[4] + lhs[2]*rhs[8] + lhs[3]*rhs[12];
+    out[1] = lhs[0]*rhs[1] + lhs[1]*rhs[5] + lhs[2]*rhs[9] + lhs[3]*rhs[13];
+    out[2] = lhs[0]*rhs[2] + lhs[1]*rhs[6] + lhs[2]*rhs[10] + lhs[3]*rhs[14];
+    out[3] = lhs[0]*rhs[3] + lhs[1]*rhs[7] + lhs[2]*rhs[11] + lhs[3]*rhs[15];
 
     return out;
 };

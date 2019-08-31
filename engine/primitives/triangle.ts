@@ -9,8 +9,6 @@ const triangleLine2 = new Direction();
 const triangleNormal = new Direction();
 
 export class Triangle {
-    private readonly _normal = new Direction();
-
     constructor(
         public p0: Position = new Position(),
         public p1: Position = new Position(),
@@ -35,7 +33,7 @@ export class Triangle {
 
     asNDC(new_triangle = new Triangle()) : Triangle {
         new_triangle.setTo(this);
-        this.toNDC();
+        new_triangle.toNDC();
 
         return new_triangle;
     }
@@ -62,10 +60,16 @@ export class Triangle {
             this.p2.setTo(p0.p2);
         } else if (p0 instanceof Position) {
             this.p0.setTo(p0);
-            if (p1 instanceof Position) this.p1.setTo(p1);
-            if (p2 instanceof Position) this.p2.setTo(p2);
-            if (color !== undefined) this.color = color;
+
+            if (p1 instanceof Position)
+                this.p1.setTo(p1);
+
+            if (p2 instanceof Position)
+                this.p2.setTo(p2);
         }
+
+        if (color !== undefined)
+            this.color = color;
     }
 
     toString() : string {

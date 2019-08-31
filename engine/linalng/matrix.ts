@@ -1,13 +1,16 @@
 import Position from "./position.js";
 import Direction from "./direction.js";
 import {
+    equals,
+    isIdentity,
     identity,
     inverse,
+    transpose,
     matMatMul,
     translation,
     rotationAroundX,
     rotationAroundY,
-    rotationAroundZ
+    rotationAroundZ,
 } from "./arithmatic/matrix.js";
 import {
     Buffer,
@@ -61,14 +64,26 @@ export default class Matrix {
         this.t = new Position(this.m3);
     }
 
+    get isIdentity() : boolean {return isIdentity(this.buffer)}
+
     // get det() : number {return det(this._buffer)}
+
     get inverted() : Matrix {
         return new Matrix(inverse(this.buffer));
     }
 
-    inverse(inverted = new Matrix()) : Matrix {
-        inverse(this.buffer, inverted.buffer);
-        return inverted;
+    invert() : Matrix {
+        inverse(Buffer.from(this.buffer), this.buffer);
+        return this;
+    }
+
+    get transposed() : Matrix {
+        return new Matrix(transpose(this.buffer));
+    }
+
+    transpose() : Matrix {
+        transpose(this.buffer, this.buffer);
+        return this;
     }
 
     copy() : Matrix {
@@ -220,6 +235,12 @@ ${x0}, ${y0}, ${z0}, ${w0}
 ${x1}, ${y1}, ${z1}, ${w1}
 ${x2}, ${y2}, ${z2}, ${w2}
 ${x3}, ${y3}, ${z3}, ${w3}`;
+    }
+
+    equals(matrix: Matrix, precision_digits: number = 3) : boolean {
+        if (Object.is(matrix, this)) return true;
+        if (!(matrix instanceof Matrix)) return false;
+        return equals(this.buffer, matrix.buffer, precision_digits);
     }
 }
 

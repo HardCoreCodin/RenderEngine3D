@@ -21,9 +21,9 @@ export default class Engine3D {
     private triView = tri(pos4(), pos4(), pos4(), this.triColor);
     private triClip = tri(pos4(), pos4(), pos4(), this.triColor);
     private triNDC = tri(pos4(), pos4(), pos4(), this.triColor);
-    private triScreen = tri(pos4(), pos4(), pos4(), this.triColor);
-
+    // private triScreen = tri(pos4(), pos4(), pos4(), this.triColor);
     private triNormal = dir4();
+    private trianglesToRaster: Triangle[] = [];
 
     private worldToView = Matrix.Identity();	// Matrix that converts from world space to view space
     private viewToClip = Matrix.Identity();	// Matrix that converts from view space to clip space
@@ -62,26 +62,6 @@ export default class Engine3D {
 
         this.theta += this.rotation_angle * deltaTime; // Uncomment to spin me right round baby right round
 
-        let matRotZ = mat4();
-        let matRotX = mat4();
-
-        // Rotation Z
-        matRotZ.m0[0] = Math.cos(this.theta);
-        matRotZ.m0[1] = Math.sin(this.theta);
-        matRotZ.m1[0] = -Math.sin(this.theta);
-        matRotZ.m1[1] = Math.cos(this.theta);
-        matRotZ.m2[2] = 1;
-        matRotZ.m3[3] = 1;
-
-        // Rotation X
-        matRotX.m0[0] = 1;
-        matRotX.m1[1] = Math.cos(this.theta * 0.5);
-        matRotX.m1[2] = Math.sin(this.theta * 0.5);
-        matRotX.m2[1] = -Math.sin(this.theta * 0.5);
-        matRotX.m2[2] = Math.cos(this.theta * 0.5);
-        matRotX.m3[3] = 1;
-
-
         //
         // // Make view matrix from camera
         // this.camera.transform.matrix.inverse(this.worldToView); //Matrix_QuickInverse(matCamera);
@@ -89,13 +69,14 @@ export default class Engine3D {
         // // Make projection matrix from camera
         // this.viewToClip.setTo(this.camera.projection);
 
-        // // Set the NDC -> screen matrix
-        // this.NDCToScreen.i.x = 0.5 * this.screen.width;
-        // this.NDCToScreen.j.y = 0.5 * this.screen.height;
-        // this.NDCToScreen.t.x = this.NDCToScreen.t.y = 1;
-        //
-        // // Store triangles for rasterizining later
-        // const trianglesToRaster: Triangle[] = [];
+        // this.camera.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
+
+        // Set the NDC -> screen matrix
+        this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
+        this.NDCToScreen.j.y = this.NDCToScreen.t.y = this.screen.height * 0.5;
+
+        // Store triangles for rasterizining later
+        this.trianglesToRaster.length = 0;
 
         // Clear Screen
         this.screen.clear();
@@ -103,62 +84,33 @@ export default class Engine3D {
         // Draw Meshes
         for (const mesh of this.meshes) {
 
+            mesh.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
+
             // Draw Triangles
             for (const triangle of mesh.triangles) {
-                let triProjected = tri();
-                let triRotatedZ = tri();
-                let triRotatedZX = tri();
+                // World Matrix Transform
+                triangle.transformedBy(mesh.transform.matrix, this.triWorld);
 
-                // Rotate in Z-Axis
-                vecMatMul(triangle.p0.buffer, matRotZ.buffer, triRotatedZ.p0.buffer);
-                vecMatMul(triangle.p1.buffer, matRotZ.buffer, triRotatedZ.p1.buffer);
-                vecMatMul(triangle.p2.buffer, matRotZ.buffer, triRotatedZ.p2.buffer);
-
-                // Rotate in X-Axis
-                vecMatMul(triRotatedZ.p0.buffer, matRotZ.buffer, triRotatedZX.p0.buffer);
-                vecMatMul(triRotatedZ.p1.buffer, matRotZ.buffer, triRotatedZX.p1.buffer);
-                vecMatMul(triRotatedZ.p2.buffer, matRotZ.buffer, triRotatedZX.p2.buffer);
-
-                // Offset into the screen
-                let triTranslated = tri(triRotatedZX.p0, triRotatedZX.p1, triRotatedZX.p2);
-                triTranslated.p0.z = triRotatedZX.p0.z + 3;
-                triTranslated.p1.z = triRotatedZX.p1.z + 3;
-                triTranslated.p2.z = triRotatedZX.p2.z + 3;
+                // Calculate triangle Normal
+                this.triNormal = this.triWorld.normal;
 
                 // Project triangles from 3D --> 2D
-                vecMatMul(triTranslated.p0.buffer, this.matProj.buffer, triProjected.p0.buffer);
-                vecMatMul(triTranslated.p1.buffer, this.matProj.buffer, triProjected.p1.buffer);
-                vecMatMul(triTranslated.p2.buffer, this.matProj.buffer, triProjected.p2.buffer);
+                this.triWorld.transformedBy(this.matProj, this.triClip);
 
-                triProjected.p0.x /= triProjected.p0.w;
-                triProjected.p0.y /= triProjected.p0.w;
-                triProjected.p0.z /= triProjected.p0.w;
-                triProjected.p0.w /= triProjected.p0.w;
-
-                triProjected.p1.x /= triProjected.p1.w;
-                triProjected.p1.y /= triProjected.p1.w;
-                triProjected.p1.z /= triProjected.p1.w;
-                triProjected.p1.w /= triProjected.p1.w;
-
-                triProjected.p2.x /= triProjected.p2.w;
-                triProjected.p2.y /= triProjected.p2.w;
-                triProjected.p2.z /= triProjected.p2.w;
-                triProjected.p2.w /= triProjected.p2.w;
+                // Convert to NDC
+                this.triClip.asNDC(this.triNDC);
 
                 // Scale into view
-                triProjected.p0.x += 1; triProjected.p0.y += 1;
-                triProjected.p1.x += 1; triProjected.p1.y += 1;
-                triProjected.p2.x += 1; triProjected.p2.y += 1;
-                triProjected.p0.x *= 0.5 * this.screen.width;
-                triProjected.p0.y *= 0.5 * this.screen.height;
-                triProjected.p1.x *= 0.5 * this.screen.width;
-                triProjected.p1.y *= 0.5 * this.screen.height;
-                triProjected.p2.x *= 0.5 * this.screen.width;
-                triProjected.p2.y *= 0.5 * this.screen.height;
+                const triScreen = this.triNDC.transformedBy(this.NDCToScreen);
 
-                triProjected.color = this.triColor;
 
-                this.screen.fillTriangle(triProjected);
+                // How "aligned" are light direction and triangle surface normal?
+                triScreen.color = col();
+                triScreen.color.setGreyscale(Math.max(0.1, this.lightDirection.dot(this.triNormal)));
+
+                // Store triangle for sorting
+                this.trianglesToRaster.push(triScreen);
+                // this.screen.fillTriangle(triScreen);
 
                 //
                 // // World Matrix Transform
@@ -177,16 +129,16 @@ export default class Engine3D {
                 //     this.triColor.setGreyscale(Math.max(0.1, this.lightDirection.dot(this.triNormal)));
                 //
                 //     // Convert World Space --> View Space
-                //     const view = this.triWorld.transformedBy(this.worldToView, this.triView);
+                //     this.triWorld.transformedBy(this.worldToView, this.triView);
                 //
                 //     // Project triangles from 3D --> 2D
-                //     const clip =this.triView.transformedBy(this.viewToClip, this.triClip);
+                //     this.triView.transformedBy(this.viewToClip, this.triClip);
                 //
                 //     // Convert to NDC
-                //     const ndc = this.triClip.asNDC(this.triNDC);
+                //     this.triClip.asNDC(this.triNDC);
                 //
                 //     // Offset verts into visible normalised space
-                //     const screen = this.triNDC.transformedBy(this.NDCToScreen, this.triScreen);
+                //     this.triNDC.transformedBy(this.NDCToScreen, this.triScreen);
                 //
                 //     // Store triangle for sorting
                 //     trianglesToRaster.push(this.triScreen);
@@ -194,20 +146,17 @@ export default class Engine3D {
             }
 
             // Sort triangles from back to front
-            // trianglesToRaster.sort(
-            //     (t1: triangle, t2: triangle) =>
-            //         t1.p[0].z +
-            //         t1.p[1].z +
-            //         t1.p[2].z -
-            //         t2.p[0].z -
-            //         t2.p[1].z -
-            //         t2.p[2].z
-            // );
+            this.trianglesToRaster.sort(
+                (t1: Triangle, t2: Triangle) =>
+                    ((t2.p0.z + t2.p1.z + t2.p2.z) / 3)
+                    -
+                    ((t1.p0.z +  t1.p1.z + t1.p2.z) / 3)
+            );
 
-            // for (const tri of trianglesToRaster) {
-            //     this.screen.drawTriangle(tri);
-            //     this.screen.fillTriangle(tri);
-            // }
+            for (const tri of this.trianglesToRaster) {
+                // this.screen.drawTriangle(tri);
+                this.screen.fillTriangle(tri);
+            }
         }
     }
 

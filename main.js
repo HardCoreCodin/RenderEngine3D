@@ -7,6 +7,7 @@ const axis_mesh = Mesh.from(axis);
 axis_mesh.transform.translation.z = 80;
 axis_mesh.transform.translation.x = 0;
 const cube_mesh = new Cube();
+cube_mesh.transform.translation.z = 3;
 const canvas = document.getElementsByTagName('canvas')[0];
 const engine = new Engine3D(new Screen(canvas), [cube_mesh]);
 const perfectFrameTime = 1000 / 60;

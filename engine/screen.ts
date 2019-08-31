@@ -4,9 +4,10 @@ export default class Screen {
     constructor(
         private readonly canvas: HTMLCanvasElement,
         private readonly context: CanvasRenderingContext2D = canvas.getContext('2d'),
-        public readonly width = canvas.width,
-        public readonly height = canvas.height
     ) {}
+
+    get width() : number {return this.canvas.width};
+    get height() : number {return this.canvas.height};
 
     clear() {
         this.context.clearRect(0, 0, this.width, this.height);

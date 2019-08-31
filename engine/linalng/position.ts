@@ -36,7 +36,7 @@ export default class Position  {
     }
 
     copy() : Position {
-        return new Position(Float32Array.from(this.buffer));
+        return new Position(Buffer.from(this.buffer));
     }
 
     add(position: Direction | Position) : Position {
@@ -100,9 +100,7 @@ export default class Position  {
         if (x instanceof Direction ||
             x instanceof Position) {
 
-            this.buffer[0] = x.buffer[0];
-            this.buffer[1] = x.buffer[1];
-            this.buffer[2] = x.buffer[2];
+            this.buffer.set(x.buffer);
 
             return this;
         }

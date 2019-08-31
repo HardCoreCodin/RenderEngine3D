@@ -2,6 +2,7 @@ import Matrix from "../linalng/matrix.js";
 import Transform from "./transform.js";
 import Direction from "../linalng/direction.js";
 import Position from "../linalng/position.js";
+import {projection} from "../linalng/arithmatic/matrix.js";
 
 export default class Camera {
     public readonly position: Position; // Location in world space
@@ -47,14 +48,7 @@ export default class Camera {
     }
 
     setProjection(aspect: number = 1, fov: number = 90, near: number = 0.1, far: number = 1000) : Matrix {
-        this.projection.buffer.fill(0);
-        this.projection.buffer[0] = this.projection.buffer[5] = 1.0 / Math.tan(fov * 0.5 / 180 * Math.PI);
-        this.projection.buffer[0] *= aspect;
-        this.projection.buffer[10] = this.projection.buffer[14] = 1.0 / (far - near);
-        this.projection.buffer[10] *= far;
-        this.projection.buffer[14] *= -far * near;
-        this.projection.buffer[11] = 1;
-
+        projection(aspect, fov, near, far, this.projection.buffer);
         return this.projection;
     }
 
