@@ -1,4 +1,3 @@
-import pressed from "./input.js";
 import Screen from "./screen.js";
 import Camera from "./primitives/camera.js";
 import Matrix4x4 from "./linalng/4D/matrix.js";
@@ -7,10 +6,16 @@ import {Meshes} from "./primitives/mesh.js";
 import {col} from "./primitives/color.js";
 import {tri, Triangle} from "./primitives/triangle.js";
 import {pos4} from "./linalng/4D/position.js";
+import {FPSController} from "./input.js";
 
 export default class Engine3D {
     public camera = new Camera();
     private cameraRay = new Direction4D();
+
+    private fps_controller = new FPSController(this.camera);
+
+    private turntable_angle = 0;
+    private turntable_rotation_speed = 0.05;
 
     private lightDirection = dir4(0, 0, -1).normalize(); // Illumination
 
@@ -26,15 +31,6 @@ export default class Engine3D {
     private viewToClip = Matrix4x4.Identity();	// Matrix that converts from view space to clip space
     private NDCToScreen = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
 
-    private yaw: number = 0;		// FPS Camera rotation in XZ plane
-    private pitch: number = 0;
-    public rotate_using_angles: boolean = true;
-
-    private turntable_angle: number = 0;
-
-    private movement_step = 0.2;
-    private rotation_angle = 0.03;
-
     constructor(
         public screen: Screen,
         public meshes: Meshes = []
@@ -42,8 +38,8 @@ export default class Engine3D {
 
     update(deltaTime) {
         // Uncomment to spin me right round baby right round
-        // this.turntable_angle += this.rotation_angle * deltaTime;
-        this.handleInput(deltaTime);
+        // this.turntable_angle += this.turntable_rotation_speed * deltaTime;
+        this.fps_controller.update();
         this.render();
     }
 
@@ -70,7 +66,7 @@ export default class Engine3D {
         // Draw Meshes
         for (const mesh of this.meshes) {
 
-            mesh.transform.rotation.y = this.turntable_angle;
+            // mesh.transform.rotation.y = this.turntable_angle;
 
             // Draw Triangles
             for (const triangle of mesh.triangles) {
@@ -123,29 +119,5 @@ export default class Engine3D {
                 this.screen.fillTriangle(tri);
             }
         }
-    }
-
-    handleInput(deltaTime: number) : void {
-        if (pressed.yaw_left || pressed.yaw_right || pressed.pitch_up || pressed.pitch_down) {
-            if (pressed.yaw_left) this.yaw -= this.rotation_angle;
-            if (pressed.yaw_right) this.yaw += this.rotation_angle;
-            if (pressed.pitch_up) this.pitch -= this.rotation_angle;
-            if (pressed.pitch_down) this.pitch += this.rotation_angle;
-
-            this.rotate_using_angles ?
-                this.camera.setOrientationByAngles(this.yaw, this.pitch) :
-                this.camera.setOrientationByDirection(this.lightDirection); /// TODO: ...
-        }
-
-        if (pressed.forward || pressed.backwards) {
-            if (pressed.forward) this.camera.position.add(this.camera.forward.times(this.movement_step));
-            if (pressed.backwards) this.camera.position.sub(this.camera.forward.times(this.movement_step));
-        }
-
-        /// TODO: ... Make work according to reoriented reference frame above...
-        if (pressed.left) this.camera.position.x -= this.movement_step;
-        if (pressed.right) this.camera.position.x += this.movement_step;
-        if (pressed.up) this.camera.position.y += this.movement_step;
-        if (pressed.down) this.camera.position.y -= this.movement_step;
     }
 }

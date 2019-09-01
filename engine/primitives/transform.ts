@@ -5,6 +5,8 @@ import Matrix3x3 from "../linalng/3D/matrix.js";
 import Direction3D from "../linalng/3D/direction.js";
 
 export class EulerRotation {
+    public computeEagerly = true;
+
     constructor(
         public readonly matrix : Matrix3x3 = new Matrix3x3().setToIdentity(), // Overall Rotation Matrix
         private readonly rotationMatrixForX: Matrix3x3 = new Matrix3x3().setToIdentity(), // Rotation Matrix for X
@@ -20,19 +22,22 @@ export class EulerRotation {
     set x(x: number) {
         this.angles.x = x;
         this.rotationMatrixForX.setRotationAroundX(x);
-        this.computeMatrix();
+        if (this.computeEagerly)
+            this.computeMatrix();
     }
 
     set y(y: number) {
         this.angles.y = y;
         this.rotationMatrixFroY.setRotationAroundY(y);
-        this.computeMatrix();
+        if (this.computeEagerly)
+            this.computeMatrix();
     }
 
     set z(z: number) {
         this.angles.z = z;
         this.rotationMatrixForZ.setRotationAroundZ(z);
-        this.computeMatrix();
+        if (this.computeEagerly)
+            this.computeMatrix();
     }
 
     set xyz(xyz: Direction4D) {
@@ -42,7 +47,8 @@ export class EulerRotation {
         this.rotationMatrixFroY.setRotationAroundY(xyz.y);
         this.rotationMatrixForZ.setRotationAroundZ(xyz.z);
 
-        this.computeMatrix();
+        if (this.computeEagerly)
+            this.computeMatrix();
     }
 
     setXY(x: number, y: number) {
@@ -87,7 +93,7 @@ export class EulerRotation {
         this.computeMatrix();
     }
 
-    private computeMatrix() : void {
+    public computeMatrix() : void {
         this.matrix
             .setToIdentity()
             .mul(this.rotationMatrixForZ)
