@@ -1,22 +1,22 @@
-import Matrix from "../linalng/matrix.js";
-import Direction from "../linalng/direction.js";
-import Position, {pos4} from "../linalng/position.js";
+import Matrix4x4 from "../linalng/4D/matrix.js";
+import Direction4D from "../linalng/4D/direction.js";
+import Position4D, {pos4} from "../linalng/4D/position.js";
 import {Color} from "./color.js";
-import {Buffer} from "../linalng/arithmatic/types.js";
+import {Buffer} from "../linalng/4D/arithmatic/constants.js";
 
-const triangleLine1 = new Direction();
-const triangleLine2 = new Direction();
-const triangleNormal = new Direction();
+const triangleLine1 = new Direction4D();
+const triangleLine2 = new Direction4D();
+const triangleNormal = new Direction4D();
 
 export class Triangle {
     constructor(
-        public p0: Position = new Position(),
-        public p1: Position = new Position(),
-        public p2: Position = new Position(),
+        public p0: Position4D = new Position4D(),
+        public p1: Position4D = new Position4D(),
+        public p2: Position4D = new Position4D(),
         public color?: Color
     ) {}
 
-    get normal(): Direction {
+    get normal(): Direction4D {
         // Get lines either side of triangle
         this.p0.to(this.p1, triangleLine1);
         this.p0.to(this.p2, triangleLine2);
@@ -38,7 +38,7 @@ export class Triangle {
         return new_triangle;
     }
 
-    transformTo(matrix: Matrix): Triangle {
+    transformTo(matrix: Matrix4x4): Triangle {
         this.p0.mul(matrix);
         this.p1.mul(matrix);
         this.p2.mul(matrix);
@@ -46,25 +46,25 @@ export class Triangle {
         return this;
     }
 
-    transformedBy(matrix: Matrix, new_triangle: Triangle = new Triangle()): Triangle {
+    transformedBy(matrix: Matrix4x4, new_triangle: Triangle = new Triangle()): Triangle {
         new_triangle.setTo(this);
         new_triangle.transformTo(matrix);
 
         return new_triangle;
     }
 
-    setTo(p0: Position | Triangle, p1?: Position, p2?: Position, color?: Color) {
+    setTo(p0: Position4D | Triangle, p1?: Position4D, p2?: Position4D, color?: Color) {
         if (p0 instanceof Triangle) {
             this.p0.setTo(p0.p0);
             this.p1.setTo(p0.p1);
             this.p2.setTo(p0.p2);
-        } else if (p0 instanceof Position) {
+        } else if (p0 instanceof Position4D) {
             this.p0.setTo(p0);
 
-            if (p1 instanceof Position)
+            if (p1 instanceof Position4D)
                 this.p1.setTo(p1);
 
-            if (p2 instanceof Position)
+            if (p2 instanceof Position4D)
                 this.p2.setTo(p2);
         }
 
@@ -78,9 +78,9 @@ export class Triangle {
 }
 
 export const tri = (
-    p0?: Buffer | Position | Direction,
-    p1?: Buffer | Position | Direction,
-    p2?: Buffer | Position | Direction,
+    p0?: Buffer | Position4D | Direction4D,
+    p1?: Buffer | Position4D | Direction4D,
+    p2?: Buffer | Position4D | Direction4D,
     color?: Color,
 ): Triangle => new Triangle(
     pos4(p0),

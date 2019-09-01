@@ -1,4 +1,4 @@
-import {Buffer, MatrixBufferLength, VectorBufferLength} from "./types.js";
+import {Buffer, MatrixBufferLength, VectorBufferLength} from "./constants.js";
 
 export const identity = (out?: Buffer) : Buffer => {
     if (out instanceof Buffer)
@@ -85,24 +85,6 @@ export const equals = (
 
     return true;
 };
-
-// export const toColumnMajor = (
-//     _in: Buffer,
-//     out: Buffer = new Buffer(MatrixBufferLength)
-// ) : Buffer => {
-//     [
-//         out[0], out[1], out[2], out[3],
-//         out[4], out[5], out[6], out[7],
-//         out[8], out[9], out[10], out[11],
-//         out[12], out[13], out[14], out[15],
-//     ] = [
-//         _in[15], _in[11], _in[7], _in[3],
-//         _in[14], _in[10], _in[6], _in[2],
-//         _in[13], _in[9], _in[5], _in[1],
-//         _in[12], _in[8], _in[4], _in[0],
-//     ];
-//     return out;
-// };
 
 export const isIdentity = (m: Buffer) =>
     m[0] === 1 &&

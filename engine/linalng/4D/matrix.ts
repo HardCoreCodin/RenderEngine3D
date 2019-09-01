@@ -1,5 +1,5 @@
-import Position from "./position.js";
-import Direction from "./direction.js";
+import Position4D from "./position.js";
+import Direction4D from "./direction.js";
 import {
     equals,
     isIdentity,
@@ -27,9 +27,9 @@ import {
     M1_End,
     M2_End,
     M3_End,
-} from "./arithmatic/types.js";
+} from "./arithmatic/constants.js";
 
-export default class Matrix {
+export default class Matrix4x4 {
     public buffer: Buffer;
 
     public m0: Buffer;
@@ -37,10 +37,10 @@ export default class Matrix {
     public m2: Buffer;
     public m3: Buffer;
 
-    public i: Direction;
-    public j: Direction;
-    public k: Direction;
-    public t: Position;
+    public i: Direction4D;
+    public j: Direction4D;
+    public k: Direction4D;
+    public t: Position4D;
 
     constructor(buffer?: Buffer) {
         if (buffer instanceof Buffer) {
@@ -58,74 +58,78 @@ export default class Matrix {
         this.m2 = this.buffer.subarray(M2_Start, M2_End);
         this.m3 = this.buffer.subarray(M3_Start, M3_End);
 
-        this.i = new Direction(this.m0);
-        this.j = new Direction(this.m1);
-        this.k = new Direction(this.m2);
-        this.t = new Position(this.m3);
+        this.i = new Direction4D(this.m0);
+        this.j = new Direction4D(this.m1);
+        this.k = new Direction4D(this.m2);
+        this.t = new Position4D(this.m3);
     }
 
     get isIdentity() : boolean {return isIdentity(this.buffer)}
 
     // get det() : number {return det(this._buffer)}
 
-    get inverted() : Matrix {
-        return new Matrix(inverse(this.buffer));
+    get inverted() : Matrix4x4 {
+        return new Matrix4x4(inverse(this.buffer));
     }
 
-    invert() : Matrix {
+    invert() : Matrix4x4 {
         inverse(Buffer.from(this.buffer), this.buffer);
         return this;
     }
 
-    get transposed() : Matrix {
-        return new Matrix(transpose(this.buffer));
+    get transposed() : Matrix4x4 {
+        return new Matrix4x4(transpose(this.buffer));
     }
 
-    transpose() : Matrix {
+    transpose() : Matrix4x4 {
         transpose(this.buffer, this.buffer);
         return this;
     }
 
-    copy() : Matrix {
-        return new Matrix(Buffer.from(this.buffer));
+    copy() : Matrix4x4 {
+        return new Matrix4x4(Buffer.from(this.buffer));
     }
 
-    times(rhs: Matrix) : Matrix {
-        return new Matrix(matMatMul(this.buffer, rhs.buffer));
+    times(
+        rhs: Matrix4x4,
+        new_matrix: Matrix4x4 = new Matrix4x4()
+    ) : Matrix4x4 {
+        matMatMul(this.buffer, rhs.buffer, new_matrix.buffer);
+        return new_matrix;
     }
 
-    mul(rhs: Matrix) : Matrix {
+    mul(rhs: Matrix4x4) : Matrix4x4 {
         matMatMul(this.buffer, rhs.buffer, this.buffer);
         return this;
     }
 
-    setToIdentity() : Matrix {
+    setToIdentity() : Matrix4x4 {
         identity(this.buffer);
         return this
     }
 
-    setRotationAroundX(angle=0, reset=true) : Matrix {
+    setRotationAroundX(angle=0, reset=true) : Matrix4x4 {
         rotationAroundX(angle, reset, this.buffer);
         return this;
     }
 
-    setRotationAroundY(angle: number, reset=false) : Matrix {
+    setRotationAroundY(angle: number, reset=false) : Matrix4x4 {
         rotationAroundY(angle, reset, this.buffer);
         return this;
     }
 
-    setRotationAroundZ(angle: number, reset=false) : Matrix {
+    setRotationAroundZ(angle: number, reset=false) : Matrix4x4 {
         rotationAroundZ(angle, reset, this.buffer);
         return this;
     }
 
     setTranslation(
-        x: number | Buffer | Position | Direction = 0,
+        x: number | Buffer | Position4D | Direction4D = 0,
         y: number = 0,
         z: number = 0,
         reset=false
-    ) : Matrix {
-        if (x instanceof Position || x instanceof Direction)
+    ) : Matrix4x4 {
+        if (x instanceof Position4D || x instanceof Direction4D)
             translation(x.buffer, y, z, reset, this.buffer);
         else
             translation(x, y, z, reset, this.buffer);
@@ -133,43 +137,43 @@ export default class Matrix {
         return this;
     }
 
-    static Identity() : Matrix {
-        return new Matrix(identity());
+    static Identity() : Matrix4x4 {
+        return new Matrix4x4(identity());
     }
 
-    static RotationX(angle=0) : Matrix {
-        return new Matrix(rotationAroundX(angle));
+    static RotationX(angle=0) : Matrix4x4 {
+        return new Matrix4x4(rotationAroundX(angle));
     }
 
-    static RotationY(angle=0) : Matrix {
-        return new Matrix(rotationAroundY(angle));
+    static RotationY(angle=0) : Matrix4x4 {
+        return new Matrix4x4(rotationAroundY(angle));
     }
 
-    static RotationZ(angle=0) : Matrix {
-        return new Matrix(rotationAroundZ(angle));
+    static RotationZ(angle=0) : Matrix4x4 {
+        return new Matrix4x4(rotationAroundZ(angle));
     }
 
     static Translation(
-        x: number | Buffer | Position | Direction = 0,
+        x: number | Buffer | Position4D | Direction4D = 0,
         y: number = 0,
         z: number = 0
-    ) : Matrix {
-        if (x instanceof Position || x instanceof Direction)
-            return new Matrix(translation(x.buffer));
+    ) : Matrix4x4 {
+        if (x instanceof Position4D || x instanceof Direction4D)
+            return new Matrix4x4(translation(x.buffer));
 
-        return new Matrix(translation(x, y, z,true));
+        return new Matrix4x4(translation(x, y, z,true));
     }
 
     setTo(
-        x0: Number | Buffer | Position | Direction | Matrix,
-        y0?: Number | Buffer | Position | Direction,
-        z0?: Number | Buffer | Position | Direction,
-        w0?: Number | Buffer | Position | Direction,
+        x0: Number | Buffer | Position4D | Direction4D | Matrix4x4,
+        y0?: Number | Buffer | Position4D | Direction4D,
+        z0?: Number | Buffer | Position4D | Direction4D,
+        w0?: Number | Buffer | Position4D | Direction4D,
         x1?: Number, y1?: Number, z1?: Number, w1?: Number,
         x2?: Number, y2?: Number, z2?: Number, w2?: Number,
         x3?: Number, y3?: Number, z3?: Number, w3?: Number,
-    ) : Matrix {
-        if (x0 instanceof Matrix) {
+    ) : Matrix4x4 {
+        if (x0 instanceof Matrix4x4) {
             this.buffer.set(x0.buffer);
             return this;
         }
@@ -196,11 +200,11 @@ export default class Matrix {
             }
         }
 
-        if (x0 instanceof Position || x0 instanceof Direction) {
+        if (x0 instanceof Position4D || x0 instanceof Direction4D) {
             this.m0.set(x0.buffer);
-            if (y0 instanceof Position || y0 instanceof Direction) this.m1.set(y0.buffer);
-            if (z0 instanceof Position || z0 instanceof Direction) this.m2.set(z0.buffer);
-            if (w0 instanceof Position || w0 instanceof Direction) this.m3.set(w0.buffer);
+            if (y0 instanceof Position4D || y0 instanceof Direction4D) this.m1.set(y0.buffer);
+            if (z0 instanceof Position4D || z0 instanceof Direction4D) this.m2.set(z0.buffer);
+            if (w0 instanceof Position4D || w0 instanceof Direction4D) this.m3.set(w0.buffer);
 
             return this;
         }
@@ -237,22 +241,22 @@ ${x2}, ${y2}, ${z2}, ${w2}
 ${x3}, ${y3}, ${z3}, ${w3}`;
     }
 
-    equals(matrix: Matrix, precision_digits: number = 3) : boolean {
+    equals(matrix: Matrix4x4, precision_digits: number = 3) : boolean {
         if (Object.is(matrix, this)) return true;
-        if (!(matrix instanceof Matrix)) return false;
+        if (!(matrix instanceof Matrix4x4)) return false;
         return equals(this.buffer, matrix.buffer, precision_digits);
     }
 }
 
 export const mat4 = (
-    x0: Number | Buffer | Position | Direction | Matrix = 1,
-    y0?: Number | Buffer | Position | Direction,
-    z0?: Number | Buffer | Position | Direction,
-    w0?: Number | Buffer | Position | Direction,
+    x0: Number | Buffer | Position4D | Direction4D | Matrix4x4 = 1,
+    y0?: Number | Buffer | Position4D | Direction4D,
+    z0?: Number | Buffer | Position4D | Direction4D,
+    w0?: Number | Buffer | Position4D | Direction4D,
     x1?: Number, y1: Number = 1, z1?: Number, w1?: Number,
     x2?: Number, y2?: Number, z2: Number = 1, w2?: Number,
     x3?: Number, y3?: Number, z3?: Number, w3: Number = 1,
-) : Matrix => new Matrix().setTo(
+) : Matrix4x4 => new Matrix4x4().setTo(
     x0, y0, z0, w0,
     x1, y1, z1, w1,
     x2, y2, z2, w2,

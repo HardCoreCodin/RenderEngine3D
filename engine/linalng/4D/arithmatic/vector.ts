@@ -1,4 +1,4 @@
-import {Buffer, MatrixBufferLength, VectorBufferLength} from "./types.js";
+import {Buffer, VectorBufferLength} from "./constants.js";
 
 export const add = (
     lhs: Buffer,
@@ -127,7 +127,7 @@ export const cross = (
 export const vecMatMul = (
     lhs: Buffer,
     rhs: Buffer,
-    out: Buffer = new Buffer(MatrixBufferLength)
+    out: Buffer = new Buffer(VectorBufferLength)
 ) : Buffer => {
     if (Object.is(out, lhs)) lhs = Buffer.from(lhs);
     if (Object.is(out, rhs)) rhs = Buffer.from(rhs);

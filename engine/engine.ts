@@ -1,16 +1,16 @@
 import pressed from "./input.js";
 import Screen from "./screen.js";
 import Camera from "./primitives/camera.js";
-import Matrix from "./linalng/matrix.js";
-import Direction, {dir4} from "./linalng/direction.js";
+import Matrix4x4 from "./linalng/4D/matrix.js";
+import Direction4D, {dir4} from "./linalng/4D/direction.js";
 import {Meshes} from "./primitives/mesh.js";
 import {col} from "./primitives/color.js";
 import {tri, Triangle} from "./primitives/triangle.js";
-import {pos4} from "./linalng/position.js";
+import {pos4} from "./linalng/4D/position.js";
 
 export default class Engine3D {
     public camera = new Camera();
-    private cameraRay = new Direction();
+    private cameraRay = new Direction4D();
 
     private lightDirection = dir4(0, 0, -1).normalize(); // Illumination
 
@@ -22,12 +22,15 @@ export default class Engine3D {
     private triNormal = dir4();
     private trianglesToRaster: Triangle[] = [];
 
-    private worldToView = Matrix.Identity();	// Matrix that converts from world space to view space
-    private viewToClip = Matrix.Identity();	// Matrix that converts from view space to clip space
-    private NDCToScreen = Matrix.Identity();	// Matrix that converts from NDC space to screen space
+    private worldToView = Matrix4x4.Identity();	// Matrix that converts from world space to view space
+    private viewToClip = Matrix4x4.Identity();	// Matrix that converts from view space to clip space
+    private NDCToScreen = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
 
     private yaw: number = 0;		// FPS Camera rotation in XZ plane
-    private theta: number = 0;	// Spins World transform
+    private pitch: number = 0;
+    public rotate_using_angles: boolean = true;
+
+    private turntable_angle: number = 0;
 
     private movement_step = 0.2;
     private rotation_angle = 0.03;
@@ -38,10 +41,13 @@ export default class Engine3D {
     ) {}
 
     update(deltaTime) {
+        // Uncomment to spin me right round baby right round
+        // this.turntable_angle += this.rotation_angle * deltaTime;
         this.handleInput(deltaTime);
+        this.render();
+    }
 
-        this.theta += this.rotation_angle * deltaTime; // Uncomment to spin me right round baby right round
-
+    render() {
         // Make view matrix from camera
         this.worldToView.setTo(this.camera.transform.matrix.inverted);
 
@@ -64,7 +70,7 @@ export default class Engine3D {
         // Draw Meshes
         for (const mesh of this.meshes) {
 
-            // mesh.transform.setRotationAnglesForXZ(this.theta * 0.5, this.theta);
+            mesh.transform.rotation.y = this.turntable_angle;
 
             // Draw Triangles
             for (const triangle of mesh.triangles) {
@@ -119,32 +125,27 @@ export default class Engine3D {
         }
     }
 
-    handleInput(deltaTime) {
-        // Dont use these two in FPS mode, it is confusing :P
-        if (pressed.ml)
-            this.camera.position.x -= this.movement_step;	// Travel Along X-Axis
+    handleInput(deltaTime: number) : void {
+        if (pressed.yaw_left || pressed.yaw_right || pressed.pitch_up || pressed.pitch_down) {
+            if (pressed.yaw_left) this.yaw -= this.rotation_angle;
+            if (pressed.yaw_right) this.yaw += this.rotation_angle;
+            if (pressed.pitch_up) this.pitch -= this.rotation_angle;
+            if (pressed.pitch_down) this.pitch += this.rotation_angle;
 
-        if (pressed.mr)
-            this.camera.position.x += this.movement_step;	// Travel Along X-Axis
-
-        if (pressed.mu)
-            this.camera.position.y += this.movement_step;	// Travel Upwards
-
-        if (pressed.md)
-            this.camera.position.y -= this.movement_step;	// Travel Downwards
-
-        // Standard FPS Control scheme, but turn instead of strafe
-        if (pressed.mf)
-            this.camera.position.add(this.camera.forward.times(this.movement_step));
-
-        if (pressed.mb)
-            this.camera.position.sub(this.camera.forward.times(this.movement_step));
-
-        if (pressed.tl) {
-            this.yaw -= this.rotation_angle;
+            this.rotate_using_angles ?
+                this.camera.setOrientationByAngles(this.yaw, this.pitch) :
+                this.camera.setOrientationByDirection(this.lightDirection); /// TODO: ...
         }
 
-        if (pressed.tr)
-            this.yaw += this.rotation_angle;
+        if (pressed.forward || pressed.backwards) {
+            if (pressed.forward) this.camera.position.add(this.camera.forward.times(this.movement_step));
+            if (pressed.backwards) this.camera.position.sub(this.camera.forward.times(this.movement_step));
+        }
+
+        /// TODO: ... Make work according to reoriented reference frame above...
+        if (pressed.left) this.camera.position.x -= this.movement_step;
+        if (pressed.right) this.camera.position.x += this.movement_step;
+        if (pressed.up) this.camera.position.y += this.movement_step;
+        if (pressed.down) this.camera.position.y -= this.movement_step;
     }
 }

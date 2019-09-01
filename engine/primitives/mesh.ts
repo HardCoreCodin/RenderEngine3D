@@ -1,5 +1,5 @@
-import Position, {pos4} from "../linalng/position.js";
-import Direction from "../linalng/direction.js";
+import Position4D, {pos4} from "../linalng/4D/position.js";
+import Direction4D from "../linalng/4D/direction.js";
 import Transform from "./transform.js";
 import {tri, Triangle} from "./triangle.js";
 
@@ -10,8 +10,8 @@ export class Mesh {
 
     constructor(
         public triangles: Triangle[] = [],
-        public positions : Position[] = [],
-        public normals : Direction[] = []
+        public positions : Position4D[] = [],
+        public normals : Direction4D[] = []
     ) {}
 
     static from(obj: string) {
@@ -20,7 +20,7 @@ export class Mesh {
 
     load(obj: string) : Mesh {
         let parts: string[];
-        const positions: Position[] = [];
+        const positions: Position4D[] = [];
 
         for (const line of obj.split('\n')) {
             if (line[0] === 'v') {

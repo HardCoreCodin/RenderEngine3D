@@ -1,45 +1,69 @@
-const MOVE_UP_KEY_CODE = 82; // r
-const MOVE_DOWN_KEY_CODE = 70; // f
-const MOVE_LEFT_kEY_CODE = 65; // a
-const MOVE_RIGHT_kEY_CODE = 68; // d
-const MOVE_FORWARD_kEY_CODE = 87; // w
-const MOVE_BACKWARD_kEY_CODE = 83; // s
-const TURN_LEFT_KEY_CODE = 81; // q
-const TURN_RIGHT_KEY_CODE = 69; // e
+const UP_KEY_CODE = 82; // r
+const DOWN_KEY_CODE = 70; // f
+
+const LEFT_kEY_CODE = 65; // a
+const RIGHT_kEY_CODE = 68; // d
+
+const FORWARD_kEY_CODE = 87; // w
+const BACKWARD_kEY_CODE = 83; // s
+
+const YAW_LEFT_KEY_CODE = 37; // left arrow
+const YAW_RIGHT_KEY_CODE = 39; // right arrow
+
+const PITCH_UP_KEY_CODE = 38; // up arrow
+const PITCH_DOWN_KEY_CODE = 40; // down arrow
 
 const pressed = {
-    mu: false,
-    md: false,
-    mf: false,
-    mb: false,
-    mr: false,
-    ml: false,
-    tl: false,
-    tr: false
+    up: false,
+    down: false,
+
+    forward: false,
+    backwards: false,
+
+    right: false,
+    left: false,
+
+    yaw_right: false,
+    yaw_left: false,
+
+    pitch_up: false,
+    pitch_down: false
 };
 export default pressed;
 
 document.addEventListener('keydown', (event) => {
     switch (event.which) {
-        case MOVE_UP_KEY_CODE: pressed.mu = true; break;
-        case MOVE_DOWN_KEY_CODE: pressed.md = true; break;
-        case MOVE_LEFT_kEY_CODE: pressed.ml = true; break;
-        case MOVE_RIGHT_kEY_CODE: pressed.mr = true; break;
-        case MOVE_FORWARD_kEY_CODE: pressed.mf = true; break;
-        case MOVE_BACKWARD_kEY_CODE: pressed.mb = true; break;
-        case TURN_LEFT_KEY_CODE: pressed.tl = true; break;
-        case TURN_RIGHT_KEY_CODE: pressed.tr = true; break;
+        case UP_KEY_CODE: pressed.up = true; break;
+        case DOWN_KEY_CODE: pressed.down = true; break;
+
+        case FORWARD_kEY_CODE: pressed.forward = true; break;
+        case BACKWARD_kEY_CODE: pressed.backwards = true; break;
+
+        case LEFT_kEY_CODE: pressed.yaw_left = true; break;
+        case RIGHT_kEY_CODE: pressed.yaw_right = true; break;
+
+        case YAW_LEFT_KEY_CODE: pressed.yaw_left = true; break;
+        case YAW_RIGHT_KEY_CODE: pressed.yaw_right = true; break;
+
+        case PITCH_UP_KEY_CODE: pressed.pitch_up = true; break;
+        case PITCH_DOWN_KEY_CODE: pressed.pitch_down = true; break;
     }
 });
 document.addEventListener('keyup', (event) => {
     switch (event.which) {
-        case MOVE_UP_KEY_CODE: pressed.mu = false; break;
-        case MOVE_DOWN_KEY_CODE: pressed.md = false; break;
-        case MOVE_LEFT_kEY_CODE: pressed.ml = false; break;
-        case MOVE_RIGHT_kEY_CODE: pressed.mr = false; break;
-        case MOVE_FORWARD_kEY_CODE: pressed.mf = false; break;
-        case MOVE_BACKWARD_kEY_CODE: pressed.mb = false; break;
-        case TURN_LEFT_KEY_CODE: pressed.tl = false; break;
-        case TURN_RIGHT_KEY_CODE: pressed.tr = false; break;
+        case UP_KEY_CODE: pressed.up = false; break;
+        case DOWN_KEY_CODE: pressed.down = false; break;
+
+        case FORWARD_kEY_CODE: pressed.forward = false; break;
+        case BACKWARD_kEY_CODE: pressed.backwards = false; break;
+
+        case LEFT_kEY_CODE: pressed.yaw_left = false; break;
+        case RIGHT_kEY_CODE: pressed.yaw_right = false; break;
+
+        case YAW_LEFT_KEY_CODE: pressed.yaw_left = false; break;
+        case YAW_RIGHT_KEY_CODE: pressed.yaw_right = false; break;
+
+        case PITCH_UP_KEY_CODE: pressed.pitch_up = false; break;
+        case PITCH_DOWN_KEY_CODE: pressed.pitch_down = false; break;
     }
 });

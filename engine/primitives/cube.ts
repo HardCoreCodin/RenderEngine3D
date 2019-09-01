@@ -1,5 +1,5 @@
 import {Mesh} from "./mesh.js";
-import {pos4} from "../linalng/position.js";
+import {pos4} from "../linalng/4D/position.js";
 import {tri} from "./triangle.js";
 
 const triangle_positions = [

@@ -1,14 +1,16 @@
-import Matrix from "../linalng/matrix.js";
-import Position from "../linalng/position.js";
-import Direction from "../linalng/direction.js";
+import Matrix4x4 from "../linalng/4D/matrix.js";
+import Position4D from "../linalng/4D/position.js";
+import Direction4D from "../linalng/4D/direction.js";
+import Matrix3x3 from "../linalng/3D/matrix.js";
+import Direction3D from "../linalng/3D/direction.js";
 
 export class EulerRotation {
     constructor(
-        public readonly matrix = new Matrix().setToIdentity(), // Overall Rotation Matrix
-        private readonly rotationMatrixForX = new Matrix().setToIdentity(), // Rotation Matrix for X
-        private readonly rotationMatrixFroY = new Matrix().setToIdentity(), // Rotation Matrix for Y
-        private readonly rotationMatrixForZ = new Matrix().setToIdentity(), // Rotation Matrix for Z
-        public readonly angles = new Direction()	// Rotation Angles for X, Y, and Z
+        public readonly matrix : Matrix3x3 = new Matrix3x3().setToIdentity(), // Overall Rotation Matrix
+        private readonly rotationMatrixForX: Matrix3x3 = new Matrix3x3().setToIdentity(), // Rotation Matrix for X
+        private readonly rotationMatrixFroY: Matrix3x3 = new Matrix3x3().setToIdentity(), // Rotation Matrix for Y
+        private readonly rotationMatrixForZ: Matrix3x3 = new Matrix3x3().setToIdentity(), // Rotation Matrix for Z
+        public readonly angles = new Direction3D()	// Rotation Angles for X, Y, and Z
     ) {}
 
     get x() : number {return this.angles.x}
@@ -33,7 +35,7 @@ export class EulerRotation {
         this.computeMatrix();
     }
 
-    set xyz(xyz: Direction) {
+    set xyz(xyz: Direction4D) {
         this.angles.setTo(xyz);
 
         this.rotationMatrixForX.setRotationAroundX(xyz.x);
@@ -95,57 +97,15 @@ export class EulerRotation {
 }
 
 export default class Transform {
-    public readonly translation: Position;
-
     constructor(
-        public readonly matrix: Matrix = new Matrix().setToIdentity(),
-        public readonly rotation: EulerRotation = new EulerRotation()
-    ) {
-        this.translation = matrix.t;
-    }
-
-    get rotationAngleForX() : number {return this.rotation.x}
-    get rotationAngleForY() : number {return this.rotation.y}
-    get rotationAngleForZ() : number {return this.rotation.z}
-
-    set rotationAngleForX(x: number) {
-        this.rotation.x = x;
-        this.setMatrix();
-    }
-
-    set rotationAngleForY(y: number) {
-        this.rotation.y = y;
-        this.setMatrix();
-    }
-
-    set rotationAngleForZ(z: number) {
-        this.rotation.z = z;
-        this.setMatrix();
-    }
-
-    setRotationAnglesForXYZ(x: number, y: number, z: number) : void {
-        this.rotation.setXYZ(x, y, z);
-        this.setMatrix();
-    }
-
-    setRotationAnglesForXY(x: number, y: number) : void {
-        this.rotation.setXY(x, y);
-        this.setMatrix();
-    }
-
-    setRotationAnglesForXZ(x: number, z: number) : void {
-        this.rotation.setXZ(x, z);
-        this.setMatrix();
-    }
-
-    setRotationAnglesForYZ(y: number, z: number) : void {
-        this.rotation.setYZ(y, z);
-        this.setMatrix();
-    }
-
-    private setMatrix() : void {
-        this.matrix.m0.set(this.rotation.matrix.m0);
-        this.matrix.m1.set(this.rotation.matrix.m1);
-        this.matrix.m2.set(this.rotation.matrix.m2);
-    }
+        public readonly matrix: Matrix4x4 = new Matrix4x4().setToIdentity(),
+        public readonly translation: Position4D = matrix.t,
+        public readonly rotation: EulerRotation = new EulerRotation(
+            new Matrix3x3(
+                matrix.i.buffer.subarray(0, 3),
+                matrix.j.buffer.subarray(0, 3),
+                matrix.k.buffer.subarray(0, 3),
+            )
+        )
+    ) {}
 }
