@@ -11,6 +11,14 @@ const spaceship_mesh = Mesh.from(spaceship);
 // spaceship_mesh.transform.rotationAngleForY = 180;
 spaceship_mesh.transform.translation.z = 5;
 spaceship_mesh.transform.translation.x = -5;
+// import mountains from './mountains.js';
+//
+// const mountains_mesh = Mesh.from(mountains);
+// mountains_mesh.transform.matrix.i.x = 0.1;
+// mountains_mesh.transform.matrix.i.x = 0.1;
+// mountains_mesh.transform.matrix.i.x = 0.1;
+// mountains_mesh.transform.matrix.k.x = 50;
+// mountains_mesh.transform.matrix.k.y = -30;
 const canvas = document.getElementsByTagName('canvas')[0];
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -21,13 +29,14 @@ let lastTimestamp = 0;
 function drawingLoop(timestamp) {
     deltaTime = (timestamp - lastTimestamp) / perfectFrameTime;
     lastTimestamp = timestamp;
-    try {
-        engine.update(deltaTime);
-    }
-    catch (e) {
-        console.trace();
-        console.debug(e.stack);
-    }
+    engine.update(deltaTime);
+    //
+    // try {
+    //     engine.update(deltaTime);
+    // } catch (e) {
+    //     console.trace();
+    //     console.debug(e.stack);
+    // }
     requestAnimationFrame(drawingLoop);
 }
 requestAnimationFrame(drawingLoop);

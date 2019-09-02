@@ -1,5 +1,7 @@
 import Camera from "./primitives/camera.js";
 import Direction3D from "./linalng/3D/direction.js";
+import Position4D from "./linalng/4D/position";
+import Direction4D from "./linalng/4D/direction";
 
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
@@ -34,6 +36,9 @@ const pressed = {
 };
 
 export class FPSController {
+    public position_changed: boolean = false;
+    public direction_changed: boolean = false;
+
     constructor(
         private readonly camera: Camera,
         public movement_speed: number = 0.4,
@@ -41,7 +46,7 @@ export class FPSController {
 
         private readonly _forward_direction = new Direction3D(),
         private readonly look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
-        private readonly right_direction = camera.transform.rotation.matrix.i // The player's right direction
+        private readonly right_direction = camera.transform.rotation.matrix.i, // The player's right direction
     ) {}
 
     get forward_direction() : Direction3D {
@@ -68,20 +73,38 @@ export class FPSController {
     straffLeft = () => this.camera.position.sub(this.right_direction.times(this.movement_speed));
 
     update(): void {
-        if (pressed.yaw_left) this.yawLeft();
-        if (pressed.yaw_right) this.yawRight();
+        if (pressed.yaw_left ||
+            pressed.yaw_right ||
+            pressed.pitch_up ||
+            pressed.pitch_down) {
 
-        if (pressed.pitch_up) this.pitchUp();
-        if (pressed.pitch_down) this.pitchDown();
+            if (pressed.yaw_left) this.yawLeft();
+            if (pressed.yaw_right) this.yawRight();
 
-        if (pressed.forward) this.moveForward();
-        if (pressed.backwards) this.moveBackwards();
+            if (pressed.pitch_up) this.pitchUp();
+            if (pressed.pitch_down) this.pitchDown();
 
-        if (pressed.right) this.straffRight();
-        if (pressed.left) this.straffLeft();
+            this.direction_changed = true;
+        } else this.direction_changed = false;
 
-        if (pressed.up) this.panUp();
-        if (pressed.down) this.panDown();
+        if (pressed.forward ||
+            pressed.backwards ||
+            pressed.right ||
+            pressed.left ||
+            pressed.up ||
+            pressed.down) {
+
+            if (pressed.forward) this.moveForward();
+            if (pressed.backwards) this.moveBackwards();
+
+            if (pressed.right) this.straffRight();
+            if (pressed.left) this.straffLeft();
+
+            if (pressed.up) this.panUp();
+            if (pressed.down) this.panDown();
+
+            this.position_changed = true;
+        } else this.position_changed = false;
     }
 }
 

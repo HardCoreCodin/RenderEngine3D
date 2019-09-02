@@ -49,6 +49,28 @@ export default class Matrix3x3 {
         return new_matrix;
     }
 
+    equals(
+        other: Matrix3x3,
+        precision_digits: number = 3
+    ) : boolean {
+        if (Object.is(other, this))
+            return true;
+
+        if (!(other instanceof Matrix3x3))
+            return false;
+
+        return equals(
+            this.m0,
+            this.m1,
+            this.m2,
+
+            other.m0,
+            other.m1,
+            other.m2,
+
+            precision_digits);
+    }
+
     times(
         rhs: Matrix3x3,
         new_matrix: Matrix3x3 = new Matrix3x3()
@@ -182,28 +204,6 @@ export default class Matrix3x3 {
 ${x0}, ${y0}, ${z0}
 ${x1}, ${y1}, ${z1}
 ${x2}, ${y2}, ${z2}`;
-    }
-
-    equals(
-        matrix: Matrix3x3,
-        precision_digits: number = 3
-    ) : boolean {
-        if (Object.is(matrix, this))
-            return true;
-
-        if (!(matrix instanceof Matrix3x3))
-            return false;
-
-        return equals(
-            this.m0,
-            this.m1,
-            this.m2,
-
-            matrix.m0,
-            matrix.m1,
-            matrix.m2,
-
-            precision_digits);
     }
 }
 

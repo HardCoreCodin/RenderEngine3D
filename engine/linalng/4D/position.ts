@@ -1,7 +1,7 @@
 import Direction4D from "./direction.js";
 import Matrix4x4 from "./matrix.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
-import {add, sub, minus, plus, mul, times, div, over, vecMatMul} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
 
 export default class Position4D  {
     public buffer: Buffer;
@@ -30,12 +30,17 @@ export default class Position4D  {
     get z() : number {return this.buffer[2]}
     get w() : number {return this.buffer[3]}
 
-    to(
+    equals(
         other: Position4D,
-        direction = new Direction4D
-    ) : Direction4D {
-        direction.setTo(minus(other.buffer, this.buffer));
-        return direction;
+        precision_digits: number = 3
+    ) : boolean {
+        if (Object.is(other, this))
+            return true;
+
+        if (!(other instanceof Position4D))
+            return false;
+
+        return equals(this.buffer, other.buffer, precision_digits);
     }
 
     copy() : Position4D {
@@ -137,13 +142,55 @@ export default class Position4D  {
         throw `Invalid arguments ${x}, ${y}, ${z}, ${w}`
     }
 
-    // toDirection() : Direction4D {
-    //     return new Direction4D(Buffer.from(this.buffer));
+    to(
+        other: Position4D,
+        direction = new Direction4D
+    ) : Direction4D {
+        direction.setTo(minus(other.buffer, this.buffer));
+        return direction;
+    }
+
+    // intersectPlane(
+    //     plane_p: Direction4D,
+    //     plane_n: Direction4D,
+    //     lineStart: Position4D,
+    //     lineEnd: Position4D
+    // ) : Direction4D {
+    //     const plane_d = plane_n.normalize().dot(plane_p);
+    //     const ad = plane_n.dot(lineStart);
+    //     const bd = plane_n.dot(lineEnd);
+    //     const t = (plane_d - ad) / (bd - ad);
+    //     return lineStart.to(lineEnd).mul(t).add(lineStart);
     // }
-    //
-    // asDirection() : Direction4D {
-    //     return new Direction4D(this.buffer);
-    // }
+
+
+    intersectPlane(
+        plane_n: Direction4D,
+        lineStart: Position4D,
+        lineEnd: Position4D,
+        outPos: Position4D
+    ) : number {
+        plane_n.normalize();
+
+        const plane_d = -plane_n.dot(this);
+        const ad = plane_n.dot(lineStart);
+        const bd = plane_n.dot(lineEnd);
+        const t = (-plane_d - ad) / (bd - ad);
+        const lineStartToEnd : Direction4D = lineStart.to(lineEnd);
+        const lineToIntersect : Direction4D = lineStartToEnd.times(t);
+
+        lineToIntersect.plus(lineStartToEnd, outPos);
+
+        return t;
+    }
+
+    toDirection() : Direction4D {
+        return new Direction4D(Buffer.from(this.buffer));
+    }
+
+    asDirection() : Direction4D {
+        return new Direction4D(this.buffer);
+    }
 }
 
 export const pos4 = (

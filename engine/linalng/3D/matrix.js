@@ -27,6 +27,13 @@ export default class Matrix3x3 {
         new_matrix.m2.set(this.m2);
         return new_matrix;
     }
+    equals(other, precision_digits = 3) {
+        if (Object.is(other, this))
+            return true;
+        if (!(other instanceof Matrix3x3))
+            return false;
+        return equals(this.m0, this.m1, this.m2, other.m0, other.m1, other.m2, precision_digits);
+    }
     times(rhs, new_matrix = new Matrix3x3()) {
         matMatMul(this.m0, this.m1, this.m2, rhs.m0, rhs.m1, rhs.m2, new_matrix.m0, new_matrix.m1, new_matrix.m2);
         return new_matrix;
@@ -112,13 +119,6 @@ export default class Matrix3x3 {
 ${x0}, ${y0}, ${z0}
 ${x1}, ${y1}, ${z1}
 ${x2}, ${y2}, ${z2}`;
-    }
-    equals(matrix, precision_digits = 3) {
-        if (Object.is(matrix, this))
-            return true;
-        if (!(matrix instanceof Matrix3x3))
-            return false;
-        return equals(this.m0, this.m1, this.m2, matrix.m0, matrix.m1, matrix.m2, precision_digits);
     }
 }
 export const mat4 = (x0 = 1, y0, z0, x1, y1 = 1, z1, x2, y2, z2 = 1) => new Matrix3x3().setTo(x0, y0, z0, x1, y1, z1, x2, y2, z2);

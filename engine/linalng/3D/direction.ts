@@ -1,6 +1,6 @@
 import Matrix3x3 from "./matrix.js";
 import Position3D from "./position.js";
-import {add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul, equals} from "./arithmatic/vector.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
 
 export default class Direction3D  {
@@ -34,6 +34,26 @@ export default class Direction3D  {
         return new Direction3D(over(this.buffer, this.length));
     }
 
+    copy(
+        new_direction: Direction3D = new Direction3D()
+    ) : Direction3D {
+        new_direction.setTo(Buffer.from(this.buffer));
+        return new_direction;
+    }
+
+    equals(
+        other: Direction3D,
+        precision_digits: number = 3
+    ) : boolean {
+        if (Object.is(other, this))
+            return true;
+
+        if (!(other instanceof Direction3D))
+            return false;
+
+        return equals(this.buffer, other.buffer, precision_digits);
+    }
+
     normalize() : Direction3D {
         this.div(this.length);
         return this;
@@ -47,13 +67,6 @@ export default class Direction3D  {
           new_direction: Direction3D = new Direction3D()
     ) : Direction3D {
         cross(this.buffer, dir.buffer, new_direction.buffer);
-        return new_direction;
-    }
-
-    copy(
-        new_direction: Direction3D = new Direction3D()
-    ) : Direction3D {
-        new_direction.setTo(Buffer.from(this.buffer));
         return new_direction;
     }
 
@@ -84,21 +97,52 @@ export default class Direction3D  {
         div(this.buffer, scalar);
         return this;
     }
+    plus(
+        position_or_direction: Position3D,
+        added: Direction3D | Position3D
+    ) : Position3D;
 
-    plus(position_or_direction: Position3D) : Position3D;
-    plus(position_or_direction: Direction3D) : Direction3D;
-    plus(position_or_direction: Direction3D | Position3D) : Direction3D | Position3D {
-        return position_or_direction instanceof Direction3D ?
-            new Direction3D(plus(this.buffer, position_or_direction.buffer)) :
-            new Position3D(plus(this.buffer, position_or_direction.buffer));
+    plus(
+        position_or_direction: Direction3D,
+        added: Direction3D | Position3D
+    ) : Direction3D;
+
+    plus(
+        position_or_direction: Direction3D | Position3D,
+        added: Direction3D | Position3D = null
+    ) : Direction3D | Position3D {
+        if (added === null)
+            added = position_or_direction instanceof Direction3D ?
+                new Direction3D() :
+                new Position3D();
+
+        plus(this.buffer, position_or_direction.buffer, added.buffer);
+
+        return added;
     }
 
-    minus(position_or_direction: Position3D) : Position3D;
-    minus(position_or_direction: Direction3D) : Direction3D;
-    minus(position_or_direction: Direction3D | Position3D) : Direction3D | Position3D {
-        return position_or_direction instanceof Direction3D ?
-            new Direction3D(minus(this.buffer, position_or_direction.buffer)) :
-            new Position3D(minus(this.buffer, position_or_direction.buffer));
+    minus(
+        position_or_direction: Position3D,
+        subtracted: Direction3D | Position3D
+    ) : Position3D;
+
+    minus(
+        position_or_direction: Direction3D,
+        subtracted: Direction3D | Position3D
+    ) : Direction3D;
+
+    minus(
+        position_or_direction: Direction3D | Position3D,
+        subtracted: Direction3D | Position3D = null
+    ) : Direction3D | Position3D {
+        if (subtracted === null)
+            subtracted = position_or_direction instanceof Direction3D ?
+                new Direction3D() :
+                new Position3D();
+
+        minus(this.buffer, position_or_direction.buffer, subtracted.buffer);
+
+        return subtracted;
     }
 
     over(
@@ -106,7 +150,6 @@ export default class Direction3D  {
         new_direction: Direction3D = new Direction3D()
     ) : Direction3D {
         over(this.buffer, scalar, new_direction.buffer);
-
         return new_direction;
     }
 

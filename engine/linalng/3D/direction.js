@@ -1,6 +1,6 @@
 import Matrix3x3 from "./matrix.js";
 import Position3D from "./position.js";
-import { add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul } from "./arithmatic/vector.js";
+import { add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul, equals } from "./arithmatic/vector.js";
 import { Buffer, VectorBufferLength } from "./arithmatic/constants.js";
 export default class Direction3D {
     constructor(buffer) {
@@ -27,6 +27,17 @@ export default class Direction3D {
     get norm() {
         return new Direction3D(over(this.buffer, this.length));
     }
+    copy(new_direction = new Direction3D()) {
+        new_direction.setTo(Buffer.from(this.buffer));
+        return new_direction;
+    }
+    equals(other, precision_digits = 3) {
+        if (Object.is(other, this))
+            return true;
+        if (!(other instanceof Direction3D))
+            return false;
+        return equals(this.buffer, other.buffer, precision_digits);
+    }
     normalize() {
         this.div(this.length);
         return this;
@@ -36,10 +47,6 @@ export default class Direction3D {
     }
     cross(dir, new_direction = new Direction3D()) {
         cross(this.buffer, dir.buffer, new_direction.buffer);
-        return new_direction;
-    }
-    copy(new_direction = new Direction3D()) {
-        new_direction.setTo(Buffer.from(this.buffer));
         return new_direction;
     }
     add(position) {
@@ -60,15 +67,21 @@ export default class Direction3D {
         div(this.buffer, scalar);
         return this;
     }
-    plus(position_or_direction) {
-        return position_or_direction instanceof Direction3D ?
-            new Direction3D(plus(this.buffer, position_or_direction.buffer)) :
-            new Position3D(plus(this.buffer, position_or_direction.buffer));
+    plus(position_or_direction, added = null) {
+        if (added === null)
+            added = position_or_direction instanceof Direction3D ?
+                new Direction3D() :
+                new Position3D();
+        plus(this.buffer, position_or_direction.buffer, added.buffer);
+        return added;
     }
-    minus(position_or_direction) {
-        return position_or_direction instanceof Direction3D ?
-            new Direction3D(minus(this.buffer, position_or_direction.buffer)) :
-            new Position3D(minus(this.buffer, position_or_direction.buffer));
+    minus(position_or_direction, subtracted = null) {
+        if (subtracted === null)
+            subtracted = position_or_direction instanceof Direction3D ?
+                new Direction3D() :
+                new Position3D();
+        minus(this.buffer, position_or_direction.buffer, subtracted.buffer);
+        return subtracted;
     }
     over(scalar, new_direction = new Direction3D()) {
         over(this.buffer, scalar, new_direction.buffer);

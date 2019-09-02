@@ -1,7 +1,7 @@
 import Direction3D from "./direction.js";
 import Matrix3x3 from "./matrix.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
-import {add, sub, minus, plus, mul, times, div, over, vecMatMul} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
 
 export default class Position3D  {
     public buffer: Buffer;
@@ -28,19 +28,24 @@ export default class Position3D  {
     get y() : number {return this.buffer[1]}
     get z() : number {return this.buffer[2]}
 
-    to(
-        other: Position3D,
-        direction = new Direction3D
-    ) : Direction3D {
-        direction.setTo(minus(other.buffer, this.buffer));
-        return direction;
-    }
-
     copy(
         new_position: Position3D = new Position3D()
     ) : Position3D {
         new_position.buffer.set(Buffer.from(this.buffer));
         return new_position;
+    }
+
+    equals(
+        other: Position3D,
+        precision_digits: number = 3
+    ) : boolean {
+        if (Object.is(other, this))
+            return true;
+
+        if (!(other instanceof Position3D))
+            return false;
+
+        return equals(this.buffer, other.buffer, precision_digits);
     }
 
     add(position: Direction3D | Position3D) : Position3D {
@@ -113,6 +118,14 @@ export default class Position3D  {
             );
 
         return new_position;
+    }
+
+    to(
+        other: Position3D,
+        direction = new Direction3D
+    ) : Direction3D {
+        direction.setTo(minus(other.buffer, this.buffer));
+        return direction;
     }
 
     setTo(

@@ -5,110 +5,160 @@ import Position3D from "../linalng/3D/position.js";
 
 export default class Camera {
     public readonly transform = new Transform();
-    // Location in world space
 
+    // Location in world space
     public readonly position = new Position3D(this.transform.translation.buffer.subarray(0, 3));
 
     // Position in space (0, 0, 0, 1) with perspective projection applied to it
     public readonly projected_position = new Position4D();
 
-    // Matrix that converts from view space to clip space
-    public readonly projection: Matrix4x4 = new Matrix4x4().setToIdentity();
-
     constructor(
         public options: CameraOptions = new CameraOptions()
     ) {}
 
-    setProjection(
-        screen_width: number = this.options.screen_width,
-        screen_height: number = this.options.screen_height,
-        fov: number = this.options.fov,
-        near: number = this.options.near,
-        far: number = this.options.far
+    // Matrix that converts from view space to clip space
+    getProjectionMatrix(
+        projection_matrix: Matrix4x4 = new Matrix4x4().setToIdentity()
     ) : Matrix4x4 {
-        this.options.updateIfNeeded(
-            screen_width,
-            screen_height,
-            fov,
-            near,
-            far
-        );
-
-        this.projection.setTo(
+        projection_matrix.setTo(
             this.options.perspective_factor, 0, 0, 0,
             0, this.options.perspective_factor * this.options.aspect_ratio, 0, 0,
-            0, 0, far / this.options.depth_span, 1,
-            0, 0,  (-far * near) / this.options.depth_span, 0
+            0, 0, this.options.far / this.options.depth_span, 1,
+            0, 0,  (-this.options.far * this.options.near) / this.options.depth_span, 0
         );
 
         this.projected_position.w = 1;
         this.projected_position.z = 0;
-        this.projected_position.mul(this.projection);
+        this.projected_position.mul(projection_matrix);
 
-        return this.projection;
+        return projection_matrix;
     }
 }
 
 export class CameraOptions {
     public perspective_factor: number;
     public depth_span: number;
+    public aspect_ratio: number;
+
+    public projection_parameters_changed : boolean = false;
+
+    public depth_span_changed : boolean = false;
+    public aspect_ratio_changed : boolean = false;
+    public perspective_factor_changed : boolean = false;
+
+    public screen_width_changed: boolean = false;
+    public screen_height_changed: boolean = false;
+
+    public far_changed: boolean = false;
+    public near_changed: boolean = false;
+
+    private _screen_width: number = 0;
+    private _screen_height: number = 0;
+
+    private _near: number = 0;
+    private _far: number = 0;
+
+    private _fov: number = 0;
+
+    private _new_aspect_ratio: number = 0;
+    private _new_depth_span: number = 0;
 
     constructor(
-        public screen_width: number = 1024,
-        public screen_height: number = 1024,
-        public near: number = 0.1,
-        public far: number = 1000,
-        public fov: number = 90,
-        public aspect_ratio: number = 1
+        screen_width: number = 1024,
+        screen_height: number = 1024,
+
+        near: number = 0.1,
+        far: number = 1000,
+
+        fov: number = 90
     ) {
-        this.setDepthSpan(near, far);
-        this.setAspectRatio(screen_width, screen_height);
-        this.setPerspectiveFactor(fov);
+        this.update(
+            screen_width,
+            screen_height,
+
+            near,
+            far,
+
+            fov
+        )
     }
 
-    updateIfNeeded(
-        screen_width: number = this.screen_width,
-        screen_height: number = this.screen_height,
-        fov: number = this.fov,
-        near: number = this.near,
-        far: number = this.far
-    ) : boolean {
-        let updated = false;
+    get fov() : number {return this._fov}
+    get far() : number {return this._far}
+    get near() : number {return this._near}
+    get screen_width() : number {return this._screen_width}
+    get screen_height() : number {return this._screen_height}
 
-        if (fov !== this.fov) {
-            this.setPerspectiveFactor(fov);
-            updated = true;
+    update(
+        screen_width: number = this._screen_width,
+        screen_height: number = this._screen_height,
+
+        near: number = this._near,
+        far: number = this._far,
+
+        fov: number = this._fov
+    ) : void {
+        this.projection_parameters_changed = false;
+        this.setClippingPlaneDistances(near, far);
+        this.setScreenDimensions(screen_width, screen_height);
+        this.setFieldOfView(fov);
+    }
+
+    setFieldOfView(fov: number) : void {
+        if (fov === this._fov) {
+            this.perspective_factor_changed = false;
+        } else {
+            this._fov = fov;
+
+            this.perspective_factor_changed = true;
+            this.projection_parameters_changed = true;
+            this.perspective_factor = 1.0 / Math.tan(fov * 0.5 / 180.0 * Math.PI);
         }
+    }
 
-        if (near !== this.near ||
-            far !== this.far) {
-            this.setDepthSpan(near, far);
-            updated = true;
+    setScreenDimensions(screen_width: number, screen_height: number) : void {
+        if (screen_width === this._screen_width && screen_height === this._screen_height) {
+            this.screen_width_changed = false;
+            this.screen_height_changed = false;
+        } else {
+            this.screen_width_changed = screen_width !== this._screen_width;
+            this.screen_height_changed = screen_height !== this._screen_height;
+
+            this._screen_width = screen_width;
+            this._screen_height = screen_height;
+
+            this._new_aspect_ratio = screen_width / screen_height;
+
+            if (this._new_aspect_ratio === this.aspect_ratio) {
+                this.aspect_ratio_changed = false;
+            } else {
+                this.aspect_ratio_changed = true;
+                this.projection_parameters_changed = true;
+                this.aspect_ratio = this._new_aspect_ratio;
+            }
         }
+    }
 
-        if (screen_width !== this.screen_width ||
-            screen_height !== this.screen_height) {
-            this.setAspectRatio(screen_width, screen_height);
-            updated = true;
+    setClippingPlaneDistances(near: number, far: number) : void {
+        if (near === this._near && far === this._far) {
+            this.near_changed = false;
+            this.far_changed = false;
+        } else {
+            this.near_changed = near !== this._near;
+            this.far_changed = far !== this._far;
+
+            this._near = near;
+            this._far = far;
+
+            this._new_depth_span = far - near;
+
+            if (this._new_depth_span === this.depth_span) {
+                this.depth_span_changed = false;
+            } else {
+                this.depth_span_changed = true;
+                this.projection_parameters_changed = true;
+                this.depth_span = this._new_depth_span;
+            }
         }
-
-        return updated;
-    }
-
-    setPerspectiveFactor(fov: number) : void {
-        this.fov = fov;
-        this.perspective_factor = 1.0 / Math.tan(fov * 0.5 / 180.0 * Math.PI);
-    }
-
-    setAspectRatio(screen_width: number, screen_height: number) : void {
-        this.screen_height = screen_height;
-        this.screen_width = screen_width;
-        this.aspect_ratio = screen_width / screen_height;
-    }
-
-    setDepthSpan(near: number, far: number) : void {
-        this.near = near;
-        this.far = far;
-        this.depth_span = far - near;
     }
 }

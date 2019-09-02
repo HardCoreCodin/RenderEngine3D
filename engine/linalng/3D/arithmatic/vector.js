@@ -1,4 +1,17 @@
 import { Buffer, VectorBufferLength } from "./constants.js";
+export const equals = (lhs, rhs, precision_digits = 3) => {
+    if (Object.is(lhs, rhs))
+        return true;
+    if (Object.is(lhs.buffer, rhs.buffer))
+        return true;
+    if (lhs.length !== rhs.length)
+        return false;
+    if (lhs[0].toFixed(precision_digits) !== rhs[0].toFixed(precision_digits))
+        return false;
+    if (lhs[1].toFixed(precision_digits) !== rhs[1].toFixed(precision_digits))
+        return false;
+    return lhs[2].toFixed(precision_digits) === rhs[2].toFixed(precision_digits);
+};
 export const add = (lhs, rhs) => {
     lhs[0] += rhs[0];
     lhs[1] += rhs[1];

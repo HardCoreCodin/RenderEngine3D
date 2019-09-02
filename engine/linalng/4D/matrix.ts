@@ -64,12 +64,27 @@ export default class Matrix4x4 {
         this.t = new Position4D(this.m3);
     }
 
-    get isIdentity() : boolean {return isIdentity(this.buffer)}
+    copy() : Matrix4x4 {
+        return new Matrix4x4(Buffer.from(this.buffer));
+    }
 
-    // get det() : number {return det(this._buffer)}
+    equals(matrix: Matrix4x4, precision_digits: number = 3) : boolean {
+        if (Object.is(matrix, this)) return true;
+        if (!(matrix instanceof Matrix4x4)) return false;
+        return equals(this.buffer, matrix.buffer, precision_digits);
+    }
+
+    get isIdentity() : boolean {return isIdentity(this.buffer)}
 
     get inverted() : Matrix4x4 {
         return new Matrix4x4(inverse(this.buffer));
+    }
+
+    inverse(
+        inverted: Matrix4x4 = Matrix4x4.Identity()
+    ) : Matrix4x4 {
+        inverse(this.buffer, inverted.buffer);
+        return inverted;
     }
 
     invert() : Matrix4x4 {
@@ -84,10 +99,6 @@ export default class Matrix4x4 {
     transpose() : Matrix4x4 {
         transpose(this.buffer, this.buffer);
         return this;
-    }
-
-    copy() : Matrix4x4 {
-        return new Matrix4x4(Buffer.from(this.buffer));
     }
 
     times(
@@ -239,12 +250,6 @@ ${x0}, ${y0}, ${z0}, ${w0}
 ${x1}, ${y1}, ${z1}, ${w1}
 ${x2}, ${y2}, ${z2}, ${w2}
 ${x3}, ${y3}, ${z3}, ${w3}`;
-    }
-
-    equals(matrix: Matrix4x4, precision_digits: number = 3) : boolean {
-        if (Object.is(matrix, this)) return true;
-        if (!(matrix instanceof Matrix4x4)) return false;
-        return equals(this.buffer, matrix.buffer, precision_digits);
     }
 }
 
