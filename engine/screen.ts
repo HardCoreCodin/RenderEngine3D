@@ -13,30 +13,51 @@ export default class Screen {
         this.context.clearRect(0, 0, this.width, this.height);
     }
 
-    drawTriangle(tri: Triangle) {
+    drawTriangle(triangle: Triangle) {
         this.context.beginPath();
 
-        this.context.moveTo(tri.p0.x, tri.p0.y);
-        this.context.lineTo(tri.p1.x, tri.p1.y);
-        this.context.lineTo(tri.p2.x, tri.p2.y);
-        this.context.lineTo(tri.p0.x, tri.p0.y);
+        this.context.moveTo(
+            triangle.vertices[0].position.buffer[0],
+            triangle.vertices[0].position.buffer[1]
+        );
+        this.context.lineTo(
+            triangle.vertices[1].position.buffer[0],
+            triangle.vertices[1].position.buffer[1]
+        );
+        this.context.lineTo(
+            triangle.vertices[2].position.buffer[0],
+            triangle.vertices[2].position.buffer[1]
+        );
+        this.context.lineTo(
+            triangle.vertices[0].position.buffer[0],
+            triangle.vertices[0].position.buffer[1]
+        );
 
         this.context.closePath();
 
-        this.context.strokeStyle = `${tri.color}`;
+        this.context.strokeStyle = `${triangle.color}`;
         this.context.stroke();
     }
 
-    fillTriangle(tri: Triangle) {
+    fillTriangle(triangle: Triangle) {
         this.context.beginPath();
 
-        this.context.moveTo(tri.p0.x, tri.p0.y);
-        this.context.lineTo(tri.p1.x, tri.p1.y);
-        this.context.lineTo(tri.p2.x, tri.p2.y);
+        this.context.moveTo(
+            triangle.vertices[0].position.buffer[0],
+            triangle.vertices[0].position.buffer[1]
+        );
+        this.context.lineTo(
+            triangle.vertices[1].position.buffer[0],
+            triangle.vertices[1].position.buffer[1]
+        );
+        this.context.lineTo(
+            triangle.vertices[2].position.buffer[0],
+            triangle.vertices[2].position.buffer[1]
+        );
 
         this.context.closePath();
 
-        this.context.fillStyle = `${tri.color}`;
+        this.context.fillStyle = `${triangle.color}`;
         this.context.fill();
     }
 }

@@ -1,21 +1,17 @@
 import Direction3D from "./direction.js";
 import Matrix3x3 from "./matrix.js";
 import { Buffer, VectorBufferLength } from "./arithmatic/constants.js";
-import { add, sub, minus, plus, mul, times, div, over, vecMatMul, equals } from "./arithmatic/vector.js";
+import { add, sub, minus, plus, mul, times, div, over, lerp, vecMatMul, equals } from "./arithmatic/vector.js";
 export default class Position3D {
     constructor(buffer) {
         if (buffer instanceof Buffer) {
-            if (buffer.length === VectorBufferLength) {
+            if (buffer.length === VectorBufferLength)
                 this.buffer = buffer;
-                this.buffer[3] = 1;
-            }
             else
                 throw `Invalid buffer length ${buffer.length}`;
         }
-        else if (buffer === undefined || buffer === null) {
+        else if (buffer === undefined || buffer === null)
             this.buffer = new Buffer(VectorBufferLength);
-            this.buffer[3] = 1;
-        }
         else
             throw `Invalid buffer ${buffer}`;
     }
@@ -35,6 +31,10 @@ export default class Position3D {
         if (!(other instanceof Position3D))
             return false;
         return equals(this.buffer, other.buffer, precision_digits);
+    }
+    lerp(to, by, new_position = new Position3D()) {
+        lerp(this.buffer, to.buffer, by, new_position.buffer);
+        return new_position;
     }
     add(position) {
         add(this.buffer, position.buffer);

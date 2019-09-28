@@ -30,7 +30,6 @@ function drawingLoop(timestamp) {
     deltaTime = (timestamp - lastTimestamp) / perfectFrameTime;
     lastTimestamp = timestamp;
     engine.update(deltaTime);
-    //
     // try {
     //     engine.update(deltaTime);
     // } catch (e) {

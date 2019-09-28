@@ -67,7 +67,7 @@ export class CameraOptions {
         screen_width: number = 1024,
         screen_height: number = 1024,
 
-        near: number = 0.1,
+        near: number = 1,
         far: number = 1000,
 
         fov: number = 90

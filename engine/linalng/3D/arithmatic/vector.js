@@ -73,6 +73,12 @@ export const cross = (lhs, rhs, out = new Buffer(VectorBufferLength)) => {
     out[2] = lhs[0] * rhs[1] - lhs[1] * rhs[0];
     return out;
 };
+export const lerp = (from, to, by, out = new Buffer(VectorBufferLength)) => {
+    out[0] = from[0] + by * (to[0] - from[0]);
+    out[1] = from[1] + by * (to[1] - from[1]);
+    out[2] = from[2] + by * (to[2] - from[2]);
+    return out;
+};
 export const vecMatMul = (lhs, rhs0, rhs1, rhs2, out = new Buffer(VectorBufferLength)) => {
     if (Object.is(out, lhs))
         lhs = Buffer.from(lhs);

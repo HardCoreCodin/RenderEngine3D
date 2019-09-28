@@ -115,30 +115,6 @@ export const times = (
     return out;
 };
 
-export const dot = (
-    lhs: Buffer,
-    rhs: Buffer
-    ) : number =>
-    lhs[0]*rhs[0] +
-    lhs[1]*rhs[1] +
-    lhs[2]*rhs[2]
-;
-
-export const cross = (
-    lhs: Buffer,
-    rhs: Buffer,
-    out: Buffer = new Buffer(VectorBufferLength)
-) : Buffer => {
-    if (Object.is(out, lhs)) lhs = Buffer.from(lhs);
-    if (Object.is(out, rhs)) rhs = Buffer.from(rhs);
-
-    out[0] = lhs[1]*rhs[2] - lhs[2]*rhs[1];
-    out[1] = lhs[2]*rhs[0] - lhs[0]*rhs[2];
-    out[2] = lhs[0]*rhs[1] - lhs[1]*rhs[0];
-
-    return out;
-};
-
 export const vecMatMul = (
     lhs: Buffer,
     rhs: Buffer,

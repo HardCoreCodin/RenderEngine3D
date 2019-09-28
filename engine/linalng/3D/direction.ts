@@ -1,6 +1,6 @@
 import Matrix3x3 from "./matrix.js";
 import Position3D from "./position.js";
-import {add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul, equals} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, dot, cross, lerp, vecMatMul, equals} from "./arithmatic/vector.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
 
 export default class Direction3D  {
@@ -59,12 +59,22 @@ export default class Direction3D  {
         return this;
     }
 
+    lerp(
+        to: Direction3D,
+        by: number,
+        new_direction: Direction3D = new Direction3D()
+    ) : Direction3D {
+        lerp(this.buffer, to.buffer, by, new_direction.buffer);
+        return new_direction;
+    }
+
     dot(dir: Direction3D | Position3D) : number {
         return dot(this.buffer, dir.buffer);
     }
 
-    cross(dir: Direction3D,
-          new_direction: Direction3D = new Direction3D()
+    cross(
+        dir: Direction3D,
+        new_direction: Direction3D = new Direction3D()
     ) : Direction3D {
         cross(this.buffer, dir.buffer, new_direction.buffer);
         return new_direction;
@@ -174,9 +184,9 @@ export default class Direction3D  {
     }
 
     setTo(
-        x: Number | Buffer | Position3D | Direction3D,
-        y?: Number,
-        z?: Number,
+        x: number | Buffer | Position3D | Direction3D,
+        y?: number,
+        z?: number,
     ) : Direction3D {
         if (x instanceof Direction3D ||
             x instanceof Position3D) {
@@ -218,9 +228,9 @@ export default class Direction3D  {
 }
 
 export const dir3 = (
-    x?: Number | Buffer | Position3D | Direction3D,
-    y: Number = 0,
-    z: Number = 0,
+    x?: number | Buffer | Position3D | Direction3D,
+    y: number = 0,
+    z: number = 0,
 ) : Direction3D => x === undefined ?
     new Direction3D() :
     new Direction3D().setTo(x, y, z);

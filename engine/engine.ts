@@ -3,40 +3,35 @@ import Camera from "./primitives/camera.js";
 import Matrix4x4 from "./linalng/4D/matrix.js";
 import Direction4D, {dir4} from "./linalng/4D/direction.js";
 import {Meshes} from "./primitives/mesh.js";
-import {col} from "./primitives/color.js";
 import {tri, Triangle} from "./primitives/triangle.js";
-import Position4D, {pos4} from "./linalng/4D/position.js";
 import {FPSController} from "./input.js";
+import {rgb} from "./linalng/3D/color.js";
 
 export default class Engine3D {
     public camera = new Camera();
-    private cameraRay = new Direction4D();
+    private ray = new Direction4D();
 
     private fps_controller = new FPSController(this.camera);
 
     private turntable_angle = 0;
     private turntable_rotation_speed = 0.05;
 
-    private lightDirection = dir4(0, 0, -1).normalize(); // Illumination
+    private light_direction = dir4(0, 0, -1).normalize(); // Illumination
 
-    private triWorld = tri();
-    private triView = tri();
-    private triClip = tri();
-    private triNDC = tri();
-    private triNormal = dir4();
-    private trianglesToRaster: Triangle[] = [];
+    private extra_triangle = tri();
+    private triangle_in_clip_space = tri();
+    private triangle_in_ndc_space = tri();
+    private triangle_in_screen_space = tri();
+    private triangle_normal = dir4();
+    private triangle_color = rgb();
+    private triangle_count: number;
+    private triangles_to_raster: Triangle[] = [];
 
-    private nearClippingPlanePosition = pos4(0, 0, this.camera.options.near);
-    private nearClippingPlaneDirection = dir4(0, 0, 1);
-    private clippedTriangles = [tri(), tri()];
-
-    private worldToView = Matrix4x4.Identity();	// Matrix that converts from world space to view space
-    private viewToClip = Matrix4x4.Identity();	// Matrix that converts from view space to clip space
-    private NDCToScreen = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
-
-    private worldToClip = Matrix4x4.Identity();	// Matrix that converts from world space to clip space
-    private localToClip = Matrix4x4.Identity();	// Matrix that converts from local space to clip space
-    private localToView = Matrix4x4.Identity();	// Matrix that converts from local space to view space
+    private world_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from world space to clip space
+    private world_space_to_camera_space = Matrix4x4.Identity();	// Matrix that converts from world space to view space
+    private local_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from local space to clip space
+    private camera_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from view space to clip space
+    private ndc_to_screen_space = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
 
     constructor(
         public screen: Screen,
@@ -45,183 +40,140 @@ export default class Engine3D {
 
     update(deltaTime) {
         // Uncomment to spin me right round baby right round
-        // this.turntable_angle += this.turntable_rotation_speed * deltaTime;
+        this.turntable_angle += this.turntable_rotation_speed * deltaTime;
         this.fps_controller.update();
 
-
         // If position or orientation of the camera had changed:
-
         if (this.fps_controller.direction_changed ||
             this.fps_controller.position_changed) {
 
             // Make view matrix from camera
-            this.camera.transform.matrix.inverse(this.worldToView);
+            this.camera.transform.matrix.inverse(this.world_space_to_camera_space);
         }
 
         // Update camera options
         this.camera.options.update(
             this.screen.width,
             this.screen.height,
-            2 * Math.sin(deltaTime  / 180.0 * Math.PI)
+            // 2 * Math.sin(deltaTime  / 180.0 * Math.PI)
         );
 
         this.render();
     }
 
     render() {
-
-        // Update near clipping plane position (if needed);
-        if (this.camera.options.near_changed)
-            this.nearClippingPlanePosition.z = this.camera.options.near;
+        const opts = this.camera.options;
 
         // Update projection matrix from camera (if needed);
-        if (this.camera.options.projection_parameters_changed) {
-            this.camera.getProjectionMatrix(this.viewToClip);
+        if (opts.projection_parameters_changed)
+            this.camera.getProjectionMatrix(this.camera_space_to_clip_space);
 
-            // Update concatenated world -> clip space matrix:
-            this.worldToView.times(this.viewToClip, this.worldToClip);
-        }
+        // Update concatenated world -> clip space matrix (if needed):
+        if (this.fps_controller.direction_changed ||
+            this.fps_controller.position_changed)
+            this.world_space_to_camera_space.times(
+                this.camera_space_to_clip_space,
+                this.world_space_to_clip_space
+            );
 
         // Set the NDC -> screen matrix
-        if (this.camera.options.screen_width_changed ||
-            this.camera.options.screen_height_changed) {
-            this.NDCToScreen.i.x = this.NDCToScreen.t.x = this.screen.width * 0.5;
-            this.NDCToScreen.j.y = this.NDCToScreen.t.y = this.screen.height * 0.5;
-            this.NDCToScreen.j.y *= -1;
+        if (opts.screen_width_changed ||
+            opts.screen_height_changed) {
+            this.ndc_to_screen_space.i.x = this.ndc_to_screen_space.t.x = this.screen.width * 0.5;
+            this.ndc_to_screen_space.j.y = this.ndc_to_screen_space.t.y = this.screen.height * 0.5;
+            this.ndc_to_screen_space.j.y *= -1;
         }
 
         // Store triangles for rasterizining later
-        this.trianglesToRaster.length = 0;
+        this.triangles_to_raster.length = 0;
 
         // Draw Meshes
         for (const mesh of this.meshes) {
-
             // mesh.transform.rotation.y = this.turntable_angle;
 
-            // Update concatenated local -> clip space matrix:
-            mesh.transform.matrix.times(this.worldToClip, this.localToClip);
-
-            // Update concatenated local -> view space matrix:
-            mesh.transform.matrix.times(this.worldToView, this.localToView);
+            // Update concatenated local->view and local->clip matrices:
+            mesh.transform.matrix.times(
+                this.world_space_to_clip_space,
+                this.local_space_to_clip_space
+            );
 
             // Draw Triangles
             for (const triangle of mesh.triangles) {
 
-                // World Matrix Transform
-                triangle.transformedBy(mesh.transform.matrix, this.triWorld);
-
-                // View Matrix Transform
-                this.triWorld.transformedBy(this.worldToView, this.triView);
-
-
-                // Project triangles from 3D --> 2D
-                this.triView.transformedBy(this.viewToClip, this.triClip);
-
-                // Project triangles from 3D --> 2D
-                // triangle.transformedBy(this.localToClip, this.triClip);
-
-                // Frustum culling:
-                if (
-                    !(
-                        this.triClip.p0.x > -this.triClip.p0.w ||
-                        this.triClip.p0.x < this.triClip.p0.w ||
-
-                        this.triClip.p0.y > -this.triClip.p0.w ||
-                        this.triClip.p0.y < this.triClip.p0.w ||
-
-                        this.triClip.p0.z >= 0 &&
-                        this.triClip.p0.z <= this.triClip.p0.w ||
-
-
-                        this.triClip.p1.x > -this.triClip.p1.w ||
-                        this.triClip.p1.x < this.triClip.p1.w ||
-
-                        this.triClip.p1.y > -this.triClip.p1.w ||
-                        this.triClip.p1.y < this.triClip.p1.w ||
-
-                        this.triClip.p1.z >= 0 ||
-                        this.triClip.p1.z <= this.triClip.p1.w ||
-
-
-                        this.triClip.p2.x > -this.triClip.p2.w ||
-                        this.triClip.p2.x < this.triClip.p2.w ||
-
-                        this.triClip.p2.y > -this.triClip.p2.w ||
-                        this.triClip.p2.y < this.triClip.p2.w ||
-
-                        this.triClip.p2.z >= 0 ||
-                        this.triClip.p2.z <= this.triClip.p2.w
-                    )
-                ) {
-                    continue;
-                }
-
-                // World+View Matrix Transform
-                triangle.transformedBy(this.localToView, this.triView);
-                //
-                // // World Matrix Transform
-                // triangle.transformedBy(mesh.transform.matrix, this.triWorld);
-                //
-                // // View Matrix Transform
-                // this.triWorld.transformedBy(this.worldToView, this.triView);
-
-                // Clip Viewed Triangle against near plane, this could form two additional
-                // additional triangles.
-                let nClippedTriangles = this.triView.clipAgainstPlane(
-                    this.nearClippingPlanePosition,
-                    this.nearClippingPlaneDirection,
-                    this.clippedTriangles[0],
-                    this.clippedTriangles[1]
+                // Generate clip-space triangle:
+                triangle.transformedBy(
+                    this.local_space_to_clip_space,
+                    this.triangle_in_clip_space
                 );
 
-                // this.clippedTriangles[0].setTo(this.triView);
-                // let nClippedTriangles = 1;
+                // Frustum culling:
+                if (this.triangle_in_clip_space.isOutOfView(opts.near, opts.far))
+                    continue;
 
-                // We may end up with multiple triangles form the clip, so project as
-                // required
-                for (let n = 0; n < nClippedTriangles; n++) {
-                    // Calculate triangle Normal
-                    this.triNormal = this.triView.normal;
+                // Back-face culling:
+                this.triangle_in_clip_space.normal(this.triangle_normal);
+                this.camera.projected_position.to(this.triangle_in_clip_space.vertices[0].position, this.ray);
+                if (this.ray.dot(this.triangle_normal) >= 0)
+                    continue;
 
-                    // Get Ray from triangle to camera
-                    this.camera.projected_position.to(this.triClip.p0, this.cameraRay);
+                // Frustum clipping:
+                this.triangle_count = this.triangle_in_clip_space.clipToNearClippingPlane(opts.near, this.extra_triangle);
 
-                    // If ray is aligned with normal, then triangle is visible
-                    if (this.cameraRay.dot(this.triNormal) >= 0)
-                        continue;
+                if (this.triangle_count === 0)
+                    continue;
 
-                    // Project triangles from 3D --> 2D
-                    this.triView.transformedBy(this.viewToClip, this.triClip);
+                // How "aligned" are light direction and triangle surface normal?
+                this.triangle_color.setGreyScale(Math.max(0.1, this.light_direction.dot(this.triangle_normal)));
 
-                    // Convert to NDC
-                    this.triClip.asNDC(this.triNDC);
+                this.triangle_in_clip_space.asNDC(this.triangle_in_ndc_space);
+                this.triangle_in_ndc_space.transformedBy(this.ndc_to_screen_space, this.triangle_in_screen_space);
+                if (this.triangle_in_clip_space.color.r === 1 ||
+                    this.triangle_in_clip_space.color.g === 1 ||
+                    this.triangle_in_clip_space.color.b === 1)
+                    this.triangle_in_screen_space.color = this.triangle_in_clip_space.color;
+                else
+                    this.triangle_in_screen_space.color = this.triangle_color; // Set grey-scale color on all vertices
 
-                    // Scale into view
-                    const triScreen = this.triNDC.transformedBy(this.NDCToScreen);
+                // Store triangle for sorting
+                this.triangles_to_raster.push(this.triangle_in_screen_space.copy());
 
-                    // How "aligned" are light direction and triangle surface normal?
-                    triScreen.color = col();
-                    triScreen.color.setGreyscale(Math.max(0.1, this.lightDirection.dot(this.triNormal)));
+                if (this.triangle_count === 2) {
+                    // Do the same for the extra triangle generated:
+                    this.extra_triangle.asNDC(this.triangle_in_ndc_space);
+                    this.triangle_in_ndc_space.transformedBy(this.ndc_to_screen_space, this.triangle_in_screen_space);
+                    this.triangle_in_screen_space.color = rgb(0, 0, 1);
+                    // this.triangle_in_screen_space.color = this.triangle_color; // Set grey-scale color on all vertices
 
-                    // Store triangle for sorting
-                    this.trianglesToRaster.push(triScreen);
+                    this.triangles_to_raster.push(this.triangle_in_screen_space.copy());
                 }
             }
 
             // Sort triangles from back to front
-            this.trianglesToRaster.sort(
-                (t1: Triangle, t2: Triangle) =>
-                    ((t2.p0.z + t2.p1.z + t2.p2.z) / 3)
-                    -
-                    ((t1.p0.z +  t1.p1.z + t1.p2.z) / 3)
+            this.triangles_to_raster.sort(
+                (
+                    t1: Triangle,
+                    t2: Triangle
+                ) => (
+                    (
+                        t2.vertices[0].position.z +
+                        t2.vertices[1].position.z +
+                        t2.vertices[2].position.z
+                    ) / 3
+                ) - (
+                    (
+                        t1.vertices[0].position.z +
+                        t1.vertices[1].position.z +
+                        t1.vertices[2].position.z
+                    ) / 3
+                )
             );
 
             // Clear Screen
             this.screen.clear();
 
-            for (const tri of this.trianglesToRaster) {
-                this.screen.drawTriangle(tri);
-                // this.screen.fillTriangle(tri);
+            for (const tri of this.triangles_to_raster) {
+                // this.screen.drawTriangle(tri);
+                this.screen.fillTriangle(tri);
             }
         }
     }

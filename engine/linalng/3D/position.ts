@@ -1,22 +1,20 @@
 import Direction3D from "./direction.js";
 import Matrix3x3 from "./matrix.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
-import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, lerp, vecMatMul, equals} from "./arithmatic/vector.js";
 
 export default class Position3D  {
     public buffer: Buffer;
 
     constructor(buffer?: Buffer) {
         if (buffer instanceof Buffer) {
-            if (buffer.length === VectorBufferLength) {
+            if (buffer.length === VectorBufferLength)
                 this.buffer = buffer;
-                this.buffer[3] = 1;
-            } else
+            else
                 throw `Invalid buffer length ${buffer.length}`;
-        } else if (buffer === undefined || buffer === null) {
+        } else if (buffer === undefined || buffer === null)
             this.buffer = new Buffer(VectorBufferLength);
-            this.buffer[3] = 1;
-        } else
+        else
             throw `Invalid buffer ${buffer}`;
     }
 
@@ -46,6 +44,15 @@ export default class Position3D  {
             return false;
 
         return equals(this.buffer, other.buffer, precision_digits);
+    }
+
+    lerp(
+        to: Position3D,
+        by: number,
+        new_position: Position3D = new Position3D()
+    ) : Position3D {
+        lerp(this.buffer, to.buffer, by, new_position.buffer);
+        return new_position;
     }
 
     add(position: Direction3D | Position3D) : Position3D {
@@ -129,9 +136,9 @@ export default class Position3D  {
     }
 
     setTo(
-        x: Number | Buffer | Position3D | Direction3D,
-        y?: Number,
-        z?: Number,
+        x: number | Buffer | Position3D | Direction3D,
+        y?: number,
+        z?: number,
     ) : Position3D {
         if (x instanceof Direction3D ||
             x instanceof Position3D) {
@@ -171,9 +178,9 @@ export default class Position3D  {
 }
 
 export const pos3 = (
-    x?: Number | Buffer | Position3D | Direction3D,
-    y: Number = 0,
-    z: Number = 0,
+    x?: number | Buffer | Position3D | Direction3D,
+    y: number = 0,
+    z: number = 0,
 ) : Position3D => x === undefined ?
     new Position3D() :
     new Position3D().setTo(x, y, z);

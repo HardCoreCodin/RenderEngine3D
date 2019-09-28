@@ -1,6 +1,7 @@
 import Matrix4x4 from "./matrix.js";
 import Position4D from "./position.js";
-import {add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul, equals} from "./arithmatic/vector.js";
+import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
+import {dot, cross, lerp} from "../3D/arithmatic/vector.js";
 import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
 
 export default class Direction4D  {
@@ -61,6 +62,11 @@ export default class Direction4D  {
         return this;
     }
 
+    normalizeTo(normalized: Direction4D = new Direction4D()) : Direction4D {
+        over(this.buffer, this.length, normalized.buffer);
+        return normalized;
+    }
+
     dot(dir: Direction4D | Position4D) : number {
         return dot(this.buffer, dir.buffer);
     }
@@ -70,6 +76,15 @@ export default class Direction4D  {
         new_direction: Direction4D = new Direction4D()
     ) : Direction4D {
         cross(this.buffer, dir.buffer, new_direction.buffer);
+        return new_direction;
+    }
+
+    lerp(
+        to: Direction4D,
+        by: number,
+        new_direction: Direction4D = new Direction4D()
+    ) : Direction4D {
+        lerp(this.buffer, to.buffer, by, new_direction.buffer);
         return new_direction;
     }
 
@@ -164,10 +179,10 @@ export default class Direction4D  {
     }
 
     setTo(
-        x: Number | Buffer | Position4D | Direction4D,
-        y?: Number,
-        z?: Number,
-        w?: Number,
+        x: number | Buffer | Position4D | Direction4D,
+        y?: number,
+        z?: number,
+        w?: number,
     ) : Direction4D {
         if (x instanceof Direction4D ||
             x instanceof Position4D) {
@@ -210,10 +225,10 @@ export default class Direction4D  {
 }
 
 export const dir4 = (
-    x?: Number | Buffer | Position4D | Direction4D,
-    y: Number = 0,
-    z: Number = 0,
-    w: Number = 0,
+    x?: number | Buffer | Position4D | Direction4D,
+    y: number = 0,
+    z: number = 0,
+    w: number = 0,
 ) : Direction4D => x === undefined ?
     new Direction4D() :
     new Direction4D().setTo(x, y, z, w);

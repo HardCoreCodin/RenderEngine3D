@@ -131,6 +131,19 @@ export const cross = (
     return out;
 };
 
+export const lerp = (
+    from: Buffer,
+    to: Buffer,
+    by: number,
+    out: Buffer = new Buffer(VectorBufferLength)
+) : Buffer => {
+    out[0] = from[0] + by*(to[0] - from[0]);
+    out[1] = from[1] + by*(to[1] - from[1]);
+    out[2] = from[2] + by*(to[2] - from[2]);
+
+    return out;
+};
+
 export const vecMatMul = (
     lhs: Buffer,
     rhs0: Buffer, rhs1: Buffer, rhs2: Buffer,

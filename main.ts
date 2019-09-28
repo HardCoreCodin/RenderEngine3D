@@ -40,7 +40,7 @@ function drawingLoop(timestamp) {
     lastTimestamp = timestamp;
 
     engine.update(deltaTime);
-    //
+
     // try {
     //     engine.update(deltaTime);
     // } catch (e) {

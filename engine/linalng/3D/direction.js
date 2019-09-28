@@ -1,6 +1,6 @@
 import Matrix3x3 from "./matrix.js";
 import Position3D from "./position.js";
-import { add, sub, minus, plus, mul, times, div, over, dot, cross, vecMatMul, equals } from "./arithmatic/vector.js";
+import { add, sub, minus, plus, mul, times, div, over, dot, cross, lerp, vecMatMul, equals } from "./arithmatic/vector.js";
 import { Buffer, VectorBufferLength } from "./arithmatic/constants.js";
 export default class Direction3D {
     constructor(buffer) {
@@ -41,6 +41,10 @@ export default class Direction3D {
     normalize() {
         this.div(this.length);
         return this;
+    }
+    lerp(to, by, new_direction = new Direction3D()) {
+        lerp(this.buffer, to.buffer, by, new_direction.buffer);
+        return new_direction;
     }
     dot(dir) {
         return dot(this.buffer, dir.buffer);

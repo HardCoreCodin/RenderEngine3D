@@ -41,8 +41,8 @@ export class FPSController {
 
     constructor(
         private readonly camera: Camera,
-        public movement_speed: number = 0.4,
-        public rotation_speed: number = 0.04,
+        public movement_speed: number = 0.004,
+        public rotation_speed: number = 0.004,
 
         private readonly _forward_direction = new Direction3D(),
         private readonly look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
