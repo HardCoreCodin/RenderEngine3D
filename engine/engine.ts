@@ -8,10 +8,11 @@ import {FPSController} from "./input.js";
 import {rgb} from "./linalng/3D/color.js";
 
 export default class Engine3D {
-    public camera = new Camera();
-    private ray = new Direction4D();
+    private frame_time = 1000 / 60;
+    private last_timestamp = 0;
+    private delta_time = 0;
 
-    private fps_controller = new FPSController(this.camera);
+    private ray = new Direction4D();
 
     private turntable_angle = 0;
     private turntable_rotation_speed = 0.05;
@@ -34,14 +35,36 @@ export default class Engine3D {
     private ndc_to_screen_space = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
 
     constructor(
-        public screen: Screen,
-        public meshes: Meshes = []
+        private readonly canvas: HTMLCanvasElement,
+        public meshes: Meshes = [],
+        public camera = new Camera(),
+        public screen = new Screen(canvas),
+        private fps_controller = new FPSController(camera, screen)
     ) {}
 
-    update(deltaTime) {
+    private draw = (timestamp) => {
+        this.delta_time = (timestamp - this.last_timestamp) / this.frame_time;
+        this.last_timestamp = timestamp;
+
+        this.update();
+
+        // try {
+        //     engine.update();
+        // } catch (e) {
+        //     console.trace();
+        //     console.debug(e.stack);
+        // }
+        requestAnimationFrame(this.draw);
+    };
+
+    start() {
+        requestAnimationFrame(this.draw);
+    }
+
+    update() {
         // Uncomment to spin me right round baby right round
-        this.turntable_angle += this.turntable_rotation_speed * deltaTime;
-        this.fps_controller.update();
+        this.turntable_angle += this.turntable_rotation_speed * this.delta_time;
+        this.fps_controller.update(this.delta_time);
 
         // If position or orientation of the camera had changed:
         if (this.fps_controller.direction_changed ||
