@@ -39,7 +39,7 @@ export default class Engine3D {
         public meshes: Meshes = [],
         public camera = new Camera(),
         public screen = new Screen(canvas),
-        private fps_controller = new FPSController(camera, screen)
+        private fps_controller = new FPSController(camera, canvas)
     ) {}
 
     private draw = (timestamp) => {

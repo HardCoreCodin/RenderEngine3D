@@ -1,4 +1,3 @@
-import Screen from "./screen.js";
 import Camera from "./primitives/camera.js";
 import Direction3D from "./linalng/3D/direction.js";
 
@@ -38,6 +37,9 @@ export class FPSController {
     public position_changed: boolean = false;
     public direction_changed: boolean = false;
 
+    public mouse_x: number;
+    public mouse_y: number;
+
     private last_mouse_x: number;
     private last_mouse_y: number;
 
@@ -49,7 +51,7 @@ export class FPSController {
 
     constructor(
         private readonly camera: Camera,
-        private readonly screen: Screen,
+        private readonly canvas: HTMLCanvasElement,
 
         public movement_speed: number = 0.1,
         public rotation_speed: number = 0.01,
@@ -58,7 +60,11 @@ export class FPSController {
         private readonly _forward_direction = new Direction3D(),
         private readonly look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
         private readonly right_direction = camera.transform.rotation.matrix.i, // The player's right direction
-    ) {}
+    ) {
+        canvas.onmousemove = this.on_mousemove;
+        document.onkeydown = this.on_keydown;
+        document.onkeyup = this.on_keyup;
+    }
 
     get forward_direction() : Direction3D {
         this._forward_direction.x = this.look_direction.x;
@@ -67,6 +73,49 @@ export class FPSController {
 
         return this._forward_direction;
     }
+
+    on_mousemove = (mouse_event) => {
+        this.mouse_x = mouse_event.clientX - this.canvas.offsetLeft;
+        this.mouse_y = mouse_event.clientY - this.canvas.offsetTop;
+    };
+
+    on_keydown = (key_event) : void => {
+        switch (key_event.which) {
+            case UP_KEY_CODE: pressed.up = true; break;
+            case DOWN_KEY_CODE: pressed.down = true; break;
+
+            case FORWARD_kEY_CODE: pressed.forward = true; break;
+            case BACKWARD_kEY_CODE: pressed.backwards = true; break;
+
+            case LEFT_kEY_CODE: pressed.left = true; break;
+            case RIGHT_kEY_CODE: pressed.right = true; break;
+
+            case YAW_LEFT_KEY_CODE: pressed.yaw_left = true; break;
+            case YAW_RIGHT_KEY_CODE: pressed.yaw_right = true; break;
+
+            case PITCH_UP_KEY_CODE: pressed.pitch_up = true; break;
+            case PITCH_DOWN_KEY_CODE: pressed.pitch_down = true; break;
+        }
+    };
+
+    on_keyup = (key_event) => {
+        switch (key_event.which) {
+            case UP_KEY_CODE: pressed.up = false; break;
+            case DOWN_KEY_CODE: pressed.down = false; break;
+
+            case FORWARD_kEY_CODE: pressed.forward = false; break;
+            case BACKWARD_kEY_CODE: pressed.backwards = false; break;
+
+            case LEFT_kEY_CODE: pressed.left = false; break;
+            case RIGHT_kEY_CODE: pressed.right = false; break;
+
+            case YAW_LEFT_KEY_CODE: pressed.yaw_left = false; break;
+            case YAW_RIGHT_KEY_CODE: pressed.yaw_right = false; break;
+
+            case PITCH_UP_KEY_CODE: pressed.pitch_up = false; break;
+            case PITCH_DOWN_KEY_CODE: pressed.pitch_down = false; break;
+        }
+    };
 
     update(delta_time: number): void {
         this.position_changed = false;
@@ -141,53 +190,16 @@ export class FPSController {
             }
         }
 
-        if (this.screen.mouse_x !== undefined) {
+        if (this.mouse_x !== undefined) {
             if (this.last_mouse_x !== undefined) {
                 this.direction_changed = true;
                 this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
-                this.camera.transform.rotation.x += this.rotation_amount * (this.screen.mouse_y - this.last_mouse_y;
-                this.camera.transform.rotation.y += this.rotation_amount * (this.last_mouse_x - this.screen.mouse_x);
+                this.camera.transform.rotation.x += this.rotation_amount * (this.mouse_y - this.last_mouse_y);
+                this.camera.transform.rotation.y += this.rotation_amount * (this.last_mouse_x - this.mouse_x);
             }
 
-            this.last_mouse_x = this.screen.mouse_x;
-            this.last_mouse_y = this.screen.mouse_y;
+            this.last_mouse_x = this.mouse_x;
+            this.last_mouse_y = this.mouse_y;
         }
     }
 }
-
-document.addEventListener('keydown', (event) => {
-    switch (event.which) {
-        case UP_KEY_CODE: pressed.up = true; break;
-        case DOWN_KEY_CODE: pressed.down = true; break;
-
-        case FORWARD_kEY_CODE: pressed.forward = true; break;
-        case BACKWARD_kEY_CODE: pressed.backwards = true; break;
-
-        case LEFT_kEY_CODE: pressed.left = true; break;
-        case RIGHT_kEY_CODE: pressed.right = true; break;
-
-        case YAW_LEFT_KEY_CODE: pressed.yaw_left = true; break;
-        case YAW_RIGHT_KEY_CODE: pressed.yaw_right = true; break;
-
-        case PITCH_UP_KEY_CODE: pressed.pitch_up = true; break;
-        case PITCH_DOWN_KEY_CODE: pressed.pitch_down = true; break;
-    }
-});
-document.addEventListener('keyup', (event) => {
-    switch (event.which) {
-        case UP_KEY_CODE: pressed.up = false; break;
-        case DOWN_KEY_CODE: pressed.down = false; break;
-
-        case FORWARD_kEY_CODE: pressed.forward = false; break;
-        case BACKWARD_kEY_CODE: pressed.backwards = false; break;
-
-        case LEFT_kEY_CODE: pressed.left = false; break;
-        case RIGHT_kEY_CODE: pressed.right = false; break;
-
-        case YAW_LEFT_KEY_CODE: pressed.yaw_left = false; break;
-        case YAW_RIGHT_KEY_CODE: pressed.yaw_right = false; break;
-
-        case PITCH_UP_KEY_CODE: pressed.pitch_up = false; break;
-        case PITCH_DOWN_KEY_CODE: pressed.pitch_down = false; break;
-    }
-});
