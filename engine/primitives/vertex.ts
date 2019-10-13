@@ -7,7 +7,7 @@ export default class Vertex {
     constructor(
         public position: Position4D = new Position4D(),
         public normal: Direction4D = new Direction4D(),
-        public uv_coords: Position3D = new Position3D(),
+        public uvs: Position3D = new Position3D(),
         public color: Color3D = new Color3D()
     ) {}
 
@@ -21,7 +21,7 @@ export default class Vertex {
     }
 
     isInView(near: number = 0, far: number = 1) : boolean {
-        const [x, y, z, w] = [...this.position.buffer];
+        const [x, y, z, w] = this.position.buffer;
         return (
             near <= z && z <= far &&
             -w <= y && y <= w &&
@@ -30,7 +30,7 @@ export default class Vertex {
     }
 
     isOutOfView(near: number = 0, far: number = 1) : boolean {
-        const [x, y, z, w] = [...this.position.buffer];
+        const [x, y, z, w] = this.position.buffer;
         return (
             z < near ||
             z > far ||
@@ -47,7 +47,7 @@ export default class Vertex {
         out: Vertex = new Vertex()
     ) : Vertex {
         this.position.lerp(to.position, by, out.position);
-        this.uv_coords.lerp(to.uv_coords, by, out.uv_coords);
+        this.uvs.lerp(to.uvs, by, out.uvs);
         this.normal.lerp(to.normal, by, out.normal);
         // this.color.lerp(to.color, by, out.color);
 
@@ -63,7 +63,7 @@ export default class Vertex {
         if (position instanceof Vertex) {
             this.position.setTo(position.position);
             this.normal.setTo(position.normal);
-            this.uv_coords.setTo(position.uv_coords);
+            this.uvs.setTo(position.uvs);
             this.color.setTo(position.color);
         } else if (position instanceof Position4D) {
             this.position.setTo(position);
@@ -72,7 +72,7 @@ export default class Vertex {
                 this.normal.setTo(normal);
 
             if (uv_coords instanceof Position3D)
-                this.uv_coords.setTo(uv_coords);
+                this.uvs.setTo(uv_coords);
 
             if (color instanceof Color3D)
                 this.color.setTo(color);

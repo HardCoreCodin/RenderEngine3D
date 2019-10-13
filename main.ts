@@ -4,12 +4,12 @@ import teapot from './teapot.js';
 import Engine3D from "./engine/engine.js";
 import {Mesh} from "./engine/primitives/mesh.js";
 
-const teapot_mesh = Mesh.from(teapot);
+const teapot_mesh = Mesh.fromObj(teapot);
 // teapot_mesh.transform.rotationAngleForY = 180;
 teapot_mesh.transform.translation.z = 5;
 teapot_mesh.transform.translation.x = 5;
 
-const spaceship_mesh = Mesh.from(spaceship);
+const spaceship_mesh = Mesh.fromObj(spaceship);
 // spaceship_mesh.transform.rotationAngleForY = 180;
 spaceship_mesh.transform.translation.z = 5;
 spaceship_mesh.transform.translation.x = -5;

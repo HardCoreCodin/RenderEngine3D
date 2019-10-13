@@ -8,6 +8,7 @@ import {FPSController} from "./input.js";
 import {rgb} from "./linalng/3D/color.js";
 
 export default class Engine3D {
+    private depth_buffer: Float32Array;
     private frame_time = 1000 / 60;
     private last_timestamp = 0;
     private delta_time = 0;
@@ -105,6 +106,7 @@ export default class Engine3D {
             this.ndc_to_screen_space.i.x = this.ndc_to_screen_space.t.x = this.screen.width * 0.5;
             this.ndc_to_screen_space.j.y = this.ndc_to_screen_space.t.y = this.screen.height * 0.5;
             this.ndc_to_screen_space.j.y *= -1;
+            this.depth_buffer = new Float32Array(this.screen.width * this.screen.height);
         }
 
         // Store triangles for rasterizining later
@@ -121,7 +123,9 @@ export default class Engine3D {
             );
 
             // Draw Triangles
-            for (const triangle of mesh.triangles) {
+            let triangle: Triangle;
+            for (let t = 0; t < mesh.triangles.count; t++) {
+                triangle = mesh.triangles.at(t);
 
                 // Generate clip-space triangle:
                 triangle.transformedBy(
@@ -199,5 +203,106 @@ export default class Engine3D {
                 this.screen.fillTriangle(tri);
             }
         }
+    }
+
+    drawTriangle(triangle: Triangle) {
+        triangle.sort_vertices_vertically();
+
+        const [x1, y1, z1] = triangle.vertices[0].position.buffer;
+        const [x2, y2, z2] = triangle.vertices[1].position.buffer;
+        const [x3, y3, z3] = triangle.vertices[2].position.buffer;
+
+        const [u1, v1, w1] = triangle.vertices[0].uvs.buffer;
+        const [u2, v2, w2] = triangle.vertices[1].uvs.buffer;
+        const [u3, v3, w3] = triangle.vertices[2].uvs.buffer;
+
+        const dau = (u2 - u1) | 0;
+        const dav = (v2 - v1) | 0;
+        const daw = (w2 - w1) | 0;
+        const dax = (x2 - x1) | 0;
+        const day = (y2 - y1) | 0;
+        const daz = (z2 - z1) | 0;
+
+        const dbu = (u3 - u2) | 0;
+        const dbv = (v3 - v2) | 0;
+        const dbw = (w3 - w2) | 0;
+        const dbx = (x3 - x2) | 0;
+        const dby = (y3 - y2) | 0;
+        const dbz = (z3 - z2) | 0;
+
+        let dax_step = 0;
+        let dau_step = 0;
+        let dav_step = 0;
+        let daw_step = 0;
+        let dbx_step = 0;
+        let dbu_step = 0;
+        let dbv_step = 0;
+        let dbw_step = 0;
+
+        if (day) {
+            const abs_day = Math.abs(day);
+            if (dax) dax_step = dax / abs_day;
+            if (dau) dau_step = dau / abs_day;
+            if (dav) dav_step = dav / abs_day;
+            if (daw) daw_step = daw / abs_day;
+        }
+
+        if (dby) {
+            const abs_dby = Math.abs(dby);
+            if (dbx) dbx_step = dbx / abs_dby;
+            if (dbu) dbu_step = dbu / abs_dby;
+            if (dbv) dbv_step = dbv / abs_dby;
+            if (dbw) dbw_step = dbw / abs_dby;
+        }
+
+        const x_count = this.screen.width;
+
+        if (day) {
+            let ax: number;
+            let bx: number;
+
+            let dy: number;
+            let dz: number;
+
+            let tx: number;
+            let ty: number;
+            let tx_step: number;
+
+            let i: number;
+            let z: number;
+
+            for (let y = y1; y <= y2; y++) {
+                dy = y - y1;
+                // dz = daz + ;
+                ty = dy / day;
+
+                ax = dax_step ? x1 + dax_step * dy : x1;
+                bx = dax_step ? x1 + dbx_step * dy : x1;
+
+                let tex_au = u1 + dy * dau_step;
+                let tex_av = v1 + dy * dav_step;
+                let tex_aw = w1 + dy * daw_step;
+
+                let tex_bu = u1 + dy * dbu_step;
+                let tex_bv = v1 + dy * dbv_step;
+                let tex_bw = w1 + dy * dbw_step;
+
+                if (ax > bx) [ax, bx] = [bx, ax];
+
+                tx_step = 1.0 / (bx - ax);
+                tx = 0.0;
+
+                for (let x = ax; x < bx; x++) {
+                    i = x + x_count * y;
+                    // z = ;
+                    if (z > this.depth_buffer[i]) {
+                        this.depth_buffer[i] = z;
+                    }
+
+                    tx += tx_step;
+                }
+            }
+        }
+
     }
 }
