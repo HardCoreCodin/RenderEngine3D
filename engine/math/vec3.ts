@@ -3,433 +3,511 @@ import {Direction, Position} from "./base.js";
 import {
     ArrayType,
 
-    bool_op,
-    number_op,
+    lr_b,
+    lr_n,
 
-    unary_number_op,
-    unary_op,
-    in_place_unary_op,
+    l_n,
+    lo_v,
+    l_v,
 
-    in_place_op,
-    in_place_number_op,
+    lr_v,
+    ln_v,
 
-    out_op,
-    out_number_op,
-    out_by_op
+    lro_v,
+    lno_v,
+    lrno_v,
+
+    lm_v,
+    lmo_v
 } from "../types.js";
+import {Float32Buffer} from "../buffers/base";
 
 let temp_number: number;
 const temp_lhs = new ArrayType(3);
 const temp_rhs = new ArrayType(3);
 const temp_matrix = new ArrayType(9);
 
-export const length : unary_number_op = (
-    lhs: ArrayType,
-    lhs_offset: number = 0
-) : number => Math.hypot(
-    lhs[lhs_offset  ],
-    lhs[lhs_offset+1],
-    lhs[lhs_offset+2],
-);
+export const length : l_n = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number
+) : number => Math.hypot(x[i], y[i], z[i]);
 
-export const length_squared : unary_number_op = (
-    lhs: ArrayType,
-    lhs_offset: number = 0
+export const length_squared : l_n = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number
+) : number => x[i]**2 + y[i]**2 + z[i]**2;
+
+export const distance : lr_n = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
+
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number = 0
+) : number => Math.hypot(x1[i1] - x0[i0], y1[i1] - y0[i0], z1[i1] - z0[i0]);
+
+export const distance_squared : lr_n = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
+
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : number => (
-    lhs[lhs_offset  ]*lhs[lhs_offset  ] +
-    lhs[lhs_offset+1]*lhs[lhs_offset+1] +
-    lhs[lhs_offset+2]*lhs[lhs_offset+2]
+    (x1[i1] - x0[i0])**2 +
+    (y1[i1] - y0[i0])**2 +
+    (z1[i1] - z0[i0])**2
 );
 
-export const distance : number_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const equals : lr_b = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
-) : number => Math.hypot(
-    (rhs[rhs_offset  ]-lhs[lhs_offset  ]),
-    (rhs[rhs_offset+1]-lhs[lhs_offset+1]),
-    (rhs[rhs_offset+2]-lhs[lhs_offset+2]),
-);
-
-export const distance_squared : number_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
-
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
-) : number => (
-    (rhs[rhs_offset  ]-lhs[lhs_offset  ])*(rhs[rhs_offset  ]-lhs[lhs_offset  ]) +
-    (rhs[rhs_offset+1]-lhs[lhs_offset+1])*(rhs[rhs_offset+1]-lhs[lhs_offset+1]) +
-    (rhs[rhs_offset+2]-lhs[lhs_offset+2])*(rhs[rhs_offset+2]-lhs[lhs_offset+2])
-);
-
-export const equals : bool_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
-
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : boolean => {
-    if (Object.is(lhs, rhs) && lhs_offset === rhs_offset) return true;
-    if (Object.is(lhs.buffer, rhs.buffer) && lhs_offset === rhs_offset) return true;
-    if (lhs.length !== rhs.length) return false;
+    if (i0 === i1 && (
+        (Object.is(x0, x1) || Object.is(x0.buffer, x1.buffer)) &&
+        (Object.is(y0, y1) || Object.is(y0.buffer, y1.buffer)) &&
+        (Object.is(z0, z1) || Object.is(z0.buffer, z1.buffer))
+    )) return true;
 
-    if (lhs[lhs_offset  ].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset  ].toFixed(PRECISION_DIGITS)) return false;
-    if (lhs[lhs_offset+1].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset+1].toFixed(PRECISION_DIGITS)) return false;
-    if (lhs[lhs_offset+2].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset+2].toFixed(PRECISION_DIGITS)) return false;
+    if (x0[i0].toFixed(PRECISION_DIGITS) !== x1[i1].toFixed(PRECISION_DIGITS)) return false;
+    if (y0[i0].toFixed(PRECISION_DIGITS) !== y1[i1].toFixed(PRECISION_DIGITS)) return false;
+    if (z0[i0].toFixed(PRECISION_DIGITS) !== z1[i1].toFixed(PRECISION_DIGITS)) return false;
 
     return true;
 };
 
-export const linearly_interpolate: out_by_op = (
-    out: ArrayType,
-    from: ArrayType,
-    to: ArrayType,
-    by: number,
+export const linearly_interpolate: lrno_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    out_offset: number = 0,
-    from_offset: number = 0,
-    to_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number,
+
+    t: number,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
-    out[out_offset  ] = from[from_offset  ] + by*(to[to_offset  ] - from[from_offset  ]);
-    out[out_offset+1] = from[from_offset+1] + by*(to[to_offset+1] - from[from_offset+1]);
-    out[out_offset+2] = from[from_offset+2] + by*(to[to_offset+2] - from[from_offset+2]);
+    X[o] = (1-t)*x0[i0] + t*(x1[i1]);
+    Y[o] = (1-t)*y0[i0] + t*(y1[i1]);
+    Z[o] = (1-t)*z0[i0] + t*(z1[i1]);
 };
 
-export const add : out_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const add : lro_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+
+    i0: number = 0,
+    i1: number = 0,
+    o: number = 0
 ) : void => {
-    out[out_offset  ] = lhs[lhs_offset  ] + rhs[rhs_offset  ];
-    out[out_offset+1] = lhs[lhs_offset+1] + rhs[rhs_offset+1];
-    out[out_offset+2] = lhs[lhs_offset+2] + rhs[rhs_offset+2];
+    X[o] = x0[i0] + x1[i1];
+    Y[o] = y0[i0] + y1[i1];
+    Z[o] = z0[i0] + z1[i1];
 };
 
-export const add_in_place : in_place_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const add_in_place : lr_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : void => {
-    lhs[lhs_offset  ] += rhs[rhs_offset  ];
-    lhs[lhs_offset+1] += rhs[rhs_offset+1];
-    lhs[lhs_offset+2] += rhs[rhs_offset+2];
+    x0[i0] += x1[i1];
+    y0[i0] += y1[i1];
+    z0[i0] += z1[i1];
 };
 
-export const subtract : out_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const subtract : lro_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    out_offset: number,
-    lhs_offset: number,
-    rhs_offset: number
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
-    out[out_offset  ] = lhs[lhs_offset  ] - rhs[rhs_offset  ];
-    out[out_offset+1] = lhs[lhs_offset+1] - rhs[rhs_offset+1];
-    out[out_offset+2] = lhs[lhs_offset+2] - rhs[rhs_offset+2];
+    X[o] = x0[i0] - x1[i1];
+    Y[o] = y0[i0] - y1[i1];
+    Z[o] = z0[i0] - z1[i1];
 };
 
-export const subtract_in_place = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const subtract_in_place : lr_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : void => {
-    lhs[lhs_offset  ] -= rhs[rhs_offset  ];
-    lhs[lhs_offset+1] -= rhs[rhs_offset+1];
-    lhs[lhs_offset+2] -= rhs[rhs_offset+2];
+    x0[i0] -= x1[i1];
+    y0[i0] -= y1[i1];
+    z0[i0] -= z1[i1];
 };
 
-export const divide : out_number_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: number,
+export const divide : lno_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0
+    n: number,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
-    out[out_offset  ] = lhs[lhs_offset  ] / rhs;
-    out[out_offset+1] = lhs[lhs_offset+1] / rhs;
-    out[out_offset+2] = lhs[lhs_offset+2] / rhs;
+    X[o] = x[i] / n;
+    Y[o] = y[i] / n;
+    Z[o] = z[i] / n;
 };
 
-export const divide_in_place : in_place_number_op = (
-    lhs: ArrayType,
-    rhs: number,
+export const divide_in_place : ln_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number,
 
-    lhs_offset: number = 0
+    n: number,
 ) : void => {
-    lhs[lhs_offset  ] /= rhs;
-    lhs[lhs_offset+1] /= rhs;
-    lhs[lhs_offset+2] /= rhs;
+    x[i] /= n;
+    y[i] /= n;
+    z[i] /= n;
 };
 
-export const scale : out_number_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: number,
+export const scale : lno_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0
+    n: number,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
-    out[out_offset  ] = lhs[lhs_offset  ] * rhs;
-    out[out_offset+1] = lhs[lhs_offset+1] * rhs;
-    out[out_offset+2] = lhs[lhs_offset+2] * rhs;
+    X[o] = x[i] * n;
+    Y[o] = y[i] * n;
+    Z[o] = z[i] * n;
 };
 
-export const scale_in_place : in_place_number_op = (
-    lhs: ArrayType,
-    rhs: number,
+export const scale_in_place : ln_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number,
 
-    lhs_offset: number = 0
+    n: number
 ) : void => {
-    lhs[lhs_offset  ] *= rhs;
-    lhs[lhs_offset+1] *= rhs;
-    lhs[lhs_offset+2] *= rhs;
+    x[i] *= n;
+    y[i] *= n;
+    z[i] *= n;
 };
 
-export const normalize : unary_op = (
-    out: ArrayType,
-    lhs: ArrayType,
+export const normalize : lo_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
-    temp_number = Math.hypot(
-        lhs[lhs_offset  ],
-        lhs[lhs_offset+1],
-        lhs[lhs_offset+2],
-    );
+    temp_number = Math.hypot(x[i], y[i], z[i]);
 
-    out[out_offset  ] = lhs[lhs_offset  ] / temp_number;
-    out[out_offset+1] = lhs[lhs_offset+1] / temp_number;
-    out[out_offset+2] = lhs[lhs_offset+2] / temp_number;
+    X[o] = x[i] / temp_number;
+    Y[o] = y[i] / temp_number;
+    Z[o] = z[i] / temp_number;
 };
 
-export const normalize_in_place : in_place_unary_op = (
-    lhs: ArrayType,
-    lhs_offset: number = 0
+export const normalize_in_place : l_v = (
+    x: ArrayType,
+    y: ArrayType,
+    z: ArrayType,
+    i: number
 ) : void => {
-    temp_number = Math.hypot(
-        lhs[lhs_offset  ],
-        lhs[lhs_offset+1],
-        lhs[lhs_offset+2],
-    );
+    temp_number = Math.hypot(x[i], y[i], z[i]);
 
-    lhs[lhs_offset  ] /= temp_number;
-    lhs[lhs_offset+1] /= temp_number;
-    lhs[lhs_offset+2] /= temp_number;
+    x[i] /= temp_number;
+    y[i] /= temp_number;
+    z[i] /= temp_number;
 };
 
-export const dot : number_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const dot : lr_n = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : number =>
-    lhs[lhs_offset  ] * rhs[rhs_offset  ] +
-    lhs[lhs_offset+1] * rhs[rhs_offset+1] +
-    lhs[lhs_offset+2] * rhs[rhs_offset+2];
+    x0[i0] * x1[i1] +
+    y0[i0] * y1[i1] +
+    z0[i0] * z1[i1];
 
-export const cross : out_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const cross : lro_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
     if (
         (
-            out_offset === lhs_offset && (
-                Object.is(out, lhs) ||
-                Object.is(out.buffer, lhs.buffer)
+            o === i0 && (
+                (Object.is(X, x0) || Object.is(X.buffer, x0.buffer)) &&
+                (Object.is(Y, y0) || Object.is(Y.buffer, y0.buffer)) &&
+                (Object.is(Z, z0) || Object.is(Z.buffer, z0.buffer))
             )
         ) || (
-            out_offset === rhs_offset && (
-                Object.is(out, rhs) ||
-                Object.is(out.buffer, rhs.buffer)
+            o === i1 && (
+                (Object.is(X, x1) || Object.is(X.buffer, x1.buffer)) &&
+                (Object.is(Y, y1) || Object.is(Y.buffer, y1.buffer)) &&
+                (Object.is(Z, z1) || Object.is(Z.buffer, z1.buffer))
             )
         )
     ) throw `Can not cross - shared buffer detected! (Use cross_in_place)`;
 
-    out[out_offset  ] = lhs[lhs_offset+1]*rhs[rhs_offset+2] - lhs[lhs_offset+2]*rhs[rhs_offset+1];
-    out[out_offset+1] = lhs[lhs_offset+2]*rhs[rhs_offset  ] - lhs[lhs_offset  ]*rhs[rhs_offset+2];
-    out[out_offset+2] = lhs[lhs_offset  ]*rhs[rhs_offset+1] - lhs[lhs_offset+1]*rhs[rhs_offset  ];
+    X[o] = y0[i0]*z1[i1] - z0[i0]*y1[i1];
+    Y[o] = z0[i0]*x1[i1] - x0[i0]*z1[i1];
+    Z[o] = x0[i0]*y1[i1] - y0[i0]*x1[i1];
 };
 
-export const cross_in_place : in_place_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const cross_in_place : lr_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    x1: ArrayType,
+    y1: ArrayType,
+    z1: ArrayType,
+    i1: number
 ) : void => {
-    temp_lhs.set(lhs.subarray(lhs_offset, lhs_offset+3));
-    temp_rhs.set(rhs.subarray(rhs_offset, rhs_offset+3));
+    temp_lhs[0] = x0[i0];
+    temp_lhs[1] = y0[i0];
+    temp_lhs[2] = z0[i0];
 
-    lhs[lhs_offset  ] = temp_lhs[1]*temp_rhs[2] - temp_lhs[2]*temp_rhs[1];
-    lhs[lhs_offset+1] = temp_lhs[2]*temp_rhs[0] - temp_lhs[0]*temp_rhs[2];
-    lhs[lhs_offset+2] = temp_lhs[0]*temp_rhs[1] - temp_lhs[1]*temp_rhs[0];
+    temp_rhs[0] = x1[i1];
+    temp_rhs[1] = y1[i1];
+    temp_rhs[2] = z1[i1];
+
+    x0[i0] = temp_lhs[1]*temp_rhs[2] - temp_lhs[2]*temp_rhs[1];
+    y0[i0] = temp_lhs[2]*temp_rhs[0] - temp_lhs[0]*temp_rhs[2];
+    z0[i0] = temp_lhs[0]*temp_rhs[1] - temp_lhs[1]*temp_rhs[0];
 };
 
-export const multiply : out_op = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const multiply : lmo_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    out_offset: number = 0,
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    m: ArrayType,
+
+    X: ArrayType,
+    Y: ArrayType,
+    Z: ArrayType,
+    o: number
 ) : void => {
     if (
-        (
-            out_offset === lhs_offset && (
-                Object.is(out, lhs) ||
-                Object.is(out.buffer, lhs.buffer)
-            )
-        ) || (
-            out_offset === rhs_offset && (
-                Object.is(out, rhs) ||
-                Object.is(out.buffer, rhs.buffer)
-            )
+        o === i0 && (
+            (Object.is(X, x0) || Object.is(X.buffer, x0.buffer)) &&
+            (Object.is(Y, y0) || Object.is(Y.buffer, y0.buffer)) &&
+            (Object.is(Z, z0) || Object.is(Z.buffer, z0.buffer))
         )
     ) throw `Can not multiply - shared buffer detected! (Use matrix_multiply_in_place)`;
-    out[out_offset  ] = lhs[lhs_offset]*rhs[rhs_offset  ] + lhs[lhs_offset+1]*rhs[rhs_offset+3] + lhs[lhs_offset+2]*rhs[rhs_offset+6];
-    out[out_offset+1] = lhs[lhs_offset]*rhs[rhs_offset+1] + lhs[lhs_offset+1]*rhs[rhs_offset+4] + lhs[lhs_offset+2]*rhs[rhs_offset+7];
-    out[out_offset+2] = lhs[lhs_offset]*rhs[rhs_offset+2] + lhs[lhs_offset+1]*rhs[rhs_offset+5] + lhs[lhs_offset+2]*rhs[rhs_offset+8];
+
+    X[o] = x0[i0]*m[0] + y0[i0]*m[3] + z0[i0]*m[6];
+    Y[o] = x0[i0]*m[1] + y0[i0]*m[4] + z0[i0]*m[7];
+    Z[o] = x0[i0]*m[2] + y0[i0]*m[5] + z0[i0]*m[8];
 };
 
-export const multiply_in_place : in_place_op = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const multiply_in_place : lm_v = (
+    x0: ArrayType,
+    y0: ArrayType,
+    z0: ArrayType,
+    i0: number,
 
-    lhs_offset: number = 0,
-    rhs_offset: number = 0
+    m: ArrayType
 ) : void => {
-    temp_lhs.set(lhs.subarray(lhs_offset, lhs_offset+3));
-    temp_matrix.set(rhs.subarray(rhs_offset, rhs_offset+9));
+    temp_lhs[0] = x0[i0];
+    temp_lhs[1] = y0[i0];
+    temp_lhs[2] = z0[i0];
 
-    lhs[lhs_offset  ] = temp_lhs[0]*temp_matrix[0] + temp_lhs[1]*temp_matrix[3] + temp_lhs[2]*temp_matrix[6];
-    lhs[lhs_offset+1] = temp_lhs[0]*temp_matrix[1] + temp_lhs[1]*temp_matrix[4] + temp_lhs[2]*temp_matrix[7];
-    lhs[lhs_offset+2] = temp_lhs[0]*temp_matrix[2] + temp_lhs[1]*temp_matrix[5] + temp_lhs[2]*temp_matrix[8];
+    temp_matrix.set(m);
+
+    x0[i0] = temp_lhs[0]*temp_matrix[0] + temp_lhs[1]*temp_matrix[3] + temp_lhs[2]*temp_matrix[6];
+    y0[i0] = temp_lhs[0]*temp_matrix[1] + temp_lhs[1]*temp_matrix[4] + temp_lhs[2]*temp_matrix[7];
+    z0[i0] = temp_lhs[0]*temp_matrix[2] + temp_lhs[1]*temp_matrix[5] + temp_lhs[2]*temp_matrix[8];
 };
 
 export class Position3D extends Position {
-    protected typed_array_length: number = 3;
+    protected typed_arry0_length: number = 3;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: lrno_v = linearly_interpolate;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
-    set x(x) {this.typed_array[this.typed_array_offset  ] = x}
-    set y(y) {this.typed_array[this.typed_array_offset+1] = y}
-    set z(z) {this.typed_array[this.typed_array_offset+2] = z}
+    set x(x) {this.typed_arry0[this.typed_arry0_offset  ] = x}
+    set y(y) {this.typed_arry0[this.typed_arry0_offset+1] = y}
+    set z(z) {this.typed_arry0[this.typed_arry0_offset+2] = z}
 
-    get x() : number {return this.typed_array[this.typed_array_offset  ]}
-    get y() : number {return this.typed_array[this.typed_array_offset+1]}
-    get z() : number {return this.typed_array[this.typed_array_offset+2]}
+    get x() : number {return this.typed_arry0[this.typed_arry0_offset  ]}
+    get y() : number {return this.typed_arry0[this.typed_arry0_offset+1]}
+    get z() : number {return this.typed_arry0[this.typed_arry0_offset+2]}
 }
 
 export class Direction3D extends Direction {
-    protected typed_array_length: number = 3;
+    protected typed_arry0_length: number = 3;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: out_y1_op = linearly_interpolate;
 
-    protected _dot: number_op = dot;
-    protected _length: unary_number_op = length;
+    protected _dot: lr_n = dot;
+    protected _length: l_n = length;
 
-    protected _normalize : unary_op = normalize;
-    protected _normalize_in_place : in_place_unary_op = normalize_in_place;
+    protected _normalize : lo_v = normalize;
+    protected _normalize_in_place : l_v = normalize_in_place;
 
-    protected _cross : out_op = cross;
-    protected _cross_in_place : in_place_op = cross_in_place;
+    protected _cross : lro_v = cross;
+    protected _cross_in_place : lr_v = cross_in_place;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
-    set x(x) {this.typed_array[this.typed_array_offset  ] = x}
-    set y(y) {this.typed_array[this.typed_array_offset+1] = y}
-    set z(z) {this.typed_array[this.typed_array_offset+2] = z}
+    set x(x) {this.typed_arry0[this.typed_arry0_offset  ] = x}
+    set y(y) {this.typed_arry0[this.typed_arry0_offset+1] = y}
+    set z(z) {this.typed_arry0[this.typed_arry0_offset+2] = z}
 
-    get x() : number {return this.typed_array[this.typed_array_offset  ]}
-    get y() : number {return this.typed_array[this.typed_array_offset+1]}
-    get z() : number {return this.typed_array[this.typed_array_offset+2]}
+    get x() : number {return this.typed_arry0[this.typed_arry0_offset  ]}
+    get y() : number {return this.typed_arry0[this.typed_arry0_offset+1]}
+    get z() : number {return this.typed_arry0[this.typed_arry0_offset+2]}
 }
 
 export class Color3D extends Position {
-    protected typed_array_length: number = 3;
+    protected typed_arry0_length: number = 3;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: out_y1_op = linearly_interpolate;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
-    set r(r) {this.typed_array[this.typed_array_offset  ] = r}
-    set g(g) {this.typed_array[this.typed_array_offset+1] = g}
-    set b(b) {this.typed_array[this.typed_array_offset+2] = b}
+    set r(r) {this.typed_arry0[this.typed_arry0_offset  ] = r}
+    set g(g) {this.typed_arry0[this.typed_arry0_offset+1] = g}
+    set b(b) {this.typed_arry0[this.typed_arry0_offset+2] = b}
 
-    get r() : number {return this.typed_array[this.typed_array_offset  ]}
-    get g() : number {return this.typed_array[this.typed_array_offset+1]}
-    get b() : number {return this.typed_array[this.typed_array_offset+2]}
+    get r() : number {return this.typed_arry0[this.typed_arry0_offset  ]}
+    get g() : number {return this.typed_arry0[this.typed_arry0_offset+1]}
+    get b() : number {return this.typed_arry0[this.typed_arry0_offset+2]}
 
     setGreyScale(color: number) : Color3D {
-        this.typed_array.fill(
+        this.typed_arry0.fill(
             color,
-            this.typed_array_offset,
-            this.typed_array_offset+3
+            this.typed_arry0_offset,
+            this.typed_arry0_offset+3
         );
 
         return this;
@@ -440,13 +518,27 @@ export class Color3D extends Position {
     }
 }
 
+export class Colors3D {
+    constructor(
+        public readonly count: number,
+        public readonly stride: number = 3,
+        public readonly buffer = new Float32Buffer(count, stride),
+        public readonly current = new Color3D(buffer.sub_arry0s[0])
+    ) {}
+
+    at(index: number, current: Color3D = this.current) : Color3D {
+        current.buffer = this.buffer.sub_arry0s[index];
+        return current;
+    }
+}
+
 export const rgb = (
     r?: number|Color3D,
     g: number = 0,
     b: number = 0,
-    typed_array: ArrayType = new ArrayType(3)
+    typed_arry0: ArrayType = new ArrayType(3)
 ) : Color3D => {
-    const color = new Color3D(typed_array);
+    const color = new Color3D(typed_arry0);
 
     if (r instanceof Color3D)
         color.setFromOther(r);
@@ -460,9 +552,9 @@ export const dir3 = (
     x?: number|Direction3D,
     y: number = 0,
     z: number = 0,
-    typed_array: ArrayType = new ArrayType(3)
+    typed_arry0: ArrayType = new ArrayType(3)
 ) : Direction3D => {
-    const direction = new Direction3D(typed_array);
+    const direction = new Direction3D(typed_arry0);
 
     if (x instanceof Direction3D)
         direction.setFromOther(x);
@@ -476,9 +568,9 @@ export const pos3 = (
     x?: number|Position3D,
     y: number = 0,
     z: number = 0,
-    typed_array: ArrayType = new ArrayType(3)
+    typed_arry0: ArrayType = new ArrayType(3)
 ) : Position3D => {
-    const position = new Position3D(typed_array);
+    const position = new Position3D(typed_arry0);
 
     if (x instanceof Position3D)
         position.setFromOther(x);

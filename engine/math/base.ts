@@ -1,38 +1,91 @@
 import {
-    ArrayType,
-    bool_op,
-    in_place_number_op,
-    in_place_op,
-    in_place_unary_op,
-    number_bool_op,
-    number_op,
-    out_by_op,
-    out_number_op,
-    out_op,
-    unary_bool_op,
-    unary_number_op,
-    unary_op
-} from "../types.js";
-import {Direction3D} from "./vec3";
+    // TypedArray,
+    // TypedArrayConstructor,
 
+    ArrayType,
+    // ArrayTypeConstructor,
+    //
+    // ItemTypeConstructor,
+
+    lr_b,
+    ln_v,
+    lr_v,
+    l_v,
+    nbo_v,
+    lr_n,
+    lrno_v,
+    lno_v,
+    lro_v,
+    l_b,
+    l_n,
+    lo_v
+} from "../types.js";
+import {PRECISION_DIGITS} from "../constants";
+//
+// export class Buffer<A extends TypedArrayConstructor, I extends ItemTypeConstructor> {
+//     constructor(
+//         public readonly count: number,
+//         public readonly typed_array: A,
+//         public readonly item_type_constructor: I,
+//         public readonly current: I = new item_type_constructor(typed_array, 0)
+//     ) {}
+//
+//     at(index: number, current: ItemType = this.current) : ItemType {
+//         current.typed_array = this.typed_array;
+//
+//         return current;
+//     }
+// }
+//
+// export type BufferType = {
+//     new (count: number, stride: number) : Buffer
+// }
+//
+// export class Float32Buffer extends Buffer {
+//     constructor(
+//         public readonly count: number,
+//         public readonly stride: number,
+//         public readonly array: ArrayType = new Float32Array(count * stride)
+//     ) {
+//         super(count, stride, array);
+//     }
+//
+//     setTo = (values: number[]) => this.array.set(values);
+// }
+//
+// export class Uint32Buffer extends BaseBuffer {
+//     constructor(
+//         public readonly count: number,
+//         public readonly stride: number,
+//         public readonly array: Uint32Array = new Uint32Array(count * stride)
+//     ) {
+//         super(count, stride, array);
+//     }
+// }
+//
+// export class Uint8Buffer extends BaseBuffer {
+//     constructor(
+//         public readonly count: number,
+//         public readonly stride: number,
+//         public readonly array: Uint8Array = new Uint8Array(count * stride)
+//     ) {
+//         super(count, stride, array);
+//     }
+// }
 
 export default class Base {
-    protected typed_array_length: number;
-
-    protected _equals: bool_op;
+    protected _: ArrayType[];
 
     constructor(
-        public typed_array: ArrayType,
-        public typed_array_offset: number = 0
-    ) {}
+        public i: number,
+        ...typed_arrays : ArrayType[]
+    ) {
+        this._ = typed_arrays;
+    }
 
     copyTo(out: this) : this {
-        out.typed_array.set(
-            this.typed_array.subarray(
-                this.typed_array_offset,
-                this.typed_array_offset+this.typed_array_length
-            ), this.typed_array_offset
-        );
+        for (const [array_index, array] of this._.entries())
+            out._[array_index][out.i] = array[this.i];
 
         return out;
     }
@@ -44,75 +97,65 @@ export default class Base {
         if (this.constructor !== other.constructor)
             return false;
 
-        return this._equals(
-            this.typed_array,
-            other.typed_array,
+        for (const [array_index, array] of this._.entries())
+            if (array[this.i].toFixed(PRECISION_DIGITS) !==
+                other._[array_index][other.i].toFixed(PRECISION_DIGITS))
+                return false;
 
-            this.typed_array_offset,
-            other.typed_array_offset
-        );
+        return true;
     }
 
     setFromOther(other: this) : this {
-        this.typed_array.set(
-            other.typed_array.subarray(
-                other.typed_array_offset,
-                other.typed_array_offset+other.typed_array_length
-            ),
-            this.typed_array_offset
-        );
-
-        return this;
-    }
-
-    setFromTypedArray(typed_array: ArrayType, offset: number) : this {
-        this.typed_array.set(
-            typed_array.subarray(
-                offset,
-                offset+this.typed_array_length
-            ),
-            this.typed_array_offset
-        );
+        for (const [array_index, array] of other._.entries())
+            this._[array_index][this.i] = array[other.i];
 
         return this;
     }
 
     setTo(...values: number[]) : this {
         for (let [i, v] of values.entries())
-            this.typed_array[this.typed_array_offset+i] = v;
+            this._[i][this.i] = v;
 
         return this;
     }
 }
 
 export class Vector extends Base {
-    protected _linearly_interpolate: out_by_op;
+    protected _linearly_interpolate: lrno_v;
 
-    protected _add: out_op;
-    protected _add_in_place: in_place_op;
+    protected _add: lro_v;
+    protected _add_in_place: lr_v;
 
-    protected _subtract: out_op;
-    protected _subtract_in_place: in_place_op;
+    protected _subtract: lro_v;
+    protected _subtract_in_place: lr_v;
 
-    protected _scale: out_number_op;
-    protected _scale_in_place: in_place_number_op;
+    protected _scale: lno_v;
+    protected _scale_in_place: ln_v;
 
-    protected _divide: out_number_op;
-    protected _divide_in_place: in_place_number_op;
+    protected _divide: lno_v;
+    protected _divide_in_place: ln_v;
 
-    protected _multiply: out_op;
-    protected _multiply_in_place: in_place_op;
+    protected _multiply: lro_v;
+    protected _multiply_in_place: lr_v;
 
     lerp(to: this, by: number, out: this): this {
         this._linearly_interpolate(
-            out.typed_array,
-            this.typed_array,
-            to.typed_array,
-            by,
+            this._[0],
+            this._[0],
+            this._[0],
+            this.i,
 
-            out.typed_array_offset,
-            this.typed_array_offset,
-            to.typed_array_offset,
+            to._[0],
+            to._[0],
+            to._[0],
+            to.i,
+
+            t: number,
+
+            X: ArrayType,
+            Y: ArrayType,
+            Z: ArrayType,
+            o: number
         );
 
         return out;
@@ -256,14 +299,14 @@ export class Position extends Vector {
 }
 
 export class Direction extends Vector {
-    protected _dot: number_op;
-    protected _length: unary_number_op;
+    protected _dot: lr_n;
+    protected _length: l_n;
 
-    protected _normalize : unary_op;
-    protected _normalize_in_place : in_place_unary_op;
+    protected _normalize : lo_v;
+    protected _normalize_in_place : l_v;
 
-    protected _cross : out_op;
-    protected _cross_in_place : in_place_op;
+    protected _cross : lro_v;
+    protected _cross_in_place : lr_v;
 
     get length() : number {
         return this._length(
@@ -331,17 +374,17 @@ export class Direction extends Vector {
 }
 
 export class Matrix extends Base {
-    protected _is_identity: unary_bool_op;
-    protected _set_to_identity: in_place_unary_op;
-    protected _set_rotation_around_x: number_bool_op;
-    protected _set_rotation_around_y: number_bool_op;
-    protected _set_rotation_around_z: number_bool_op;
+    protected _is_identity: l_b;
+    protected _set_to_identity: l_v;
+    protected _set_rotation_around_x: nbo_v;
+    protected _set_rotation_around_y: nbo_v;
+    protected _set_rotation_around_z: nbo_v;
 
-    protected _transpose: unary_op;
-    protected _transpose_in_place: in_place_unary_op;
+    protected _transpose: lo_v;
+    protected _transpose_in_place: l_v;
 
-    protected _multiply : out_op;
-    protected _multiply_in_place : in_place_op;
+    protected _multiply : lro_v;
+    protected _multiply_in_place : lr_v;
 
     get is_identity() : boolean {
         return this._is_identity(

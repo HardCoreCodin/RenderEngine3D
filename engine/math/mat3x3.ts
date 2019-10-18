@@ -3,13 +3,13 @@ import {Matrix} from "./base";
 import {Direction3D} from "./vec3.js";
 import {
     ArrayType,
-    bool_op,
-    in_place_op,
-    in_place_unary_op,
-    number_bool_op,
-    out_op,
-    unary_bool_op,
-    unary_op
+    lr_b,
+    lr_v,
+    l_v,
+    nbo_v,
+    lro_v,
+    l_b,
+    lo_v
 } from "../types.js";
 
 const temp_matrix = new ArrayType(9);
@@ -19,7 +19,7 @@ function setSinCos(angle: number) {
     cos = Math.cos(angle);
 }
 
-export const set_to_identity : in_place_unary_op = (
+export const set_to_identity : l_v = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : void => {
@@ -27,7 +27,7 @@ export const set_to_identity : in_place_unary_op = (
     lhs[lhs_offset] = lhs[lhs_offset+4] = lhs[lhs_offset+8] = 1;
 };
 
-export const inverse : unary_op = (
+export const inverse : lo_v = (
     out: ArrayType,
     lhs: ArrayType,
 
@@ -58,7 +58,7 @@ export const inverse : unary_op = (
     out[out_offset+8] = 1;
 };
 
-export const inverse_in_place : in_place_unary_op = (
+export const inverse_in_place : l_v = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : void => {
@@ -83,7 +83,7 @@ export const inverse_in_place : in_place_unary_op = (
     lhs[lhs_offset+8] = 1;
 };
 
-export const transpose : unary_op = (
+export const transpose : lo_v = (
     out: ArrayType,
     lhs: ArrayType,
 
@@ -108,7 +108,7 @@ export const transpose : unary_op = (
     out[out_offset+8] = lhs[lhs_offset+8];
 };
 
-export const transpose_in_place : in_place_unary_op = (
+export const transpose_in_place : l_v = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : void => {
@@ -126,7 +126,7 @@ export const transpose_in_place : in_place_unary_op = (
     lhs[lhs_offset+8] = temp_matrix[8];
 };
 
-export const equals : bool_op = (
+export const equals : lr_b = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -150,7 +150,7 @@ export const equals : bool_op = (
     return true;
 };
 
-export const is_identity : unary_bool_op = (
+export const is_identity : l_b = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : boolean =>
@@ -164,7 +164,7 @@ export const is_identity : unary_bool_op = (
     lhs[lhs_offset+7] === 0 &&
     lhs[lhs_offset+8] === 1;
 
-export const multiply : out_op = (
+export const multiply : lro_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: ArrayType,
@@ -230,7 +230,7 @@ export const multiply : out_op = (
         lhs[lhs_offset+8] * rhs[rhs_offset+8];
 };
 
-export const multiply_in_place : in_place_op = (
+export const multiply_in_place : lr_v = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -282,7 +282,7 @@ export const multiply_in_place : in_place_op = (
         temp_matrix[8] * rhs[rhs_offset+8];
 };
 
-export const set_rotation_around_x : number_bool_op = (
+export const set_rotation_around_x : nbo_v = (
     out: ArrayType,
     angle: number,
     reset = true,
@@ -298,7 +298,7 @@ export const set_rotation_around_x : number_bool_op = (
     out[out_offset+7] = -sin;
 };
 
-export const set_rotation_around_y : number_bool_op = (
+export const set_rotation_around_y : nbo_v = (
     out: ArrayType,
     angle: number,
     reset = true,
@@ -314,7 +314,7 @@ export const set_rotation_around_y : number_bool_op = (
     out[out_offset+6] = -sin;
 };
 
-export const set_rotation_around_z : number_bool_op = (
+export const set_rotation_around_z : nbo_v = (
     out: ArrayType,
     angle: number,
     reset = true,
@@ -333,21 +333,21 @@ export const set_rotation_around_z : number_bool_op = (
 export class Matrix3x3 extends Matrix{
     protected typed_array_length: number = 9;
 
-    protected _equals: bool_op = equals;
-    protected _is_identity: unary_bool_op = is_identity;
-    protected _set_to_identity: in_place_unary_op = set_to_identity;
-    protected _set_rotation_around_x: number_bool_op = set_rotation_around_x;
-    protected _set_rotation_around_y: number_bool_op = set_rotation_around_y;
-    protected _set_rotation_around_z: number_bool_op = set_rotation_around_z;
+    protected _equals: lr_b = equals;
+    protected _is_identity: l_b = is_identity;
+    protected _set_to_identity: l_v = set_to_identity;
+    protected _set_rotation_around_x: nbo_v = set_rotation_around_x;
+    protected _set_rotation_around_y: nbo_v = set_rotation_around_y;
+    protected _set_rotation_around_z: nbo_v = set_rotation_around_z;
 
-    protected _inverse: unary_op = inverse;
-    protected _inverse_in_place: in_place_unary_op = inverse_in_place;
+    protected _inverse: lo_v = inverse;
+    protected _inverse_in_place: l_v = inverse_in_place;
 
-    protected _transpose: unary_op = transpose;
-    protected _transpose_in_place: in_place_unary_op = transpose_in_place;
+    protected _transpose: lo_v = transpose;
+    protected _transpose_in_place: l_v = transpose_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
     constructor(
         public typed_array: ArrayType,

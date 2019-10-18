@@ -4,19 +4,19 @@ import {cross, cross_in_place} from "./vec3.js";
 import {
     ArrayType,
 
-    bool_op,
-    number_op,
+    lr_b,
+    lr_n,
 
-    unary_number_op,
-    unary_op,
-    in_place_unary_op,
+    l_n,
+    lo_v,
+    l_v,
 
-    in_place_op,
-    in_place_number_op,
+    lr_v,
+    ln_v,
 
-    out_op,
-    out_number_op,
-    out_by_op
+    lro_v,
+    lno_v,
+    lrno_v
 } from "../types.js";
 
 let temp_number: number;
@@ -24,7 +24,7 @@ const temp_lhs = new ArrayType(4);
 const temp_rhs = new ArrayType(4);
 const temp_matrix = new ArrayType(16);
 
-export const length : unary_number_op = (
+export const length : l_n = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : number => Math.hypot(
@@ -34,7 +34,7 @@ export const length : unary_number_op = (
     lhs[lhs_offset+3]
 );
 
-export const length_squared : unary_number_op = (
+export const length_squared : l_n = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : number => (
@@ -44,7 +44,7 @@ export const length_squared : unary_number_op = (
     lhs[lhs_offset+3]*lhs[lhs_offset+3]
 );
 
-export const distance : number_op = (
+export const distance : lr_n = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -57,7 +57,7 @@ export const distance : number_op = (
     (rhs[rhs_offset+3]-lhs[lhs_offset+3])
 );
 
-export const distance_squared : number_op = (
+export const distance_squared : lr_n = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -70,7 +70,7 @@ export const distance_squared : number_op = (
     (rhs[rhs_offset+3]-lhs[lhs_offset+3])*(rhs[rhs_offset+3]-lhs[lhs_offset+3])
 );
 
-export const equals : bool_op = (
+export const equals : lr_b = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -89,7 +89,7 @@ export const equals : bool_op = (
     return true;
 };
 
-export const linearly_interpolate: out_by_op = (
+export const linearly_interpolate: lrno_v = (
     out: ArrayType,
     from: ArrayType,
     to: ArrayType,
@@ -105,7 +105,7 @@ export const linearly_interpolate: out_by_op = (
     out[out_offset+3] = from[from_offset+3] + by*(to[to_offset+3] - from[from_offset+3]);
 };
 
-export const add : out_op = (
+export const add : lro_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: ArrayType,
@@ -120,7 +120,7 @@ export const add : out_op = (
     out[out_offset+3] = lhs[lhs_offset+3] + rhs[rhs_offset+3];
 };
 
-export const add_in_place : in_place_op = (
+export const add_in_place : lr_v = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -133,7 +133,7 @@ export const add_in_place : in_place_op = (
     lhs[lhs_offset+3] += rhs[rhs_offset+3];
 };
 
-export const subtract : out_op = (
+export const subtract : lro_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: ArrayType,
@@ -161,7 +161,7 @@ export const subtract_in_place = (
     lhs[lhs_offset+3] -= rhs[rhs_offset+3];
 };
 
-export const divide : out_number_op = (
+export const divide : lno_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: number,
@@ -175,7 +175,7 @@ export const divide : out_number_op = (
     out[out_offset+3] = lhs[lhs_offset+3] / rhs;
 };
 
-export const divide_in_place : in_place_number_op = (
+export const divide_in_place : ln_v = (
     lhs: ArrayType,
     rhs: number,
 
@@ -187,7 +187,7 @@ export const divide_in_place : in_place_number_op = (
     lhs[lhs_offset+3] /= rhs;
 };
 
-export const scale : out_number_op = (
+export const scale : lno_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: number,
@@ -201,7 +201,7 @@ export const scale : out_number_op = (
     out[out_offset+3] = lhs[lhs_offset+3] * rhs;
 };
 
-export const scale_in_place : in_place_number_op = (
+export const scale_in_place : ln_v = (
     lhs: ArrayType,
     rhs: number,
 
@@ -213,7 +213,7 @@ export const scale_in_place : in_place_number_op = (
     lhs[lhs_offset+3] *= rhs;
 };
 
-export const normalize : unary_op = (
+export const normalize : lo_v = (
     out: ArrayType,
     lhs: ArrayType,
 
@@ -233,7 +233,7 @@ export const normalize : unary_op = (
     out[out_offset+3] = lhs[lhs_offset+3] / temp_number;
 };
 
-export const normalize_in_place : in_place_unary_op = (
+export const normalize_in_place : l_v = (
     lhs: ArrayType,
     lhs_offset: number = 0
 ) : void => {
@@ -250,7 +250,7 @@ export const normalize_in_place : in_place_unary_op = (
     lhs[lhs_offset+3] /= temp_number;
 };
 
-export const dot : number_op = (
+export const dot : lr_n = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -262,7 +262,7 @@ export const dot : number_op = (
     lhs[lhs_offset+2] * rhs[rhs_offset+2] +
     lhs[lhs_offset+3] * rhs[rhs_offset+3];
 
-export const multiply : out_op = (
+export const multiply : lro_v = (
     out: ArrayType,
     lhs: ArrayType,
     rhs: ArrayType,
@@ -310,7 +310,7 @@ export const multiply : out_op = (
         lhs[lhs_offset+3]*rhs[rhs_offset+15];
 };
 
-export const multiply_in_place : in_place_op = (
+export const multiply_in_place : lr_v = (
     lhs: ArrayType,
     rhs: ArrayType,
 
@@ -348,23 +348,23 @@ export const multiply_in_place : in_place_op = (
 export class Position4D extends Position {
     protected typed_array_length: number = 4;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: lrno_v = linearly_interpolate;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
     set x(x) {this.typed_array[this.typed_array_offset  ] = x}
     set y(y) {this.typed_array[this.typed_array_offset+1] = y}
@@ -380,32 +380,32 @@ export class Position4D extends Position {
 export class Direction4D extends Direction {
     protected typed_array_length: number = 4;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: lrno_v = linearly_interpolate;
 
-    protected _dot: number_op = dot;
-    protected _length: unary_number_op = length;
+    protected _dot: lr_n = dot;
+    protected _length: l_n = length;
 
-    protected _normalize : unary_op = normalize;
-    protected _normalize_in_place : in_place_unary_op = normalize_in_place;
+    protected _normalize : lo_v = normalize;
+    protected _normalize_in_place : l_v = normalize_in_place;
 
-    protected _cross : out_op = cross;
-    protected _cross_in_place : in_place_op = cross_in_place;
+    protected _cross : lro_v = cross;
+    protected _cross_in_place : lr_v = cross_in_place;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
     set x(x) {this.typed_array[this.typed_array_offset  ] = x}
     set y(y) {this.typed_array[this.typed_array_offset+1] = y}
@@ -421,23 +421,23 @@ export class Direction4D extends Direction {
 export class Color4D extends Position {
     protected typed_array_length: number = 4;
 
-    protected _equals: bool_op = equals;
-    protected _linearly_interpolate: out_by_op = linearly_interpolate;
+    protected _equals: lr_b = equals;
+    protected _linearly_interpolate: lrno_v = linearly_interpolate;
 
-    protected _add: out_op = add;
-    protected _add_in_place: in_place_op = add_in_place;
+    protected _add: lro_v = add;
+    protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: out_op = subtract;
-    protected _subtract_in_place: in_place_op = subtract_in_place;
+    protected _subtract: lro_v = subtract;
+    protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: out_number_op = scale;
-    protected _scale_in_place: in_place_number_op = scale_in_place;
+    protected _scale: lno_v = scale;
+    protected _scale_in_place: ln_v = scale_in_place;
 
-    protected _divide: out_number_op = divide;
-    protected _divide_in_place: in_place_number_op = divide_in_place;
+    protected _divide: lno_v = divide;
+    protected _divide_in_place: ln_v = divide_in_place;
 
-    protected _multiply : out_op = multiply;
-    protected _multiply_in_place : in_place_op = multiply_in_place;
+    protected _multiply : lro_v = multiply;
+    protected _multiply_in_place : lr_v = multiply_in_place;
 
     set r(r) {this.typed_array[this.typed_array_offset  ] = r}
     set g(g) {this.typed_array[this.typed_array_offset+1] = g}

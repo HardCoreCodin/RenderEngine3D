@@ -5,51 +5,205 @@ import Triangles from "../buffers/triangle.js";
 import Vertices from "../buffers/vertex.js";
 import Direction4D from "../linalng/4D/direction";
 import {tri} from "./triangle";
-import {BaseBuffer} from "../buffers/base";
+import {BaseBuffer, Uint32Buffer} from "../buffers/base";
+import {ArrayType} from "../types";
 
 export type Meshes = Mesh[];
 
+const OBJ_LINE_HEADER__INDICES = 'f';
+const OBJ_LINE_HEADER__POSITIONS = 'v';
+const OBJ_LINE_HEADER__NORMALS = 'vn';
+const OBJ_LINE_HEADER__UVS = 'vt';
+
+
 export class Mesh {
     constructor(
-        public readonly count: number,
-        public readonly vertices: Vertices = new Vertices(count * 3),
-        public readonly triangles: Triangles = new Triangles(count, vertices),
+        public readonly face_count: number,
+        public readonly vertex_count: number,
 
-        public transform: Transform = new Transform()
+        public readonly vertex_positions: ArrayType,
+        public readonly vertex_normals: ArrayType,
+        public readonly vertex_colors: ArrayType,
+        public readonly vertex_uvs: ArrayType,
+
+        public readonly face_positions: ArrayType,
+        public readonly face_normals: ArrayType,
+        public readonly face_colors: ArrayType,
+        public readonly face_uvs: ArrayType,
+
+        public readonly position_indices: Uint32Array,
+        public readonly normal_indices: Uint32Array,
+        public readonly color_indices: Uint32Array,
+        public readonly uv_indices: Uint32Array,
+
+        public readonly shared_vertex_positions: boolean = vertex_positions.length === vertex_count,
+        public readonly shared_vertex_normals: boolean = vertex_normals.length === vertex_count,
+        public readonly shared_vertex_colors: boolean = vertex_colors.length === vertex_count,
+        public readonly shared_vertex_uvs: boolean = vertex_uvs.length === vertex_count,
+
+        public readonly transform: Transform = new Transform()
     ) {}
 
-    static fromObj(obj: string, smooth_normals: boolean = false) : Mesh {
+    static fromObj(obj: string, share_vertex_positions: boolean = true, smooth_normals: boolean = false) : Mesh {
+        //
+        // const positions: number[] = [];
+        // const position_indices: number[] = [];
+        //
+        // const normals: number[] = [];
+        // const normal_indices: number[] = [];
+        //
+        // const uvs: number[] = [];
+        // const uv_indices: number[] = [];
+
         let line_parts: string[];
         let line_header : string;
-        let index: string;
-        let index_parts: string[];
 
-        let vertex_count = 0;
-        let triangle_count = 0;
+        let vertex_index: number;
+        let vertex_indices: string[];
 
-        const positions: number[] = [];
-        const position_indices: number[] = [];
+        let line: string[];
+        let line_index: number;
+        let line_part: string;
+        let line_part_index: number;
 
-        const normals: number[] = [];
-        const normal_indices: number[] = [];
+        let offset: number;
+        let face_index: number;
+        let face_vertex_index: number;
 
-        const uvs: number[] = [];
-        const uv_indices: number[] = [];
+        const index_lines = [];
+        const position_lines = [];
+        const normal_lines = [];
+        const uv_lines = [];
 
         for (const line of obj.split('\n')) {
             line_parts = line.split(' ');
             line_header = line_parts.shift();
 
-            if (line_header === 'f') {
-                triangle_count++;
+            switch (line_header) {
+                case OBJ_LINE_HEADER__INDICES: index_lines.push(line_parts); break;
+                case OBJ_LINE_HEADER__POSITIONS: position_lines.push(line_parts); break;
+                case OBJ_LINE_HEADER__NORMALS: normal_lines.push(line_parts); break;
+                case OBJ_LINE_HEADER__UVS: uv_lines.push(line_parts); break;
+            }
+        }
 
-                for (index of line_parts) {
-                    index_parts = index.split('/');
-                    position_indices.push(+index_parts[0]);
-                    if (index_parts[1] !== undefined) uv_indices.push(+index_parts[1]);
-                    if (index_parts[2] !== undefined) normal_indices.push(+index_parts[2]);
+        const vertices_per_face = index_lines[0].length;
+        const vertex_count = position_lines.length;
+        const face_count = index_lines.length;
+
+        const vertex_array_length = vertex_count << 2;
+        const face_array_length = face_count << 2;
+        const index_array_length = face_count * vertices_per_face;
+
+        const vertex_positions = new ArrayType(vertex_array_length);
+        const face_positions = new ArrayType(face_array_length);
+        const face_normals: ArrayType = new ArrayType(face_array_length);
+        const face_colors: ArrayType = new ArrayType(face_array_length);
+        const face_uvs: ArrayType = new ArrayType(face_count << 1);
+
+        const position_indices = new Uint32Array(index_array_length);
+        const normal_indices = new Uint32Array(index_array_length);
+        const color_indices = new Uint32Array(index_array_length);
+        const uv_indices = new Uint32Array(index_array_length);
+
+        // Collect index arrays::
+        for ([line_index, line] of index_lines.entries()) {
+            offset = line_index * vertices_per_face;
+
+            for ([line_part_index, line_part] of line.entries()) {
+                offset += line_part_index;
+
+                vertex_indices = line_part.split('/');
+
+                position_indices[offset] = +vertex_indices[0];
+                if (vertex_indices[1] !== undefined) uv_indices[offset] = +vertex_indices[1];
+                if (vertex_indices[2] !== undefined) normal_indices[offset] = +vertex_indices[2];
+                // TODO: Vertex colors
+            }
+        }
+
+        vertex_positions.fill(1);
+        for ([line_index, line] of position_lines.entries()) {
+            offset = line_index * vertices_per_face;
+            for ([line_part_index, line_part] of line.entries()) {
+                offset += line_part_index;
+                vertex_positions[offset] = +line_part;
+            }
+        }
+
+        const a_to_b = 
+        for (face_index = 0; face_index < face_count; face_index++) {
+            offset = face_index * vertices_per_face;
+
+            for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
+                vertex_index = position_indices[offset + face_vertex_index];
+                face_positions[face_index  ] += vertex_positions[vertex_index  ];
+                face_positions[face_index+1] += vertex_positions[vertex_index+1];
+                face_positions[face_index+2] += vertex_positions[vertex_index+2];
+            }
+
+            face_positions[face_index  ] /= vertices_per_face;
+            face_positions[face_index+1] /= vertices_per_face;
+            face_positions[face_index+2] /= vertices_per_face;
+            face_positions[face_index+3] = 1;
+
+            if (normal_lines.length === 0) {
+                // Compute face normals from face vertex positions:
+
+            }
+        }
+
+        let vertex_normals: ArrayType;
+        let normal_index: number;
+
+        if (normal_lines.length) {
+            vertex_normals = new ArrayType(normal_lines.length);
+            for ([line_index, line] of normal_lines.entries()) {
+                offset = line_index * vertices_per_face;
+                for ([line_part_index, line_part] of line.entries())
+                    vertex_normals[offset + line_part_index] = +line_part;
+            }
+
+            // Compute face normals as average of vertex normals
+            for (face_index = 0; face_index < face_count; face_index++) {
+                offset = face_index * vertices_per_face;
+
+                for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
+                    vertex_index = normal_indices[offset + face_vertex_index];
+                    face_normals[face_index  ] += vertex_normals[vertex_index  ];
+                    face_normals[face_index+1] += vertex_normals[vertex_index+1];
+                    face_normals[face_index+2] += vertex_normals[vertex_index+2];
                 }
-            } else if (line_header === 'v') {
+
+                face_normals[face_index  ] /= vertices_per_face;
+                face_normals[face_index+1] /= vertices_per_face;
+                face_normals[face_index+2] /= vertices_per_face;
+            }
+        } else {
+            // Compute face normals from face vertex positions:
+            for (face_index = 0; face_index < face_count; face_index++) {
+                offset = face_index * vertices_per_face;
+
+                for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
+                    vertex_index = position_indices[offset + face_vertex_index];
+                }
+            }
+            // Compute vertex normals:
+            if (share_vertex_positions) {
+                vertex_normals = new ArrayType(vertex_array_length);
+
+            } else {
+                vertex_normals = new ArrayType(vertex_array_length * vertices_per_face);
+            }
+        }
+
+
+
+        for (const line of obj.split('\n')) {
+            line_parts = line.split(' ');
+            line_header = line_parts.shift();
+
+            if (line_header === 'v') {
                 vertex_count++;
 
                 positions.push(+line_parts[0]);
