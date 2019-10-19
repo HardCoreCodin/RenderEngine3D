@@ -2,30 +2,30 @@ import {PRECISION_DIGITS} from "../constants.js";
 import {Direction, Position} from "./base.js";
 import {cross, cross_in_place} from "./vec3.js";
 import {
-    ArrayType,
+    floatData,
 
-    lr_b,
-    lr_n,
+    ff_b,
+    ff_n,
 
-    l_n,
-    lo_v,
-    l_v,
+    f_n,
+    ff_v,
+    f_v,
 
     lr_v,
-    ln_v,
+    fn_v,
 
-    lro_v,
-    lno_v,
-    lrno_v
+    fff_v,
+    fnf_v,
+    ffnf_v
 } from "../types.js";
 
 let temp_number: number;
-const temp_lhs = new ArrayType(4);
-const temp_rhs = new ArrayType(4);
-const temp_matrix = new ArrayType(16);
+const temp_lhs = new floatData(4);
+const temp_rhs = new floatData(4);
+const temp_matrix = new floatData(16);
 
-export const length : l_n = (
-    lhs: ArrayType,
+export const length : f_n = (
+    lhs: floatData,
     lhs_offset: number = 0
 ) : number => Math.hypot(
     lhs[lhs_offset  ],
@@ -34,8 +34,8 @@ export const length : l_n = (
     lhs[lhs_offset+3]
 );
 
-export const length_squared : l_n = (
-    lhs: ArrayType,
+export const length_squared : f_n = (
+    lhs: floatData,
     lhs_offset: number = 0
 ) : number => (
     lhs[lhs_offset  ]*lhs[lhs_offset  ] +
@@ -44,9 +44,9 @@ export const length_squared : l_n = (
     lhs[lhs_offset+3]*lhs[lhs_offset+3]
 );
 
-export const distance : lr_n = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const distance : ff_n = (
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -57,9 +57,9 @@ export const distance : lr_n = (
     (rhs[rhs_offset+3]-lhs[lhs_offset+3])
 );
 
-export const distance_squared : lr_n = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const distance_squared : ff_n = (
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -70,9 +70,9 @@ export const distance_squared : lr_n = (
     (rhs[rhs_offset+3]-lhs[lhs_offset+3])*(rhs[rhs_offset+3]-lhs[lhs_offset+3])
 );
 
-export const equals : lr_b = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const equals : ff_b = (
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -89,10 +89,10 @@ export const equals : lr_b = (
     return true;
 };
 
-export const linearly_interpolate: lrno_v = (
-    out: ArrayType,
-    from: ArrayType,
-    to: ArrayType,
+export const linearly_interpolate: ffnf_v = (
+    out: floatData,
+    from: floatData,
+    to: floatData,
     by: number,
 
     out_offset: number = 0,
@@ -105,10 +105,10 @@ export const linearly_interpolate: lrno_v = (
     out[out_offset+3] = from[from_offset+3] + by*(to[to_offset+3] - from[from_offset+3]);
 };
 
-export const add : lro_v = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const add : fff_v = (
+    out: floatData,
+    lhs: floatData,
+    rhs: floatData,
 
     out_offset: number = 0,
     lhs_offset: number = 0,
@@ -121,8 +121,8 @@ export const add : lro_v = (
 };
 
 export const add_in_place : lr_v = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -133,10 +133,10 @@ export const add_in_place : lr_v = (
     lhs[lhs_offset+3] += rhs[rhs_offset+3];
 };
 
-export const subtract : lro_v = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const subtract : fff_v = (
+    out: floatData,
+    lhs: floatData,
+    rhs: floatData,
 
     out_offset: number,
     lhs_offset: number,
@@ -149,8 +149,8 @@ export const subtract : lro_v = (
 };
 
 export const subtract_in_place = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -161,9 +161,9 @@ export const subtract_in_place = (
     lhs[lhs_offset+3] -= rhs[rhs_offset+3];
 };
 
-export const divide : lno_v = (
-    out: ArrayType,
-    lhs: ArrayType,
+export const divide : fnf_v = (
+    out: floatData,
+    lhs: floatData,
     rhs: number,
 
     out_offset: number = 0,
@@ -175,8 +175,8 @@ export const divide : lno_v = (
     out[out_offset+3] = lhs[lhs_offset+3] / rhs;
 };
 
-export const divide_in_place : ln_v = (
-    lhs: ArrayType,
+export const divide_in_place : fn_v = (
+    lhs: floatData,
     rhs: number,
 
     lhs_offset: number = 0
@@ -187,9 +187,9 @@ export const divide_in_place : ln_v = (
     lhs[lhs_offset+3] /= rhs;
 };
 
-export const scale : lno_v = (
-    out: ArrayType,
-    lhs: ArrayType,
+export const scale : fnf_v = (
+    out: floatData,
+    lhs: floatData,
     rhs: number,
 
     out_offset: number = 0,
@@ -201,8 +201,8 @@ export const scale : lno_v = (
     out[out_offset+3] = lhs[lhs_offset+3] * rhs;
 };
 
-export const scale_in_place : ln_v = (
-    lhs: ArrayType,
+export const scale_in_place : fn_v = (
+    lhs: floatData,
     rhs: number,
 
     lhs_offset: number = 0
@@ -213,9 +213,9 @@ export const scale_in_place : ln_v = (
     lhs[lhs_offset+3] *= rhs;
 };
 
-export const normalize : lo_v = (
-    out: ArrayType,
-    lhs: ArrayType,
+export const normalize : ff_v = (
+    out: floatData,
+    lhs: floatData,
 
     out_offset: number = 0,
     lhs_offset: number = 0
@@ -233,8 +233,8 @@ export const normalize : lo_v = (
     out[out_offset+3] = lhs[lhs_offset+3] / temp_number;
 };
 
-export const normalize_in_place : l_v = (
-    lhs: ArrayType,
+export const normalize_in_place : f_v = (
+    lhs: floatData,
     lhs_offset: number = 0
 ) : void => {
     temp_number = Math.hypot(
@@ -250,9 +250,9 @@ export const normalize_in_place : l_v = (
     lhs[lhs_offset+3] /= temp_number;
 };
 
-export const dot : lr_n = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const dot : ff_n = (
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -262,10 +262,10 @@ export const dot : lr_n = (
     lhs[lhs_offset+2] * rhs[rhs_offset+2] +
     lhs[lhs_offset+3] * rhs[rhs_offset+3];
 
-export const multiply : lro_v = (
-    out: ArrayType,
-    lhs: ArrayType,
-    rhs: ArrayType,
+export const multiply : fff_v = (
+    out: floatData,
+    lhs: floatData,
+    rhs: floatData,
 
     out_offset: number = 0,
     lhs_offset: number = 0,
@@ -311,8 +311,8 @@ export const multiply : lro_v = (
 };
 
 export const multiply_in_place : lr_v = (
-    lhs: ArrayType,
-    rhs: ArrayType,
+    lhs: floatData,
+    rhs: floatData,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -348,22 +348,22 @@ export const multiply_in_place : lr_v = (
 export class Position4D extends Position {
     protected typed_array_length: number = 4;
 
-    protected _equals: lr_b = equals;
-    protected _linearly_interpolate: lrno_v = linearly_interpolate;
+    protected _equals: ff_b = equals;
+    protected _linearly_interpolate: ffnf_v = linearly_interpolate;
 
-    protected _add: lro_v = add;
+    protected _add: fff_v = add;
     protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: lro_v = subtract;
+    protected _subtract: fff_v = subtract;
     protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: lno_v = scale;
-    protected _scale_in_place: ln_v = scale_in_place;
+    protected _scale: fnf_v = scale;
+    protected _scale_in_place: fn_v = scale_in_place;
 
-    protected _divide: lno_v = divide;
-    protected _divide_in_place: ln_v = divide_in_place;
+    protected _divide: fnf_v = divide;
+    protected _divide_in_place: fn_v = divide_in_place;
 
-    protected _multiply : lro_v = multiply;
+    protected _multiply : fff_v = multiply;
     protected _multiply_in_place : lr_v = multiply_in_place;
 
     set x(x) {this.typed_array[this.typed_array_offset  ] = x}
@@ -380,31 +380,31 @@ export class Position4D extends Position {
 export class Direction4D extends Direction {
     protected typed_array_length: number = 4;
 
-    protected _equals: lr_b = equals;
-    protected _linearly_interpolate: lrno_v = linearly_interpolate;
+    protected _equals: ff_b = equals;
+    protected _linearly_interpolate: ffnf_v = linearly_interpolate;
 
-    protected _dot: lr_n = dot;
-    protected _length: l_n = length;
+    protected _dot: ff_n = dot;
+    protected _length: f_n = length;
 
-    protected _normalize : lo_v = normalize;
-    protected _normalize_in_place : l_v = normalize_in_place;
+    protected _normalize : ff_v = normalize;
+    protected _normalize_in_place : f_v = normalize_in_place;
 
-    protected _cross : lro_v = cross;
+    protected _cross : fff_v = cross;
     protected _cross_in_place : lr_v = cross_in_place;
 
-    protected _add: lro_v = add;
+    protected _add: fff_v = add;
     protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: lro_v = subtract;
+    protected _subtract: fff_v = subtract;
     protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: lno_v = scale;
-    protected _scale_in_place: ln_v = scale_in_place;
+    protected _scale: fnf_v = scale;
+    protected _scale_in_place: fn_v = scale_in_place;
 
-    protected _divide: lno_v = divide;
-    protected _divide_in_place: ln_v = divide_in_place;
+    protected _divide: fnf_v = divide;
+    protected _divide_in_place: fn_v = divide_in_place;
 
-    protected _multiply : lro_v = multiply;
+    protected _multiply : fff_v = multiply;
     protected _multiply_in_place : lr_v = multiply_in_place;
 
     set x(x) {this.typed_array[this.typed_array_offset  ] = x}
@@ -421,22 +421,22 @@ export class Direction4D extends Direction {
 export class Color4D extends Position {
     protected typed_array_length: number = 4;
 
-    protected _equals: lr_b = equals;
-    protected _linearly_interpolate: lrno_v = linearly_interpolate;
+    protected _equals: ff_b = equals;
+    protected _linearly_interpolate: ffnf_v = linearly_interpolate;
 
-    protected _add: lro_v = add;
+    protected _add: fff_v = add;
     protected _add_in_place: lr_v = add_in_place;
 
-    protected _subtract: lro_v = subtract;
+    protected _subtract: fff_v = subtract;
     protected _subtract_in_place: lr_v = subtract_in_place;
 
-    protected _scale: lno_v = scale;
-    protected _scale_in_place: ln_v = scale_in_place;
+    protected _scale: fnf_v = scale;
+    protected _scale_in_place: fn_v = scale_in_place;
 
-    protected _divide: lno_v = divide;
-    protected _divide_in_place: ln_v = divide_in_place;
+    protected _divide: fnf_v = divide;
+    protected _divide_in_place: fn_v = divide_in_place;
 
-    protected _multiply : lro_v = multiply;
+    protected _multiply : fff_v = multiply;
     protected _multiply_in_place : lr_v = multiply_in_place;
 
     set r(r) {this.typed_array[this.typed_array_offset  ] = r}
@@ -469,7 +469,7 @@ export const rgba = (
     g: number = 0,
     b: number = 0,
     a: number = 0,
-    typed_array: ArrayType = new ArrayType(4)
+    typed_array: floatData = new floatData(4)
 ) : Color4D => {
     const color = new Color4D(typed_array);
 
@@ -486,7 +486,7 @@ export const dir4 = (
     y: number = 0,
     z: number = 0,
     w: number = 0,
-    typed_array: ArrayType = new ArrayType(4)
+    typed_array: floatData = new floatData(4)
 ) : Direction4D => {
     const direction = new Direction4D(typed_array);
 
@@ -503,7 +503,7 @@ export const pos4 = (
     y: number = 0,
     z: number = 0,
     w: number = 0,
-    typed_array: ArrayType = new ArrayType(4)
+    typed_array: floatData = new floatData(4)
 ) : Position4D => {
     const position = new Position4D(typed_array);
 

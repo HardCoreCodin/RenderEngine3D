@@ -6,7 +6,7 @@ import Vertices from "../buffers/vertex.js";
 import Direction4D from "../linalng/4D/direction";
 import {tri} from "./triangle";
 import {BaseBuffer, Uint32Buffer} from "../buffers/base";
-import {ArrayType} from "../types";
+import {floatData} from "../types";
 
 export type Meshes = Mesh[];
 
@@ -21,15 +21,15 @@ export class Mesh {
         public readonly face_count: number,
         public readonly vertex_count: number,
 
-        public readonly vertex_positions: ArrayType,
-        public readonly vertex_normals: ArrayType,
-        public readonly vertex_colors: ArrayType,
-        public readonly vertex_uvs: ArrayType,
+        public readonly vertex_positions: floatData,
+        public readonly vertex_normals: floatData,
+        public readonly vertex_colors: floatData,
+        public readonly vertex_uvs: floatData,
 
-        public readonly face_positions: ArrayType,
-        public readonly face_normals: ArrayType,
-        public readonly face_colors: ArrayType,
-        public readonly face_uvs: ArrayType,
+        public readonly face_positions: floatData,
+        public readonly face_normals: floatData,
+        public readonly face_colors: floatData,
+        public readonly face_uvs: floatData,
 
         public readonly position_indices: Uint32Array,
         public readonly normal_indices: Uint32Array,
@@ -95,11 +95,11 @@ export class Mesh {
         const face_array_length = face_count << 2;
         const index_array_length = face_count * vertices_per_face;
 
-        const vertex_positions = new ArrayType(vertex_array_length);
-        const face_positions = new ArrayType(face_array_length);
-        const face_normals: ArrayType = new ArrayType(face_array_length);
-        const face_colors: ArrayType = new ArrayType(face_array_length);
-        const face_uvs: ArrayType = new ArrayType(face_count << 1);
+        const vertex_positions = new floatData(vertex_array_length);
+        const face_positions = new floatData(face_array_length);
+        const face_normals: floatData = new floatData(face_array_length);
+        const face_colors: floatData = new floatData(face_array_length);
+        const face_uvs: floatData = new floatData(face_count << 1);
 
         const position_indices = new Uint32Array(index_array_length);
         const normal_indices = new Uint32Array(index_array_length);
@@ -153,11 +153,11 @@ export class Mesh {
             }
         }
 
-        let vertex_normals: ArrayType;
+        let vertex_normals: floatData;
         let normal_index: number;
 
         if (normal_lines.length) {
-            vertex_normals = new ArrayType(normal_lines.length);
+            vertex_normals = new floatData(normal_lines.length);
             for ([line_index, line] of normal_lines.entries()) {
                 offset = line_index * vertices_per_face;
                 for ([line_part_index, line_part] of line.entries())
@@ -190,10 +190,10 @@ export class Mesh {
             }
             // Compute vertex normals:
             if (share_vertex_positions) {
-                vertex_normals = new ArrayType(vertex_array_length);
+                vertex_normals = new floatData(vertex_array_length);
 
             } else {
-                vertex_normals = new ArrayType(vertex_array_length * vertices_per_face);
+                vertex_normals = new floatData(vertex_array_length * vertices_per_face);
             }
         }
 
