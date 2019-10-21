@@ -2,7 +2,7 @@ import {PRECISION_DIGITS} from "../constants.js";
 import {Direction, Position} from "./base.js";
 import {cross, cross_in_place} from "./vec3.js";
 import {
-    floatData,
+    FloatArrays,
 
     ff_b,
     ff_n,
@@ -20,12 +20,12 @@ import {
 } from "../types.js";
 
 let temp_number: number;
-const temp_lhs = new floatData(4);
-const temp_rhs = new floatData(4);
-const temp_matrix = new floatData(16);
+const temp_lhs = new FloatArrays(4);
+const temp_rhs = new FloatArrays(4);
+const temp_matrix = new FloatArrays(16);
 
 export const length : f_n = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : number => Math.hypot(
     lhs[lhs_offset  ],
@@ -35,7 +35,7 @@ export const length : f_n = (
 );
 
 export const length_squared : f_n = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : number => (
     lhs[lhs_offset  ]*lhs[lhs_offset  ] +
@@ -45,8 +45,8 @@ export const length_squared : f_n = (
 );
 
 export const distance : ff_n = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -58,8 +58,8 @@ export const distance : ff_n = (
 );
 
 export const distance_squared : ff_n = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -71,8 +71,8 @@ export const distance_squared : ff_n = (
 );
 
 export const equals : ff_b = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -90,9 +90,9 @@ export const equals : ff_b = (
 };
 
 export const linearly_interpolate: ffnf_v = (
-    out: floatData,
-    from: floatData,
-    to: floatData,
+    out: FloatArrays,
+    from: FloatArrays,
+    to: FloatArrays,
     by: number,
 
     out_offset: number = 0,
@@ -106,9 +106,9 @@ export const linearly_interpolate: ffnf_v = (
 };
 
 export const add : fff_v = (
-    out: floatData,
-    lhs: floatData,
-    rhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0,
@@ -121,8 +121,8 @@ export const add : fff_v = (
 };
 
 export const add_in_place : lr_v = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -134,9 +134,9 @@ export const add_in_place : lr_v = (
 };
 
 export const subtract : fff_v = (
-    out: floatData,
-    lhs: floatData,
-    rhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     out_offset: number,
     lhs_offset: number,
@@ -149,8 +149,8 @@ export const subtract : fff_v = (
 };
 
 export const subtract_in_place = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -162,8 +162,8 @@ export const subtract_in_place = (
 };
 
 export const divide : fnf_v = (
-    out: floatData,
-    lhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
     rhs: number,
 
     out_offset: number = 0,
@@ -176,7 +176,7 @@ export const divide : fnf_v = (
 };
 
 export const divide_in_place : fn_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     rhs: number,
 
     lhs_offset: number = 0
@@ -188,8 +188,8 @@ export const divide_in_place : fn_v = (
 };
 
 export const scale : fnf_v = (
-    out: floatData,
-    lhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
     rhs: number,
 
     out_offset: number = 0,
@@ -202,7 +202,7 @@ export const scale : fnf_v = (
 };
 
 export const scale_in_place : fn_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     rhs: number,
 
     lhs_offset: number = 0
@@ -214,8 +214,8 @@ export const scale_in_place : fn_v = (
 };
 
 export const normalize : ff_v = (
-    out: floatData,
-    lhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0
@@ -234,7 +234,7 @@ export const normalize : ff_v = (
 };
 
 export const normalize_in_place : f_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : void => {
     temp_number = Math.hypot(
@@ -251,8 +251,8 @@ export const normalize_in_place : f_v = (
 };
 
 export const dot : ff_n = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -263,9 +263,9 @@ export const dot : ff_n = (
     lhs[lhs_offset+3] * rhs[rhs_offset+3];
 
 export const multiply : fff_v = (
-    out: floatData,
-    lhs: floatData,
-    rhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0,
@@ -311,8 +311,8 @@ export const multiply : fff_v = (
 };
 
 export const multiply_in_place : lr_v = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -469,7 +469,7 @@ export const rgba = (
     g: number = 0,
     b: number = 0,
     a: number = 0,
-    typed_array: floatData = new floatData(4)
+    typed_array: FloatArrays = new FloatArrays(4)
 ) : Color4D => {
     const color = new Color4D(typed_array);
 
@@ -486,7 +486,7 @@ export const dir4 = (
     y: number = 0,
     z: number = 0,
     w: number = 0,
-    typed_array: floatData = new floatData(4)
+    typed_array: FloatArrays = new FloatArrays(4)
 ) : Direction4D => {
     const direction = new Direction4D(typed_array);
 
@@ -503,7 +503,7 @@ export const pos4 = (
     y: number = 0,
     z: number = 0,
     w: number = 0,
-    typed_array: floatData = new floatData(4)
+    typed_array: FloatArrays = new FloatArrays(4)
 ) : Position4D => {
     const position = new Position4D(typed_array);
 

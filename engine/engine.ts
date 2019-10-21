@@ -2,10 +2,10 @@ import Screen from "./screen.js";
 import Camera from "./primitives/camera.js";
 import Matrix4x4 from "./linalng/4D/matrix.js";
 import Direction4D, {dir4} from "./linalng/4D/direction.js";
-import {Meshes} from "./primitives/mesh.js";
 import {tri, Triangle} from "./primitives/triangle.js";
 import {FPSController} from "./input.js";
 import {rgb} from "./linalng/3D/color.js";
+import {Meshes} from "./types";
 
 export default class Engine3D {
     private depth_buffer: Float32Array;

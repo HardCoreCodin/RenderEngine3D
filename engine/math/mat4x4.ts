@@ -2,7 +2,7 @@ import {PRECISION_DIGITS} from "../constants";
 import {Matrix} from "./base";
 import {Direction4D} from "./vec4.js";
 import {
-    floatData,
+    FloatArrays,
     ff_b,
     lr_v,
     f_v,
@@ -13,7 +13,7 @@ import {
 } from "../types.js";
 import Position4D from "../linalng/4D/position";
 
-const temp_matrix = new floatData(16);
+const temp_matrix = new FloatArrays(16);
 let sin, cos;
 function setSinCos(angle: number) {
     sin = Math.sin(angle);
@@ -21,7 +21,7 @@ function setSinCos(angle: number) {
 }
 
 export const set_to_identity : f_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : void => {
     lhs.fill(0, lhs_offset, lhs_offset+16);
@@ -29,8 +29,8 @@ export const set_to_identity : f_v = (
 };
 
 export const inverse : ff_v = (
-    out: floatData,
-    lhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0
@@ -74,7 +74,7 @@ export const inverse : ff_v = (
 };
 
 export const inverse_in_place : f_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : void => {
     temp_matrix.set(lhs, lhs_offset);
@@ -113,8 +113,8 @@ export const inverse_in_place : f_v = (
 };
 
 export const transpose : ff_v = (
-    out: floatData,
-    lhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0
@@ -146,7 +146,7 @@ export const transpose : ff_v = (
 };
 
 export const transpose_in_place : f_v = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : void => {
     temp_matrix.set(lhs, lhs_offset);
@@ -173,8 +173,8 @@ export const transpose_in_place : f_v = (
 };
 
 export const equals : ff_b = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -204,7 +204,7 @@ export const equals : ff_b = (
 };
 
 export const is_identity : f_b = (
-    lhs: floatData,
+    lhs: FloatArrays,
     lhs_offset: number = 0
 ) : boolean =>
     lhs[lhs_offset  ] === 1 &&
@@ -225,9 +225,9 @@ export const is_identity : f_b = (
     lhs[lhs_offset+15] === 1;
 
 export const multiply : fff_v = (
-    out: floatData,
-    lhs: floatData,
-    rhs: floatData,
+    out: FloatArrays,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     out_offset: number = 0,
     lhs_offset: number = 0,
@@ -337,8 +337,8 @@ export const multiply : fff_v = (
 };
 
 export const multiply_in_place : lr_v = (
-    lhs: floatData,
-    rhs: floatData,
+    lhs: FloatArrays,
+    rhs: FloatArrays,
 
     lhs_offset: number = 0,
     rhs_offset: number = 0
@@ -441,7 +441,7 @@ export const multiply_in_place : lr_v = (
 };
 
 export const set_rotation_around_x : nbf_v = (
-    out: floatData,
+    out: FloatArrays,
     angle: number,
     reset = true,
 
@@ -457,7 +457,7 @@ export const set_rotation_around_x : nbf_v = (
 };
 
 export const set_rotation_around_y : nbf_v = (
-    out: floatData,
+    out: FloatArrays,
     angle: number,
     reset = true,
 
@@ -473,7 +473,7 @@ export const set_rotation_around_y : nbf_v = (
 };
 
 export const set_rotation_around_z : nbf_v = (
-    out: floatData,
+    out: FloatArrays,
     angle: number,
     reset = true,
 
@@ -508,7 +508,7 @@ export class Matrix4x4 extends Matrix{
     protected _multiply_in_place : lr_v = multiply_in_place;
 
     constructor(
-        public typed_array: floatData,
+        public typed_array: FloatArrays,
         public typed_array_offset: number = 0,
         public i: Direction4D = new Direction4D(typed_array.subarray(typed_array_offset    , typed_array_offset + 4)),
         public j: Direction4D = new Direction4D(typed_array.subarray(typed_array_offset + 4, typed_array_offset + 8)),
@@ -524,7 +524,7 @@ export const mat4 = (
     x1: number = 0, y1: number = 0, z1: number = 0, w1: number = 0,
     x2: number = 0, y2: number = 0, z2: number = 0, w2: number = 0,
     x3: number = 0, y3: number = 0, z3: number = 0, w3: number = 0,
-    typed_array: floatData = new floatData(16)
+    typed_array: FloatArrays = new FloatArrays(16)
 ) : Matrix4x4 => {
     const color = new Matrix4x4(typed_array);
 

@@ -1,296 +1,337 @@
-// import Position4D, {pos4} from "../linalng/4D/position.js";
-// import Direction4D from "../linalng/4D/direction.js";
-import Transform from "./transform.js";
-import Triangles from "../buffers/triangle.js";
-import Vertices from "../buffers/vertex.js";
-import Direction4D from "../linalng/4D/direction";
-import {tri} from "./triangle";
-import {BaseBuffer, Uint32Buffer} from "../buffers/base";
-import {floatData} from "../types";
-
-export type Meshes = Mesh[];
-
-const OBJ_LINE_HEADER__INDICES = 'f';
-const OBJ_LINE_HEADER__POSITIONS = 'v';
-const OBJ_LINE_HEADER__NORMALS = 'vn';
-const OBJ_LINE_HEADER__UVS = 'vt';
-
+import {
+    IInputIndexBuffers,
+    IInputVaueBuffers,
+    IVertexBuffers,
+    IFaceBuffers,
+    IIndexBuffers,
+    Num3, Num2, Float3, Int3, FloatBuffer
+} from "../types.js";
+import * as C from "../constants.js";
+import {float3, int3, num3, num2} from "../factories.js";
+import {cross, subtract} from "../math/vec3.js";
 
 export class Mesh {
+    public vertices: IVertexBuffers;
+    public indices: IIndexBuffers;
+    public faces?: IFaceBuffers;
+
     constructor(
-        public readonly face_count: number,
-        public readonly vertex_count: number,
+        input_vertices: IInputVaueBuffers,
+        input_indices: IInputIndexBuffers,
+        public readonly flags: number = C.DEFAULT_FLAGS,
+        public readonly face_count: number = input_indices.position[0].length,
+        public readonly vertex_count: number = input_vertices.position[0].length,
 
-        public readonly vertex_positions: floatData,
-        public readonly vertex_normals: floatData,
-        public readonly vertex_colors: floatData,
-        public readonly vertex_uvs: floatData,
+        public readonly has_vertex_normals: boolean = (
+            flags & C.FLAG__GENERATE__VERTEX_NORMALS
+        ) > 0 || (
+            Array.isArray(input_vertices.normal) &&
+            Array.isArray(input_indices.normal) &&
+            input_vertices.normal[0].length > 0 &&
+            input_indices.normal[0].length > 0
+        ),
 
-        public readonly face_positions: floatData,
-        public readonly face_normals: floatData,
-        public readonly face_colors: floatData,
-        public readonly face_uvs: floatData,
+        public readonly has_vertex_colors: boolean = (
+            flags & C.FLAG__GENERATE__VERTEX_COLORS
+        ) > 0 || (
+            Array.isArray(input_vertices.color) &&
+            Array.isArray(input_indices.color) &&
+            input_vertices.color[0].length > 0 &&
+            input_indices.color[0].length > 0
+        ),
 
-        public readonly position_indices: Uint32Array,
-        public readonly normal_indices: Uint32Array,
-        public readonly color_indices: Uint32Array,
-        public readonly uv_indices: Uint32Array,
+        public readonly has_uvs: boolean = (
+            Array.isArray(input_vertices.uv) &&
+            Array.isArray(input_indices.uv) &&
+            input_vertices.uv[0].length > 0 &&
+            input_indices.uv[0].length > 0
+        ),
 
-        public readonly shared_vertex_positions: boolean = vertex_positions.length === vertex_count,
-        public readonly shared_vertex_normals: boolean = vertex_normals.length === vertex_count,
-        public readonly shared_vertex_colors: boolean = vertex_colors.length === vertex_count,
-        public readonly shared_vertex_uvs: boolean = vertex_uvs.length === vertex_count,
+        public readonly has_face_colors: boolean = (
+            flags & C.FLAG__GENERATE__FACE_COLORS
+        ) > 0,
 
-        public readonly transform: Transform = new Transform()
-    ) {}
+        public readonly has_face_positions: boolean = (
+            flags & C.FLAG__GENERATE__FACE_POSITIONS
+        ) > 0,
+    ) {
+        this.vertices = {
+            position: float3(
+                (
+                    flags & C.FLAG__SHARE__VERTEX_POSITIONS
+                ) > 0 ?
+                    vertex_count :
+                    face_count * 3
+            )
+        };
 
-    static fromObj(obj: string, share_vertex_positions: boolean = true, smooth_normals: boolean = false) : Mesh {
-        //
-        // const positions: number[] = [];
-        // const position_indices: number[] = [];
-        //
-        // const normals: number[] = [];
-        // const normal_indices: number[] = [];
-        //
-        // const uvs: number[] = [];
-        // const uv_indices: number[] = [];
+        this.indices = {
+            position: int3(face_count)
+        };
 
-        let line_parts: string[];
-        let line_header : string;
+        this.faces = {
+            normal: float3(face_count)
+        };
 
-        let vertex_index: number;
-        let vertex_indices: string[];
+        // Populate positions:
+        num2float(
+            input_vertices.position,
+            this.vertices.position,
 
-        let line: string[];
-        let line_index: number;
-        let line_part: string;
-        let line_part_index: number;
+            input_indices.position,
+            this.indices.position,
 
-        let offset: number;
-        let face_index: number;
-        let face_vertex_index: number;
+            (flags & C.FLAG__SHARE__VERTEX_POSITIONS) > 0
+        );
 
-        const index_lines = [];
-        const position_lines = [];
-        const normal_lines = [];
-        const uv_lines = [];
+        // Generate face normals:
+        for (let face_id = 0; face_id < face_count; face_id++) {
+            subtract(
+                this.vertices.position, this.indices.position[1][face_id],
+                this.vertices.position, this.indices.position[0][face_id],
+                temp_buffer, 0
+            );
 
-        for (const line of obj.split('\n')) {
-            line_parts = line.split(' ');
-            line_header = line_parts.shift();
+            subtract(
+                this.vertices.position, this.indices.position[2][face_id],
+                this.vertices.position, this.indices.position[0][face_id],
+                temp_buffer, 1
+            );
 
-            switch (line_header) {
-                case OBJ_LINE_HEADER__INDICES: index_lines.push(line_parts); break;
-                case OBJ_LINE_HEADER__POSITIONS: position_lines.push(line_parts); break;
-                case OBJ_LINE_HEADER__NORMALS: normal_lines.push(line_parts); break;
-                case OBJ_LINE_HEADER__UVS: uv_lines.push(line_parts); break;
+            cross(
+                temp_buffer, 0,
+                temp_buffer, 1,
+                temp_buffer, 2
+            );
+
+            this.faces.normal[0][face_id] = temp_buffer[0][2];
+            this.faces.normal[1][face_id] = temp_buffer[1][2];
+            this.faces.normal[2][face_id] = temp_buffer[2][2];
+
+            if (flags & C.FLAG__GENERATE__FACE_COLORS) {
+                // Assigned randomized colors to the faces:
+                // TODO: Implement...
+            }
+
+            if (flags & C.FLAG__GENERATE__FACE_POSITIONS) {
+                // Average face positions from their related vertex positions:
+                // TODO: Implement...
             }
         }
 
-        const vertices_per_face = index_lines[0].length;
-        const vertex_count = position_lines.length;
-        const face_count = index_lines.length;
+        // Populate vertex normals:
+        if (has_vertex_normals) {
+            this.indices.normal = int3(face_count);
+            this.vertices.normal = float3(
+                (
+                    flags & C.FLAG__SHARE__VERTEX_NORMALS
+                ) > 0 ?
+                    vertex_count :
+                    face_count * 3
+            );
 
-        const vertex_array_length = vertex_count << 2;
-        const face_array_length = face_count << 2;
-        const index_array_length = face_count * vertices_per_face;
-
-        const vertex_positions = new floatData(vertex_array_length);
-        const face_positions = new floatData(face_array_length);
-        const face_normals: floatData = new floatData(face_array_length);
-        const face_colors: floatData = new floatData(face_array_length);
-        const face_uvs: floatData = new floatData(face_count << 1);
-
-        const position_indices = new Uint32Array(index_array_length);
-        const normal_indices = new Uint32Array(index_array_length);
-        const color_indices = new Uint32Array(index_array_length);
-        const uv_indices = new Uint32Array(index_array_length);
-
-        // Collect index arrays::
-        for ([line_index, line] of index_lines.entries()) {
-            offset = line_index * vertices_per_face;
-
-            for ([line_part_index, line_part] of line.entries()) {
-                offset += line_part_index;
-
-                vertex_indices = line_part.split('/');
-
-                position_indices[offset] = +vertex_indices[0];
-                if (vertex_indices[1] !== undefined) uv_indices[offset] = +vertex_indices[1];
-                if (vertex_indices[2] !== undefined) normal_indices[offset] = +vertex_indices[2];
-                // TODO: Vertex colors
-            }
-        }
-
-        vertex_positions.fill(1);
-        for ([line_index, line] of position_lines.entries()) {
-            offset = line_index * vertices_per_face;
-            for ([line_part_index, line_part] of line.entries()) {
-                offset += line_part_index;
-                vertex_positions[offset] = +line_part;
-            }
-        }
-
-        const a_to_b = 
-        for (face_index = 0; face_index < face_count; face_index++) {
-            offset = face_index * vertices_per_face;
-
-            for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
-                vertex_index = position_indices[offset + face_vertex_index];
-                face_positions[face_index  ] += vertex_positions[vertex_index  ];
-                face_positions[face_index+1] += vertex_positions[vertex_index+1];
-                face_positions[face_index+2] += vertex_positions[vertex_index+2];
-            }
-
-            face_positions[face_index  ] /= vertices_per_face;
-            face_positions[face_index+1] /= vertices_per_face;
-            face_positions[face_index+2] /= vertices_per_face;
-            face_positions[face_index+3] = 1;
-
-            if (normal_lines.length === 0) {
-                // Compute face normals from face vertex positions:
-
-            }
-        }
-
-        let vertex_normals: floatData;
-        let normal_index: number;
-
-        if (normal_lines.length) {
-            vertex_normals = new floatData(normal_lines.length);
-            for ([line_index, line] of normal_lines.entries()) {
-                offset = line_index * vertices_per_face;
-                for ([line_part_index, line_part] of line.entries())
-                    vertex_normals[offset + line_part_index] = +line_part;
-            }
-
-            // Compute face normals as average of vertex normals
-            for (face_index = 0; face_index < face_count; face_index++) {
-                offset = face_index * vertices_per_face;
-
-                for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
-                    vertex_index = normal_indices[offset + face_vertex_index];
-                    face_normals[face_index  ] += vertex_normals[vertex_index  ];
-                    face_normals[face_index+1] += vertex_normals[vertex_index+1];
-                    face_normals[face_index+2] += vertex_normals[vertex_index+2];
+            if (flags & C.FLAG__GENERATE__VERTEX_NORMALS) {
+                if (flags & C.FLAG__SHARE__VERTEX_NORMALS) {
+                    // Average vertex normals from their related face's normals:
+                    // TODO: Implement...
+                } else {
+                    // Copy over face normals to their respective vertex normals
+                    // TODO: Implement...
                 }
+            } else if (Array.isArray(input_vertices.normal)) num2float(
+                input_vertices.normal,
+                this.vertices.normal,
 
-                face_normals[face_index  ] /= vertices_per_face;
-                face_normals[face_index+1] /= vertices_per_face;
-                face_normals[face_index+2] /= vertices_per_face;
-            }
-        } else {
-            // Compute face normals from face vertex positions:
-            for (face_index = 0; face_index < face_count; face_index++) {
-                offset = face_index * vertices_per_face;
+                input_indices.normal,
+                this.indices.normal,
 
-                for (face_vertex_index = 0; face_vertex_index < vertices_per_face; face_vertex_index++) {
-                    vertex_index = position_indices[offset + face_vertex_index];
+                (flags & C.FLAG__SHARE__VERTEX_NORMALS) > 0
+            );
+        }
+
+        // Populate vertex colors:
+        if (has_vertex_normals) {
+            this.indices.color = int3(face_count);
+            this.vertices.color = float3(
+                (
+                    flags & C.FLAG__SHARE__VERTEX_COLORS
+                ) > 0 ?
+                    vertex_count :
+                    face_count * 3
+            );
+
+            if (flags & C.FLAG__GENERATE__VERTEX_COLORS) {
+                if (flags & C.FLAG__GENERATE__FACE_COLORS) {
+                    if (flags & C.FLAG__SHARE__VERTEX_COLORS) {
+                        // Average vertex colors from their related face's colors:
+                        // TODO: Implement...
+                    } else {
+                        // Copy over face colors to their respective vertex colors
+                        // TODO: Implement...
+                    }
+                } else {
+                    // Assigned randomized colors to the vertices
+                    if (flags & C.FLAG__SHARE__VERTEX_COLORS) {
+                        // TODO: Implement...
+                    } else {
+                        // TODO: Implement...
+                    }
                 }
-            }
-            // Compute vertex normals:
-            if (share_vertex_positions) {
-                vertex_normals = new floatData(vertex_array_length);
+            } else if (Array.isArray(input_vertices.color)) num2float(
+                input_vertices.color,
+                this.vertices.color,
 
-            } else {
-                vertex_normals = new floatData(vertex_array_length * vertices_per_face);
-            }
+                input_indices.color,
+                this.indices.color,
+
+                (flags & C.FLAG__SHARE__VERTEX_COLORS) > 0
+            );
         }
 
+        // Populate vertex UVs:
+        if (has_uvs) {
+            this.indices.uv = int3(face_count);
+            this.vertices.uv = float3(
+                (
+                    flags & C.FLAG__SHARE__VERTEX_UVS
+                ) > 0 ?
+                    vertex_count :
+                    face_count * 3
+            );
 
+            if (Array.isArray(input_vertices.uv)) num2float(
+                input_vertices.uv,
+                this.vertices.uv,
 
-        for (const line of obj.split('\n')) {
-            line_parts = line.split(' ');
-            line_header = line_parts.shift();
+                input_indices.uv,
+                this.indices.uv,
 
-            if (line_header === 'v') {
-                vertex_count++;
-
-                positions.push(+line_parts[0]);
-                positions.push(+line_parts[1]);
-                positions.push(+line_parts[2]);
-                positions.push(1);
-            } else if (line_header === 'vn') {
-                normals.push(+line_parts[0]);
-                normals.push(+line_parts[1]);
-                normals.push(+line_parts[2]);
-                normals.push(0);
-            } else if (line_header === 'vt') {
-                uvs.push(+line_parts[0]);
-                uvs.push(+line_parts[1]);
-                uvs.push(1);
-            }
+                (flags & C.FLAG__SHARE__VERTEX_UVS) > 0
+            );
         }
-
-        const mesh = new Mesh(triangle_count);
-        mesh.vertices.positions.buffer.array.set(positions);
-        mesh.triangles.indices.array.set(position_indices);
-
-        const triangles = new Triangles(triangle_count);
-        triangles.vertices.positions.buffer.array.set(positions);
-        triangles.indices.array.set(position_indices);
-
-        if (normals.length || uvs.length) {
-            const vertex_normals = triangles.vertices.normals.buffer.array;
-            const vertex_uvs = triangles.vertices.uvs.buffer.array;
-
-            let v_idxs: number[];
-            let n_idxs: number[];
-            let uv_idxs: number[];
-
-            let s, e: number;
-
-            for (let t = 0; t < triangle_count; t++) {
-                s = 3 * t;
-                e = 3 * (t + 1);
-
-                v_idxs = position_indices.slice(s, e);
-
-                if (normals.length)
-                    for (const [v_idx, n_idx] of normal_indices.slice(s, e).entries())
-                        vertex_normals.set(
-                            // Vertex normal data
-                            normals.slice(
-                                n_idx,
-                                n_idx + 4
-                            ),
-                            // Offset correlated with vertex index
-                            v_idxs[v_idx] * 4
-                        );
-
-                if (uvs.length)
-                    for (const [v, uv_idx] of uv_indices.slice(s, e).entries())
-                        vertex_uvs.set(
-                            // Vertex UV coordinates data
-                            normals.slice(
-                                uv_idx,
-                                uv_idx + 3
-                            ),
-                            // Offset correlated with vertex index
-                            v_idxs[v] * 3
-                        );
-            }
-        }
-
-
-
-        const triangleLine1 = new Direction4D();
-        const triangleLine2 = new Direction4D();
-// normal(
-//     normal: Direction4D = new Direction4D()
-// ) : Direction4D {
-//     // Get lines either side of triangle
-//     this.vertices[0].position.to(this.vertices[1].position, triangleLine1);
-//     this.vertices[0].position.to(this.vertices[2].position, triangleLine2);
-//
-//     // Take cross product of lines to get normal to triangle surface
-//     return triangleLine1.cross(triangleLine2, normal).normalize();
-// }
-
-        return new Mesh(triangles);
     }
 
-    setTo(buffer: BaseBuffer, source_data, source_indices) {
+    static fromObj(obj: string, share_flags: number = C.DEFAULT_FLAGS): Mesh {
+        const position_ids = num3();
+        const normal_ids = num3();
+        const color_ids = num3();
+        const positions = num3();
+        const normals = num3();
+        const colors = num3();
+        const uv_ids = num3();
+        const uvs = num2();
+        const ids = [position_ids, uv_ids, normal_ids, color_ids];
 
+        let attr_ids, id: string;
+        let strings: string[];
+        let vertex, attr: number;
+
+        for (const line of obj.split('\n')) {
+            if (line.length === 0 || line[0] === '/')
+                continue;
+
+            strings = line.split(' ');
+            switch (strings.shift()) {
+                case C.OBJ_LINE_HEADER__VERTEX: str2num(strings, positions); break;
+                case C.OBJ_LINE_HEADER__NORMAL: str2num(strings, normals); break;
+                case C.OBJ_LINE_HEADER__UV:     str2num(strings, uvs); break;
+                case C.OBJ_LINE_HEADER__FACE:
+                    for ([vertex, attr_ids] of strings.entries())
+                        for ([attr, id] of attr_ids.split('/').entries())
+                            if (id !== '') ids[attr][vertex].push(+id);
+            }
+        }
+
+        const vertices: IInputVaueBuffers = {position: positions};
+        const indices: IInputIndexBuffers = {position: position_ids};
+
+        if (normals[0].length) vertices.normal = normals;
+        if (colors[0].length) vertices.color = colors;
+        if (uvs[0].length) vertices.uv = uvs;
+
+        if (normal_ids[0].length) indices.normal = normal_ids;
+        if (color_ids[0].length) indices.color = color_ids;
+        if (uv_ids[0].length) indices.uv = uv_ids;
+
+        return new Mesh(vertices, indices, share_flags);
     }
 }
+
+const temp_buffer: Float3 = float3(3);
+
+const str2num = (
+    strings: string[],
+    numbers: Num2 | Num3
+) => {
+    for (const [i, string] of strings.entries())
+        numbers[i].push(+string);
+};
+
+const num2float = (
+    input_values: Num2 | Num3,
+    output_values: FloatBuffer,
+
+    input_ids: Num3,
+    output_ids: Int3,
+
+    shared: boolean
+) => {
+    let vertex_num: number;
+    let vertex_ids: number[];
+
+    let component_num: number;
+    let component_values: number[];
+
+    if (shared) {
+        for ([
+            component_num,
+            component_values
+        ] of input_values.entries())
+            output_values[component_num].set(component_values);
+
+        for ([
+            vertex_num,
+            vertex_ids
+        ] of input_ids.entries())
+            output_ids[vertex_num].set(vertex_ids);
+    } else {
+        let output_id = 0;
+        let input_id,
+            face_id,
+            vertex_num,
+            component_num: number;
+
+        for ([vertex_num, vertex_ids] of input_ids.entries()) {
+            for ([face_id, input_id] of vertex_ids.entries()) {
+                output_ids[vertex_num][face_id] = output_id;
+
+                for ([
+                    component_num,
+                    component_values
+                ] of input_values.entries())
+                    output_values[component_num][output_id] = component_values[input_id];
+
+                output_id++;
+            }
+
+            output_id += vertex_ids.length;
+        }
+    }
+};
+
+const num2float2 = (iv: Num2|Num3, ov: FloatBuffer, ii: Num3, oi: Int3, shared: boolean) => {
+    if (shared) {
+        for (const [i, v] of iv.entries()) ov[i].set(v);
+        for (const [i, v] of ii.entries()) oi[i].set(v);
+    } else {
+        let oid = 0;
+        for (const [i, ids] of ii.entries()) {
+            for (const [j, id] of ids.entries()) {
+                oi[i][j] = oid;
+                for (const [c, vs] of iv.entries()) ov[c][oid] = vs[id];
+                oid++;
+            }
+            oid += ids.length;
+        }
+    }
+};

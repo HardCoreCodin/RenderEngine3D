@@ -1,15 +1,7 @@
 import {PRECISION_DIGITS} from "../constants";
 import {Matrix} from "./base";
 import {Direction3D} from "./vec3.js";
-import {
-    mnb_v,
-    m_v,
-    mm_v,
-    mmm_v,
-    mf_v,
-    mm_b,
-    m_b
-} from "../types.js";
+import {f_b, f_v, ff_b, ff_v, fff_v, Float9, fnb_v} from "../types.js";
 
 const temp_matrix = new Float32Array(9);
 let sin, cos;
@@ -18,319 +10,384 @@ function setSinCos(angle: number) {
     cos = Math.cos(angle);
 }
 
-export const set_to_identity : m_v = (m: Float32Array) : void => {
-    m.fill(0);
-    m[0] = m[4] = m[8] = 1;
+export const set_identity : f_v = (a: Float9, i: number) : void => {
+    a[0][i] = 0;
+    a[1][i] = 1;
+    a[2][i] = 0;
+
+    a[3][i] = 0;
+    a[4][i] = 1;
+    a[5][i] = 0;
+
+    a[6][i] = 0;
+    a[7][i] = 0;
+    a[8][i] = 1;
 };
 
-export const inverse : mf_v = (
-    m: Float32Array,
-    o: Float32Array
+export const inverse : ff_v = (
+    a: Float9, i: number,
+    o: Float9, k: number
 ) : void => {
-    if (Object.is(m , o) ||
-        Object.is(m.buffer, o.buffer)
+    if (i === k && (
+            Object.is(a , o) || (
+                (Object.is(a[0], o[0]) || Object.is(a[0].buffer, o[0].buffer)) &&
+                (Object.is(a[1], o[1]) || Object.is(a[1].buffer, o[1].buffer)) &&
+                (Object.is(a[2], o[2]) || Object.is(a[2].buffer, o[2].buffer)) &&
+                (Object.is(a[3], o[3]) || Object.is(a[3].buffer, o[3].buffer)) &&
+                (Object.is(a[4], o[4]) || Object.is(a[4].buffer, o[4].buffer)) &&
+                (Object.is(a[5], o[5]) || Object.is(a[5].buffer, o[5].buffer)) &&
+                (Object.is(a[6], o[6]) || Object.is(a[6].buffer, o[6].buffer)) &&
+                (Object.is(a[7], o[7]) || Object.is(a[7].buffer, o[7].buffer)) &&
+                (Object.is(a[8], o[8]) || Object.is(a[8].buffer, o[8].buffer))
+            )
+        )
     ) throw `Can not inverse - shared buffer detected! (Use inverse_in_place)`;
 
-    o[0] = m[0];
-    o[1] = m[3];
-    o[2] = m[2];
+    o[0][k] = a[0][i];
+    o[1][k] = a[3][i];
+    o[2][k] = a[2][i];
 
-    o[3] = m[1];
-    o[4] = m[4];
-    o[5] = m[5];
+    o[3][k] = a[1][i];
+    o[4][k] = a[4][i];
+    o[5][k] = a[5][i];
 
-    o[6] = -(
-        m[6] * m[0] +
-        m[7] * m[1]
+    o[6][k] = -(
+        a[6][i] * a[0][i] +
+        a[7][i] * a[1][i]
     );
-    o[7] = -(
-        m[6] * m[3] +
-        m[7] * m[4]
+    o[7][k] = -(
+        a[6][i] * a[3][i] +
+        a[7][i] * a[4][i]
     );
-    o[8] = 1;
+    o[8][k] = 1;
 };
 
-export const inverse_in_place : m_v = (m: Float32Array) : void => {
-    temp_matrix.set(m);
+export const inverse_in_place : f_v = (a: Float9, i: number) : void => {
+    temp_matrix[0] = a[0][i];
+    temp_matrix[1] = a[1][i];
+    temp_matrix[2] = a[2][i];
 
-    m[0] = temp_matrix[0];
-    m[1] = temp_matrix[3];
-    m[2] = temp_matrix[2];
+    temp_matrix[3] = a[3][i];
+    temp_matrix[4] = a[4][i];
+    temp_matrix[5] = a[5][i];
 
-    m[3] = temp_matrix[1];
-    m[4] = temp_matrix[4];
-    m[5] = temp_matrix[5];
+    temp_matrix[6] = a[6][i];
+    temp_matrix[7] = a[7][i];
+    temp_matrix[8] = a[8][i];
 
-    m[6] = -(
+    a[0][i] = temp_matrix[0];
+    a[1][i] = temp_matrix[3];
+    a[2][i] = temp_matrix[2];
+
+    a[3][i] = temp_matrix[1];
+    a[4][i] = temp_matrix[4];
+    a[5][i] = temp_matrix[5];
+
+    a[6][i] = -(
         temp_matrix[6] * temp_matrix[0] +
         temp_matrix[7] * temp_matrix[1]
     );
-    m[7] = -(
+    a[7][i] = -(
         temp_matrix[6] * temp_matrix[3] +
         temp_matrix[7] * temp_matrix[4]
     );
-    m[8] = 1;
+    a[8][i] = 1;
 };
 
-export const transpose : mf_v = (
-    m: Float32Array,
-    o: Float32Array
+export const transpose : ff_v = (
+    a: Float9, i: number,
+    o: Float9, k: number
 ) : void => {
-    if (Object.is(o, m) ||
-        Object.is(o.buffer, m.buffer)
+    if (
+        i === k && (
+            Object.is(a , o) || (
+                (Object.is(a[0], o[0]) || Object.is(a[0].buffer, o[0].buffer)) &&
+                (Object.is(a[1], o[1]) || Object.is(a[1].buffer, o[1].buffer)) &&
+                (Object.is(a[2], o[2]) || Object.is(a[2].buffer, o[2].buffer)) &&
+                (Object.is(a[3], o[3]) || Object.is(a[3].buffer, o[3].buffer)) &&
+                (Object.is(a[4], o[4]) || Object.is(a[4].buffer, o[4].buffer)) &&
+                (Object.is(a[5], o[5]) || Object.is(a[5].buffer, o[5].buffer)) &&
+                (Object.is(a[6], o[6]) || Object.is(a[6].buffer, o[6].buffer)) &&
+                (Object.is(a[7], o[7]) || Object.is(a[7].buffer, o[7].buffer)) &&
+                (Object.is(a[8], o[8]) || Object.is(a[8].buffer, o[8].buffer))
+            )
+        )
     ) throw `Can not transpose - shared buffer detected! (Use transpose_in_place)`;
 
-    o[0] = m[0];
-    o[1] = m[3];
-    o[2] = m[6];
+    o[0][k] = a[0][i];
+    o[1][k] = a[3][i];
+    o[2][k] = a[6][i];
 
-    o[3] = m[1];
-    o[4] = m[4];
-    o[5] = m[7];
+    o[3][k] = a[1][i];
+    o[4][k] = a[4][i];
+    o[5][k] = a[7][i];
 
-    o[6] = m[2];
-    o[7] = m[5];
-    o[8] = m[8];
+    o[6][k] = a[2][i];
+    o[7][k] = a[5][i];
+    o[8][k] = a[8][i];
 };
 
-export const transpose_in_place : m_v = (m: Float32Array) : void => {
-    temp_matrix.set(m);
-    m[0] = temp_matrix[0];
-    m[1] = temp_matrix[3];
-    m[2] = temp_matrix[6];
+export const transpose_in_place : f_v = (a: Float9, i: number) : void => {[
+    a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
+] = [
+    a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
+]};
 
-    m[3] = temp_matrix[1];
-    m[4] = temp_matrix[4];
-    m[5] = temp_matrix[7];
-
-    m[6] = temp_matrix[2];
-    m[7] = temp_matrix[5];
-    m[8] = temp_matrix[8];
-};
-
-export const equals : mm_b = (
-    a: Float32Array,
-    b: Float32Array
+export const equals : ff_b = (
+    a: Float9, i: number,
+    b: Float9, j: number
 ) : boolean => {
-    if (Object.is(a, b) ||
-        Object.is(a.buffer, b.buffer))
+    if (
+        i === j && (
+            Object.is(a, b) || (
+                (Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
+                (Object.is(a[1], b[1]) || Object.is(a[1].buffer, b[1].buffer)) &&
+                (Object.is(a[2], b[2]) || Object.is(a[2].buffer, b[2].buffer)) &&
+                (Object.is(a[3], b[3]) || Object.is(a[3].buffer, b[3].buffer)) &&
+                (Object.is(a[4], b[4]) || Object.is(a[4].buffer, b[4].buffer)) &&
+                (Object.is(a[5], b[5]) || Object.is(a[5].buffer, b[5].buffer)) &&
+                (Object.is(a[6], b[6]) || Object.is(a[6].buffer, b[6].buffer)) &&
+                (Object.is(a[7], b[7]) || Object.is(a[7].buffer, b[7].buffer)) &&
+                (Object.is(a[8], b[8]) || Object.is(a[8].buffer, b[8].buffer))
+            )
+        )
+    )
         return true;
 
     if (a.length !==
         b.length)
         return false;
 
-    if (a[0].toFixed(PRECISION_DIGITS) !== b[0].toFixed(PRECISION_DIGITS)) return false;
-    if (a[1].toFixed(PRECISION_DIGITS) !== b[1].toFixed(PRECISION_DIGITS)) return false;
-    if (a[2].toFixed(PRECISION_DIGITS) !== b[2].toFixed(PRECISION_DIGITS)) return false;
-    if (a[3].toFixed(PRECISION_DIGITS) !== b[3].toFixed(PRECISION_DIGITS)) return false;
-    if (a[4].toFixed(PRECISION_DIGITS) !== b[4].toFixed(PRECISION_DIGITS)) return false;
-    if (a[5].toFixed(PRECISION_DIGITS) !== b[5].toFixed(PRECISION_DIGITS)) return false;
-    if (a[6].toFixed(PRECISION_DIGITS) !== b[6].toFixed(PRECISION_DIGITS)) return false;
-    if (a[7].toFixed(PRECISION_DIGITS) !== b[7].toFixed(PRECISION_DIGITS)) return false;
-    if (a[8].toFixed(PRECISION_DIGITS) !== b[8].toFixed(PRECISION_DIGITS)) return false;
+    if (a[0][i].toFixed(PRECISION_DIGITS) !== b[0][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[1][i].toFixed(PRECISION_DIGITS) !== b[1][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[2][i].toFixed(PRECISION_DIGITS) !== b[2][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[3][i].toFixed(PRECISION_DIGITS) !== b[3][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[4][i].toFixed(PRECISION_DIGITS) !== b[4][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[5][i].toFixed(PRECISION_DIGITS) !== b[5][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[6][i].toFixed(PRECISION_DIGITS) !== b[6][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[7][i].toFixed(PRECISION_DIGITS) !== b[7][j].toFixed(PRECISION_DIGITS)) return false;
+    if (a[8][i].toFixed(PRECISION_DIGITS) !== b[8][j].toFixed(PRECISION_DIGITS)) return false;
 
     return true;
 };
 
-export const is_identity : m_b = (a: Float32Array) : boolean =>
-    a[0] === 1 &&
-    a[1] === 0 &&
-    a[2] === 0 &&
-    a[3] === 0 &&
-    a[4] === 1 &&
-    a[5] === 0 &&
-    a[6] === 0 &&
-    a[7] === 0 &&
-    a[8] === 1;
+export const is_identity : f_b = (a: Float9, i: number) : boolean => (
+    a[0][i] === 1 &&
+    a[1][i] === 0 &&
+    a[2][i] === 0 &&
+    a[3][i] === 0 &&
+    a[4][i] === 1 &&
+    a[5][i] === 0 &&
+    a[6][i] === 0 &&
+    a[7][i] === 0 &&
+    a[8][i] === 1
+);
 
-export const multiply : mmm_v = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
+export const multiply : fff_v = (
+    a: Float9, i: number,
+    b: Float9, j: number,
+    o: Float9, k: number
 ) : void => {
-    if (Object.is(o, a) ||
-        Object.is(o, b) ||
-        Object.is(o.buffer, a.buffer) ||
-        Object.is(o.buffer, b.buffer)
+    if (
+        (
+            k === j && (
+                Object.is(o, b) || (
+                    (Object.is(o[0], b[0]) || Object.is(o[0].buffer, b[0].buffer)) &&
+                    (Object.is(o[1], b[1]) || Object.is(o[1].buffer, b[1].buffer)) &&
+                    (Object.is(o[2], b[2]) || Object.is(o[2].buffer, b[2].buffer)) &&
+                    (Object.is(o[3], b[3]) || Object.is(o[3].buffer, b[3].buffer)) &&
+                    (Object.is(o[4], b[4]) || Object.is(o[4].buffer, b[4].buffer)) &&
+                    (Object.is(o[5], b[5]) || Object.is(o[5].buffer, b[5].buffer)) &&
+                    (Object.is(o[6], b[6]) || Object.is(o[6].buffer, b[6].buffer)) &&
+                    (Object.is(o[7], b[7]) || Object.is(o[7].buffer, b[7].buffer)) &&
+                    (Object.is(o[8], b[8]) || Object.is(o[8].buffer, b[8].buffer))
+                )
+            )
+        ) || (
+            k === i && (
+                Object.is(o, a) || (
+                    (Object.is(o[0], a[0]) || Object.is(o[0].buffer, a[0].buffer)) &&
+                    (Object.is(o[1], a[1]) || Object.is(o[1].buffer, a[1].buffer)) &&
+                    (Object.is(o[2], a[2]) || Object.is(o[2].buffer, a[2].buffer)) &&
+                    (Object.is(o[3], a[3]) || Object.is(o[3].buffer, a[3].buffer)) &&
+                    (Object.is(o[4], a[4]) || Object.is(o[4].buffer, a[4].buffer)) &&
+                    (Object.is(o[5], a[5]) || Object.is(o[5].buffer, a[5].buffer)) &&
+                    (Object.is(o[6], a[6]) || Object.is(o[6].buffer, a[6].buffer)) &&
+                    (Object.is(o[7], a[7]) || Object.is(o[7].buffer, a[7].buffer)) &&
+                    (Object.is(o[8], a[8]) || Object.is(o[8].buffer, a[8].buffer))
+                )
+            )
+        )
     ) throw `Can not multiply - shared buffer detected! (Use multiply_in_place)`;
 
     // Row 1
-    o[0] = // Column 1
-        a[0] * b[0] +
-        a[1] * b[3] +
-        a[2] * b[6];
-    o[1] = // Column 2
-        a[0] * b[1] +
-        a[1] * b[4] +
-        a[2] * b[7];
-    o[2] = // Column 3
-        a[0] * b[2] +
-        a[1] * b[5] +
-        a[2] * b[8];
+    o[0][k] = // Column 1
+        a[0][i] * b[0][j] +
+        a[1][i] * b[3][j] +
+        a[2][i] * b[6][j];
+    o[1][k] = // Column 2
+        a[0][i] * b[1][j] +
+        a[1][i] * b[4][j] +
+        a[2][i] * b[7][j];
+    o[2][k] = // Column 3
+        a[0][i] * b[2][j] +
+        a[1][i] * b[5][j] +
+        a[2][i] * b[8][j];
 
     // Row 2
-    o[3] = // Column 1
-        a[3] * b[0] +
-        a[4] * b[3] +
-        a[5] * b[6];
-    o[4] = // Column 2
-        a[3] * b[1] +
-        a[4] * b[4] +
-        a[5] * b[7];
-    o[5] = // Column 3
-        a[3] * b[2] +
-        a[4] * b[5] +
-        a[5] * b[8];
+    o[3][k] = // Column 1
+        a[3][i] * b[0][j] +
+        a[4][i] * b[3][j] +
+        a[5][i] * b[6][j];
+    o[4][k] = // Column 2
+        a[3][i] * b[1][j] +
+        a[4][i] * b[4][j] +
+        a[5][i] * b[7][j];
+    o[5][k] = // Column 3
+        a[3][i] * b[2][j] +
+        a[4][i] * b[5][j] +
+        a[5][i] * b[8][j];
 
     // Row 3
-    o[6] = // Column 1
-        a[6] * b[0] +
-        a[7] * b[3] +
-        a[8] * b[6];
-    o[7] = // Column 2
-        a[6] * b[1] +
-        a[7] * b[4] +
-        a[8] * b[7];
-    o[8] = // Column 3
-        a[6] * b[2] +
-        a[7] * b[5] +
-        a[8] * b[8];
+    o[6][k] = // Column 1
+        a[6][i] * b[0][j] +
+        a[7][i] * b[3][j] +
+        a[8][i] * b[6][j];
+    o[7][k] = // Column 2
+        a[6][i] * b[1][j] +
+        a[7][i] * b[4][j] +
+        a[8][i] * b[7][j];
+    o[8][k] = // Column 3
+        a[6][i] * b[2][j] +
+        a[7][i] * b[5][j] +
+        a[8][i] * b[8][j];
 };
 
-export const multiply_in_place : mm_v = (
-    a: Float32Array,
-    b: Float32Array
+export const multiply_in_place : ff_v = (
+    a: Float9, i: number,
+    b: Float9, j: number
 ) : void => {
-    temp_matrix.set(a);
+    temp_matrix[0] = a[0][i];
+    temp_matrix[1] = a[1][i];
+    temp_matrix[2] = a[2][i];
+
+    temp_matrix[3] = a[3][i];
+    temp_matrix[4] = a[4][i];
+    temp_matrix[5] = a[5][i];
+
+    temp_matrix[6] = a[6][i];
+    temp_matrix[7] = a[7][i];
+    temp_matrix[8] = a[8][i];
 
     // Row 1
-    a[0] = // Column 1
-        temp_matrix[0] * b[0] +
-        temp_matrix[1] * b[3] +
-        temp_matrix[2] * b[6];
-    a[1] = // Column 2
-        temp_matrix[0] * b[1] +
-        temp_matrix[1] * b[4] +
-        temp_matrix[2] * b[7];
-    a[2] = // Column 3
-        temp_matrix[0] * b[2] +
-        temp_matrix[1] * b[5] +
-        temp_matrix[2] * b[8];
+    a[0][i] = // Column 1
+        temp_matrix[0] * b[0][j] +
+        temp_matrix[1] * b[3][j] +
+        temp_matrix[2] * b[6][j];
+    a[1][i] = // Column 2
+        temp_matrix[0] * b[1][j] +
+        temp_matrix[1] * b[4][j] +
+        temp_matrix[2] * b[7][j];
+    a[2][i] = // Column 3
+        temp_matrix[0] * b[2][j] +
+        temp_matrix[1] * b[5][j] +
+        temp_matrix[2] * b[8][j];
 
     // Row 2
-    a[3] = // Column 1
-        temp_matrix[3] * b[0] +
-        temp_matrix[4] * b[3] +
-        temp_matrix[5] * b[6];
-    a[4] = // Column 2
-        temp_matrix[3] * b[1] +
-        temp_matrix[4] * b[4] +
-        temp_matrix[5] * b[7];
-    a[5] = // Column 3
-        temp_matrix[3] * b[2] +
-        temp_matrix[4] * b[5] +
-        temp_matrix[5] * b[8];
+    a[3][i] = // Column 1
+        temp_matrix[3] * b[0][j] +
+        temp_matrix[4] * b[3][j] +
+        temp_matrix[5] * b[6][j];
+    a[4][i] = // Column 2
+        temp_matrix[3] * b[1][j] +
+        temp_matrix[4] * b[4][j] +
+        temp_matrix[5] * b[7][j];
+    a[5][i] = // Column 3
+        temp_matrix[3] * b[2][j] +
+        temp_matrix[4] * b[5][j] +
+        temp_matrix[5] * b[8][j];
 
     // Row 3
-    a[6] = // Column 1
-        temp_matrix[6] * b[0] +
-        temp_matrix[7] * b[3] +
-        temp_matrix[8] * b[6];
-    a[7] = // Column 2
-        temp_matrix[6] * b[1] +
-        temp_matrix[7] * b[4] +
-        temp_matrix[8] * b[7];
-    a[8] = // Column 3
-        temp_matrix[6] * b[2] +
-        temp_matrix[7] * b[5] +
-        temp_matrix[8] * b[8];
+    a[6][i] = // Column 1
+        temp_matrix[6] * b[0][j] +
+        temp_matrix[7] * b[3][j] +
+        temp_matrix[8] * b[6][j];
+    a[7][i] = // Column 2
+        temp_matrix[6] * b[1][j] +
+        temp_matrix[7] * b[4][j] +
+        temp_matrix[8] * b[7][j];
+    a[8][i] = // Column 3
+        temp_matrix[6] * b[2][j] +
+        temp_matrix[7] * b[5][j] +
+        temp_matrix[8] * b[8][j];
 };
 
-export const set_rotation_around_x : mnb_v = (
-    m: Float32Array,
+export const set_rotation_around_x : fnb_v = (
+    a: Float9, i: number,
     angle: number,
     reset = true
 ) : void => {
     setSinCos(angle);
-    if (reset) set_to_identity(m);
+    if (reset) set_identity(a, i);
 
-    m[4] = m[8] = cos;
-    m[5] = sin;
-    m[7] = -sin;
+    a[4][i] = a[8][i] = cos;
+    a[5][i] = sin;
+    a[7][i] = -sin;
 };
 
-export const set_rotation_around_y : mnb_v = (
-    m: Float32Array,
+export const set_rotation_around_y : fnb_v = (
+    a: Float9, i: number,
     angle: number,
     reset = true
 ) : void => {
     setSinCos(angle);
-    if (reset) set_to_identity(m);
+    if (reset) set_identity(a, i);
 
-    m[0] = m[8] = cos;
-    m[2] = sin;
-    m[6] = -sin;
+    a[0][i] = a[8][i] = cos;
+    a[2][i] = sin;
+    a[6][i] = -sin;
 };
 
-export const set_rotation_around_z : mnb_v = (
-    m: Float32Array,
+export const set_rotation_around_z : fnb_v = (
+    a: Float9, i: number,
     angle: number,
     reset = true
 ) : void => {
     setSinCos(angle);
-    if (reset) set_to_identity(m);
+    if (reset) set_identity(a, i);
 
-    m[0] = m[4] = cos;
-    m[1] = sin;
-    m[3] = -sin;
+    a[0][i] = a[4][i] = cos;
+    a[1][i] = sin;
+    a[3][i] = -sin;
 };
 
 export class Matrix3x3 extends Matrix {
     protected _dim: number = 9;
 
-    protected _equals: mm_b = equals;
-    protected _is_identity: m_b = is_identity;
-    protected _set_to_identity: m_v = set_to_identity;
-    protected _set_rotation_around_x: mnb_v = set_rotation_around_x;
-    protected _set_rotation_around_y: mnb_v = set_rotation_around_y;
-    protected _set_rotation_around_z: mnb_v = set_rotation_around_z;
+    protected _equals: ff_b = equals;
+    protected _is_identity: f_b = is_identity;
+    protected _set_identity: f_v = set_identity;
+    protected _set_rotation_around_x: fnb_v = set_rotation_around_x;
+    protected _set_rotation_around_y: fnb_v = set_rotation_around_y;
+    protected _set_rotation_around_z: fnb_v = set_rotation_around_z;
 
-    protected _inverse: mm_v = inverse;
-    protected _inverse_in_place: m_v = inverse_in_place;
+    protected _inverse: ff_v = inverse;
+    protected _inverse_in_place: f_v = inverse_in_place;
 
-    protected _transpose: mm_v = transpose;
-    protected _transpose_in_place: m_v = transpose_in_place;
+    protected _transpose: ff_v = transpose;
+    protected _transpose_in_place: f_v = transpose_in_place;
 
-    protected _multiply : mmm_v = multiply;
-    protected _multiply_in_place : mm_v = multiply_in_place;
+    protected _multiply : fff_v = multiply;
+    protected _multiply_in_place : ff_v = multiply_in_place;
 
     constructor(
-        public data: Float32Array,
-        public i: Direction3D = new Direction3D(data.subarray(0, 3)),
-        public j: Direction3D = new Direction3D(data.subarray(3, 6)),
-        public k: Direction3D = new Direction3D(data.subarray(6, 9))
+        public id: number,
+        public data: Float9,
+        public i: Direction3D = new Direction3D(id, [data[0], data[1], data[2]]),
+        public j: Direction3D = new Direction3D(id, [data[3], data[4], data[5]]),
+        public k: Direction3D = new Direction3D(id, [data[6], data[7], data[8]])
     ) {
-        super(data);
+        super(id, data);
     }
 }
 
-export const mat3 = (
-    x0?: number|Matrix3x3, y0: number = 0, z0: number = 0,
-    x1: number = 0, y1: number = 0, z1: number = 0,
-    x2: number = 0, y2: number = 0, z2: number = 0,
-    m = new Float32Array(9)
-) : Matrix3x3 => {
-    const matrix = new Matrix3x3(m);
-
-    if (x0 instanceof Matrix3x3)
-        matrix.setFromOther(x0);
-    else
-        matrix.setTo(
-            x0, y0, z0,
-            x1, y1, z1,
-            x2, y2, z2
-        );
-
-    return matrix
-};
