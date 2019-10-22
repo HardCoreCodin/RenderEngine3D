@@ -49,7 +49,7 @@ export interface IFaceBuffers {
     position?: Float3 | Float4
 }
 
-export interface IInputVaueBuffers extends IBuffers {
+export interface IInputVertexBuffers extends IBuffers {
     position: Num3,
     normal?: Num3,
     color?: Num3,
@@ -61,6 +61,22 @@ export interface IInputIndexBuffers extends IBuffers {
     normal?: Num3,
     color?: Num3,
     uv?: Num3
+}
+
+export interface IBaseData {
+    vertex: IVertexBuffers | IInputVertexBuffers,
+    index: IIndexBuffers | IInputIndexBuffers
+}
+
+export interface IInputData extends IBaseData {
+    vertex: IInputVertexBuffers,
+    index: IInputIndexBuffers
+}
+
+export interface IData extends IBaseData {
+    vertex: IVertexBuffers,
+    index: IIndexBuffers,
+    face?: IFaceBuffers
 }
 
 export type f_v = (a: FloatArrays, i: number) => void;
