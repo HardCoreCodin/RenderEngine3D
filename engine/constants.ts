@@ -19,3 +19,28 @@ export const DEFAULT_FLAGS = (
     FLAG__SHARE__VERTEX_NORMALS |
     FLAG__SHARE__VERTEX_COLORS
 );
+
+export const enum ATTRIBUTE {
+    position,
+    normal,
+    color,
+    uv
+}
+export const ATTRS: ATTRIBUTE[] = [
+    ATTRIBUTE.position,
+    ATTRIBUTE.normal,
+    ATTRIBUTE.color,
+    ATTRIBUTE.uv
+];
+export const ATTR_NAMES: string[] = [
+    'position',
+    'normal',
+    'color',
+    'uv'
+];
+
+export const enum ATTR_LOADING_MODE {
+    FROM_INPUTS,
+    GENERATED,
+    FAN_IN
+}

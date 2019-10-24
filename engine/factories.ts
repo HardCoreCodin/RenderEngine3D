@@ -1,6 +1,7 @@
-import {Float16, Float2, Float3, Float4, Float9, Int3, Num2, Num3, Num4} from "./types.js";
+import {Float16, Float2, Float3, Float4, Float9, FloatValues, Int3, Num2, Num3, Num4} from "./types.js";
 import {Color3D, Direction3D, Position3D} from "./math/vec3.js";
 import {Matrix3x3} from "./math/mat3x3.js";
+import {ATTRIBUTE} from "./constants";
 
 export const num2 = (length: number = 0) : Num2 => [
     Array(length),
@@ -79,6 +80,14 @@ export const float16 = (length: number) : Float16 => [
     new Float32Array(length),
     new Float32Array(length)
 ];
+
+export const float = (length: number, dim: number = 3) : FloatValues => {
+    switch (dim) {
+        case 2: return float2(length);
+        case 3: return float3(length);
+        case 4: return float4(length);
+    }
+};
 
 export const rgb = (
     r?: number | Color3D,
