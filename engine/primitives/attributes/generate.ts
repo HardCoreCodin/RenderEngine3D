@@ -1,8 +1,6 @@
 import {
-    FaceValues,
     FaceVertices,
-    FloatValues,
-    SharedVertexValues,
+    Values,
     UnsharedVertexValues,
     VertexFaces
 } from "../../types.js";
@@ -40,37 +38,16 @@ export const generateVertexFaces = (
     return vertex_faces;
 };
 
-export const randomize = (values: FloatValues) : void => {
+export const randomize = (values: Values) : void => {
     // Assigned random values:
     for (const array of values)
         for (const index of array.keys())
             array[index] = Math.random();
 };
 
-export const distributeFacesToUnsharedVertices = (
-    faces: FloatValues,
-    unshared_vertices: UnsharedVertexValues
-) : void => {
-    // Copy over face-attribute values to their respective vertex-attribute values:
-    for (const vertex_components of unshared_vertices)
-        for (const [c, vertex] of vertex_components.entries())
-            for (let f = 0; f < faces[0].length; f++)
-                vertex[f] = faces[c][f];
-};
-
-export const averageUnsharedVerticesToFaces = (
-    unshared_vertices: UnsharedVertexValues,
-    faces: FaceValues
-) : void => {
-    const [v0, v1, v2] = unshared_vertices;
-    for (const [c, face] of faces.entries())
-        for (let f = 0; f < faces.length; f++)
-            face[f] = (v0[c][f] + v1[c][f] + v2[c][f]) / 3;
-};
-
 export const averageSharedVerticesToFaces = (
-    shared_vertices: SharedVertexValues,
-    faces: FaceValues,
+    shared_vertices: Values,
+    faces: Values,
     face_vertices: FaceVertices
 ) : void => {
     for (const [c, vertex] of this.values.entries()) {
@@ -83,9 +60,19 @@ export const averageSharedVerticesToFaces = (
     }
 };
 
+export const averageUnsharedVerticesToFaces = (
+    unshared_vertices: UnsharedVertexValues,
+    faces: Values
+) : void => {
+    const [v0, v1, v2] = unshared_vertices;
+    for (const [c, face] of faces.entries())
+        for (let f = 0; f < faces.length; f++)
+            face[f] = (v0[c][f] + v1[c][f] + v2[c][f]) / 3;
+};
+
 export const averageFacesToSharedVertices = (
-    faces: FloatValues,
-    shared_Vertices: SharedVertexValues,
+    faces: Values,
+    shared_Vertices: Values,
     vertex_faces: VertexFaces
 ) : void => {
     // Average vertex-attribute values from their related face's attribute values:
@@ -102,9 +89,20 @@ export const averageFacesToSharedVertices = (
     }
 };
 
+export const distributeFacesToUnsharedVertices = (
+    faces: Values,
+    unshared_vertices: UnsharedVertexValues
+) : void => {
+    // Copy over face-attribute values to their respective vertex-attribute values:
+    for (const vertex_components of unshared_vertices)
+        for (const [c, vertex] of vertex_components.entries())
+            for (let f = 0; f < faces[0].length; f++)
+                vertex[f] = faces[c][f];
+};
+
 export const computeFaceNormalsFromSharedVertexPositions = (
-    shared_vertices: SharedVertexValues,
-    faces: FaceValues,
+    shared_vertices: Values,
+    faces: Values,
     face_vertices: FaceVertices
 ) : void => {
     for (let f = 0; f < faces[0].length; f++) {
@@ -118,21 +116,14 @@ export const computeFaceNormalsFromSharedVertexPositions = (
             shared_vertices, face_vertices[0][f],
             temp, 1
         );
-        cross(
-            temp, 0,
-            temp, 1,
-            temp, 2
-        );
 
-        faces[0][f] = temp[0][2];
-        faces[1][f] = temp[1][2];
-        faces[2][f] = temp[2][2];
+        setFaceNormalsFromTempVectors(faces, f);
     }
 };
 
 export const computeFaceNormalsFromUnsharedVertexPositions = (
     unshared_vertices: UnsharedVertexValues,
-    faces: FaceValues
+    faces: Values
 ) : void => {
     for (let f = 0; f < faces[0].length; f++) {
         subtract(
@@ -145,14 +136,19 @@ export const computeFaceNormalsFromUnsharedVertexPositions = (
             unshared_vertices[0], f,
             temp, 1
         );
-        cross(
-            temp, 0,
-            temp, 1,
-            temp, 2
-        );
 
-        faces[0][f] = temp[0][2];
-        faces[1][f] = temp[1][2];
-        faces[2][f] = temp[2][2];
+        setFaceNormalsFromTempVectors(faces, f);
     }
+};
+
+const setFaceNormalsFromTempVectors = (faces: Values, face_index: number) => {
+    cross(
+        temp, 0,
+        temp, 1,
+        temp, 2
+    );
+
+    faces[0][face_index] = temp[0][2];
+    faces[1][face_index] = temp[1][2];
+    faces[2][face_index] = temp[2][2];
 };

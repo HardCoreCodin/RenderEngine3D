@@ -1,54 +1,46 @@
-import {ATTR_LOADING_MODE, ATTR_NAMES, ATTRIBUTE} from "../../constants.js";
-import {FaceValues, IMesh, VertexValues} from "../../types.js";
+import {ATTRIBUTE, DIM} from "../../constants.js";
+import {Values} from "../../types.js";
 import {float} from "../../factories.js";
+import {randomize} from "./generate.js";
+import {AttributeInputs} from "./input.js";
 
-export class DataAttribute {
-    public readonly id: ATTRIBUTE;
+export class BaseAttribute {
     public readonly name: string;
-    public readonly dim: number = 3;
-    public readonly supported_loading_modes: ATTR_LOADING_MODE[] = [];
+    public readonly id: ATTRIBUTE;
+    public readonly dim: DIM = DIM._3D;
 
-    // public readonly is_allocated: boolean;
-    public is_loaded: boolean;
-    public values: FaceValues | VertexValues | null = null;
+    public readonly values: Values;
+    public is_loaded: boolean = false;
 
-    constructor(
-        public readonly mesh: IMesh,
-        public readonly length: number,
-        public readonly loading_mode: ATTR_LOADING_MODE = ATTR_LOADING_MODE.FROM_INPUTS,
-    ) {
-        this.name = ATTR_NAMES[this.id];
-        this.allocate();
-        this.load();
+    constructor(length: number) {
+        this.values = float(length, this.dim)
     }
 
-    allocate() {
-        this.values = float(this.length, this.dim);
-        // this.is_allocated = true;
-    }
+    protected _load(inputs: AttributeInputs): void {
+        if (inputs === null)
+            throw `${this.name}s could not be loaded, as there are no inputs!`;
 
-    load() {
-        if (!(ATTR_LOADING_MODE.FROM_INPUTS in this.supported_loading_modes))
-            throw `Unsupported loading mode ${this.loading_mode} for ${this.name}!`;
-
-        switch (this.loading_mode) {
-            case ATTR_LOADING_MODE.FROM_INPUTS: this.loadFromInputs(); break;
-            case ATTR_LOADING_MODE.FAN_IN: this.fanIn(); break;
-            case ATTR_LOADING_MODE.GENERATED: this.generate(); break;
-        }
+        for (const [component_num, component_values] of this.values.entries())
+            component_values.set(inputs.vertices[component_num]);
 
         this.is_loaded = true;
     }
 
-    generate() : void {
-        throw `Not Implemented!`;
-    }
+    protected _generate() : void {
+        randomize(this.values);
 
-    fanIn() : void {
-        throw `Not Implemented!`;
+        this.is_loaded = true;
     }
+}
 
-    loadFromInputs() : void {
-        throw `Not Implemented!`;
-    }
+export interface ILoad {
+    load(...args: any[]): void;
+}
+
+export interface IGather {
+    gatherFrom(...args: any[]): void;
+}
+
+export interface IGenerate {
+    generate(...args: any[]): void;
 }

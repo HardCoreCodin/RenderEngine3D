@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {ColorMixin, DirectionMixin, PositionMixin, Vector} from "./base.js";
-import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, Float3, Float9, fn_v, fnf_v} from "../types.js";
+import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, FloatArrays3, FloatArrays9, fn_v, fnf_v} from "../types.js";
 
 let temp_number: number;
 const temp_lhs = new Float32Array(3);
@@ -8,7 +8,7 @@ const temp_rhs = new Float32Array(3);
 const temp_matrix = new Float32Array(9);
 
 export const length : f_n = (
-    a: Float3, i: number
+    a: FloatArrays3, i: number
 ) : number => Math.hypot(
     a[0][i],
     a[1][i],
@@ -16,8 +16,8 @@ export const length : f_n = (
 );
 
 export const distance : ff_n = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : number => Math.hypot(
     (b[0][j] - a[0][i]),
     (b[1][j] - a[1][i]),
@@ -25,7 +25,7 @@ export const distance : ff_n = (
 );
 
 export const length_squared : f_n = (
-    a: Float3, i: number
+    a: FloatArrays3, i: number
 ) : number => (
     a[0][i]**2 +
     a[1][i]**2 +
@@ -33,8 +33,8 @@ export const length_squared : f_n = (
 );
 
 export const distance_squared : ff_n = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : number => (
     (b[0][j] - a[0][i])**2 +
     (b[1][j] - a[1][i])**2 +
@@ -42,8 +42,8 @@ export const distance_squared : ff_n = (
 );
 
 export const equals : ff_b = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : boolean => {
     if (i === j && ((Object.is(a, b)) || (
         (Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
@@ -59,9 +59,9 @@ export const equals : ff_b = (
 };
 
 export const linearly_interpolate: ffnf_v = (
-    a: Float3, i: number,
-    b: Float3, j: number, t: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number, t: number,
+    o: FloatArrays3, k: number
 ) : void => {
     o[0][k] = (1-t)*a[0][i] + t*(b[0][j]);
     o[1][k] = (1-t)*a[1][i] + t*(b[1][j]);
@@ -69,9 +69,9 @@ export const linearly_interpolate: ffnf_v = (
 };
 
 export const add : fff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number,
+    o: FloatArrays3, k: number
 ) : void => {
     o[0][k] = a[0][i] + b[0][j];
     o[1][k] = a[1][i] + b[1][j];
@@ -79,8 +79,8 @@ export const add : fff_v = (
 };
 
 export const add_in_place : ff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : void => {
     a[0][i] += b[0][j];
     a[1][i] += b[1][j];
@@ -88,9 +88,9 @@ export const add_in_place : ff_v = (
 };
 
 export const subtract : fff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number,
+    o: FloatArrays3, k: number
 ) : void => {
     o[0][k] = a[0][i] - b[0][j];
     o[1][k] = a[1][i] - b[1][j];
@@ -98,8 +98,8 @@ export const subtract : fff_v = (
 };
 
 export const subtract_in_place : ff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : void => {
     a[0][i] -= b[0][j];
     a[1][i] -= b[1][j];
@@ -107,8 +107,8 @@ export const subtract_in_place : ff_v = (
 };
 
 export const divide : fnf_v = (
-    a: Float3, i: number, n: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number, n: number,
+    o: FloatArrays3, k: number
 ) : void => {
     o[0][k] = a[0][i] / n;
     o[1][k] = a[1][i] / n;
@@ -116,7 +116,7 @@ export const divide : fnf_v = (
 };
 
 export const divide_in_place : fn_v = (
-    a: Float3, i: number, n: number
+    a: FloatArrays3, i: number, n: number
 ) : void => {
     a[0][i] /= n;
     a[1][i] /= n;
@@ -124,8 +124,8 @@ export const divide_in_place : fn_v = (
 };
 
 export const scale : fnf_v = (
-    a: Float3, i: number, n: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number, n: number,
+    o: FloatArrays3, k: number
 ) : void => {
     o[0][k] = a[0][i] * n;
     o[1][k] = a[1][i] * n;
@@ -133,7 +133,7 @@ export const scale : fnf_v = (
 };
 
 export const scale_in_place : fn_v = (
-    a: Float3, i: number, n: number
+    a: FloatArrays3, i: number, n: number
 ) : void => {
     a[0][i] *= n;
     a[1][i] *= n;
@@ -141,8 +141,8 @@ export const scale_in_place : fn_v = (
 };
 
 export const normalize : ff_v = (
-    a: Float3, i: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    o: FloatArrays3, k: number
 ) : void => {
     temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
 
@@ -152,7 +152,7 @@ export const normalize : ff_v = (
 };
 
 export const normalize_in_place : f_v = (
-    a: Float3, i: number
+    a: FloatArrays3, i: number
 ) : void => {
     temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
 
@@ -162,8 +162,8 @@ export const normalize_in_place : f_v = (
 };
 
 export const dot : ff_n = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : number => (
     a[0][i] * b[0][j] +
     a[1][i] * b[1][j] +
@@ -171,9 +171,9 @@ export const dot : ff_n = (
 );
 
 export const cross : fff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number,
+    o: FloatArrays3, k: number
 ) : void => {
     if (
         (
@@ -201,8 +201,8 @@ export const cross : fff_v = (
 };
 
 export const cross_in_place : ff_v = (
-    a: Float3, i: number,
-    b: Float3, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays3, j: number
 ) : void => {
     temp_lhs[0] = a[0][i];
     temp_lhs[1] = a[1][i];
@@ -218,9 +218,9 @@ export const cross_in_place : ff_v = (
 };
 
 export const multiply : fff_v = (
-    a: Float3, i: number,
-    b: Float9, j: number,
-    o: Float3, k: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays9, j: number,
+    o: FloatArrays3, k: number
 ) : void => {
     if (k === i && (
             (Object.is(o, a)) || (
@@ -237,8 +237,8 @@ export const multiply : fff_v = (
 };
 
 export const multiply_in_place : ff_v = (
-    a: Float3, i: number,
-    b: Float9, j: number
+    a: FloatArrays3, i: number,
+    b: FloatArrays9, j: number
 ) : void => {
     temp_lhs[0] = a[0][i];
     temp_lhs[1] = a[1][i];

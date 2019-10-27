@@ -1,7 +1,7 @@
 import {PRECISION_DIGITS} from "../constants";
 import {Matrix} from "./base";
 import {Direction3D} from "./vec3.js";
-import {f_b, f_v, ff_b, ff_v, fff_v, Float9, fnb_v} from "../types.js";
+import {f_b, f_v, ff_b, ff_v, fff_v, FloatArrays9, fnb_v} from "../types.js";
 
 const temp_matrix = new Float32Array(9);
 let sin, cos;
@@ -10,7 +10,7 @@ function setSinCos(angle: number) {
     cos = Math.cos(angle);
 }
 
-export const set_identity : f_v = (a: Float9, i: number) : void => {
+export const set_identity : f_v = (a: FloatArrays9, i: number) : void => {
     a[0][i] = 0;
     a[1][i] = 1;
     a[2][i] = 0;
@@ -25,8 +25,8 @@ export const set_identity : f_v = (a: Float9, i: number) : void => {
 };
 
 export const inverse : ff_v = (
-    a: Float9, i: number,
-    o: Float9, k: number
+    a: FloatArrays9, i: number,
+    o: FloatArrays9, k: number
 ) : void => {
     if (i === k && (
             Object.is(a , o) || (
@@ -62,7 +62,7 @@ export const inverse : ff_v = (
     o[8][k] = 1;
 };
 
-export const inverse_in_place : f_v = (a: Float9, i: number) : void => {
+export const inverse_in_place : f_v = (a: FloatArrays9, i: number) : void => {
     temp_matrix[0] = a[0][i];
     temp_matrix[1] = a[1][i];
     temp_matrix[2] = a[2][i];
@@ -95,8 +95,8 @@ export const inverse_in_place : f_v = (a: Float9, i: number) : void => {
 };
 
 export const transpose : ff_v = (
-    a: Float9, i: number,
-    o: Float9, k: number
+    a: FloatArrays9, i: number,
+    o: FloatArrays9, k: number
 ) : void => {
     if (
         i === k && (
@@ -127,15 +127,15 @@ export const transpose : ff_v = (
     o[8][k] = a[8][i];
 };
 
-export const transpose_in_place : f_v = (a: Float9, i: number) : void => {[
+export const transpose_in_place : f_v = (a: FloatArrays9, i: number) : void => {[
     a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
 ] = [
     a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
 ]};
 
 export const equals : ff_b = (
-    a: Float9, i: number,
-    b: Float9, j: number
+    a: FloatArrays9, i: number,
+    b: FloatArrays9, j: number
 ) : boolean => {
     if (
         i === j && (
@@ -171,7 +171,7 @@ export const equals : ff_b = (
     return true;
 };
 
-export const is_identity : f_b = (a: Float9, i: number) : boolean => (
+export const is_identity : f_b = (a: FloatArrays9, i: number) : boolean => (
     a[0][i] === 1 &&
     a[1][i] === 0 &&
     a[2][i] === 0 &&
@@ -184,9 +184,9 @@ export const is_identity : f_b = (a: Float9, i: number) : boolean => (
 );
 
 export const multiply : fff_v = (
-    a: Float9, i: number,
-    b: Float9, j: number,
-    o: Float9, k: number
+    a: FloatArrays9, i: number,
+    b: FloatArrays9, j: number,
+    o: FloatArrays9, k: number
 ) : void => {
     if (
         (
@@ -264,8 +264,8 @@ export const multiply : fff_v = (
 };
 
 export const multiply_in_place : ff_v = (
-    a: Float9, i: number,
-    b: Float9, j: number
+    a: FloatArrays9, i: number,
+    b: FloatArrays9, j: number
 ) : void => {
     temp_matrix[0] = a[0][i];
     temp_matrix[1] = a[1][i];
@@ -323,7 +323,7 @@ export const multiply_in_place : ff_v = (
 };
 
 export const set_rotation_around_x : fnb_v = (
-    a: Float9, i: number,
+    a: FloatArrays9, i: number,
     angle: number,
     reset = true
 ) : void => {
@@ -336,7 +336,7 @@ export const set_rotation_around_x : fnb_v = (
 };
 
 export const set_rotation_around_y : fnb_v = (
-    a: Float9, i: number,
+    a: FloatArrays9, i: number,
     angle: number,
     reset = true
 ) : void => {
@@ -349,7 +349,7 @@ export const set_rotation_around_y : fnb_v = (
 };
 
 export const set_rotation_around_z : fnb_v = (
-    a: Float9, i: number,
+    a: FloatArrays9, i: number,
     angle: number,
     reset = true
 ) : void => {
@@ -382,7 +382,7 @@ export class Matrix3x3 extends Matrix {
 
     constructor(
         public id: number,
-        public data: Float9,
+        public data: FloatArrays9,
         public i: Direction3D = new Direction3D(id, [data[0], data[1], data[2]]),
         public j: Direction3D = new Direction3D(id, [data[3], data[4], data[5]]),
         public k: Direction3D = new Direction3D(id, [data[6], data[7], data[8]])

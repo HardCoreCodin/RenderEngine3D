@@ -1,23 +1,16 @@
 import * as C from "../constants.js";
 import {ATTR_NAMES, ATTRIBUTE, ATTRS} from "../constants.js";
-import {float, float3, int3, num2, num3} from "../factories.js";
-import {
-    FaceVertices,
-    FloatValues,
-    IMesh,
-    NumValues,
-    SharedVertexValues,
-    UnsharedVertexValues,
-    VertexFaces
-} from "../types.js";
-import {IFaceData, IInputData, IVertexData} from "./attributes/interfaces";
+import {float3, int3} from "../factories.js";
+import {FaceVertices, IMesh, VertexFaces} from "../types.js";
+import {MeshInputs} from "./attributes/input";
+import {Faces, Vertices} from "./mesh/data";
 
 
 export class Mesh implements IMesh {
-    public readonly faces: IFaceData;
+    public readonly faces: Faces;
     public readonly face_vertices: FaceVertices;
 
-    public readonly vertices: IVertexData;
+    public readonly vertices: Vertices;
     public readonly vertex_faces: VertexFaces;
 
     public readonly has_uvs: boolean;
@@ -41,11 +34,11 @@ export class Mesh implements IMesh {
     public readonly generated_vertex_normals: boolean;
 
     constructor(
-        public readonly input: IInputData,
+        public readonly input: MeshInputs,
         public readonly flags: number = C.DEFAULT_FLAGS,
 
-        public readonly face_count: number = input.position.face_vertices[0].length,
-        public readonly vertex_count: number = input.position.values[0].length
+        public readonly face_count: number = input.position.faces[0].length,
+        public readonly vertex_count: number = input.position.vertices[0].length
     ) {
         this.shared_positions = !!(C.FLAG__SHARE__VERTEX_POSITIONS & flags);
         this.shared_normals = !!(C.FLAG__SHARE__VERTEX_NORMALS & flags);
@@ -166,86 +159,5 @@ export class Mesh implements IMesh {
         return false;
     }
 
-    static fromObj(obj: string, flags: number = C.DEFAULT_FLAGS): Mesh {
-        const position_ids = num3();
-        const normal_ids = num3();
-        const positions = num3();
-        const normals = num3();
-        const colors = num3();
-        const uv_ids = num3();
-        const uvs = num2();
-
-        // Order of attributes from the .obj format spec.
-        const values = [position_ids, uv_ids, normal_ids];
-
-        let vertex_num,
-            attribute_num: number;
-        let indices, index: string;
-        let strings: string[];
-
-        const push = (
-            attribute_values: NumValues,
-            start: number = 0,
-            end: number = strings.length
-        ) : void => {
-            for (let i = start; i < end; i++)
-                attribute_values[i].push(+strings[i]);
-        };
-
-        for (const line of obj.split('\n')) {
-            if (line.length === 0 || line[0] === '#' || line[0] === ' ')
-                continue;
-
-            strings = line.split(' ');
-            switch (strings.shift()) {
-                case C.OBJ_LINE_HEADER__VERTEX:
-                    push(positions, 0, 3);
-
-                    // Extract non-standard vertex color encodingL
-                    if (strings.length === 6)
-                        push(colors, 3, 6);
-
-                    break;
-                case C.OBJ_LINE_HEADER__NORMAL: push(normals); break;
-                case C.OBJ_LINE_HEADER__UV: push(uvs, 0, 2); break;
-                case C.OBJ_LINE_HEADER__FACE:
-                    for ([vertex_num, indices] of strings.entries())
-                        for ([attribute_num, index] of indices.split('/').entries())
-                            if (index !== '') values[attribute_num][vertex_num].push(+index - 1);
-            }
-        }
-
-        const input_data: IInputData = {
-            position: {
-                values: positions,
-                face_vertices: position_ids
-            },
-            normal: null,
-            color: null,
-            uv: null
-        };
-
-        if (normals[0].length)
-            input_data.normal = {
-                values: normals,
-                face_vertices: position_ids
-            };
-
-        if (colors[0].length)
-            input_data.normal = {
-                values: colors,
-                face_vertices: normal_ids
-            };
-
-        if (uvs[0].length)
-            input_data.uv = {
-                values: uvs,
-                face_vertices: uv_ids
-            };
-
-        return new Mesh(input_data, flags);
-    }
 }
-
-
 
