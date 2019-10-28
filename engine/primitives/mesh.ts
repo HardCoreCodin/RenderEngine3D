@@ -2,8 +2,8 @@ import * as C from "../constants.js";
 import {ATTR_NAMES, ATTRIBUTE, ATTRS} from "../constants.js";
 import {float3, int3} from "../factories.js";
 import {FaceVertices, IMesh, VertexFaces} from "../types.js";
-import {MeshInputs} from "./attributes/input";
-import {Faces, Vertices} from "./mesh/data";
+import {Faces, MeshData, Vertices} from "./mesh/data";
+import {MeshInputs} from "./mesh/inputs";
 
 
 export class Mesh implements IMesh {
@@ -35,10 +35,7 @@ export class Mesh implements IMesh {
 
     constructor(
         public readonly input: MeshInputs,
-        public readonly flags: number = C.DEFAULT_FLAGS,
-
-        public readonly face_count: number = input.position.faces[0].length,
-        public readonly vertex_count: number = input.position.vertices[0].length
+        public readonly data: MeshData
     ) {
         this.shared_positions = !!(C.FLAG__SHARE__VERTEX_POSITIONS & flags);
         this.shared_normals = !!(C.FLAG__SHARE__VERTEX_NORMALS & flags);

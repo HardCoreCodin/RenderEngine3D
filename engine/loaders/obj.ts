@@ -1,10 +1,14 @@
-import * as C from "../constants.js";
+import {ATTRIBUTE} from "../constants.js";
 import {Mesh} from "../primitives/mesh.js";
-import {MeshInputs, AttributeInputs} from "../primitives/attributes/input.js";
+import {AttributeInputs} from "../primitives/attributes/input.js";
+import {MeshInputs} from "../primitives/mesh/inputs";
+import {MeshData} from "../primitives/mesh/data";
+import {Flags} from "../primitives/mesh/flags";
 
 const vertex_uv_test_re = /^vt\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const vertex_normal_test_re = /^vn\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const vertex_color_test_re = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
+const vertex_position_test_re = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 
 const vertex_position_and_color_re = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
 const vertex_position_re = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
@@ -14,12 +18,17 @@ const vertex_uv_re = /vt\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
 const triangle_indices_re = /f\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)/;
 const quad_indices_re = /f\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)/;
 
-const loadMeshFromObjString = (obj: string, flags: number = C.DEFAULT_FLAGS): Mesh => {
-    const inputs = new MeshInputs(
-        vertex_normal_test_re.test(obj),
-        vertex_color_test_re.test(obj),
-        vertex_uv_test_re.test(obj)
-    );
+const loadMeshFromObjString = (obj: string, flags: Flags = new Flags()): Mesh => {
+    if (!vertex_position_test_re.test(obj))
+        throw `Invalid obj file sting - no vertex positions found!`;
+
+    let included: ATTRIBUTE = ATTRIBUTE.position;
+    if (vertex_normal_test_re.test(obj)) included &= ATTRIBUTE.normal;
+    if (vertex_color_test_re.test(obj)) included &= ATTRIBUTE.color;
+    if (vertex_uv_test_re.test(obj)) included &= ATTRIBUTE.uv;
+
+    const inputs = new MeshInputs(included);
+    const data = new MeshData(inputs, flags);
 
     for (const line of obj.split('\n'))
         if (vertex_position_and_color_re.test(line))
@@ -35,7 +44,7 @@ const loadMeshFromObjString = (obj: string, flags: number = C.DEFAULT_FLAGS): Me
         else if (triangle_indices_re.test(line))
             setFaceIndices(inputs, triangle_indices_re.exec(line));
 
-    return new Mesh(inputs, flags);
+    return new Mesh(inputs, data);
 };
 
 

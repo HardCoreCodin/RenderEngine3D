@@ -1,11 +1,4 @@
-import {
-    FaceInputs,
-    FaceInputStr,
-    FaceInputNum,
-    VertexInputs,
-    VertexInputStr,
-    VertexInputNum
-} from "../../types.js";
+import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputs, VertexInputStr} from "../../types.js";
 import {ATTRIBUTE, DIM, VERTICES_PER_FACE} from "../../constants.js";
 import {num2, num3, num4} from "../../factories.js";
 
@@ -82,18 +75,5 @@ export class ColorInputs extends AttributeInputs {
 export class UVInputs extends AttributeInputs {
     public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
     public readonly dim: DIM = DIM._2D;
-}
-
-export class MeshInputs {
-    constructor(
-        has_normals: boolean = false,
-        has_colors: boolean = false,
-        has_uvs: boolean = false,
-
-        public position: PositionInputs = new PositionInputs(),
-        public normal: NormalInputs | null = has_normals ? new PositionInputs() : null,
-        public color: ColorInputs | null = has_colors ? new ColorInputs() : null,
-        public uv: UVInputs | null = has_uvs ? new UVInputs() : null
-    ) {}
 }
 

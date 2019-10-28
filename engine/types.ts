@@ -1,5 +1,3 @@
-import {IFaceData, IInputData, IVertexData} from "./primitives/attributes/interfaces.js";
-
 export type Str2 = [string, string];
 export type Str3 = [string, string, string];
 export type Str4 = [string, string, string, string];
@@ -103,16 +101,3 @@ export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum |
 export type VertexValues = Values | UnsharedVertexValues;
 export type VertexFaces = IntArrays;
 export type FaceVertices = IntArrays3;
-
-
-export interface IMesh {
-    readonly input: IInputData;
-
-    readonly faces: IFaceData;
-    readonly face_vertices: FaceVertices;
-    readonly face_count: number;
-
-    readonly vertices: IVertexData;
-    readonly vertex_faces: VertexFaces;
-    readonly vertex_count: number;
-}
