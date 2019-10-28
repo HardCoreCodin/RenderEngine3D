@@ -1,5 +1,5 @@
 import {Triangle} from "./primitives/triangle.js";
-import Vertex from "./primitives/vertex";
+import Vertex from "./primitives/attribute";
 
 export default class Screen {
     constructor(

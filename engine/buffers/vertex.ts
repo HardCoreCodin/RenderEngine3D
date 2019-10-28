@@ -1,7 +1,7 @@
 import {Positions3D, Positions4D} from "./position.js";
 import {Directions4D} from "./direction.js";
 import {Colors3D} from "./color.js";
-import Vertex from "../primitives/vertex.js";
+import Vertex from "../primitives/attribute";
 
 export default class Vertices {
     constructor(

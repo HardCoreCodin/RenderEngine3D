@@ -1,24 +1,13 @@
 export type Str2 = [string, string];
 export type Str3 = [string, string, string];
 export type Str4 = [string, string, string, string];
-// export type Str = Str2 | Str3 | Str4;
 export type Num2 = [number, number];
 export type Num3 = [number, number, number];
 export type Num4 = [number, number, number, number];
-// export type Num = Num2 | Num3 | Num4;
 export type NumArrays2 = [number[], number[]];
 export type NumArrays3 = [number[], number[], number[]];
 export type NumArrays4 = [number[], number[], number[], number[]];
 export type NumArrays = number[][]
-
-// export type InputUV1D = NumArrays1;
-// export type InputUV2D = NumArrays2;
-// export type InputUV3D = NumArrays3;
-// export type InputUV = InputUV1D | InputUV2D | InputUV3D;
-// export type InputPosition2D = NumArrays2
-// export type InputPosition3D = NumArrays3
-// export type InputPosition4D = NumArrays4
-// export type InputPosition = InputPosition2D | InputPosition3D | InputPosition4D;
 
 export type PositionInputs = NumArrays3
 export type NormalInputs = NumArrays3;
@@ -62,14 +51,7 @@ export type FloatArrays16 = [
     Float32Array, Float32Array, Float32Array, Float32Array
 ];
 export type FloatArrays = Float32Array[];
-
-// export type PositionValues = FloatArrays3 | FloatArrays4;
-// export type ColorValues = FloatArrays3 | FloatArrays4;
-// export type NormalValues = FloatArrays3;
-// export type UvValues = FloatArrays2 | FloatArrays3;
 export type Values = FloatArrays2 | FloatArrays3 | FloatArrays4;
-// export type FaceValues = FloatArrays2 | FloatArrays3 | FloatArrays4;
-// export type SharedVertexValues = Values;
 export type UnsharedVertexValues = [Values, Values, Values];
 
 export type f_v = (a: FloatArrays, i: number) => void;
