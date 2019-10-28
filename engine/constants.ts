@@ -23,33 +23,88 @@ export const enum ATTRIBUTE {
     color    = 0b0100,
     uv       = 0b1000,
 }
-
-export const enum INCLUDE_FACE {
+export const enum SHARE {
     POSITION = 0b0001,
     NORMAL   = 0b0010,
-    COLOR    = 0b0011_0000_0000,
-}
-export const enum INCLUDE_VERTEX {
+    COLOR    = 0b0100,
     UV       = 0b1000,
-    NORMAL   = 0b1000_0100,
-    COLOR    = 0b0111_0000,
+}
+export const enum FACE_INCLUDE {
+    POSITION = 0b0001_0000,
+    NORMAL   = 0b0010_0000,
+    COLOR    = 0b0011_0000_0000_0000,
+}
+export const enum VERTEX_INCLUDE {
+    UV       = 0b1000_0000,
+    NORMAL   = 0b1000_0100_0000,
+    COLOR    = 0b0111_0000_0000,
 }
 
 export const enum VERTEX_NORMAL_MODE {
-    LOAD     = 0b0000_0100,
-    GATHER   = 0b1000_0000,
+    LOAD     = 0b0000_0100_0000,
+    GATHER   = 0b1000_0000_0000,
 }
 export const enum VERTEX_COLOR_MODE {
-    LOAD     = 0b0001_0000,
-    GATHER   = 0b0010_0000,
-    GENERATE = 0b0100_0000,
+    LOAD     = 0b0001_0000_0000,
+    GATHER   = 0b0010_0000_0000,
+    GENERATE = 0b0100_0000_0000,
 }
 export const enum FACE_COLOR_MODE {
-    GATHER   = 0b0001_0000_0000,
-    GENERATE = 0b0010_0000_0000,
+    GATHER   = 0b0001_0000_0000_0000,
+    GENERATE = 0b0010_0000_0000_0000,
 }
 
+export const getShared = (flags: number) : number => flags & 0b1111;
+export const getVertexIncludes = (flags: number) : number => 1 | (
+    (
+        (
+            VERTEX_INCLUDE.NORMAL & flags
+        ) ? ATTRIBUTE.normal : 0
+    ) | (
+        (
+            VERTEX_INCLUDE.COLOR & flags
+        ) ? ATTRIBUTE.color : 0
+    ) | (
+        (
+            VERTEX_INCLUDE.UV & flags
+        ) ? ATTRIBUTE.uv : 0
+    )
+);
+export const getFaceIncludes = (flags: number) : number => (
+    (
+        (
+            FACE_INCLUDE.POSITION & flags
+        ) ? ATTRIBUTE.position : 0
+    ) | (
+        (
+            FACE_INCLUDE.NORMAL & flags
+        ) ? ATTRIBUTE.normal : 0
+    ) | (
+        (
+            FACE_INCLUDE.COLOR & flags
+        ) ? ATTRIBUTE.color : 0
+    )
+);
 
+export const enum NORMAL_SOURCE {
+    NO_VERTEX__NO_FACE,
+    NO_VERTEX__GENERATE_FACE,
+    LOAD_VERTEX__NO_FACE,
+    LOAD_VERTEX__GENERATE_FACE,
+    GATHER_VERTEX__GENERATE_FACE
+}
+
+export const enum COLOR_SOURCE {
+    NO_VERTEX__NO_FACE,
+    NO_VERTEX__GENERATE_FACE,
+    LOAD_VERTEX__NO_FACE,
+    LOAD_VERTEX__GATHER_FACE,
+    LOAD_VERTEX__GENERATE_FACE,
+    GENERATE_VERTEX__NO_FACE,
+    GENERATE_VERTEX__GATHER_FACE,
+    GENERATE_VERTEX__GENERATE_FACE,
+    GATHER_VERTEX__GENERATE_FACE
+}
 
 //
 // export const enum SHARE {

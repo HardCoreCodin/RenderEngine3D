@@ -9,7 +9,17 @@ import {
     UnsharedVertexUVs
 } from "../attributes/vertex.js";
 import {FaceColors, FaceNormals, FacePositions} from "../attributes/face.js";
-import {ATTRIBUTE, CONVERT, GEN, MASK, OFFSET, SHARE} from "../../constants.js";
+import {
+    ATTRIBUTE,
+    CONVERT, FACE_COLOR_MODE, FACE_INCLUDE,
+    GEN,
+    MASK,
+    OFFSET,
+    SHARE,
+    VERTEX_COLOR_MODE,
+    VERTEX_INCLUDE,
+    VERTEX_NORMAL_MODE
+} from "../../constants.js";
 import {FaceVertices, VertexFaces} from "../../types.js";
 import {MeshInputs} from "./inputs.js";
 import {AttributeInputs} from "../attributes/input";
@@ -40,27 +50,6 @@ export class Vertices {
                 new SharedVertexUVs(count) :
                 new UnsharedVertexUVs(count);
     }
-
-    // constructor(count: number, flags: number) {
-    //     this.position = SHARE.position & flags ?
-    //         new SharedVertexPositions(count) :
-    //         new UnsharedVertexPositions(count);
-    //
-    //     if (flags & (ATTRIBUTE.normal | CONVERT.f2v_normal))
-    //         this.normal = SHARE.normal & flags ?
-    //             new SharedVertexNormals(count) :
-    //             new UnsharedVertexNormals(count);
-    //
-    //     if (flags & (ATTRIBUTE.color | CONVERT.f2v_color | GEN.v_color))
-    //         this.color = SHARE.color & flags ?
-    //             new SharedVertexColors(count) :
-    //             new UnsharedVertexColors(count);
-    //
-    //     if (ATTRIBUTE.uv & flags)
-    //         this.uv = SHARE.uv & flags ?
-    //             new SharedVertexUVs(count) :
-    //             new UnsharedVertexUVs(count);
-    // }
 }
 
 export class Faces {
@@ -73,17 +62,6 @@ export class Faces {
         if (include & ATTRIBUTE.normal) this.normal = new FaceNormals(count);
         if (include & ATTRIBUTE.color) this.color = new FaceColors(count);
     }
-
-    // constructor(count: number, flags: number) {
-    //     if (flags & CONVERT.v2f_position)
-    //         this.position = new FacePositions(length);
-    //
-    //     if (flags & GEN.f_normal)
-    //         this.normal = new FaceNormals(length);
-    //
-    //     if (flags & GEN.f_color | CONVERT.v2f_color)
-    //         this.color = new FaceColors(length);
-    // }
 }
 
 export class MeshData {
@@ -96,7 +74,7 @@ export class MeshData {
     public _flags: number;
 
     constructor(
-        flags: number = ATTRIBUTE.position,
+        flags: number,
 
         public readonly inputs: MeshInputs,
         public readonly face_count: number = inputs.position.faces[0].length,
@@ -104,7 +82,7 @@ export class MeshData {
     ) {
         this.flags = flags;
 
-        this.faces = new Faces(face_count, flags);
+        this.faces = new Faces(face_count, this.face_includes);
         this.vertices = new Vertices(vertex_count, flags);
 
         this.vertices.position.load(inputs.position);
@@ -113,19 +91,48 @@ export class MeshData {
     get flags() : number {return this._flags}
     set flags(flags) {
         // Sanitize the vertex loading flags to load only from what's included in the inputs:
-        flags &= this.inputs.includes | (MASK.ALL & ~MASK.LOAD);
+        if (flags & VERTEX_NORMAL_MODE.LOAD && this.inputs.normal === null)
+            flags &= ~VERTEX_NORMAL_MODE.LOAD;
+        if (flags & VERTEX_COLOR_MODE.LOAD && this.inputs.color === null)
+            flags &= ~VERTEX_COLOR_MODE.LOAD;
+        if (flags & VERTEX_INCLUDE.UV && this.inputs.uv === null)
+            flags &= ~VERTEX_INCLUDE.UV;
 
-        // If vertex color is asked to be converted from face colors
+        // If face colors are asked to be gathered from vertex colors,
+        // but either of the following conditions are detected, disable face color gathering:
+        // 1. Face colors are asked to also be 'generated' (favour that)
+        // 2. Vertex colors are asked to be gathered from face colors (and they can not gather from each other)
+        // 3. No vertex colors are available to be gathered (not loaded nor generated).
+        if (flags & FACE_COLOR_MODE.GATHER && (
+            flags & FACE_COLOR_MODE.GENERATE ||
+            flags & VERTEX_COLOR_MODE.GATHER || !(
+                flags & VERTEX_COLOR_MODE.GENERATE |
+                flags & VERTEX_COLOR_MODE.LOAD
+            )
+        ))
+            flags &= ~FACE_COLOR_MODE.GATHER;
+
+        // If vertex colors are asked to be gathered from face colors,
+        // but face colors are't being generated, disable vertex color gathering::
+        if (flags & VERTEX_COLOR_MODE.GATHER && !(
+            flags & FACE_COLOR_MODE.GENERATE))
+            flags &= ~VERTEX_COLOR_MODE.GATHER;
+
+        // If vertex normals are asked to be gathered from face normals,
+        // but face normals are't being generated, disable vertex normal gathering:
+        if (flags & VERTEX_NORMAL_MODE.GATHER && !(
+            flags & FACE_INCLUDE.NORMAL))
+            flags &= ~VERTEX_NORMAL_MODE.GATHER;
 
         // If vertex colors are being generated or converted-to, there is no point in loading them:
-        if (flags & ATTRIBUTE.color &&
+        if (flags & VERTEX_COLOR_MODE.LOAD &&
             (flags & GEN.v_color || flags & CONVERT.f2v_color))
-            flags &= ~ATTRIBUTE.color;
+            flags &= ~VERTEX_COLOR_MODE.LOAD;
 
         // If vertex normals are being generated, there is no point in loading them:
         if (flags & CONVERT.f2v_normal &&
             flags & ATTRIBUTE.normal)
-            flags &= ~ATTRIBUTE.normal;
+            flags &= ~VERTEX_NORMAL_MODE.LOAD;
 
         // Sanitize the vertex sharing flags to share only from what's available:
         flags &= (flags << OFFSET.SHARE) | (MASK.ALL & ~MASK.SHARE);
