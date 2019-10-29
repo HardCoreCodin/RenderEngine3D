@@ -1,7 +1,6 @@
-import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING, VERTICES_PER_FACE} from "../constants.js";
+import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING, FACE_TYPE} from "../constants.js";
 import {FaceVertices, VertexFaces} from "../types.js";
-import {Faces, Vertices} from "./attribute.js";
-import {ColorInputs, NormalInputs, PositionInputs, UVInputs} from "./inputs.js";
+import {InputColors, Faces, InputNormals, InputPositions, InputUVs, Vertices} from "./attribute.js";
 
 export class Mesh {
     public readonly faces: Faces;
@@ -16,36 +15,18 @@ export class Mesh {
         public readonly face_count: number = inputs.position.faces[0].length,
         public readonly vertex_count: number = inputs.position.vertices[0].length
     ) {
-        // Sanitize options:
-        if (inputs.normal === null) {
-            switch (options.normal) {
-                case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE:
-                    options.normal = NORMAL_SOURCING.NO_VERTEX__NO_FACE;
-                    break;
-                case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                    options.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
-                    break;
-            }
-        }
-        if (inputs.color === null) {
-            switch (options.color) {
-                case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
-                case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:
-                    options.color = COLOR_SOURCING.NO_VERTEX__NO_FACE;
-                    break;
-                case COLOR_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                    options.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
-                    break;
-            }
-        }
+        // Prep:
+        options.sanitize(inputs);
+        if (inputs.position.face_type === FACE_TYPE.QUAD)
+            inputs.triangulate();
 
-        // Initialize data buffers:
+
+        // Init::
         this.faces = new Faces(face_count, options.face_attributes);
         this.vertices = new Vertices(vertex_count, options.vertex_attributes, options.share);
 
-        // Load data:
-        if (inputs.position.vertices_per_face)
-            this.vertices.position.load(inputs.position);
+        // Load:
+        this.vertices.position.load(inputs.position);
 
         if (options.include_uvs && inputs.uv)
             this.vertices.uv.load(inputs.uv);
@@ -98,28 +79,52 @@ export class MeshOptions {
 
         return flags;
     }
+
+    sanitize(inputs: MeshInputs) {
+        if (inputs.normal === null) {
+            switch (this.normal) {
+                case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE:
+                    this.normal = NORMAL_SOURCING.NO_VERTEX__NO_FACE;
+                    break;
+                case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE:
+                    this.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
+                    break;
+            }
+        }
+        if (inputs.color === null) {
+            switch (this.color) {
+                case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
+                case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:
+                    this.color = COLOR_SOURCING.NO_VERTEX__NO_FACE;
+                    break;
+                case COLOR_SOURCING.LOAD_VERTEX__GENERATE_FACE:
+                    this.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
+                    break;
+            }
+        }
+    }
 }
 
 export class MeshInputs {
-    public readonly position: PositionInputs;
-    public readonly normal: NormalInputs = null;
-    public readonly color: ColorInputs = null;
-    public readonly uv: UVInputs = null;
+    public readonly position: InputPositions;
+    public readonly normal: InputNormals = null;
+    public readonly color: InputColors = null;
+    public readonly uv: InputUVs = null;
 
     constructor(
         public readonly attributes: ATTRIBUTE = ATTRIBUTE.position,
-        public readonly vertices_per_face: VERTICES_PER_FACE = VERTICES_PER_FACE.TRIANGLE,
+        public readonly face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
     ) {
-        this.position = new PositionInputs(vertices_per_face);
+        this.position = new InputPositions(face_type);
 
         if (attributes & ATTRIBUTE.normal)
-            this.normal = new NormalInputs(vertices_per_face);
+            this.normal = new InputNormals(face_type);
 
         if (attributes & ATTRIBUTE.color)
-            this.color = new ColorInputs(vertices_per_face);
+            this.color = new InputColors(face_type);
 
         if (attributes & ATTRIBUTE.uv)
-            this.uv = new UVInputs(vertices_per_face);
+            this.uv = new InputUVs(face_type);
     }
 
     triangulate(): void {

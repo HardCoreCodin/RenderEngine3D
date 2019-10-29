@@ -1,51 +1,353 @@
-import {ATTRIBUTE, DIM, VERTEX_NUM} from "../constants.js";
-import {FaceVertices, UnsharedVertexValues, Values, VertexFaces} from "../types.js";
-import {float, float3} from "../factories.js";
-import {AttributeInputs, ColorInputs, NormalInputs, PositionInputs, UVInputs} from "./inputs.js";
+import {ATTRIBUTE, DIM, FACE_TYPE, FACE_VERTEX_NUMBER} from "../constants.js";
+import {
+    FaceInputNum,
+    FaceInputs,
+    FaceInputStr, FaceValues,
+    FaceVertices, FloatArrays,
+    UnsharedVertexValues,
+    Values,
+    VertexFaces,
+    VertexInputNum,
+    VertexInputs,
+    VertexInputStr
+} from "../types.js";
+import {float, float3, num2, num3, num4} from "../factories.js";
 import {cross, subtract} from "../math/vec3.js";
+import {zip} from "../utils.js";
 
-export class BaseAttribute {
-    public readonly name: string;
+export class Attribute {
     public readonly id: ATTRIBUTE;
+    public readonly name: string;
     public readonly dim: DIM = DIM._3D;
 
-    public readonly values: Values;
+    constructor() {
+        switch (this.id) {
+            case ATTRIBUTE.position: this.name = 'position'; break;
+            case ATTRIBUTE.normal: this.name = 'normal'; break;
+            case ATTRIBUTE.color: this.name = 'color'; break;
+            case ATTRIBUTE.uv: this.name = 'uv'; break;
+            default:
+                throw `Invalid attribute id ${this.id}! `+
+                'Only supports position, normal, color or uv.';
+        }
+    }
+}
+
+export class InputAttribute extends Attribute {
+    public readonly vertices: VertexInputs;
+    public readonly faces: FaceInputs;
+
+    constructor(
+        public readonly face_type: FACE_TYPE = FACE_TYPE.TRIANGLE
+    ) {
+        super();
+
+        switch (this.face_type) {
+            case FACE_TYPE.TRIANGLE: this.faces = num3(); break;
+            case FACE_TYPE.QUAD: this.faces = num4(); break;
+            default:
+                throw `Invalid face type ${this.face_type}! Only supports triangles and quads.`;
+        }
+        switch (this.dim) {
+            case DIM._2D: this.vertices = num2(); break;
+            case DIM._3D: this.vertices = num3(); break;
+            default:
+                throw `Invalid vertex dimension ${this.dim}! Only supports 2D or 3D.`;
+        }
+    }
+
+    private getValue(value: number | string, is_index: boolean): number {
+        let error: string;
+        if (typeof value === "number") {
+            if (Number.isFinite(value)) {
+                if (is_index) {
+                    if (Number.isInteger(value))
+                        return value;
+                    else
+                        error = `${value} is not an integer`
+                } else
+                    return value;
+            } else
+                error = `${value} is not a finite number`;
+        } else if (typeof value === "string")
+            return this.getValue(+value, is_index);
+        else
+            error = `Got ${typeof value} ${value} instead or a number or a string`;
+
+        throw `Invalid ${this.name} ${is_index ? 'index' : 'value'}! ${error}`;
+    }
+
+    private checkInputSize(input_size: number, is_index: boolean) {
+        const required_size = is_index ? this.face_type : this.dim;
+        if (input_size !== required_size)
+            throw `Invalid ${this.name} ${
+                is_index ? 'indices' : 'values'
+            } input! Got ${input_size} ${
+                is_index ? 'vertices per face' : 'dimensions'
+            } instead of ${required_size}`;
+    }
+
+    pushVertex(vertex: VertexInputNum | VertexInputStr) {
+        this.checkInputSize(vertex.length, false);
+        for (const [component_num, component_value] of vertex.entries())
+            this.vertices[component_num].push(this.getValue(component_value, false));
+    }
+
+    pushFace(face: FaceInputNum | FaceInputStr) {
+        this.checkInputSize(face.length, true);
+        for (const [vertex_num, vertex_index] of face.entries())
+            this.faces[vertex_num].push(this.getValue(vertex_index, true));
+    }
+}
+
+export class DataAttribute extends Attribute {
+    public readonly values: Values | FaceValues;
     public is_loaded: boolean = false;
 
     constructor(length: number) {
-        this.values = float(length, this.dim)
+        super();
+        if (length)
+            this.values = float(length, this.dim)
     }
 
-    protected _load(inputs: AttributeInputs): void {
-        if (inputs === null)
-            throw `${this.name}s could not be loaded, as there are no inputs!`;
-
-        for (const [component_num, component_values] of this.values.entries())
-            component_values.set(inputs.vertices[component_num]);
-
-        this.is_loaded = true;
+    protected _load(vertices: VertexInputs, faces: FaceInputs) : void {
+        for (const [out_component, in_component] of zip(this.values, vertices))
+            out_component.set(in_component);
     }
 
-    protected _generate(): void {
+    protected _generate() : void {
         randomize(this.values);
 
         this.is_loaded = true;
     }
 }
 
-export interface ILoad {
-    load(...args: any[]): void;
+export class SharedVertexAttribute extends DataAttribute {
+    protected _load(vertices: VertexInputs, faces: FaceInputs): void {
+
+        // TODO: Implement...
+        // if (input_vertex[0].length === this.vertex_count) {
+        //     let face_id, input_id, vertex_num, component_num, data_id : number = 0;
+        //     let input_values, input_ids: number[];
+        //     for ([vertex_num, input_ids] of input_index.entries())
+        //         data_index[vertex_num].set(input_ids);
+        // }
+    }
+
+    protected _gatherFrom(face_values: FaceValues, vertex_faces: VertexFaces): void {
+        // Average vertex-attribute values from their related face's attribute values:
+        let accumulator: number;
+        for (const [vertex_id, face_ids] of vertex_faces.entries()) {
+            // For each component 'accumulate-in' the face-value of all the faces of this vertex:
+            for (const [component, values] of face_values.entries()) {
+                accumulator = 0;
+
+                for (let face_id of face_ids)
+                    accumulator += values[face_id];
+
+                this.values[component][vertex_id] += accumulator / face_ids.length;
+            }
+        }
+    }
 }
 
-export interface IGather {
-    gatherFrom(...args: any[]): void;
+export class UnsharedVertexAttribute extends DataAttribute {
+    public readonly unshared_values: UnsharedVertexValues;
+    public is_loaded: boolean = false;
+
+    constructor(length: number) {
+        super(0);
+        this.unshared_values = [
+            float(length, this.dim),
+            float(length, this.dim),
+            float(length, this.dim)
+        ];
+    }
+
+    protected _load(vertices: VertexInputs, faces: FaceInputs) : void {
+        let face_index, vertex_index: number;
+        for (const [out_components, indices] of zip(this.unshared_values, faces))
+            for (const [out_component, in_component] of zip(out_components, vertices))
+                for ([face_index, vertex_index] of indices.entries())
+                    out_component[face_index] = in_component[vertex_index];
+    }
+
+    protected _generate(): void {
+        for (const values of this.unshared_values)
+            randomize(values);
+
+        this.is_loaded = true;
+    }
+
+    protected _gatherFrom(face_values: FaceValues) : void {
+        // Copy over face-attribute values to their respective vertex-attribute values:
+        for (const vertex_components of this.unshared_values)
+            for (const [vertex_component, face_component] of zip(vertex_components, face_values))
+                vertex_component.set(face_component);
+
+    }
 }
 
-export interface IGenerate {
-    generate(...args: any[]): void;
+
+
+
+type Constructor<T = {}> = new (...args: any[]) => T;
+function createIDedMixin(id: ATTRIBUTE) {
+    function IDedMixin<TBase extends Constructor>(Base: TBase) {
+        return class extends Base {
+            public readonly id: ATTRIBUTE = id;
+        }
+    }
+
+    return IDedMixin;
+}
+const Position = createIDedMixin(ATTRIBUTE.position);
+const Normal = createIDedMixin(ATTRIBUTE.normal);
+const Color = createIDedMixin(ATTRIBUTE.color);
+const UV = createIDedMixin(ATTRIBUTE.uv);
+
+type DataAttributeConstructor = new (...args: any[]) => DataAttribute;
+function createLoadedMixin<InputAttributeType extends InputAttribute>() {
+    function LoadedMixin<TBase extends DataAttributeConstructor>(Base: TBase) {
+        return class extends Base {
+            load(inputs: InputAttributeType) : void {
+                if (inputs === null)
+                    throw `${this.name}s could not be loaded, as there are no inputs!`;
+
+                super._load(inputs.vertices, inputs.faces);
+
+                this.is_loaded = true;
+            }
+        }
+    }
+
+    return LoadedMixin;
+}
+const LoadedPositions = createLoadedMixin<InputPositions>();
+const LoadedNormals = createLoadedMixin<InputNormals>();
+const LoadedColors = createLoadedMixin<InputColors>();
+const LoadedUVs = createLoadedMixin<InputUVs>();
+
+class SharedLoaded<
+    InputAttributeType extends InputAttribute>
+
+    extends SharedVertexAttribute implements ILoad {
+
+    load(inputs: InputAttributeType) : void {
+        if (inputs === null)
+            throw `${this.name}s could not be loaded, as there are no inputs!`;
+
+        super._load(inputs.vertices, inputs.faces);
+
+        this.is_loaded = true;
+    }
 }
 
-export class BaseFaceAttribute extends BaseAttribute implements IGather {
+class SharedGathered<
+    FaceAttributeType extends FaceAttribute,
+    InputAttributeType extends InputAttribute
+    >
+    extends SharedLoaded<InputAttributeType> implements IGather {
+
+    gatherFrom(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
+        if (!face_attribute.is_loaded)
+            throw `Vertex ${this.name}s can not be gathered, as source face attribute has'nt been loaded!`;
+
+        this._gatherFrom(face_attribute.values, vertex_faces);
+
+        this.is_loaded = true;
+    }
+}
+
+class SharedGenerated<
+    FaceAttributeType extends FaceAttribute,
+    InputAttributeType extends InputAttribute
+    >
+    extends SharedGathered<FaceAttributeType, InputAttributeType> implements IGenerate {
+    generate = () : void => this._generate();
+}
+
+class UnsharedLoaded<
+    InputAttributeType extends InputAttribute
+    >
+    extends UnsharedVertexAttribute implements ILoad {
+
+    load(inputs: InputAttributeType) : void {
+        if (inputs === null)
+            throw `${this.name}s could not be loaded, as there are no inputs!`;
+
+        super._load(inputs.vertices, inputs.faces);
+
+        this.is_loaded = true;
+    }
+}
+
+class UnsharedGathered<
+    FaceAttributeType extends FaceAttribute,
+    InputAttributeType extends InputAttribute
+    >
+    extends UnsharedLoaded<InputAttributeType> implements IGather {
+
+    gatherFrom(face_attribute: FaceAttributeType) : void {
+        if (!face_attribute.is_loaded)
+            throw `Vertex ${this.name}s can not be gathered, as source face attribute has'nt been loaded!`;
+
+        this._gatherFrom(face_attribute.values);
+
+        this.is_loaded = true;
+    }
+}
+
+class UnsharedGenerated<
+    FaceAttributeType extends FaceAttribute,
+    InputAttributeType extends InputAttribute
+    >
+    extends UnsharedGathered<FaceAttributeType, InputAttributeType> implements IGenerate {
+    generate = () : void => this._generate();
+}
+
+export class InputPositions extends Position(InputAttribute) {}
+export class SharedVertexPositions extends Position(LoadedPositions(SharedVertexAttribute)) {}
+export class UnsharedVertexPositions extends Position(LoadedPositions(UnsharedVertexAttribute)) {}
+
+export class InputNormals extends InputAttribute {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
+}
+export class SharedVertexNormals extends SharedGathered<FaceNormals, InputNormals> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
+}
+export class UnsharedVertexNormals extends UnsharedGathered<FaceNormals, InputNormals> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
+}
+
+export class InputColors extends InputAttribute {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
+}
+export class SharedVertexColors extends SharedGenerated<FaceColors, InputColors> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
+}
+export class UnsharedVertexColors extends UnsharedGenerated<FaceColors, InputColors> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
+}
+
+
+export class InputUVs extends InputAttribute {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
+    public readonly dim: DIM = DIM._2D;
+}
+export class SharedVertexUVs extends SharedLoaded<InputUVs> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
+    public readonly dim: DIM = DIM._2D;
+}
+export class UnsharedVertexUVs extends UnsharedLoaded<InputUVs> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
+    public readonly dim: DIM = DIM._2D;
+}
+
+
+export class FaceAttribute extends DataAttribute implements IGather {
+    public readonly values: FaceValues;
+
     gatherFrom(
         vertex_attribute: SharedVertexPositions | UnsharedVertexPositions | SharedVertexColors | UnsharedVertexColors,
         face_vertices?: FaceVertices
@@ -53,7 +355,7 @@ export class BaseFaceAttribute extends BaseAttribute implements IGather {
         if (vertex_attribute.is_loaded) {
             const face_count = this.values[0].length;
 
-            if (vertex_attribute instanceof BaseSharedVertexAttribute) {
+            if (vertex_attribute instanceof SharedVertexAttribute) {
                 for (const [c, vertex] of vertex_attribute.values.entries()) {
                     for (let f = 0; f < face_count; f++)
                         this.values[c][f] = (
@@ -75,17 +377,15 @@ export class BaseFaceAttribute extends BaseAttribute implements IGather {
     }
 }
 
-export class FacePositions extends BaseFaceAttribute {
-    public readonly name: string = 'position';
+export class FacePositions extends FaceAttribute {
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
 
-    gatherFrom(attribute: VertexAttribute, face_vertices?: FaceVertices) {
+    gatherFrom(attribute: SharedVertexPositions | UnsharedVertexPositions | SharedVertexColors | UnsharedVertexColors, face_vertices?: FaceVertices) {
         super.gatherFrom(attribute, face_vertices);
     }
 }
 
-export class FaceNormals extends BaseFaceAttribute {
-    public readonly name: string = 'normal';
+export class FaceNormals extends FaceAttribute {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 
     gatherFrom(attribute: SharedVertexPositions | UnsharedVertexPositions, face_vertices?: FaceVertices) {
@@ -132,8 +432,7 @@ export class FaceNormals extends BaseFaceAttribute {
     }
 }
 
-export class FaceColors extends BaseFaceAttribute implements IGenerate {
-    public readonly name: string = 'color';
+export class FaceColors extends FaceAttribute implements IGenerate {
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
 
     gatherFrom(attribute: SharedVertexColors | UnsharedVertexColors, face_vertices?: FaceVertices) {
@@ -144,164 +443,9 @@ export class FaceColors extends BaseFaceAttribute implements IGenerate {
 }
 
 
-export class BaseSharedVertexAttribute extends BaseAttribute {
-    protected _load(inputs: AttributeInputs): void {
-        if (inputs === null)
-            throw `${this.name}s could not be loaded, as there are no inputs!`;
 
-        // TODO: Implement...
-        // if (input_vertex[0].length === this.vertex_count) {
-        //     let face_id, input_id, vertex_num, component_num, data_id : number = 0;
-        //     let input_values, input_ids: number[];
-        //     for ([vertex_num, input_ids] of input_index.entries())
-        //         data_index[vertex_num].set(input_ids);
-        // }
-    }
 
-    protected _gatherFrom(face_attribute: FaceAttribute, vertex_faces: VertexFaces): void {
-        if (face_attribute.is_loaded) {
-            // Average vertex-attribute values from their related face's attribute values:
-            for (const [vertex_id, face_ids] of vertex_faces.entries()) {
-                // For each component 'accumulate-in' the face-value of all the faces of this vertex:
-                for (const [c, values] of face_attribute.values.entries()) {
-                    let accumulator = 0;
 
-                    for (let f of face_ids)
-                        accumulator += values[f];
-
-                    this.values[c][vertex_id] += accumulator / face_ids.length;
-                }
-            }
-        } else
-            throw `Vertex ${this.name}s can not be gathered, as source face attribute has'nt been loaded!`;
-
-        this.is_loaded = true;
-    }
-}
-
-export class SharedVertexPositions extends BaseSharedVertexAttribute implements ILoad {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.position;
-    public readonly name: string = 'position';
-
-    load = (inputs: PositionInputs): void => super._load(inputs);
-}
-
-export class SharedVertexNormals extends BaseSharedVertexAttribute implements ILoad, IGather {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
-    public readonly name: string = 'normal';
-
-    load = (inputs: NormalInputs): void => this._load(inputs);
-    gatherFrom = (face_attribute: FaceNormals, vertex_faces: VertexFaces): void =>
-        this._gatherFrom(face_attribute, vertex_faces);
-}
-
-export class SharedVertexColors extends BaseSharedVertexAttribute implements ILoad, IGather, IGenerate {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
-    public readonly name: string = 'color';
-
-    load = (inputs: ColorInputs): void => this._load(inputs);
-    generate = (): void => this._generate();
-    gatherFrom = (face_attribute: FaceColors, vertex_faces: VertexFaces): void =>
-        this._gatherFrom(face_attribute, vertex_faces);
-}
-
-export class SharedVertexUVs extends BaseSharedVertexAttribute implements ILoad {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
-    public readonly name: string = 'uv';
-
-    load = (inputs: UVInputs): void => this._load(inputs);
-}
-
-export class BaseUnsharedVertexAttribute {
-    public readonly name: string;
-    public readonly id: ATTRIBUTE;
-    public readonly dim: DIM = DIM._3D;
-
-    public readonly values: UnsharedVertexValues;
-    public is_loaded: boolean = false;
-
-    constructor(length: number) {
-        this.values = [
-            float(length, this.dim),
-            float(length, this.dim),
-            float(length, this.dim)
-        ];
-    }
-
-    private _setFaceVertexValues(vertex_num: VERTEX_NUM, inputs: AttributeInputs): void {
-        let face_id, vertex_id: number;
-        for (const [component_num, input_values] of inputs.vertices.entries())
-            for ([face_id, vertex_id] of inputs.faces[vertex_num].entries())
-                this.values[vertex_num][component_num][face_id] = input_values[vertex_id];
-    }
-
-    protected _load(inputs: AttributeInputs): void {
-        if (inputs === null)
-            throw `${this.name}s could not be loaded, as there are no inputs!`;
-
-        this._setFaceVertexValues(0, inputs);
-        this._setFaceVertexValues(1, inputs);
-        this._setFaceVertexValues(2, inputs);
-
-        this.is_loaded = true;
-    }
-
-    protected _generate(): void {
-        for (const values of this.values)
-            randomize(values);
-
-        this.is_loaded = true;
-    }
-
-    protected _gatherFrom(face_attribute: FaceAttribute): void {
-        if (face_attribute.is_loaded) {
-            const face_values = face_attribute.values;
-            const face_count = face_values[0].length;
-
-            // Copy over face-attribute values to their respective vertex-attribute values:
-            for (const vertex_components of this.values)
-                for (const [c, vertex] of vertex_components.entries())
-                    for (let f = 0; f < face_count; f++)
-                        vertex[f] = face_values[c][f];
-        } else
-            throw `Vertex ${this.name}s can not be gathered, as source face attribute has'nt been loaded!`;
-
-        this.is_loaded = true;
-    }
-}
-
-export class UnsharedVertexPositions extends BaseUnsharedVertexAttribute implements ILoad {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.position;
-    public readonly name: string = 'position';
-
-    load = (inputs: PositionInputs): void => this._load(inputs);
-}
-
-export class UnsharedVertexNormals extends BaseUnsharedVertexAttribute implements ILoad, IGather {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
-    public readonly name: string = 'normal';
-
-    load = (inputs: NormalInputs): void => this._load(inputs);
-    gatherFrom = (face_attribute: FaceNormals, vertex_faces: VertexFaces): void =>
-        this._gatherFrom(face_attribute);
-}
-
-export class UnsharedVertexColors extends BaseUnsharedVertexAttribute implements ILoad, IGather, IGenerate {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
-    public readonly name: string = 'color';
-
-    load = (inputs: ColorInputs): void => this._load(inputs);
-    generate = (): void => this._generate();
-    gatherFrom = (face_attribute: FaceColors, vertex_faces: VertexFaces): void =>
-        this._gatherFrom(face_attribute);
-}
-
-export class UnsharedVertexUVs extends BaseUnsharedVertexAttribute implements ILoad {
-    public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
-    public readonly name: string = 'uv';
-
-    load = (inputs: UVInputs): void => this._load(inputs);
-}
 
 export class Faces {
     public readonly position: FacePositions | null;
@@ -360,15 +504,6 @@ const randomize = (values: Values): void => {
 // Temporary float arrays for computations:
 const temp = float3(3);
 
-type SharedVertexAttribute =
-    SharedVertexPositions |
-    SharedVertexNormals |
-    SharedVertexColors |
-    SharedVertexUVs;
-type UnsharedVertexAttribute =
-    UnsharedVertexPositions |
-    UnsharedVertexNormals |
-    UnsharedVertexColors |
-    UnsharedVertexUVs;
-type VertexAttribute = SharedVertexAttribute | UnsharedVertexAttribute;
-type FaceAttribute = FacePositions | FaceNormals | FaceColors;
+interface ILoad {load(...args: any[]): void}
+interface IGather {gatherFrom(...args: any[]): void}
+interface IGenerate {generate(...args: any[]): void}

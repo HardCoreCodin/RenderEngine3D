@@ -1,12 +1,12 @@
 export const PRECISION_DIGITS = 3;
 
-export const enum VERTEX_NUM {
+export const enum FACE_VERTEX_NUMBER {
     _1,
     _2,
     _3,
 }
 
-export const enum VERTICES_PER_FACE {
+export const enum FACE_TYPE {
     TRIANGLE = 3,
     QUAD,
 }
