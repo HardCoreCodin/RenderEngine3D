@@ -39,7 +39,7 @@ export class InputAttribute extends Attribute {
     public readonly faces: FaceInputs;
 
     constructor(
-        public readonly face_type: FACE_TYPE = FACE_TYPE.TRIANGLE
+        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE
     ) {
         super();
 
@@ -102,15 +102,15 @@ export class InputAttribute extends Attribute {
 }
 
 class BaseVertexAttribute extends Attribute {
-    public readonly is_shared: boolean;
-    public readonly reorder: boolean = true;
-
     public shared_values: SharedVertexValues = null;
     public unshared_values: UnsharedVertexValues = null;
 
-    constructor(length: number) {
+    constructor(
+        public readonly length: number,
+        public readonly is_shared: boolean | number = true,
+    ) {
         super();
-        if (this.is_shared)
+        if (!!is_shared)
             this.shared_values = float(length, this.dim);
         else
             this.unshared_values = [
@@ -122,25 +122,27 @@ class BaseVertexAttribute extends Attribute {
 }
 
 abstract class AbstractLoadableVertexAttribute<InputAttributeType extends InputAttribute> extends BaseVertexAttribute {
+    protected _loadShared(input_attribute: InputAttributeType, face_vertices: FaceVertices) : void {
+        let input_id, output_id: number;
+        for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
+            for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
+                for ([output_id, input_id] of zip(output_ids, input_ids))
+                    out_component[output_id] = in_component[input_id];
+    }
 
-    load(input_attribute: InputAttributeType, face_vertices?: FaceVertices) : void {
-        if (this.is_shared) {
-            if (this.reorder) {
-                let input_id, output_id: number;
-                for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
-                    for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
-                        for ([output_id, input_id] of zip(output_ids, input_ids))
-                            out_component[output_id] = in_component[input_id];
-            } else
-                for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
-                    out_component.set(in_component);
-        } else {
-            let face_index, vertex_index: number;
-            for (const [out_components, indices] of zip(this.unshared_values, input_attribute.faces))
-                for (const [out_component, in_component] of zip(out_components, input_attribute.vertices))
-                    for ([face_index, vertex_index] of indices.entries())
-                        out_component[face_index] = in_component[vertex_index];
-        }
+    protected _loadUnShared(input_attribute: InputAttributeType) : void {
+        let face_index, vertex_index: number;
+        for (const [out_components, indices] of zip(this.unshared_values, input_attribute.faces))
+            for (const [out_component, in_component] of zip(out_components, input_attribute.vertices))
+                for ([face_index, vertex_index] of indices.entries())
+                    out_component[face_index] = in_component[vertex_index];
+    }
+
+    load(input_attribute: InputAttributeType, face_vertices: FaceVertices) : void {
+        if (this.is_shared)
+            this._loadShared(input_attribute, face_vertices);
+        else
+            this._loadUnShared(input_attribute);
     }
 }
 
@@ -177,9 +179,9 @@ class BaseFaceAttribute extends Attribute {
     }
 }
 
-abstract class AbstractFaceAttribute<VertexAttribute extends BaseVertexAttribute> extends BaseFaceAttribute {
+abstract class AbstractFaceAttribute<VertexAttributeType extends BaseVertexAttribute> extends BaseFaceAttribute {
 
-    pull(vertex_attribute: VertexAttribute, face_vertices: FaceVertices): void {
+    pull(vertex_attribute: VertexAttributeType, face_vertices: FaceVertices): void {
         if (vertex_attribute.is_shared)
             for (const [output, input] of zip(this.face_values, vertex_attribute.shared_values))
                 for (const [face_id, [id_0, id_1, id_2]] of [...zip(face_vertices)].entries())
@@ -191,16 +193,20 @@ abstract class AbstractFaceAttribute<VertexAttribute extends BaseVertexAttribute
     }
 }
 
-class BaseVertexPositions extends AbstractLoadableVertexAttribute<InputPositions> {
+class VertexPositions extends AbstractLoadableVertexAttribute<InputPositions> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
-    public readonly reorder: boolean = false;
+
+    protected _loadShared(input_attribute: InputPositions) : void {
+        for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
+            out_component.set(in_component);
+    }
 }
 
-class BaseVertexNormals extends AbstractPulledVertexAttribute<InputNormals, FaceNormals> {
+class VertexNormals extends AbstractPulledVertexAttribute<InputNormals, FaceNormals> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 }
 
-class BaseVertexColors extends AbstractPulledVertexAttribute<InputColors, FaceColors> {
+class VertexColors extends AbstractPulledVertexAttribute<InputColors, FaceColors> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
 
     generate() {
@@ -212,31 +218,15 @@ class BaseVertexColors extends AbstractPulledVertexAttribute<InputColors, FaceCo
     }
 }
 
-class BaseVertexUVs extends AbstractLoadableVertexAttribute<InputUVs> {
+class VertexUVs extends AbstractLoadableVertexAttribute<InputUVs> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
     public readonly dim: DIM = DIM._2D;
 }
 
 export class InputPositions extends InputAttribute {public readonly id = ATTRIBUTE.position}
-export class SharedVertexPositions extends BaseVertexPositions {public readonly is_shared = true}
-export class UnsharedVertexPositions extends BaseVertexPositions {public readonly is_shared = false}
-
 export class InputNormals extends InputAttribute {public readonly id = ATTRIBUTE.normal}
-export class SharedVertexNormals extends BaseVertexNormals {public readonly is_shared = true}
-export class UnsharedVertexNormals extends BaseVertexNormals {public readonly is_shared = false}
-
 export class InputColors extends InputAttribute {public readonly id = ATTRIBUTE.color}
-export class SharedVertexColors extends BaseVertexColors {public readonly is_shared = true}
-export class UnsharedVertexColors extends BaseVertexColors {public readonly is_shared = false}
-
 export class InputUVs extends InputAttribute {public readonly id = ATTRIBUTE.uv; public readonly dim = DIM._2D}
-export class SharedVertexUVs extends BaseVertexUVs {public readonly is_shared = true}
-export class UnsharedVertexUVs extends BaseVertexUVs {public readonly is_shared = false}
-
-export type VertexPositions = SharedVertexPositions | UnsharedVertexPositions;
-export type VertexNormals = SharedVertexNormals | UnsharedVertexNormals;
-export type VertexColors = SharedVertexColors | UnsharedVertexColors;
-export type VertexUVs = SharedVertexUVs | UnsharedVertexUVs;
 
 export class FacePositions extends AbstractFaceAttribute<VertexPositions> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
@@ -284,52 +274,91 @@ export class FaceColors extends AbstractFaceAttribute<VertexColors> {
 }
 
 export type FaceAttribute = FacePositions | FaceNormals | FaceColors;
+export type VertexAttribute = VertexPositions | VertexNormals | VertexColors | VertexUVs;
 
-export class Faces {
-    public readonly position: FacePositions = null;
-    public readonly normal: FaceNormals = null;
-    public readonly color: FaceColors = null;
+abstract class AbstractCollection<
+    PositionAttributeType extends Attribute,
+    NormalAttributeType extends Attribute,
+    ColorAttributeType extends Attribute,
+    > {
+    public position: PositionAttributeType = null;
+    public normal: NormalAttributeType = null;
+    public color: ColorAttributeType = null;
 
-    constructor(
-        public readonly count: number,
-        public readonly include_attributes: number,
-    ) {
-        if (include_attributes & ATTRIBUTE.position) this.position = new FacePositions(count);
-        if (include_attributes & ATTRIBUTE.normal) this.normal = new FaceNormals(count);
-        if (include_attributes & ATTRIBUTE.color) this.color = new FaceColors(count);
+    public count: number;
+    public included: number;
+
+    protected _validate(value: number, name: string,  min: number = 0, max: number = Number.MAX_SAFE_INTEGER) : boolean {
+        if (Number.isInteger(value)) {
+            if (Number.isFinite(value)) {
+                if (value > min) {
+                    if (value < max) {
+                        return true;
+                    } console.debug(`${name} has to be a smaller than ${max} - got ${value}`)
+                } console.debug(`${name} has to be a greater than ${min} - got ${value}`)
+            } else console.debug(`${name} has to be a finite number - got ${value}`);
+        } else console.debug(`${name} has to be an integer - got ${value}`);
+
+        return false;
+    }
+
+    protected _validateParameters = () : boolean => (
+        this._validate(this.count, 'Count') &&
+        this._validate(this.included, 'included', 0b0001, 0b1111)
+    );
+}
+
+export class Faces extends AbstractCollection<FacePositions, FaceNormals, FaceColors> {
+    constructor(count?: number, included?: number) {
+        super();
+
+        if (count !== undefined)
+            this.init(count, included);
+    }
+
+    init(count: number, included: number) {
+        this.count = count;
+        this.included = included;
+
+        if (!this._validateParameters())
+            throw `Invalid parameters! count: ${count} included: ${included}`;
+
+        if (included & ATTRIBUTE.position) this.position = new FacePositions(count);
+        if (included & ATTRIBUTE.normal) this.normal = new FaceNormals(count);
+        if (included & ATTRIBUTE.color) this.color = new FaceColors(count);
     }
 }
 
-export class Vertices {
-    public readonly position: VertexPositions;
-    public readonly normal: VertexNormals = null;
-    public readonly color: VertexColors = null;
-    public readonly uv: VertexUVs  = null;
+export class Vertices extends AbstractCollection<VertexPositions, VertexNormals, VertexColors> {
+    public uv: VertexUVs  = null;
+    public shared: number;
 
-    constructor(
-        public readonly count: number,
-        public readonly include_attributes: number,
-        public readonly share_attributes: number
-    ) {
-        this.position = share_attributes & ATTRIBUTE.position ?
-            new SharedVertexPositions(count) :
-            new UnsharedVertexPositions(count);
+    constructor(count?: number, included?: number, shared?: number) {
+        super();
 
-        if (include_attributes & ATTRIBUTE.normal)
-            this.normal = share_attributes & ATTRIBUTE.normal ?
-                new SharedVertexNormals(count) :
-                new UnsharedVertexNormals(count);
-
-        if (include_attributes & ATTRIBUTE.color)
-            this.color = share_attributes & ATTRIBUTE.color ?
-                new SharedVertexColors(count) :
-                new UnsharedVertexColors(count);
-
-        if (include_attributes & ATTRIBUTE.uv)
-            this.uv = share_attributes & ATTRIBUTE.uv ?
-                new SharedVertexUVs(count) :
-                new UnsharedVertexUVs(count);
+        if (count !== undefined)
+            this.init(count, included, shared);
     }
+
+    init(count: number, included: number, shared: number) {
+        this.count = count;
+        this.included = included;
+        this.shared = shared;
+
+        if (!this._validateParameters())
+            throw `Invalid parameters! count: ${count} included: ${included}`;
+
+        this.position = new VertexPositions(count, shared & ATTRIBUTE.position);
+        if (included & ATTRIBUTE.normal) this.normal = new VertexNormals(count, shared & ATTRIBUTE.normal);
+        if (included & ATTRIBUTE.color) this.color = new VertexColors(count, shared & ATTRIBUTE.color);
+        if (included & ATTRIBUTE.uv) this.uv = new VertexUVs(count, shared & ATTRIBUTE.uv);
+    }
+
+    protected _validateParameters = () : boolean => (
+        this._validate(this.count, 'Count') &&
+        this._validate(this.included, 'included', 0b0001, 0b1111) &&
+        this._validate(this.shared, 'shared', 0b0000, 0b1111)
+    );
 }
 
 const randomize = (values: Values): void => {
