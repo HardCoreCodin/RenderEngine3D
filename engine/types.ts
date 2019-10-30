@@ -33,8 +33,11 @@ export type UVInputNum = Num2;
 export type QuadInputNum = Num4;
 export type TriangleInputNum = Num3;
 
-export type IntArrays3 = [Uint32Array, Uint32Array, Uint32Array];
+export const IntArray = Uint32Array;
+export type IntArray = Uint32Array;
 export type IntArrays = Uint32Array[];
+export type IntArrays3 = [Uint32Array, Uint32Array, Uint32Array];
+
 
 export type FloatArrays2 = [Float32Array, Float32Array];
 export type FloatArrays3 = [Float32Array, Float32Array, Float32Array];
@@ -83,5 +86,5 @@ export type VertexInputs = PositionInputs | NormalInputs | UVInputs | ColorInput
 export type VertexInputStr = PositionInputStr | ColorInputStr | NormalInputStr | UVInputStr;
 export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum | UVInputNum;
 export type VertexValues = Values | UnsharedVertexValues;
-export type VertexFaces = IntArrays;
-export type FaceVertices = IntArrays3;
+export type VertexFacesValues = IntArrays;
+export type FaceVerticesValues = IntArrays3;

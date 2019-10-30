@@ -4,17 +4,77 @@ import {
     FaceInputs,
     FaceInputStr,
     FaceValues,
-    FaceVertices,
+    FaceVerticesValues,
+    IntArray,
+    NumArrays,
     SharedVertexValues,
     UnsharedVertexValues,
     Values,
-    VertexFaces,
+    VertexFacesValues,
     VertexInputNum,
     VertexInputs,
     VertexInputStr
 } from "../types.js";
 import {float, float3, num2, num3, num4} from "../factories.js";
 import {cross, subtract} from "../math/vec3.js";
+
+export class FaceVertices {
+    public values: FaceVerticesValues = [null, null, null];
+
+    constructor(input_positions: InputPositions = null) {
+        if (input_positions)
+            this.load(input_positions);
+    }
+
+    load(input_positions: InputPositions) {
+        const face_count: number = input_positions.faces[0].length;
+        for (const [i, buffer] of this.values.entries()) {
+            if (buffer === null || buffer.length !== face_count)
+                this.values[i] = new IntArray(face_count);
+        }
+
+        this.values[0].set(input_positions.faces[0]);
+        this.values[1].set(input_positions.faces[1]);
+        this.values[2].set(input_positions.faces[2]);
+    }
+}
+
+export class VertexFaces {
+    private _temp_array: NumArrays = [];
+    private _buffer: IntArray = null;
+
+    public values: VertexFacesValues = [];
+
+    constructor(vertex_count: number = 0, face_vertices: FaceVertices = null) {
+        if (vertex_count && face_vertices)
+            this.load(vertex_count, face_vertices);
+    }
+
+    load(vertex_count: number, face_vertices: FaceVertices) {
+        this._temp_array.length = vertex_count;
+        for (let i = 0; i < vertex_count; i++)
+            this._temp_array[i] = [];
+
+        let vertex_id, face_id, relations: number = 0;
+        for (const face_vertex_ids of face_vertices.values) {
+            for ([face_id, vertex_id] of face_vertex_ids.entries()) {
+                this._temp_array[vertex_id].push(face_id);
+                relations++
+            }
+        }
+
+        this.values.length = vertex_count;
+        if (this._buffer === null || this._buffer.length !== relations)
+            this._buffer = new Uint32Array(relations);
+
+        let offset = 0;
+        for (const [i, array] of this._temp_array.entries()) {
+            this.values[i] = this._buffer.subarray(offset, array.length);
+            this.values[i].set(array);
+            offset += array.length;
+        }
+    }
+}
 
 export class Attribute {
     public readonly id: ATTRIBUTE;
@@ -154,7 +214,7 @@ abstract class AbstractPulledVertexAttribute<
     pull(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
         if (this.is_shared) // Average vertex-attribute values from their related face's attribute values:
             for (const [vertex_component, face_component] of zip(this.shared_values, face_attribute.face_values))
-                for (const [vertex_id, face_ids] of vertex_faces.entries()) {
+                for (const [vertex_id, face_ids] of vertex_faces.values.entries()) {
                     let accumulator = 0;
 
                     // For each component 'accumulate-in' the face-value of all the faces of this vertex:
@@ -237,13 +297,13 @@ export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
 
     pull(attribute: VertexPositions, face_vertices: FaceVertices) {
         const [out_x, out_y, out_z] = this.face_values;
-        const [ids_0, ids_1, ids_2] =  face_vertices;
+        const [ids_0, ids_1, ids_2] =  face_vertices.values;
         let values_0, values_1, values_2;
         if (attribute.is_shared)
             values_0 = values_1 = values_2 = attribute.shared_values;
         else [
             values_0, values_1, values_2
-        ] = face_vertices;
+        ] = face_vertices.values;
         let id_0, id_1, id_2: number;
 
         for (let face_id = 0; face_id < out_x.length; face_id++) {

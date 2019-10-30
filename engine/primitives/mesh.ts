@@ -1,13 +1,21 @@
 import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
-import {FaceVertices, VertexFaces} from "../types.js";
-import {Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices} from "./attribute.js";
+import {
+    Faces,
+    FaceVertices,
+    InputColors,
+    InputNormals,
+    InputPositions,
+    InputUVs,
+    VertexFaces,
+    Vertices
+} from "./attribute.js";
 
 export class Mesh {
     public readonly faces: Faces = new Faces();
     public readonly vertices: Vertices = new Vertices();
 
-    public face_vertices: FaceVertices = [null, null, null];
-    public vertex_faces: VertexFaces = [];
+    public face_vertices: FaceVertices = new FaceVertices();
+    public vertex_faces: VertexFaces = new VertexFaces();
 
     public face_count: number;
     public vertex_count: number;
@@ -26,15 +34,7 @@ export class Mesh {
         // Init::
         this.vertices.init(this.vertex_count, options.vertex_attributes, options.share);
         this.faces.init(this.face_count, options.face_attributes);
-
-        for (const [i, buffer] of this.face_vertices.entries()) {
-            if (buffer === null || buffer.length !== this.face_count)
-                this.face_vertices[i] = new Uint32Array(this.face_count);
-        }
-
-        this.face_vertices[0].set(inputs.position.faces[0]);
-        this.face_vertices[1].set(inputs.position.faces[1]);
-        this.face_vertices[2].set(inputs.position.faces[2]);
+        this.face_vertices.load(inputs.position);
 
         // Load:
         this.vertices.position.load(inputs.position, this.face_vertices);
@@ -43,7 +43,7 @@ export class Mesh {
 
         if (options.normal === NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE ||
             options.color === COLOR_SOURCING.GATHER_VERTEX__GENERATE_FACE
-        ) this._generateVertexFaces();
+        ) this.vertex_faces.load(this.vertex_count, this.face_vertices);
 
         switch (options.normal) {
             case NORMAL_SOURCING.NO_VERTEX__NO_FACE: break;
@@ -58,7 +58,6 @@ export class Mesh {
                 this.faces.normal.pull(this.vertices.position, this.face_vertices);
                 break;
             case NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this._generateVertexFaces();
                 this.faces.normal.pull(this.vertices.position, this.face_vertices);
                 this.vertices.normal.pull(this.faces.normal, this.vertex_faces);
                 break;
@@ -96,29 +95,6 @@ export class Mesh {
                 this.faces.color.pull(this.vertices.color, this.face_vertices);
         }
     }
-
-    private _generateVertexFaces() : void {
-        const temp_array = Array(this.vertex_count);
-        for (let i = 0; i < this.vertex_count; i++)
-            temp_array[i] = [];
-
-        let vertex_id, face_id, relations: number = 0;
-        for (const face_vertex_ids of this.face_vertices) {
-            for ([face_id, vertex_id] of face_vertex_ids.entries()) {
-                temp_array[vertex_id].push(face_id);
-                relations++
-            }
-        }
-
-        this.vertex_faces = Array(this.vertex_count);
-        const buffer = new Uint32Array(relations);
-        let offset = 0;
-        for (const [i, array] of temp_array.entries()) {
-            this.vertex_faces[i] = buffer.subarray(offset, array.length);
-            this.vertex_faces[i].set(array);
-            offset += array.length;
-        }
-    };
 }
 
 export class MeshOptions {
