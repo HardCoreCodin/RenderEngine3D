@@ -15,7 +15,6 @@ import {
 } from "../types.js";
 import {float, float3, num2, num3, num4} from "../factories.js";
 import {cross, subtract} from "../math/vec3.js";
-import {zip} from "../utils.js";
 
 export class Attribute {
     public readonly id: ATTRIBUTE;
@@ -151,27 +150,21 @@ abstract class AbstractPulledVertexAttribute<
     > extends AbstractLoadableVertexAttribute<InputAttributeType> {
 
     pull(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
-        if (this.is_shared) {
-            // Average vertex-attribute values from their related face's attribute values:
-            let accumulator: number;
-
-            // For each component 'accumulate-in' the face-value of all the faces of this vertex:
-            for (const [vertex_component, face_component] of zip(this.shared_values, face_attribute.face_values)) {
+        if (this.is_shared) // Average vertex-attribute values from their related face's attribute values:
+            for (const [vertex_component, face_component] of zip(this.shared_values, face_attribute.face_values))
                 for (const [vertex_id, face_ids] of vertex_faces.entries()) {
-                    accumulator = 0;
+                    let accumulator = 0;
 
+                    // For each component 'accumulate-in' the face-value of all the faces of this vertex:
                     for (let face_id of face_ids)
                         accumulator += face_component[face_id];
 
                     vertex_component[vertex_id] += accumulator / face_ids.length;
                 }
-            }
-        } else {
-            // Copy over face-attribute values to their respective vertex-attribute values:
+        else // Copy over face-attribute values to their respective vertex-attribute values:
             for (const vertex_components of this.unshared_values)
                 for (const [vertex_component, face_component] of zip(vertex_components, face_attribute.face_values))
                     vertex_component.set(face_component);
-        }
     }
 }
 
@@ -187,23 +180,14 @@ class BaseFaceAttribute extends Attribute {
 abstract class AbstractFaceAttribute<VertexAttribute extends BaseVertexAttribute> extends BaseFaceAttribute {
 
     pull(vertex_attribute: VertexAttribute, face_vertices: FaceVertices): void {
-        const face_count = this.face_values[0].length;
-
-        if (vertex_attribute.is_shared) {
-            for (const [c, vertex] of vertex_attribute.shared_values.entries()) {
-                for (let f = 0; f < face_count; f++)
-                    this.face_values[c][f] = (
-                        vertex[face_vertices[0][f]] +
-                        vertex[face_vertices[1][f]] +
-                        vertex[face_vertices[2][f]]
-                    ) / 3;
-            }
-        } else {
-            const [v0, v1, v2] = vertex_attribute.unshared_values;
-            for (const [c, values] of this.face_values.entries())
-                for (let f = 0; f < face_count; f++)
-                    values[f] = (v0[c][f] + v1[c][f] + v2[c][f]) / 3;
-        }
+        if (vertex_attribute.is_shared)
+            for (const [output, input] of zip(this.face_values, vertex_attribute.shared_values))
+                for (const [face_id, [id_0, id_1, id_2]] of [...zip(face_vertices)].entries())
+                    output[face_id] = (input[id_0] + input[id_1] + input[id_2]) / 3;
+        else
+            for (const [output, ...inputs] of zip(this.face_values, ...vertex_attribute.unshared_values))
+                for (const [face_id, values] of [...zip(...inputs)].entries())
+                    output[face_id] = avg(values);
     }
 }
 
@@ -262,43 +246,31 @@ export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 
     pull(attribute: VertexPositions, face_vertices: FaceVertices) {
-        const [v0, v1, v2] = this.face_values;
-        const face_count = v0.length;
+        const [out_x, out_y, out_z] = this.face_values;
+        const [ids_0, ids_1, ids_2] =  face_vertices;
+        let values_0, values_1, values_2;
+        if (attribute.is_shared)
+            values_0 = values_1 = values_2 = attribute.shared_values;
+        else [
+            values_0, values_1, values_2
+        ] = face_vertices;
+        let id_0, id_1, id_2: number;
 
-        for (let face_id = 0; face_id < face_count; face_id++) {
-            if (attribute instanceof SharedVertexPositions) {
-                subtract(
-                    attribute.shared_values, face_vertices[1][face_id],
-                    attribute.shared_values, face_vertices[0][face_id],
-                    temp, 0
-                );
-                subtract(
-                    attribute.shared_values, face_vertices[2][face_id],
-                    attribute.shared_values, face_vertices[0][face_id],
-                    temp, 1
-                );
-            } else {
-                subtract(
-                    attribute.unshared_values[1], face_id,
-                    attribute.unshared_values[0], face_id,
-                    temp, 0
-                );
-                subtract(
-                    attribute.unshared_values[2], face_id,
-                    attribute.unshared_values[0], face_id,
-                    temp, 1
-                );
-            }
+        for (let face_id = 0; face_id < out_x.length; face_id++) {
+            if (attribute.is_shared) {
+                id_0 = ids_0[face_id];
+                id_1 = ids_1[face_id];
+                id_2 = ids_2[face_id];
+            } else
+                id_0 = id_1 = id_2 = face_id;
 
-            cross(
-                temp, 0,
-                temp, 1,
-                temp, 2
-            );
+            subtract(values_1, id_1, values_0, id_0, temp, 0);
+            subtract(values_2, id_2, values_0, id_0, temp, 1);
+            cross(temp, 0, temp, 1, temp, 2);
 
-            v0[face_id] = temp[0][2];
-            v1[face_id] = temp[1][2];
-            v2[face_id] = temp[2][2];
+            out_x[face_id] = temp[0][2];
+            out_y[face_id] = temp[1][2];
+            out_z[face_id] = temp[2][2];
         }
     }
 }
@@ -369,3 +341,20 @@ const randomize = (values: Values): void => {
 
 // Temporary float arrays for computations:
 const temp = float3(3);
+
+function *zip (...iterables){
+    let iterators = iterables.map(i => i[Symbol.iterator]());
+    while (true) {
+        let results = iterators.map(iter => iter.next());
+        if (results.some(res => res.done))
+            return;
+        else
+            yield results.map(res => res.value);
+    }
+}
+
+const avg = (values: number[]) : number => {
+    let sum = 0;
+    for (const value of values) sum += value;
+    return sum / values.length;
+};
