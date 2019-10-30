@@ -53,6 +53,7 @@ export type FloatArrays16 = [
 export type FloatArrays = Float32Array[];
 export type Values = FloatArrays2 | FloatArrays3 | FloatArrays4;
 export type FaceValues = Values;
+export type SharedVertexValues = Values;
 export type UnsharedVertexValues = [Values, Values, Values];
 
 export type f_v = (a: FloatArrays, i: number) => void;

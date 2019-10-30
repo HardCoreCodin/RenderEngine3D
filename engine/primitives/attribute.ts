@@ -5,6 +5,7 @@ import {
     FaceInputStr,
     FaceValues,
     FaceVertices,
+    SharedVertexValues,
     UnsharedVertexValues,
     Values,
     VertexFaces,
@@ -101,239 +102,179 @@ export class InputAttribute extends Attribute {
     }
 }
 
-export class DataAttribute extends Attribute {
-    public readonly values: Values | FaceValues;
-    public is_loaded: boolean = false;
+class BaseVertexAttribute extends Attribute {
+    public readonly is_shared: boolean;
+    public readonly reorder: boolean = true;
+
+    public shared_values: SharedVertexValues = null;
+    public unshared_values: UnsharedVertexValues = null;
 
     constructor(length: number) {
         super();
-        if (length)
-            this.values = float(length, this.dim)
-    }
-
-    protected _load(vertices: VertexInputs, faces: FaceInputs) : void {
-        for (const [out_component, in_component] of zip(this.values, vertices))
-            out_component.set(in_component);
-    }
-
-    protected _generate() : void {
-        randomize(this.values);
-    }
-
-    protected _gatherFrom(face_values: FaceValues, vertex_faces: VertexFaces) : void {
-        throw `Not implemented!`;
+        if (this.is_shared)
+            this.shared_values = float(length, this.dim);
+        else
+            this.unshared_values = [
+                float(length, this.dim),
+                float(length, this.dim),
+                float(length, this.dim)
+            ];
     }
 }
 
-export class SharedVertexAttribute extends DataAttribute {
-    protected _load(vertices: VertexInputs, faces: FaceInputs): void {
+abstract class AbstractLoadableVertexAttribute<InputAttributeType extends InputAttribute> extends BaseVertexAttribute {
 
-        // TODO: Implement...
-        // if (input_vertex[0].length === this.vertex_count) {
-        //     let face_id, input_id, vertex_num, component_num, data_id : number = 0;
-        //     let input_values, input_ids: number[];
-        //     for ([vertex_num, input_ids] of input_index.entries())
-        //         data_index[vertex_num].set(input_ids);
-        // }
-    }
-
-    protected _gatherFrom(face_values: FaceValues, vertex_faces: VertexFaces): void {
-        // Average vertex-attribute values from their related face's attribute values:
-        let accumulator: number;
-        for (const [vertex_id, face_ids] of vertex_faces.entries()) {
-            // For each component 'accumulate-in' the face-value of all the faces of this vertex:
-            for (const [component, values] of face_values.entries()) {
-                accumulator = 0;
-
-                for (let face_id of face_ids)
-                    accumulator += values[face_id];
-
-                this.values[component][vertex_id] += accumulator / face_ids.length;
-            }
+    load(input_attribute: InputAttributeType, face_vertices?: FaceVertices) : void {
+        if (this.is_shared) {
+            if (this.reorder) {
+                let input_id, output_id: number;
+                for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
+                    for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
+                        for ([output_id, input_id] of zip(output_ids, input_ids))
+                            out_component[output_id] = in_component[input_id];
+            } else
+                for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
+                    out_component.set(in_component);
+        } else {
+            let face_index, vertex_index: number;
+            for (const [out_components, indices] of zip(this.unshared_values, input_attribute.faces))
+                for (const [out_component, in_component] of zip(out_components, input_attribute.vertices))
+                    for ([face_index, vertex_index] of indices.entries())
+                        out_component[face_index] = in_component[vertex_index];
         }
     }
 }
 
-export class UnsharedVertexAttribute extends DataAttribute {
-    public readonly unshared_values: UnsharedVertexValues;
-    public is_loaded: boolean = false;
+abstract class AbstractPulledVertexAttribute<
+    InputAttributeType extends InputAttribute,
+    FaceAttributeType extends BaseFaceAttribute
+    > extends AbstractLoadableVertexAttribute<InputAttributeType> {
+
+    pull(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
+        if (this.is_shared) {
+            // Average vertex-attribute values from their related face's attribute values:
+            let accumulator: number;
+
+            // For each component 'accumulate-in' the face-value of all the faces of this vertex:
+            for (const [vertex_component, face_component] of zip(this.shared_values, face_attribute.face_values)) {
+                for (const [vertex_id, face_ids] of vertex_faces.entries()) {
+                    accumulator = 0;
+
+                    for (let face_id of face_ids)
+                        accumulator += face_component[face_id];
+
+                    vertex_component[vertex_id] += accumulator / face_ids.length;
+                }
+            }
+        } else {
+            // Copy over face-attribute values to their respective vertex-attribute values:
+            for (const vertex_components of this.unshared_values)
+                for (const [vertex_component, face_component] of zip(vertex_components, face_attribute.face_values))
+                    vertex_component.set(face_component);
+        }
+    }
+}
+
+class BaseFaceAttribute extends Attribute {
+    public face_values: FaceValues = null;
 
     constructor(length: number) {
-        super(0);
-        this.unshared_values = [
-            float(length, this.dim),
-            float(length, this.dim),
-            float(length, this.dim)
-        ];
-    }
-
-    protected _load(vertices: VertexInputs, faces: FaceInputs) : void {
-        let face_index, vertex_index: number;
-        for (const [out_components, indices] of zip(this.unshared_values, faces))
-            for (const [out_component, in_component] of zip(out_components, vertices))
-                for ([face_index, vertex_index] of indices.entries())
-                    out_component[face_index] = in_component[vertex_index];
-    }
-
-    protected _generate(): void {
-        for (const values of this.unshared_values)
-            randomize(values);
-    }
-
-    protected _gatherFrom(face_values: FaceValues, vertex_faces: VertexFaces) : void {
-        // Copy over face-attribute values to their respective vertex-attribute values:
-        for (const vertex_components of this.unshared_values)
-            for (const [vertex_component, face_component] of zip(vertex_components, face_values))
-                vertex_component.set(face_component);
+        super();
+        this.face_values = float(length, this.dim);
     }
 }
 
-type Constructor<T = {}> = new (...args: any[]) => T;
-function createIDedMixin(id: ATTRIBUTE, dim: DIM = DIM._3D) {
-    function IDedMixin<TBase extends Constructor>(Base: TBase) {
-        return class extends Base {
-            public readonly id: ATTRIBUTE = id;
-            public readonly dim: DIM = dim;
-        }
-    }
+abstract class AbstractFaceAttribute<VertexAttribute extends BaseVertexAttribute> extends BaseFaceAttribute {
 
-    return IDedMixin;
-}
-const Position = createIDedMixin(ATTRIBUTE.position);
-const Normal = createIDedMixin(ATTRIBUTE.normal);
-const Color = createIDedMixin(ATTRIBUTE.color);
-const UV = createIDedMixin(ATTRIBUTE.uv, DIM._2D);
+    pull(vertex_attribute: VertexAttribute, face_vertices: FaceVertices): void {
+        const face_count = this.face_values[0].length;
 
-type DataAttributeConstructor = new (...args: any[]) => DataAttribute;
-function createLoadedMixin<InputAttributeType extends InputAttribute>() {
-    function LoadedMixin<TBase extends DataAttributeConstructor>(Base: TBase) {
-        return class extends Base {
-            load(inputs: InputAttributeType) : void {
-                if (inputs === null)
-                    throw `${this.name}s could not be loaded, as there are no inputs!`;
-
-                super._load(inputs.vertices, inputs.faces);
-
-                this.is_loaded = true;
+        if (vertex_attribute.is_shared) {
+            for (const [c, vertex] of vertex_attribute.shared_values.entries()) {
+                for (let f = 0; f < face_count; f++)
+                    this.face_values[c][f] = (
+                        vertex[face_vertices[0][f]] +
+                        vertex[face_vertices[1][f]] +
+                        vertex[face_vertices[2][f]]
+                    ) / 3;
             }
+        } else {
+            const [v0, v1, v2] = vertex_attribute.unshared_values;
+            for (const [c, values] of this.face_values.entries())
+                for (let f = 0; f < face_count; f++)
+                    values[f] = (v0[c][f] + v1[c][f] + v2[c][f]) / 3;
         }
     }
-
-    return LoadedMixin;
 }
-const LoadedPositions = createLoadedMixin<InputPositions>();
-const LoadedNormals = createLoadedMixin<InputNormals>();
-const LoadedColors = createLoadedMixin<InputColors>();
-const LoadedUVs = createLoadedMixin<InputUVs>();
 
-function createGatheredMixin<FaceAttributeType extends FaceAttribute>() {
-    function GatheredMixin<TBase extends DataAttributeConstructor>(Base: TBase) {
-        return class extends Base {
-            gatherFrom(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
-                if (!face_attribute.is_loaded)
-                    throw `Vertex ${this.name}s can not be gathered! `+
-                    'Source face attribute has not been loaded';
+class BaseVertexPositions extends AbstractLoadableVertexAttribute<InputPositions> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.position;
+    public readonly reorder: boolean = false;
+}
 
-                this._gatherFrom(face_attribute.values, vertex_faces);
+class BaseVertexNormals extends AbstractPulledVertexAttribute<InputNormals, FaceNormals> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
+}
 
-                this.is_loaded = true;
-            }
-        }
+class BaseVertexColors extends AbstractPulledVertexAttribute<InputColors, FaceColors> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.color;
+
+    generate() {
+        if (this.is_shared)
+            randomize(this.shared_values);
+        else
+            for (const values of this.unshared_values)
+                randomize(values);
     }
-
-    return GatheredMixin;
 }
-const GatheredNormals = createGatheredMixin<FaceNormals>();
-const GatheredColors = createGatheredMixin<FaceColors>();
 
-function createGenerated<FaceAttributeType extends FaceAttribute>() {
-    function GatheredMixin<TBase extends DataAttributeConstructor>(Base: TBase) {
-        return class extends Base {
-            generate = () : void => {
-                this._generate();
-
-                this.is_loaded = true;
-            }
-        }
-    }
-
-    return GatheredMixin;
+class BaseVertexUVs extends AbstractLoadableVertexAttribute<InputUVs> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
+    public readonly dim: DIM = DIM._2D;
 }
-const GeneratedColors = createGenerated<FaceColors>();
 
-export class InputPositions extends Position(InputAttribute) {}
-export class SharedVertexPositions extends LoadedPositions(Position(SharedVertexAttribute)) {}
-export class UnsharedVertexPositions extends LoadedPositions(Position(UnsharedVertexAttribute)) {}
+export class InputPositions extends InputAttribute {public readonly id = ATTRIBUTE.position}
+export class SharedVertexPositions extends BaseVertexPositions {public readonly is_shared = true}
+export class UnsharedVertexPositions extends BaseVertexPositions {public readonly is_shared = false}
 
-export class InputNormals extends Normal(InputAttribute) {}
-export class SharedVertexNormals extends GatheredNormals(LoadedNormals(Normal(SharedVertexAttribute))) {}
-export class UnsharedVertexNormals extends GatheredNormals(LoadedNormals(Normal(UnsharedVertexAttribute))) {}
+export class InputNormals extends InputAttribute {public readonly id = ATTRIBUTE.normal}
+export class SharedVertexNormals extends BaseVertexNormals {public readonly is_shared = true}
+export class UnsharedVertexNormals extends BaseVertexNormals {public readonly is_shared = false}
 
-export class InputColors extends Color(InputAttribute) {}
-export class SharedVertexColors extends GeneratedColors(GatheredColors(LoadedColors(Color(SharedVertexAttribute)))) {}
-export class UnsharedVertexColors extends GeneratedColors(GatheredColors(LoadedColors(Color(UnsharedVertexAttribute)))) {}
+export class InputColors extends InputAttribute {public readonly id = ATTRIBUTE.color}
+export class SharedVertexColors extends BaseVertexColors {public readonly is_shared = true}
+export class UnsharedVertexColors extends BaseVertexColors {public readonly is_shared = false}
 
-export class InputUVs extends UV(InputAttribute) {}
-export class SharedVertexUVs extends LoadedUVs(UV(SharedVertexAttribute)) {}
-export class UnsharedVertexUVs extends LoadedUVs(UV(UnsharedVertexAttribute)) {}
+export class InputUVs extends InputAttribute {public readonly id = ATTRIBUTE.uv; public readonly dim = DIM._2D}
+export class SharedVertexUVs extends BaseVertexUVs {public readonly is_shared = true}
+export class UnsharedVertexUVs extends BaseVertexUVs {public readonly is_shared = false}
 
 export type VertexPositions = SharedVertexPositions | UnsharedVertexPositions;
 export type VertexNormals = SharedVertexNormals | UnsharedVertexNormals;
 export type VertexColors = SharedVertexColors | UnsharedVertexColors;
 export type VertexUVs = SharedVertexUVs | UnsharedVertexUVs;
 
-export class FaceAttribute extends DataAttribute implements IGather {
-    public readonly values: FaceValues;
-
-    gatherFrom(vertex_attribute: VertexPositions | VertexColors, face_vertices: FaceVertices): void {
-        if (vertex_attribute.is_loaded) {
-            const face_count = this.values[0].length;
-
-            if (vertex_attribute instanceof SharedVertexAttribute) {
-                for (const [c, vertex] of vertex_attribute.values.entries()) {
-                    for (let f = 0; f < face_count; f++)
-                        this.values[c][f] = (
-                            vertex[face_vertices[0][f]] +
-                            vertex[face_vertices[1][f]] +
-                            vertex[face_vertices[2][f]]
-                        ) / 3;
-                }
-            } else {
-                const [v0, v1, v2] = vertex_attribute.values;
-                for (const [c, values] of this.values.entries())
-                    for (let f = 0; f < face_count; f++)
-                        values[f] = (v0[c][f] + v1[c][f] + v2[c][f]) / 3;
-            }
-        } else
-            throw `Face ${this.name}s can not be pulled! Source attribute ${vertex_attribute.name} is not loaded!`;
-
-        this.is_loaded = true;
-    }
+export class FacePositions extends AbstractFaceAttribute<VertexPositions> {
+    public readonly id: ATTRIBUTE = ATTRIBUTE.position;
 }
 
-export class FacePositions extends Position(FaceAttribute) {
-    gatherFrom(vertex_attribute: VertexPositions | VertexColors, face_vertices: FaceVertices) {
-        super.gatherFrom(vertex_attribute, face_vertices);
-    }
-}
-
-export class FaceNormals extends FaceAttribute {
+export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 
-    gatherFrom(attribute: SharedVertexPositions | UnsharedVertexPositions, face_vertices: FaceVertices) {
-        const [v0, v1, v2] = this.values;
+    pull(attribute: VertexPositions, face_vertices: FaceVertices) {
+        const [v0, v1, v2] = this.face_values;
         const face_count = v0.length;
 
         for (let face_id = 0; face_id < face_count; face_id++) {
             if (attribute instanceof SharedVertexPositions) {
                 subtract(
-                    attribute.values, face_vertices[1][face_id],
-                    attribute.values, face_vertices[0][face_id],
+                    attribute.shared_values, face_vertices[1][face_id],
+                    attribute.shared_values, face_vertices[0][face_id],
                     temp, 0
                 );
                 subtract(
-                    attribute.values, face_vertices[2][face_id],
-                    attribute.values, face_vertices[0][face_id],
+                    attribute.shared_values, face_vertices[2][face_id],
+                    attribute.shared_values, face_vertices[0][face_id],
                     temp, 1
                 );
             } else {
@@ -359,25 +300,23 @@ export class FaceNormals extends FaceAttribute {
             v1[face_id] = temp[1][2];
             v2[face_id] = temp[2][2];
         }
-
-        this.is_loaded = true;
     }
 }
 
-export class FaceColors extends FaceAttribute implements IGenerate {
+export class FaceColors extends AbstractFaceAttribute<VertexColors> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
 
-    gatherFrom(attribute: SharedVertexColors | UnsharedVertexColors, face_vertices?: FaceVertices) {
-        super.gatherFrom(attribute, face_vertices);
+    generate() {
+        randomize(this.face_values);
     }
-
-    generate = (): void => this._generate();
 }
 
+export type FaceAttribute = FacePositions | FaceNormals | FaceColors;
+
 export class Faces {
-    public readonly position: FacePositions | null;
-    public readonly normal: FaceNormals | null;
-    public readonly color: FaceColors | null;
+    public readonly position: FacePositions = null;
+    public readonly normal: FaceNormals = null;
+    public readonly color: FaceColors = null;
 
     constructor(
         public readonly count: number,
@@ -390,10 +329,10 @@ export class Faces {
 }
 
 export class Vertices {
-    public readonly position: SharedVertexPositions | UnsharedVertexPositions;
-    public readonly normal: SharedVertexNormals | UnsharedVertexNormals | null;
-    public readonly color: SharedVertexColors | UnsharedVertexColors | null;
-    public readonly uv: SharedVertexUVs | UnsharedVertexUVs | null;
+    public readonly position: VertexPositions;
+    public readonly normal: VertexNormals = null;
+    public readonly color: VertexColors = null;
+    public readonly uv: VertexUVs  = null;
 
     constructor(
         public readonly count: number,
@@ -430,7 +369,3 @@ const randomize = (values: Values): void => {
 
 // Temporary float arrays for computations:
 const temp = float3(3);
-
-interface ILoad {load(...args: any[]): void}
-interface IGather {gatherFrom(...args: any[]): void}
-interface IGenerate {generate(...args: any[]): void}
