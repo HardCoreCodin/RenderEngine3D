@@ -1,388 +1,466 @@
-import { PRECISION_DIGITS } from "../constants";
-import { Matrix } from "./base";
-import { Direction4D } from "./vec4.js";
-import Position4D from "../linalng/4D/position";
-const temp_matrix = new FloatArrays(16);
-let sin, cos;
-function setSinCos(angle) {
-    sin = Math.sin(angle);
-    cos = Math.cos(angle);
-}
-export const set_to_identity = (lhs, lhs_offset = 0) => {
-    lhs.fill(0, lhs_offset, lhs_offset + 16);
-    lhs[lhs_offset] = lhs[lhs_offset + 5] = lhs[lhs_offset + 10] = lhs[lhs_offset + 15] = 1;
+import { PRECISION_DIGITS } from "../constants.js";
+import { Matrix } from "./base.js";
+const temp_matrix = new Float32Array(16);
+export const set__to_identity = (a, i) => {
+    a[0][i] = 1;
+    a[1][i] = 0;
+    a[2][i] = 0;
+    a[3][i] = 0;
+    a[4][i] = 0;
+    a[5][i] = 1;
+    a[6][i] = 0;
+    a[7][i] = 0;
+    a[8][i] = 0;
+    a[9][i] = 0;
+    a[10][i] = 1;
+    a[11][i] = 0;
+    a[12][i] = 0;
+    a[13][i] = 0;
+    a[14][i] = 0;
+    a[15][i] = 1;
 };
-export const inverse = (out, lhs, out_offset = 0, lhs_offset = 0) => {
-    if (out_offset === lhs_offset && (Object.is(out, lhs) ||
-        Object.is(out.buffer, lhs.buffer)))
+export const inverse = (a, i, o, k) => {
+    if (i === k && (Object.is(a, o) || ((Object.is(a[0], o[0]) || Object.is(a[0].buffer, o[0].buffer)) &&
+        (Object.is(a[1], o[1]) || Object.is(a[1].buffer, o[1].buffer)) &&
+        (Object.is(a[2], o[2]) || Object.is(a[2].buffer, o[2].buffer)) &&
+        (Object.is(a[3], o[3]) || Object.is(a[3].buffer, o[3].buffer)) &&
+        (Object.is(a[4], o[4]) || Object.is(a[4].buffer, o[4].buffer)) &&
+        (Object.is(a[5], o[5]) || Object.is(a[5].buffer, o[5].buffer)) &&
+        (Object.is(a[6], o[6]) || Object.is(a[6].buffer, o[6].buffer)) &&
+        (Object.is(a[7], o[7]) || Object.is(a[7].buffer, o[7].buffer)) &&
+        (Object.is(a[8], o[8]) || Object.is(a[8].buffer, o[8].buffer)) &&
+        (Object.is(a[9], o[9]) || Object.is(a[9].buffer, o[9].buffer)) &&
+        (Object.is(a[10], o[10]) || Object.is(a[10].buffer, o[10].buffer)) &&
+        (Object.is(a[11], o[11]) || Object.is(a[11].buffer, o[11].buffer)) &&
+        (Object.is(a[12], o[12]) || Object.is(a[12].buffer, o[12].buffer)) &&
+        (Object.is(a[13], o[13]) || Object.is(a[13].buffer, o[13].buffer)) &&
+        (Object.is(a[14], o[14]) || Object.is(a[14].buffer, o[14].buffer)) &&
+        (Object.is(a[15], o[15]) || Object.is(a[15].buffer, o[15].buffer)))))
         throw `Can not inverse - shared buffer detected! (Use inverse_in_place)`;
-    out[out_offset] = lhs[lhs_offset];
-    out[out_offset + 1] = lhs[lhs_offset + 4];
-    out[out_offset + 2] = lhs[lhs_offset + 8];
-    out[out_offset + 3] = lhs[lhs_offset + 3];
-    out[out_offset + 4] = lhs[lhs_offset + 1];
-    out[out_offset + 5] = lhs[lhs_offset + 5];
-    out[out_offset + 6] = lhs[lhs_offset + 9];
-    out[out_offset + 7] = lhs[lhs_offset + 7];
-    out[out_offset + 8] = lhs[lhs_offset + 2];
-    out[out_offset + 9] = lhs[lhs_offset + 6];
-    out[out_offset + 10] = lhs[lhs_offset + 10];
-    out[out_offset + 11] = lhs[lhs_offset + 11];
-    out[out_offset + 12] = -(lhs[lhs_offset + 12] * lhs[lhs_offset] +
-        lhs[lhs_offset + 13] * lhs[lhs_offset + 1] +
-        lhs[lhs_offset + 14] * lhs[lhs_offset + 2]);
-    out[out_offset + 13] = -(lhs[lhs_offset + 12] * lhs[lhs_offset + 4] +
-        lhs[lhs_offset + 13] * lhs[lhs_offset + 5] +
-        lhs[lhs_offset + 14] * lhs[lhs_offset + 6]);
-    out[out_offset + 14] = -(lhs[lhs_offset + 12] * lhs[lhs_offset + 8] +
-        lhs[lhs_offset + 13] * lhs[lhs_offset + 9] +
-        lhs[lhs_offset + 14] * lhs[lhs_offset + 10]);
-    out[out_offset + 15] = 1;
+    o[0][k] = a[0][i];
+    o[1][k] = a[4][i];
+    o[2][k] = a[8][i];
+    o[3][k] = a[3][i];
+    o[4][k] = a[1][i];
+    o[5][k] = a[5][i];
+    o[6][k] = a[9][i];
+    o[7][k] = a[7][i];
+    a[8][k] = a[2][i];
+    a[9][k] = a[6][i];
+    a[10][k] = a[10][i];
+    a[11][k] = a[11][i];
+    o[12][k] = -(a[12][i] * a[0][i] +
+        a[13][i] * a[1][i] +
+        a[14][i] * a[2][i]);
+    o[13][k] = -(a[12][i] * a[4][i] +
+        a[13][i] * a[5][i] +
+        a[14][i] * a[6][i]);
+    o[14][k] = -(a[12][i] * a[8][i] +
+        a[13][i] * a[9][i] +
+        a[14][i] * a[10][i]);
+    o[15][k] = 1;
 };
-export const inverse_in_place = (lhs, lhs_offset = 0) => {
-    temp_matrix.set(lhs, lhs_offset);
-    lhs[lhs_offset] = temp_matrix[0];
-    lhs[lhs_offset + 1] = temp_matrix[4];
-    lhs[lhs_offset + 2] = temp_matrix[8];
-    lhs[lhs_offset + 3] = temp_matrix[3];
-    lhs[lhs_offset + 4] = temp_matrix[1];
-    lhs[lhs_offset + 5] = temp_matrix[5];
-    lhs[lhs_offset + 6] = temp_matrix[9];
-    lhs[lhs_offset + 7] = temp_matrix[7];
-    lhs[lhs_offset + 8] = temp_matrix[2];
-    lhs[lhs_offset + 9] = temp_matrix[6];
-    lhs[lhs_offset + 10] = temp_matrix[10];
-    lhs[lhs_offset + 11] = temp_matrix[11];
-    lhs[lhs_offset + 12] = -(temp_matrix[12] * temp_matrix[0] +
+export const inverse_in_place = (a, i) => {
+    temp_matrix[0] = a[0][i];
+    temp_matrix[1] = a[1][i];
+    temp_matrix[2] = a[2][i];
+    temp_matrix[3] = a[3][i];
+    temp_matrix[4] = a[4][i];
+    temp_matrix[5] = a[5][i];
+    temp_matrix[6] = a[6][i];
+    temp_matrix[7] = a[7][i];
+    temp_matrix[8] = a[8][i];
+    temp_matrix[0] = a[9][i];
+    temp_matrix[10] = a[10][i];
+    temp_matrix[11] = a[11][i];
+    temp_matrix[12] = a[12][i];
+    temp_matrix[13] = a[13][i];
+    temp_matrix[14] = a[14][i];
+    temp_matrix[15] = a[15][i];
+    a[0][i] = temp_matrix[0];
+    a[1][i] = temp_matrix[4];
+    a[2][i] = temp_matrix[8];
+    a[3][i] = temp_matrix[3];
+    a[4][i] = temp_matrix[1];
+    a[5][i] = temp_matrix[5];
+    a[6][i] = temp_matrix[9];
+    a[7][i] = temp_matrix[7];
+    a[8][i] = temp_matrix[2];
+    a[9][i] = temp_matrix[6];
+    a[10][i] = temp_matrix[10];
+    a[11][i] = temp_matrix[11];
+    a[12][i] = -(temp_matrix[12] * temp_matrix[0] +
         temp_matrix[13] * temp_matrix[1] +
         temp_matrix[14] * temp_matrix[2]);
-    lhs[lhs_offset + 13] = -(temp_matrix[12] * temp_matrix[4] +
+    a[13][i] = -(temp_matrix[12] * temp_matrix[4] +
         temp_matrix[13] * temp_matrix[5] +
         temp_matrix[14] * temp_matrix[6]);
-    lhs[lhs_offset + 14] = -(temp_matrix[12] * temp_matrix[8] +
+    a[14][i] = -(temp_matrix[12] * temp_matrix[8] +
         temp_matrix[13] * temp_matrix[9] +
         temp_matrix[14] * temp_matrix[10]);
-    lhs[lhs_offset + 15] = 1;
+    a[15][i] = 1;
 };
-export const transpose = (out, lhs, out_offset = 0, lhs_offset = 0) => {
-    if (out_offset === lhs_offset && (Object.is(out, lhs) ||
-        Object.is(out.buffer, lhs.buffer)))
+export const transpose = (a, i, o, k) => {
+    if (i === k && (Object.is(a, o) || ((Object.is(a[0], o[0]) || Object.is(a[0].buffer, o[0].buffer)) &&
+        (Object.is(a[1], o[1]) || Object.is(a[1].buffer, o[1].buffer)) &&
+        (Object.is(a[2], o[2]) || Object.is(a[2].buffer, o[2].buffer)) &&
+        (Object.is(a[3], o[3]) || Object.is(a[3].buffer, o[3].buffer)) &&
+        (Object.is(a[4], o[4]) || Object.is(a[4].buffer, o[4].buffer)) &&
+        (Object.is(a[5], o[5]) || Object.is(a[5].buffer, o[5].buffer)) &&
+        (Object.is(a[6], o[6]) || Object.is(a[6].buffer, o[6].buffer)) &&
+        (Object.is(a[7], o[7]) || Object.is(a[7].buffer, o[7].buffer)) &&
+        (Object.is(a[8], o[8]) || Object.is(a[8].buffer, o[8].buffer)) &&
+        (Object.is(a[9], o[9]) || Object.is(a[9].buffer, o[9].buffer)) &&
+        (Object.is(a[10], o[10]) || Object.is(a[10].buffer, o[10].buffer)) &&
+        (Object.is(a[11], o[11]) || Object.is(a[11].buffer, o[11].buffer)) &&
+        (Object.is(a[12], o[12]) || Object.is(a[12].buffer, o[12].buffer)) &&
+        (Object.is(a[13], o[13]) || Object.is(a[13].buffer, o[13].buffer)) &&
+        (Object.is(a[14], o[14]) || Object.is(a[14].buffer, o[14].buffer)) &&
+        (Object.is(a[15], o[15]) || Object.is(a[15].buffer, o[15].buffer)))))
         throw `Can not transpose - shared buffer detected! (Use transpose_in_place)`;
-    out[out_offset] = lhs[lhs_offset];
-    out[out_offset + 1] = lhs[lhs_offset + 4];
-    out[out_offset + 2] = lhs[lhs_offset + 8];
-    out[out_offset + 3] = lhs[lhs_offset + 12];
-    out[out_offset + 4] = lhs[lhs_offset + 1];
-    out[out_offset + 5] = lhs[lhs_offset + 5];
-    out[out_offset + 6] = lhs[lhs_offset + 9];
-    out[out_offset + 7] = lhs[lhs_offset + 13];
-    out[out_offset + 8] = lhs[lhs_offset + 2];
-    out[out_offset + 9] = lhs[lhs_offset + 6];
-    out[out_offset + 10] = lhs[lhs_offset + 10];
-    out[out_offset + 11] = lhs[lhs_offset + 14];
-    out[out_offset + 12] = lhs[lhs_offset + 3];
-    out[out_offset + 13] = lhs[lhs_offset + 7];
-    out[out_offset + 14] = lhs[lhs_offset + 11];
-    out[out_offset + 15] = lhs[lhs_offset + 15];
+    o[0][k] = a[0][i];
+    o[1][k] = a[4][i];
+    o[2][k] = a[8][i];
+    o[3][k] = a[12][i];
+    o[4][k] = a[1][i];
+    o[5][k] = a[5][i];
+    o[6][k] = a[9][i];
+    o[7][k] = a[13][i];
+    o[8][k] = a[2][i];
+    o[9][k] = a[6][i];
+    o[10][k] = a[10][i];
+    o[11][k] = a[14][i];
+    o[12][k] = a[3][i];
+    o[13][k] = a[7][i];
+    o[14][k] = a[11][i];
+    o[15][k] = a[15][i];
 };
-export const transpose_in_place = (lhs, lhs_offset = 0) => {
-    temp_matrix.set(lhs, lhs_offset);
-    lhs[lhs_offset] = temp_matrix[0];
-    lhs[lhs_offset + 1] = temp_matrix[4];
-    lhs[lhs_offset + 2] = temp_matrix[8];
-    lhs[lhs_offset + 3] = temp_matrix[12];
-    lhs[lhs_offset + 4] = temp_matrix[1];
-    lhs[lhs_offset + 5] = temp_matrix[5];
-    lhs[lhs_offset + 6] = temp_matrix[9];
-    lhs[lhs_offset + 7] = temp_matrix[13];
-    lhs[lhs_offset + 8] = temp_matrix[2];
-    lhs[lhs_offset + 9] = temp_matrix[6];
-    lhs[lhs_offset + 10] = temp_matrix[10];
-    lhs[lhs_offset + 11] = temp_matrix[14];
-    lhs[lhs_offset + 12] = temp_matrix[3];
-    lhs[lhs_offset + 13] = temp_matrix[7];
-    lhs[lhs_offset + 14] = temp_matrix[11];
-    lhs[lhs_offset + 15] = temp_matrix[15];
+export const transpose_in_place = (a, i) => {
+    [
+        a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
+    ] = [
+        a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
+    ];
 };
-export const equals = (lhs, rhs, lhs_offset = 0, rhs_offset = 0) => {
-    if (Object.is(lhs, rhs) && lhs_offset === rhs_offset)
+export const equals = (a, i, b, j) => {
+    if (i === j && (Object.is(a, b) || ((Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
+        (Object.is(a[1], b[1]) || Object.is(a[1].buffer, b[1].buffer)) &&
+        (Object.is(a[2], b[2]) || Object.is(a[2].buffer, b[2].buffer)) &&
+        (Object.is(a[3], b[3]) || Object.is(a[3].buffer, b[3].buffer)) &&
+        (Object.is(a[4], b[4]) || Object.is(a[4].buffer, b[4].buffer)) &&
+        (Object.is(a[5], b[5]) || Object.is(a[5].buffer, b[5].buffer)) &&
+        (Object.is(a[6], b[6]) || Object.is(a[6].buffer, b[6].buffer)) &&
+        (Object.is(a[7], b[7]) || Object.is(a[7].buffer, b[7].buffer)) &&
+        (Object.is(a[8], b[8]) || Object.is(a[8].buffer, b[8].buffer)) &&
+        (Object.is(a[9], b[9]) || Object.is(a[9].buffer, b[9].buffer)) &&
+        (Object.is(a[10], b[10]) || Object.is(a[10].buffer, b[10].buffer)) &&
+        (Object.is(a[11], b[11]) || Object.is(a[11].buffer, b[11].buffer)) &&
+        (Object.is(a[12], b[12]) || Object.is(a[12].buffer, b[12].buffer)) &&
+        (Object.is(a[13], b[13]) || Object.is(a[13].buffer, b[13].buffer)) &&
+        (Object.is(a[14], b[14]) || Object.is(a[14].buffer, b[14].buffer)) &&
+        (Object.is(a[15], b[15]) || Object.is(a[15].buffer, b[15].buffer)))))
         return true;
-    if (Object.is(lhs.buffer, rhs.buffer) && lhs_offset === rhs_offset)
-        return true;
-    if (lhs.length !== rhs.length)
+    if (a.length !==
+        b.length)
         return false;
-    if (lhs[lhs_offset].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset].toFixed(PRECISION_DIGITS))
+    if (a[0][i].toFixed(PRECISION_DIGITS) !== b[0][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 1].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 1].toFixed(PRECISION_DIGITS))
+    if (a[1][i].toFixed(PRECISION_DIGITS) !== b[1][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 2].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 2].toFixed(PRECISION_DIGITS))
+    if (a[2][i].toFixed(PRECISION_DIGITS) !== b[2][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 3].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 3].toFixed(PRECISION_DIGITS))
+    if (a[3][i].toFixed(PRECISION_DIGITS) !== b[3][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 4].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 4].toFixed(PRECISION_DIGITS))
+    if (a[4][i].toFixed(PRECISION_DIGITS) !== b[4][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 5].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 5].toFixed(PRECISION_DIGITS))
+    if (a[5][i].toFixed(PRECISION_DIGITS) !== b[5][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 6].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 6].toFixed(PRECISION_DIGITS))
+    if (a[6][i].toFixed(PRECISION_DIGITS) !== b[6][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 7].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 7].toFixed(PRECISION_DIGITS))
+    if (a[7][i].toFixed(PRECISION_DIGITS) !== b[7][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 8].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 8].toFixed(PRECISION_DIGITS))
+    if (a[8][i].toFixed(PRECISION_DIGITS) !== b[8][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 9].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 9].toFixed(PRECISION_DIGITS))
+    if (a[9][i].toFixed(PRECISION_DIGITS) !== b[9][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 10].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 10].toFixed(PRECISION_DIGITS))
+    if (a[10][i].toFixed(PRECISION_DIGITS) !== b[10][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 11].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 11].toFixed(PRECISION_DIGITS))
+    if (a[11][i].toFixed(PRECISION_DIGITS) !== b[11][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 12].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 12].toFixed(PRECISION_DIGITS))
+    if (a[12][i].toFixed(PRECISION_DIGITS) !== b[12][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 13].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 13].toFixed(PRECISION_DIGITS))
+    if (a[13][i].toFixed(PRECISION_DIGITS) !== b[13][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 14].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 14].toFixed(PRECISION_DIGITS))
+    if (a[14][i].toFixed(PRECISION_DIGITS) !== b[14][j].toFixed(PRECISION_DIGITS))
         return false;
-    if (lhs[lhs_offset + 15].toFixed(PRECISION_DIGITS) !== rhs[rhs_offset + 15].toFixed(PRECISION_DIGITS))
+    if (a[15][i].toFixed(PRECISION_DIGITS) !== b[15][j].toFixed(PRECISION_DIGITS))
         return false;
     return true;
 };
-export const is_identity = (lhs, lhs_offset = 0) => lhs[lhs_offset] === 1 &&
-    lhs[lhs_offset + 1] === 0 &&
-    lhs[lhs_offset + 2] === 0 &&
-    lhs[lhs_offset + 3] === 0 &&
-    lhs[lhs_offset + 4] === 0 &&
-    lhs[lhs_offset + 5] === 1 &&
-    lhs[lhs_offset + 6] === 0 &&
-    lhs[lhs_offset + 7] === 0 &&
-    lhs[lhs_offset + 8] === 0 &&
-    lhs[lhs_offset + 9] === 0 &&
-    lhs[lhs_offset + 10] === 1 &&
-    lhs[lhs_offset + 11] === 0 &&
-    lhs[lhs_offset + 12] === 0 &&
-    lhs[lhs_offset + 13] === 0 &&
-    lhs[lhs_offset + 14] === 0 &&
-    lhs[lhs_offset + 15] === 1;
-export const multiply = (out, lhs, rhs, out_offset = 0, lhs_offset = 0, rhs_offset = 0) => {
-    if ((out_offset === lhs_offset && (Object.is(out, lhs) ||
-        Object.is(out.buffer, lhs.buffer))) || (out_offset === rhs_offset && (Object.is(out, rhs) ||
-        Object.is(out.buffer, rhs.buffer))))
+export const is_identity = (a, i) => (a[0][i] === 1 &&
+    a[1][i] === 0 &&
+    a[2][i] === 0 &&
+    a[3][i] === 0 &&
+    a[4][i] === 0 &&
+    a[5][i] === 1 &&
+    a[6][i] === 0 &&
+    a[7][i] === 0 &&
+    a[8][i] === 0 &&
+    a[9][i] === 0 &&
+    a[10][i] === 1 &&
+    a[11][i] === 0 &&
+    a[12][i] === 0 &&
+    a[13][i] === 0 &&
+    a[14][i] === 0 &&
+    a[15][i] === 1);
+export const multiply = (a, i, b, j, o, k) => {
+    if ((k === j && (Object.is(o, b) || ((Object.is(b[0], o[0]) || Object.is(b[0].buffer, o[0].buffer)) &&
+        (Object.is(b[1], o[1]) || Object.is(b[1].buffer, o[1].buffer)) &&
+        (Object.is(b[2], o[2]) || Object.is(b[2].buffer, o[2].buffer)) &&
+        (Object.is(b[3], o[3]) || Object.is(b[3].buffer, o[3].buffer)) &&
+        (Object.is(b[4], o[4]) || Object.is(b[4].buffer, o[4].buffer)) &&
+        (Object.is(b[5], o[5]) || Object.is(b[5].buffer, o[5].buffer)) &&
+        (Object.is(b[6], o[6]) || Object.is(b[6].buffer, o[6].buffer)) &&
+        (Object.is(b[7], o[7]) || Object.is(b[7].buffer, o[7].buffer)) &&
+        (Object.is(b[8], o[8]) || Object.is(b[8].buffer, o[8].buffer)) &&
+        (Object.is(b[9], o[9]) || Object.is(b[9].buffer, o[9].buffer)) &&
+        (Object.is(b[10], o[10]) || Object.is(b[10].buffer, o[10].buffer)) &&
+        (Object.is(b[11], o[11]) || Object.is(b[11].buffer, o[11].buffer)) &&
+        (Object.is(b[12], o[12]) || Object.is(b[12].buffer, o[12].buffer)) &&
+        (Object.is(b[13], o[13]) || Object.is(b[13].buffer, o[13].buffer)) &&
+        (Object.is(b[14], o[14]) || Object.is(b[14].buffer, o[14].buffer)) &&
+        (Object.is(b[15], o[15]) || Object.is(b[15].buffer, o[15].buffer))))) || (k === i && (Object.is(o, a) || ((Object.is(a[0], o[0]) || Object.is(a[0].buffer, o[0].buffer)) &&
+        (Object.is(a[1], o[1]) || Object.is(a[1].buffer, o[1].buffer)) &&
+        (Object.is(a[2], o[2]) || Object.is(a[2].buffer, o[2].buffer)) &&
+        (Object.is(a[3], o[3]) || Object.is(a[3].buffer, o[3].buffer)) &&
+        (Object.is(a[4], o[4]) || Object.is(a[4].buffer, o[4].buffer)) &&
+        (Object.is(a[5], o[5]) || Object.is(a[5].buffer, o[5].buffer)) &&
+        (Object.is(a[6], o[6]) || Object.is(a[6].buffer, o[6].buffer)) &&
+        (Object.is(a[7], o[7]) || Object.is(a[7].buffer, o[7].buffer)) &&
+        (Object.is(a[8], o[8]) || Object.is(a[8].buffer, o[8].buffer)) &&
+        (Object.is(a[9], o[9]) || Object.is(a[9].buffer, o[9].buffer)) &&
+        (Object.is(a[10], o[10]) || Object.is(a[10].buffer, o[10].buffer)) &&
+        (Object.is(a[11], o[11]) || Object.is(a[11].buffer, o[11].buffer)) &&
+        (Object.is(a[12], o[12]) || Object.is(a[12].buffer, o[12].buffer)) &&
+        (Object.is(a[13], o[13]) || Object.is(a[13].buffer, o[13].buffer)) &&
+        (Object.is(a[14], o[14]) || Object.is(a[14].buffer, o[14].buffer)) &&
+        (Object.is(a[15], o[15]) || Object.is(a[15].buffer, o[15].buffer))))))
         throw `Can not multiply - shared buffer detected! (Use multiply_in_place)`;
     // Row 1
-    out[out_offset] = // Column 1
-        lhs[lhs_offset] * rhs[rhs_offset] +
-            lhs[lhs_offset + 1] * rhs[rhs_offset + 4] +
-            lhs[lhs_offset + 2] * rhs[rhs_offset + 8] +
-            lhs[lhs_offset + 3] * rhs[rhs_offset + 12];
-    out[out_offset + 1] = // Column 2
-        lhs[lhs_offset] * rhs[rhs_offset + 1] +
-            lhs[lhs_offset + 1] * rhs[rhs_offset + 5] +
-            lhs[lhs_offset + 2] * rhs[rhs_offset + 9] +
-            lhs[lhs_offset + 3] * rhs[rhs_offset + 13];
-    out[out_offset + 2] = // Column 3
-        lhs[lhs_offset] * rhs[rhs_offset + 2] +
-            lhs[lhs_offset + 1] * rhs[rhs_offset + 6] +
-            lhs[lhs_offset + 2] * rhs[rhs_offset + 10] +
-            lhs[lhs_offset + 3] * rhs[rhs_offset + 14];
-    out[out_offset + 3] = // Column 4
-        lhs[lhs_offset] * rhs[rhs_offset + 3] +
-            lhs[lhs_offset + 1] * rhs[rhs_offset + 7] +
-            lhs[lhs_offset + 2] * rhs[rhs_offset + 11] +
-            lhs[lhs_offset + 3] * rhs[rhs_offset + 15];
+    o[0][k] = // Column 1
+        a[0][i] * b[0][j] +
+            a[1][i] * b[4][j] +
+            a[2][i] * b[8][j] +
+            a[3][i] * b[12][j];
+    o[1][k] = // Column 2
+        a[0][i] * b[1][j] +
+            a[1][i] * b[5][j] +
+            a[2][i] * b[9][j] +
+            a[3][i] * b[13][j];
+    o[2][k] = // Column 3
+        a[0][i] * b[2][j] +
+            a[1][i] * b[6][j] +
+            a[2][i] * b[10][j] +
+            a[3][i] * b[14][j];
+    o[3][k] = // Column 4
+        a[0][i] * b[3][j] +
+            a[1][i] * b[7][j] +
+            a[2][i] * b[11][j] +
+            a[3][i] * b[15][j];
     // Row 2
-    out[out_offset + 4] = // Column 1
-        lhs[lhs_offset + 4] * rhs[rhs_offset] +
-            lhs[lhs_offset + 5] * rhs[rhs_offset + 4] +
-            lhs[lhs_offset + 6] * rhs[rhs_offset + 8] +
-            lhs[lhs_offset + 7] * rhs[rhs_offset + 12];
-    out[out_offset + 5] = // Column 2
-        lhs[lhs_offset + 4] * rhs[rhs_offset + 1] +
-            lhs[lhs_offset + 5] * rhs[rhs_offset + 5] +
-            lhs[lhs_offset + 6] * rhs[rhs_offset + 9] +
-            lhs[lhs_offset + 7] * rhs[rhs_offset + 13];
-    out[out_offset + 6] = // Column 3
-        lhs[lhs_offset + 4] * rhs[rhs_offset + 2] +
-            lhs[lhs_offset + 5] * rhs[rhs_offset + 6] +
-            lhs[lhs_offset + 6] * rhs[rhs_offset + 10] +
-            lhs[lhs_offset + 7] * rhs[rhs_offset + 14];
-    out[out_offset + 7] = // Column 4
-        lhs[lhs_offset + 4] * rhs[rhs_offset + 3] +
-            lhs[lhs_offset + 5] * rhs[rhs_offset + 7] +
-            lhs[lhs_offset + 6] * rhs[rhs_offset + 11] +
-            lhs[lhs_offset + 7] * rhs[rhs_offset + 15];
+    o[4][k] = // Column 1
+        a[4][i] * b[0][j] +
+            a[5][i] * b[4][j] +
+            a[6][i] * b[8][j] +
+            a[7][i] * b[12][j];
+    o[5][k] = // Column 2
+        a[4][i] * b[1][j] +
+            a[5][i] * b[5][j] +
+            a[6][i] * b[9][j] +
+            a[7][i] * b[13][j];
+    o[6][k] = // Column 3
+        a[4][i] * b[2][j] +
+            a[5][i] * b[6][j] +
+            a[6][i] * b[10][j] +
+            a[7][i] * b[14][j];
+    o[7][k] = // Column 3
+        a[4][i] * b[3][j] +
+            a[5][i] * b[7][j] +
+            a[6][i] * b[11][j] +
+            a[7][i] * b[15][j];
     // Row 3
-    out[out_offset + 8] = // Column 1
-        lhs[lhs_offset + 8] * rhs[rhs_offset] +
-            lhs[lhs_offset + 9] * rhs[rhs_offset + 4] +
-            lhs[lhs_offset + 10] * rhs[rhs_offset + 8] +
-            lhs[lhs_offset + 11] * rhs[rhs_offset + 12];
-    out[out_offset + 9] = // Column 2
-        lhs[lhs_offset + 8] * rhs[rhs_offset + 1] +
-            lhs[lhs_offset + 9] * rhs[rhs_offset + 5] +
-            lhs[lhs_offset + 10] * rhs[rhs_offset + 9] +
-            lhs[lhs_offset + 11] * rhs[rhs_offset + 13];
-    out[out_offset + 10] = // Column 3
-        lhs[lhs_offset + 8] * rhs[rhs_offset + 2] +
-            lhs[lhs_offset + 9] * rhs[rhs_offset + 6] +
-            lhs[lhs_offset + 10] * rhs[rhs_offset + 10] +
-            lhs[lhs_offset + 11] * rhs[rhs_offset + 14];
-    out[out_offset + 11] = // Column 4
-        lhs[lhs_offset + 8] * rhs[rhs_offset + 3] +
-            lhs[lhs_offset + 9] * rhs[rhs_offset + 7] +
-            lhs[lhs_offset + 10] * rhs[rhs_offset + 11] +
-            lhs[lhs_offset + 11] * rhs[rhs_offset + 15];
+    o[8][k] = // Column 1
+        a[8][i] * b[0][j] +
+            a[9][i] * b[4][j] +
+            a[10][i] * b[8][j] +
+            a[11][i] * b[12][j];
+    o[9][k] = // Column 2
+        a[8][i] * b[1][j] +
+            a[9][i] * b[5][j] +
+            a[10][i] * b[9][j] +
+            a[11][i] * b[13][j];
+    o[10][k] = // Column 3
+        a[8][i] * b[2][j] +
+            a[9][i] * b[6][j] +
+            a[10][i] * b[10][j] +
+            a[11][i] * b[14][j];
+    o[11][k] = // Column 4
+        a[8][i] * b[3][j] +
+            a[9][i] * b[7][j] +
+            a[10][i] * b[11][j] +
+            a[11][i] * b[15][j];
     // Row 4
-    out[out_offset + 12] = // Column 1
-        lhs[lhs_offset + 12] * rhs[rhs_offset] +
-            lhs[lhs_offset + 13] * rhs[rhs_offset + 4] +
-            lhs[lhs_offset + 14] * rhs[rhs_offset + 8] +
-            lhs[lhs_offset + 15] * rhs[rhs_offset + 12];
-    out[out_offset + 13] = // Column 2
-        lhs[lhs_offset + 12] * rhs[rhs_offset + 1] +
-            lhs[lhs_offset + 13] * rhs[rhs_offset + 5] +
-            lhs[lhs_offset + 14] * rhs[rhs_offset + 9] +
-            lhs[lhs_offset + 15] * rhs[rhs_offset + 13];
-    out[out_offset + 14] = // Column 3
-        lhs[lhs_offset + 12] * rhs[rhs_offset + 2] +
-            lhs[lhs_offset + 13] * rhs[rhs_offset + 6] +
-            lhs[lhs_offset + 14] * rhs[rhs_offset + 10] +
-            lhs[lhs_offset + 15] * rhs[rhs_offset + 14];
-    out[out_offset + 15] = // Column 4
-        lhs[lhs_offset + 12] * rhs[rhs_offset + 3] +
-            lhs[lhs_offset + 13] * rhs[rhs_offset + 7] +
-            lhs[lhs_offset + 14] * rhs[rhs_offset + 11] +
-            lhs[lhs_offset + 15] * rhs[rhs_offset + 15];
+    o[12][k] = // Column 1
+        a[12][i] * b[0][j] +
+            a[13][i] * b[4][j] +
+            a[14][i] * b[8][j] +
+            a[15][i] * b[12][j];
+    o[13][k] = // Column 2
+        a[12][i] * b[1][j] +
+            a[13][i] * b[5][j] +
+            a[14][i] * b[9][j] +
+            a[15][i] * b[13][j];
+    o[14][k] = // Column 3
+        a[12][i] * b[2][j] +
+            a[13][i] * b[6][j] +
+            a[14][i] * b[10][j] +
+            a[15][i] * b[14][j];
+    o[15][k] = // Column 4
+        a[12][i] * b[3][j] +
+            a[13][i] * b[7][j] +
+            a[14][i] * b[11][j] +
+            a[15][i] * b[15][j];
 };
-export const multiply_in_place = (lhs, rhs, lhs_offset = 0, rhs_offset = 0) => {
-    temp_matrix.set(lhs, lhs_offset);
+export const multiply_in_place = (a, i, b, j) => {
+    temp_matrix[0] = a[0][i];
+    temp_matrix[1] = a[1][i];
+    temp_matrix[2] = a[2][i];
+    temp_matrix[3] = a[3][i];
+    temp_matrix[4] = a[4][i];
+    temp_matrix[5] = a[5][i];
+    temp_matrix[6] = a[6][i];
+    temp_matrix[7] = a[7][i];
+    temp_matrix[8] = a[8][i];
+    temp_matrix[9] = a[9][i];
+    temp_matrix[10] = a[10][i];
+    temp_matrix[11] = a[11][i];
+    temp_matrix[12] = a[12][i];
+    temp_matrix[13] = a[13][i];
+    temp_matrix[14] = a[14][i];
+    temp_matrix[15] = a[15][i];
     // Row 1
-    lhs[lhs_offset] = // Column 1
-        temp_matrix[0] * rhs[rhs_offset] +
-            temp_matrix[1] * rhs[rhs_offset + 3] +
-            temp_matrix[2] * rhs[rhs_offset + 6];
-    // Row 1
-    lhs[lhs_offset] = // Column 1
-        temp_matrix[0] * rhs[rhs_offset] +
-            temp_matrix[1] * rhs[rhs_offset + 4] +
-            temp_matrix[2] * rhs[rhs_offset + 8] +
-            temp_matrix[3] * rhs[rhs_offset + 12];
-    lhs[lhs_offset + 1] = // Column 2
-        temp_matrix[0] * rhs[rhs_offset + 1] +
-            temp_matrix[1] * rhs[rhs_offset + 5] +
-            temp_matrix[2] * rhs[rhs_offset + 9] +
-            temp_matrix[3] * rhs[rhs_offset + 13];
-    lhs[lhs_offset + 2] = // Column 3
-        temp_matrix[0] * rhs[rhs_offset + 2] +
-            temp_matrix[1] * rhs[rhs_offset + 6] +
-            temp_matrix[2] * rhs[rhs_offset + 10] +
-            temp_matrix[3] * rhs[rhs_offset + 14];
-    lhs[lhs_offset + 3] = // Column 4
-        temp_matrix[0] * rhs[rhs_offset + 3] +
-            temp_matrix[1] * rhs[rhs_offset + 7] +
-            temp_matrix[2] * rhs[rhs_offset + 11] +
-            temp_matrix[3] * rhs[rhs_offset + 15];
+    a[0][i] = // Column 1
+        temp_matrix[0] * b[0][j] +
+            temp_matrix[1] * b[4][j] +
+            temp_matrix[2] * b[8][j] +
+            temp_matrix[3] * b[12][j];
+    a[1][i] = // Column 2
+        temp_matrix[0] * b[1][j] +
+            temp_matrix[1] * b[5][j] +
+            temp_matrix[2] * b[9][j] +
+            temp_matrix[3] * b[13][j];
+    a[2][i] = // Column 3
+        temp_matrix[0] * b[2][j] +
+            temp_matrix[1] * b[6][j] +
+            temp_matrix[2] * b[10][j] +
+            temp_matrix[3] * b[14][j];
+    a[3][i] = // Column 4
+        temp_matrix[0] * b[3][j] +
+            temp_matrix[1] * b[7][j] +
+            temp_matrix[2] * b[11][j] +
+            temp_matrix[3] * b[15][j];
     // Row 2
-    lhs[lhs_offset + 4] = // Column 1
-        temp_matrix[4] * rhs[rhs_offset] +
-            temp_matrix[5] * rhs[rhs_offset + 4] +
-            temp_matrix[6] * rhs[rhs_offset + 8] +
-            temp_matrix[7] * rhs[rhs_offset + 12];
-    lhs[lhs_offset + 5] = // Column 2
-        temp_matrix[4] * rhs[rhs_offset + 1] +
-            temp_matrix[5] * rhs[rhs_offset + 5] +
-            temp_matrix[6] * rhs[rhs_offset + 9] +
-            temp_matrix[7] * rhs[rhs_offset + 13];
-    lhs[lhs_offset + 6] = // Column 3
-        temp_matrix[4] * rhs[rhs_offset + 2] +
-            temp_matrix[5] * rhs[rhs_offset + 6] +
-            temp_matrix[6] * rhs[rhs_offset + 10] +
-            temp_matrix[7] * rhs[rhs_offset + 14];
-    lhs[lhs_offset + 7] = // Column 4
-        temp_matrix[4] * rhs[rhs_offset + 3] +
-            temp_matrix[5] * rhs[rhs_offset + 7] +
-            temp_matrix[6] * rhs[rhs_offset + 11] +
-            temp_matrix[7] * rhs[rhs_offset + 15];
+    a[4][i] = // Column 1
+        temp_matrix[4] * b[0][j] +
+            temp_matrix[5] * b[4][j] +
+            temp_matrix[6] * b[8][j] +
+            temp_matrix[7] * b[12][j];
+    a[5][i] = // Column 2
+        temp_matrix[4] * b[1][j] +
+            temp_matrix[5] * b[5][j] +
+            temp_matrix[6] * b[9][j] +
+            temp_matrix[7] * b[13][j];
+    a[6][i] = // Column 3
+        temp_matrix[4] * b[2][j] +
+            temp_matrix[5] * b[6][j] +
+            temp_matrix[6] * b[10][j] +
+            temp_matrix[7] * b[14][j];
+    a[7][i] = // Column 3
+        temp_matrix[4] * b[3][j] +
+            temp_matrix[5] * b[7][j] +
+            temp_matrix[6] * b[11][j] +
+            temp_matrix[7] * b[15][j];
     // Row 3
-    lhs[lhs_offset + 8] = // Column 1
-        temp_matrix[8] * rhs[rhs_offset] +
-            temp_matrix[9] * rhs[rhs_offset + 4] +
-            temp_matrix[10] * rhs[rhs_offset + 8] +
-            temp_matrix[11] * rhs[rhs_offset + 12];
-    lhs[lhs_offset + 9] = // Column 2
-        temp_matrix[8] * rhs[rhs_offset + 1] +
-            temp_matrix[9] * rhs[rhs_offset + 5] +
-            temp_matrix[10] * rhs[rhs_offset + 9] +
-            temp_matrix[11] * rhs[rhs_offset + 13];
-    lhs[lhs_offset + 10] = // Column 3
-        temp_matrix[8] * rhs[rhs_offset + 2] +
-            temp_matrix[9] * rhs[rhs_offset + 6] +
-            temp_matrix[10] * rhs[rhs_offset + 10] +
-            temp_matrix[11] * rhs[rhs_offset + 14];
-    lhs[lhs_offset + 11] = // Column 4
-        temp_matrix[8] * rhs[rhs_offset + 3] +
-            temp_matrix[9] * rhs[rhs_offset + 7] +
-            temp_matrix[10] * rhs[rhs_offset + 11] +
-            temp_matrix[11] * rhs[rhs_offset + 15];
+    a[8][i] = // Column 1
+        temp_matrix[8] * b[0][j] +
+            temp_matrix[9] * b[4][j] +
+            temp_matrix[10] * b[8][j] +
+            temp_matrix[11] * b[12][j];
+    a[9][i] = // Column 2
+        temp_matrix[8] * b[1][j] +
+            temp_matrix[9] * b[5][j] +
+            temp_matrix[10] * b[9][j] +
+            temp_matrix[11] * b[13][j];
+    a[10][i] = // Column 3
+        temp_matrix[8] * b[2][j] +
+            temp_matrix[9] * b[6][j] +
+            temp_matrix[10] * b[10][j] +
+            temp_matrix[11] * b[14][j];
+    a[11][i] = // Column 4
+        temp_matrix[8] * b[3][j] +
+            temp_matrix[9] * b[7][j] +
+            temp_matrix[10] * b[11][j] +
+            temp_matrix[11] * b[15][j];
     // Row 4
-    lhs[lhs_offset + 12] = // Column 1
-        temp_matrix[12] * rhs[rhs_offset] +
-            temp_matrix[13] * rhs[rhs_offset + 4] +
-            temp_matrix[14] * rhs[rhs_offset + 8] +
-            temp_matrix[15] * rhs[rhs_offset + 12];
-    lhs[lhs_offset + 13] = // Column 2
-        temp_matrix[12] * rhs[rhs_offset + 1] +
-            temp_matrix[13] * rhs[rhs_offset + 5] +
-            temp_matrix[14] * rhs[rhs_offset + 9] +
-            temp_matrix[15] * rhs[rhs_offset + 13];
-    lhs[lhs_offset + 14] = // Column 3
-        temp_matrix[12] * rhs[rhs_offset + 2] +
-            temp_matrix[13] * rhs[rhs_offset + 6] +
-            temp_matrix[14] * rhs[rhs_offset + 10] +
-            temp_matrix[15] * rhs[rhs_offset + 14];
-    lhs[lhs_offset + 15] = // Column 4
-        temp_matrix[12] * rhs[rhs_offset + 3] +
-            temp_matrix[13] * rhs[rhs_offset + 7] +
-            temp_matrix[14] * rhs[rhs_offset + 11] +
-            temp_matrix[15] * rhs[rhs_offset + 15];
+    a[12][i] = // Column 1
+        temp_matrix[12] * b[0][j] +
+            temp_matrix[13] * b[4][j] +
+            temp_matrix[14] * b[8][j] +
+            temp_matrix[15] * b[12][j];
+    a[13][i] = // Column 2
+        temp_matrix[12] * b[1][j] +
+            temp_matrix[13] * b[5][j] +
+            temp_matrix[14] * b[9][j] +
+            temp_matrix[15] * b[13][j];
+    a[14][i] = // Column 3
+        temp_matrix[12] * b[2][j] +
+            temp_matrix[13] * b[6][j] +
+            temp_matrix[14] * b[10][j] +
+            temp_matrix[15] * b[14][j];
+    a[15][i] = // Column 4
+        temp_matrix[12] * b[3][j] +
+            temp_matrix[13] * b[7][j] +
+            temp_matrix[14] * b[11][j] +
+            temp_matrix[15] * b[15][j];
 };
-export const set_rotation_around_x = (out, angle, reset = true, out_offset = 0) => {
-    setSinCos(angle);
-    if (reset)
-        set_to_identity(out, out_offset);
-    out[out_offset + 5] = cos;
-    out[out_offset + 10] = cos;
-    out[out_offset + 6] = sin;
-    out[out_offset + 9] = -sin;
+export const set_rotation_around_x = (a, i, cos, sin) => {
+    a[10][i] = a[5][i] = cos;
+    a[6][i] = sin;
+    a[9][i] = -sin;
 };
-export const set_rotation_around_y = (out, angle, reset = true, out_offset = 0) => {
-    setSinCos(angle);
-    if (reset)
-        set_to_identity(out, out_offset);
-    out[out_offset] = cos;
-    out[out_offset + 10] = cos;
-    out[out_offset + 2] = sin;
-    out[out_offset + 8] = -sin;
+export const set_rotation_around_y = (a, i, cos, sin) => {
+    a[0][i] = a[10][i] = cos;
+    a[2][i] = sin;
+    a[8][i] = -sin;
 };
-export const set_rotation_around_z = (out, angle, reset = true, out_offset = 0) => {
-    setSinCos(angle);
-    if (reset)
-        set_to_identity(out, out_offset);
-    out[out_offset] = cos;
-    out[out_offset + 5] = cos;
-    out[out_offset + 1] = sin;
-    out[out_offset + 4] = -sin;
+export const set_rotation_around_z = (a, i, cos, sin) => {
+    a[0][i] = a[5][i] = cos;
+    a[1][i] = sin;
+    a[4][i] = -sin;
 };
 export class Matrix4x4 extends Matrix {
-    constructor(typed_array, typed_array_offset = 0, i = new Direction4D(typed_array.subarray(typed_array_offset, typed_array_offset + 4)), j = new Direction4D(typed_array.subarray(typed_array_offset + 4, typed_array_offset + 8)), k = new Direction4D(typed_array.subarray(typed_array_offset + 8, typed_array_offset + 12)), t = new Position4D(typed_array.subarray(typed_array_offset + 12, typed_array_offset + 16))) {
-        super(typed_array, typed_array_offset);
-        this.typed_array = typed_array;
-        this.typed_array_offset = typed_array_offset;
+    constructor(id, data, i = new Direction4D(id, [data[0], data[1], data[2], data[3]]), j = new Direction4D(id, [data[4], data[5], data[6], data[7]]), k = new Direction4D(id, [data[8], data[9], data[10], data[11]]), t = new Position4D(id, [data[12], data[13], data[14], data[15]])) {
+        super(id, data);
+        this.id = id;
+        this.data = data;
         this.i = i;
         this.j = j;
         this.k = k;
         this.t = t;
-        this.typed_array_length = 16;
+        this._dim = 16;
         this._equals = equals;
         this._is_identity = is_identity;
-        this._set_to_identity = set_to_identity;
+        this._set_to_identity = set__to_identity;
         this._set_rotation_around_x = set_rotation_around_x;
         this._set_rotation_around_y = set_rotation_around_y;
         this._set_rotation_around_z = set_rotation_around_z;
@@ -394,12 +472,4 @@ export class Matrix4x4 extends Matrix {
         this._multiply_in_place = multiply_in_place;
     }
 }
-export const mat4 = (x0, y0 = 0, z0 = 0, w0 = 0, x1 = 0, y1 = 0, z1 = 0, w1 = 0, x2 = 0, y2 = 0, z2 = 0, w2 = 0, x3 = 0, y3 = 0, z3 = 0, w3 = 0, typed_array = new FloatArrays(16)) => {
-    const color = new Matrix4x4(typed_array);
-    if (x0 instanceof Matrix4x4)
-        color.setFromOther(x0);
-    else
-        color.setTo(x0, y0, z0, w0, x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3);
-    return color;
-};
 //# sourceMappingURL=mat4x4.js.map

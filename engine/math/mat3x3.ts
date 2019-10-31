@@ -1,13 +1,13 @@
-import {PRECISION_DIGITS} from "../constants";
-import {Matrix} from "./base";
+import {PRECISION_DIGITS} from "../constants.js";
+import {Matrix} from "./base.js";
 import {Direction3D} from "./vec3.js";
 import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix3x3Values} from "../types.js";
 
 const temp_matrix = new Float32Array(9);
 
 export const set_identity : f_v = (a: Matrix3x3Values, i: number) : void => {
-    a[0][i] = 0;
-    a[1][i] = 1;
+    a[0][i] = 1;
+    a[1][i] = 0;
     a[2][i] = 0;
 
     a[3][i] = 0;

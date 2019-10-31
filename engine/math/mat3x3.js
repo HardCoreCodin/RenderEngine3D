@@ -1,10 +1,10 @@
-import { PRECISION_DIGITS } from "../constants";
-import { Matrix } from "./base";
+import { PRECISION_DIGITS } from "../constants.js";
+import { Matrix } from "./base.js";
 import { Direction3D } from "./vec3.js";
 const temp_matrix = new Float32Array(9);
 export const set_identity = (a, i) => {
-    a[0][i] = 0;
-    a[1][i] = 1;
+    a[0][i] = 1;
+    a[1][i] = 0;
     a[2][i] = 0;
     a[3][i] = 0;
     a[4][i] = 1;

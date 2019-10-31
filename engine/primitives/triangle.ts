@@ -3,7 +3,6 @@ import Direction4D from "../linalng/4D/direction.js";
 import Position4D from "../linalng/4D/position.js";
 import Position3D from "../linalng/3D/position.js";
 import Color4D, {rgba} from "../linalng/4D/color.js";
-import Vertex from "./attribute";
 
 export class Triangle {
     constructor(
