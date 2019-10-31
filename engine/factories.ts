@@ -1,9 +1,9 @@
 import {
-    FloatArrays16,
+    Matrix4x4Values,
     FloatArrays2,
     FloatArrays3,
     FloatArrays4,
-    FloatArrays9,
+    Matrix3x3Values,
     Values,
     IntArrays3,
     NumArrays2,
@@ -67,7 +67,7 @@ export const float4 = (length: number) : FloatArrays4 => [
     new Float32Array(length)
 ];
 
-export const float9 = (length: number) : FloatArrays9 => [
+export const float9 = (length: number) : Matrix3x3Values => [
     new Float32Array(length),
     new Float32Array(length),
     new Float32Array(length),
@@ -81,7 +81,7 @@ export const float9 = (length: number) : FloatArrays9 => [
     new Float32Array(length)
 ];
 
-export const float16 = (length: number) : FloatArrays16 => [
+export const float16 = (length: number) : Matrix4x4Values => [
     new Float32Array(length),
     new Float32Array(length),
     new Float32Array(length),
@@ -165,7 +165,7 @@ export const mat3 = (
     m00?: number | Matrix3x3, m01: number = 0, m02: number = 0,
     m10: number = 0, m11: number = 0, m12: number = 0,
     m20: number = 0, m21: number = 0, m22: number = 0,
-    data: FloatArrays9 = float9(1),
+    data: Matrix3x3Values = float9(1),
     id: number = 0,
     out: Matrix3x3 = new Matrix3x3(id, data)
 ): Matrix3x3 => {

@@ -16,7 +16,7 @@ import {
     VertexInputStr
 } from "../types.js";
 import {float, float3, num2, num3, num4} from "../factories.js";
-import {cross, subtract} from "../math/vec3.js";
+import {cross, normalize, subtract} from "../math/vec3.js";
 
 export class FaceVertices {
     public values: FaceVerticesValues = [null, null, null];
@@ -95,21 +95,21 @@ export class Attribute {
 }
 
 export class InputAttribute extends Attribute {
-    public readonly vertices: VertexInputs;
-    public readonly faces: FaceInputs;
-
     constructor(
-        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE
+        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
+        public readonly vertices: VertexInputs = null,
+        public readonly faces: FaceInputs = null
     ) {
         super();
 
-        switch (this.face_type) {
+        if (!faces) switch (face_type) {
             case FACE_TYPE.TRIANGLE: this.faces = num3(); break;
             case FACE_TYPE.QUAD: this.faces = num4(); break;
             default:
-                throw `Invalid face type ${this.face_type}! Only supports triangles and quads.`;
+                throw `Invalid face type ${face_type}! Only supports triangles and quads.`;
         }
-        switch (this.dim) {
+
+        if (!vertices) switch (this.dim) {
             case DIM._2D: this.vertices = num2(); break;
             case DIM._3D: this.vertices = num3(); break;
             default:
@@ -296,7 +296,6 @@ export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 
     pull(attribute: VertexPositions, face_vertices: FaceVertices) {
-        const [out_x, out_y, out_z] = this.face_values;
         const [ids_0, ids_1, ids_2] =  face_vertices.values;
         let values_0, values_1, values_2;
         if (attribute.is_shared)
@@ -306,7 +305,7 @@ export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
         ] = face_vertices.values;
         let id_0, id_1, id_2: number;
 
-        for (let face_id = 0; face_id < out_x.length; face_id++) {
+        for (let face_id = 0; face_id < this.face_values[0].length; face_id++) {
             if (attribute.is_shared) {
                 id_0 = ids_0[face_id];
                 id_1 = ids_1[face_id];
@@ -317,10 +316,7 @@ export class FaceNormals extends AbstractFaceAttribute<VertexPositions> {
             subtract(values_1, id_1, values_0, id_0, temp, 0);
             subtract(values_2, id_2, values_0, id_0, temp, 1);
             cross(temp, 0, temp, 1, temp, 2);
-
-            out_x[face_id] = temp[0][2];
-            out_y[face_id] = temp[1][2];
-            out_z[face_id] = temp[2][2];
+            normalize(temp, 2, this.face_values, face_id);
         }
     }
 }

@@ -9,7 +9,7 @@ import {
     fff_v,
     f_n,
     ff_v,
-    fnb_v,
+    fnn_v,
     f_b
 } from "../types.js";
 
@@ -66,9 +66,9 @@ export default class Base {
 export class Matrix extends Base {
     protected _is_identity: f_b;
     protected _set_to_identity: f_v;
-    protected _set_rotation_around_x: fnb_v;
-    protected _set_rotation_around_y: fnb_v;
-    protected _set_rotation_around_z: fnb_v;
+    protected _set_rotation_around_x: fnn_v;
+    protected _set_rotation_around_y: fnn_v;
+    protected _set_rotation_around_z: fnn_v;
 
     protected _transpose: ff_v;
     protected _transpose_in_place: f_v;
@@ -141,37 +141,25 @@ export class Matrix extends Base {
     }
 
     setRotationAroundX(angle=0, reset=true) : this {
-        this._set_rotation_around_x(
-            this.data,
-            this.id,
-
-            angle,
-            reset
-        );
+        if (reset) this._set_to_identity(this.data, this.id);
+        setSinCos(angle);
+        this._set_rotation_around_x(this.data, this.id, cos, sin);
 
         return this;
     }
 
     setRotationAroundY(angle: number, reset=false) : this {
-        this._set_rotation_around_y(
-            this.data,
-            this.id,
-
-            angle,
-            reset
-        );
+        if (reset) this._set_to_identity(this.data, this.id);
+        setSinCos(angle);
+        this._set_rotation_around_y(this.data, this.id, cos, sin);
 
         return this;
     }
 
     setRotationAroundZ(angle: number, reset=false) : this {
-        this._set_rotation_around_z(
-            this.data,
-            this.id,
-
-            angle,
-            reset
-        );
+        if (reset) this._set_to_identity(this.data, this.id);
+        setSinCos(angle);
+        this._set_rotation_around_z(this.data, this.id, cos, sin);
 
         return this;
     }
@@ -448,6 +436,12 @@ export function PositionMixin(BaseClass: Constructor) {
             return out;
         }
     }
+}
+
+let sin, cos;
+function setSinCos(angle: number) {
+    sin = Math.sin(angle);
+    cos = Math.cos(angle);
 }
 
 //

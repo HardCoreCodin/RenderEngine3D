@@ -1,50 +1,46 @@
-import {Mesh} from "./mesh.js";
-import {pos4} from "../linalng/4D/position.js";
-import {tri} from "./triangle.js";
+import {Mesh, MeshInputs, MeshOptions} from "./mesh.js";
+import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
+import {InputPositions} from "./attribute.js";
 
-const triangle_positions = [
-    // SOUTH
-    [[0, 0, 0], [0, 1, 0], [1, 1, 0]],
-    [[0, 0, 0], [1, 1, 0], [1, 0, 0]],
-    
-    // EAST                                                      
-    [[1, 0, 0], [1, 1, 0], [1, 1, 1]],
-    [[1, 0, 0], [1, 1, 1], [1, 0, 1]],
-    
-    // NORTH                                                     
-    [[1, 0, 1], [1, 1, 1], [0, 1, 1]],
-    [[1, 0, 1], [0, 1, 1], [0, 0, 1]],
-    
-    // WEST                                                      
-    [[0, 0, 1], [0, 1, 1], [0, 1, 0]],
-    [[0, 0, 1], [0, 1, 0], [0, 0, 0]],
-    
-    // TOP                                                       
-    [[0, 1, 0], [0, 1, 1], [1, 1, 1]],
-    [[0, 1, 0], [1, 1, 1], [1, 1, 0]],
-    
-    // BOTTOM                                                    
-    [[1, 0, 1], [0, 0, 1], [0, 0, 0]],
-    [[1, 0, 1], [0, 0, 0], [1, 0, 0]],
-];
+// Cube inputs in quads:
+// =====================
+const mesh_inputs  = new MeshInputs(
+    ATTRIBUTE.position,
+    FACE_TYPE.QUAD,
 
-export default class Cube extends Mesh {
-    constructor() {
-        super();
+    new InputPositions(
+        FACE_TYPE.QUAD,
 
-        for (const tri_pos of triangle_positions) {
-            this.triangles.push(
-                tri(
-                    pos4(...tri_pos[0]),
-                    pos4(...tri_pos[1]),
-                    pos4(...tri_pos[2])
-                )
-            );
+        // Vertex position values:
+        [
+            [ // X coordinates (0 = left, 1 = right)
+                0, 1, 1, 0,
+                0, 1, 1, 0
+            ],
+            [ // Y coordinates (0 = bottom, 1 = top)
+                0, 0, 1, 1,
+                0, 0, 1, 1
+            ],
+            [ // Z coordinates (0 = front, 1 = back)
+                0, 0, 0, 0,
+                1, 1, 1, 1
+            ],
+        ],
 
-            this.positions.push(this.triangles[this.triangles.length - 1].p0);
-            this.positions.push(this.triangles[this.triangles.length - 1].p1);
-            this.positions.push(this.triangles[this.triangles.length - 1].p2);
-        }
-    }
-}
-    
+        // Quad face vertex-indices:
+        [
+            [0, 1, 5, 4, 0, 3], // Vertex 1 of each quad
+            [1, 5, 4, 0, 1, 2], // Vertex 2 of each quad
+            [2, 6, 7, 3, 5, 6], // Vertex 3 of each quad
+            [3, 2, 6, 7, 4, 7], // Vertex 4 of each quad
+        ]
+    )
+);
+
+const Cube = (
+    share: ATTRIBUTE = ATTRIBUTE.position,
+    normals: NORMAL_SOURCING = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE,
+    colors: COLOR_SOURCING = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE,
+) : Mesh => new Mesh(mesh_inputs, new MeshOptions(share, normals, colors));
+
+export default Cube;

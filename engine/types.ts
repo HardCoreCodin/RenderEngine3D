@@ -58,6 +58,8 @@ export type Values = FloatArrays2 | FloatArrays3 | FloatArrays4;
 export type FaceValues = Values;
 export type SharedVertexValues = Values;
 export type UnsharedVertexValues = [Values, Values, Values];
+export type Matrix3x3Values = FloatArrays9;
+export type Matrix4x4Values = FloatArrays16;
 
 export type f_v = (a: FloatArrays, i: number) => void;
 export type f_b = (a: FloatArrays, i: number) => boolean;
@@ -77,7 +79,7 @@ export type fff_v = (a: FloatArrays, i: number,
 export type ffnf_v = (a: FloatArrays, i: number,
                       b: FloatArrays, j: number, t: number,
                       o: FloatArrays, k: number) => void;
-export type fnb_v = (a: FloatArrays, i: number, angle: number, reset: boolean) => void;
+export type fnn_v = (a: FloatArrays, i: number, cos: number, sin: number) => void;
 
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;

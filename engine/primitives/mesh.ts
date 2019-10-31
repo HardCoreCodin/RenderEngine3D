@@ -102,6 +102,7 @@ export class MeshOptions {
         public share: ATTRIBUTE = 0,
         public normal: NORMAL_SOURCING = 0,
         public color: COLOR_SOURCING = 0,
+
         public include_uvs: boolean = false,
         public generate_face_positions: boolean = false
     ) {}
@@ -159,20 +160,14 @@ export class MeshOptions {
 }
 
 export class MeshInputs {
-    public readonly position: InputPositions;
-    public readonly normal: InputNormals = null;
-    public readonly color: InputColors = null;
-    public readonly uv: InputUVs = null;
-
     constructor(
         public readonly included: ATTRIBUTE = ATTRIBUTE.position,
         public readonly face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
-    ) {
-        this.position = new InputPositions(face_type);
-        if (included & ATTRIBUTE.normal) this.normal = new InputNormals(face_type);
-        if (included & ATTRIBUTE.color) this.color = new InputColors(face_type);
-        if (included & ATTRIBUTE.uv) this.uv = new InputUVs(face_type);
-    }
+        public readonly position: InputPositions = new InputPositions(face_type),
+        public readonly normal: InputNormals = included & ATTRIBUTE.normal ? new InputNormals(face_type) : null,
+        public readonly color: InputColors = included & ATTRIBUTE.color ? new InputColors(face_type) : null,
+        public readonly uv: InputUVs = included & ATTRIBUTE.uv ? new InputUVs(face_type) : null,
+    ) {}
 
     sanitize() {
         if (this.position.face_type === FACE_TYPE.QUAD)

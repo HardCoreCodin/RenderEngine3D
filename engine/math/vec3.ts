@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {ColorMixin, DirectionMixin, PositionMixin, Vector} from "./base.js";
-import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, FloatArrays3, FloatArrays9, fn_v, fnf_v} from "../types.js";
+import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, FloatArrays3, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
 
 let temp_number: number;
 const temp_lhs = new Float32Array(3);
@@ -219,7 +219,7 @@ export const cross_in_place : ff_v = (
 
 export const multiply : fff_v = (
     a: FloatArrays3, i: number,
-    b: FloatArrays9, j: number,
+    b: Matrix3x3Values, j: number,
     o: FloatArrays3, k: number
 ) : void => {
     if (k === i && (
@@ -238,7 +238,7 @@ export const multiply : fff_v = (
 
 export const multiply_in_place : ff_v = (
     a: FloatArrays3, i: number,
-    b: FloatArrays9, j: number
+    b: Matrix3x3Values, j: number
 ) : void => {
     temp_lhs[0] = a[0][i];
     temp_lhs[1] = a[1][i];
