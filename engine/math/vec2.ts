@@ -1,23 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {
-    VectorConstructor,
-    BaseUV2D,
-    BasePosition2D,
-    BaseDirection2D
-} from "./base.js";
-import {
-    f_n,
-    f_v,
-    ff_b,
-    ff_n,
-    ff_v,
-    fff_v,
-    ffnf_v,
-    Vector2DValues,
-    Matrix2x2Values,
-    fn_v,
-    fnf_v
-} from "../types.js";
+import {VectorConstructor, BaseUV2D, BasePosition2D, BaseDirection2D } from "./base.js";
+import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, fn_v, fnf_v, Vector2DValues, Matrix2x2Values} from "../types.js";
 
 let temp_number: number;
 const temp_vector = new Float32Array(2);
@@ -228,10 +211,14 @@ export const Vector2D_Mixin = (BaseClass: VectorConstructor) => class extends Ba
 };
 
 export class UV2D extends Vector2D_Mixin(BaseUV2D) {}
-export class Position2D extends Vector2D_Mixin(BasePosition2D) {}
+export class Position2D extends Vector2D_Mixin(BasePosition2D) {
+    _distance: ff_n = distance;
+    _distance_squared: ff_n = distance_squared;
+}
 export class Direction2D extends Vector2D_Mixin(BaseDirection2D){
     protected _dot: ff_n = dot;
     protected _length: f_n = length;
+    protected _length_squared: f_n = length_squared;
 
     protected _normalize : ff_v = normalize;
     protected _normalize_in_place : f_v = normalize_in_place;

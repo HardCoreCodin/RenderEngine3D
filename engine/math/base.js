@@ -40,6 +40,10 @@ export class BaseMatrix extends Base {
     get is_identity() {
         return this._is_identity(this.arrays, this.id);
     }
+    setToIdentity() {
+        this._set_identity(this.arrays, this.id);
+        return this;
+    }
     transposed(out) {
         this._transpose(this.arrays, this.id, out.arrays, out.id);
         return out;
@@ -64,29 +68,25 @@ export class BaseMatrix extends Base {
         this._multiply(this.arrays, this.id, other.arrays, other.id, out.arrays, out.id);
         return out;
     }
-    setToIdentity() {
-        this._set_to_identity(this.arrays, this.id);
-        return this;
-    }
 }
 export class BaseRotationMatrix extends BaseMatrix {
     setRotationAroundX(angle, reset = true) {
         if (reset)
-            this._set_to_identity(this.arrays, this.id);
+            this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_x(this.arrays, this.id, cos, sin);
         return this;
     }
     setRotationAroundY(angle, reset = false) {
         if (reset)
-            this._set_to_identity(this.arrays, this.id);
+            this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_y(this.arrays, this.id, cos, sin);
         return this;
     }
     setRotationAroundZ(angle, reset = false) {
         if (reset)
-            this._set_to_identity(this.arrays, this.id);
+            this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_z(this.arrays, this.id, cos, sin);
         return this;
@@ -167,6 +167,9 @@ export class BaseDirection extends BaseVector {
     get length() {
         return this._length(this.arrays, this.id);
     }
+    get length_squared() {
+        return this._length_squared(this.arrays, this.id);
+    }
     dot(other) {
         return this._dot(this.arrays, this.id, other.arrays, other.id);
     }
@@ -180,6 +183,12 @@ export class BaseDirection extends BaseVector {
     }
 }
 export class BasePosition extends BaseVector {
+    squared_distance_to(other) {
+        return this._distance_squared(this.arrays, this.id, other.arrays, other.id);
+    }
+    distance_to(other) {
+        return this._distance(this.arrays, this.id, other.arrays, other.id);
+    }
     to(other, out) {
         this._subtract(other.arrays, other.id, this.arrays, this.id, out.arrays, out.id);
         return out;

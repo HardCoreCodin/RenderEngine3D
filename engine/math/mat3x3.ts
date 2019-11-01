@@ -1,5 +1,5 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {InverseMatrixMixin, BaseMatrix, BaseRotationMatrix} from "./base.js";
+import {BaseRotationMatrix} from "./base.js";
 import {Direction3D} from "./vec3.js";
 import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix3x3Values} from "../types.js";
 
@@ -346,15 +346,12 @@ export const set_rotation_around_z : fnn_v = (
     a[4][i] = -sin;
 };
 
-export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)) {
+export class Matrix3x3 extends BaseRotationMatrix {
     protected _dim: number = 9;
 
     protected _equals: ff_b = equals;
     protected _is_identity: f_b = is_identity;
     protected _set_identity: f_v = set_identity;
-    protected _set_rotation_around_x: fnn_v = set_rotation_around_x;
-    protected _set_rotation_around_y: fnn_v = set_rotation_around_y;
-    protected _set_rotation_around_z: fnn_v = set_rotation_around_z;
 
     protected _inverse: ff_v = inverse;
     protected _inverse_in_place: f_v = inverse_in_place;
@@ -364,6 +361,10 @@ export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)
 
     protected _multiply : fff_v = multiply;
     protected _multiply_in_place : ff_v = multiply_in_place;
+    
+    protected _set_rotation_around_x: fnn_v = set_rotation_around_x;
+    protected _set_rotation_around_y: fnn_v = set_rotation_around_y;
+    protected _set_rotation_around_z: fnn_v = set_rotation_around_z;
 
     constructor(
         public id: number,

@@ -155,12 +155,18 @@ export class UV3D extends Vector3DMixin(BaseUV3D) {
 export class Color3D extends Vector3DMixin(BaseColor3D) {
 }
 export class Position3D extends Vector3DMixin(BasePosition3D) {
+    constructor() {
+        super(...arguments);
+        this._distance = distance;
+        this._distance_squared = distance_squared;
+    }
 }
 export class Direction3D extends Vector3DMixin(BaseDirection3D) {
     constructor() {
         super(...arguments);
         this._dot = dot;
         this._length = length;
+        this._length_squared = length_squared;
         this._normalize = normalize;
         this._normalize_in_place = normalize_in_place;
         this._cross = cross;

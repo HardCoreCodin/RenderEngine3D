@@ -1,7 +1,7 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {BaseMatrix} from "./base.js";
 import {Direction2D} from "./vec2.js";
-import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix2x2Values, Matrix3x3Values} from "../types.js";
+import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix2x2Values} from "../types.js";
 
 const temp_matrix = new Float32Array(4);
 

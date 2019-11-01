@@ -1,11 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {cross, cross_in_place} from "./vec3.js";
-import {
-    VectorConstructor,
-    BaseColor4D,
-    BasePosition4D,
-    BaseDirection4D
-} from "./base.js";
+import {VectorConstructor, BaseColor4D, BasePosition4D, BaseDirection4D} from "./base.js";
 import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, fn_v, fnf_v, Vector4DValues, Matrix4x4Values} from "../types.js";
 
 let temp_number: number;
@@ -320,10 +315,14 @@ const Vector4DMixin = (BaseClass: VectorConstructor) => class extends BaseClass 
 };
 
 export class Color4D extends Vector4DMixin(BaseColor4D) {}
-export class Position4D extends Vector4DMixin(BasePosition4D) {}
+export class Position4D extends Vector4DMixin(BasePosition4D) {
+    _distance: ff_n = distance;
+    _distance_squared: ff_n = distance_squared;
+}
 export class Direction4D extends Vector4DMixin(BaseDirection4D) {
     protected _dot: ff_n = dot;
     protected _length: f_n = length;
+    protected _length_squared: f_n = length_squared;
 
     protected _normalize : ff_v = normalize;
     protected _normalize_in_place : f_v = normalize_in_place;

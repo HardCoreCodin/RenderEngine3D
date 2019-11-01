@@ -1,11 +1,5 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {
-    VectorConstructor,
-    BaseColor3D,
-    BaseUV3D,
-    BasePosition3D,
-    BaseDirection3D
-} from "./base.js";
+import {VectorConstructor, BaseColor3D, BaseUV3D, BasePosition3D, BaseDirection3D} from "./base.js";
 import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, Vector3DValues, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
 
 let temp_number: number;
@@ -289,10 +283,14 @@ const Vector3DMixin = (BaseClass: VectorConstructor) => class extends BaseClass 
 
 export class UV3D extends Vector3DMixin(BaseUV3D) {}
 export class Color3D extends Vector3DMixin(BaseColor3D) {}
-export class Position3D extends Vector3DMixin(BasePosition3D) {}
+export class Position3D extends Vector3DMixin(BasePosition3D) {
+    _distance: ff_n = distance;
+    _distance_squared: ff_n = distance_squared;
+}
 export class Direction3D extends Vector3DMixin(BaseDirection3D) {
     protected _dot: ff_n = dot;
     protected _length: f_n = length;
+    protected _length_squared: f_n = length_squared;
 
     protected _normalize : ff_v = normalize;
     protected _normalize_in_place : f_v = normalize_in_place;

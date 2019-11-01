@@ -1,18 +1,4 @@
-import {
-    FloatArrays,
-    ff_b,
-    fn_v,
-    f_v,
-    ff_n,
-    ffnf_v,
-    fnf_v,
-    fff_v,
-    f_n,
-    ff_v,
-    fnn_v,
-    f_b
-} from "../types.js";
-import {cross_in_place} from "./vec3.js";
+import {FloatArrays, ff_b, fn_v, f_v, ff_n, ffnf_v, fnf_v, fff_v,  f_n, ff_v, fnn_v, f_b} from "../types.js";
 
 abstract class AbstractBase {
     protected constructor(
@@ -73,7 +59,7 @@ export default class Base implements AbstractBase {
 
 export class BaseMatrix extends Base {
     protected _is_identity: f_b;
-    protected _set_to_identity: f_v;
+    protected _set_identity: f_v;
 
     protected _transpose: ff_v;
     protected _transpose_in_place: f_v;
@@ -89,6 +75,15 @@ export class BaseMatrix extends Base {
             this.arrays,
             this.id
         );
+    }
+
+    setToIdentity() : this {
+        this._set_identity(
+            this.arrays,
+            this.id
+        );
+
+        return this;
     }
 
     transposed(out: this) : this {
@@ -159,15 +154,6 @@ export class BaseMatrix extends Base {
 
         return out;
     }
-
-    setToIdentity() : this {
-        this._set_to_identity(
-            this.arrays,
-            this.id
-        );
-
-        return this;
-    }
 }
 
 export class BaseRotationMatrix extends BaseMatrix {
@@ -176,7 +162,7 @@ export class BaseRotationMatrix extends BaseMatrix {
     protected _set_rotation_around_z: fnn_v;
 
     setRotationAroundX(angle, reset=true) : this {
-        if (reset) this._set_to_identity(this.arrays, this.id);
+        if (reset) this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_x(this.arrays, this.id, cos, sin);
 
@@ -184,7 +170,7 @@ export class BaseRotationMatrix extends BaseMatrix {
     }
 
     setRotationAroundY(angle: number, reset=false) : this {
-        if (reset) this._set_to_identity(this.arrays, this.id);
+        if (reset) this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_y(this.arrays, this.id, cos, sin);
 
@@ -192,7 +178,7 @@ export class BaseRotationMatrix extends BaseMatrix {
     }
 
     setRotationAroundZ(angle: number, reset=false) : this {
-        if (reset) this._set_to_identity(this.arrays, this.id);
+        if (reset) this._set_identity(this.arrays, this.id);
         setSinCos(angle);
         this._set_rotation_around_z(this.arrays, this.id, cos, sin);
 
@@ -392,12 +378,20 @@ export class BaseColor4D extends BaseColor3D {
 export class BaseDirection extends BaseVector {
     protected _dot: ff_n;
     protected _length: f_n;
+    protected _length_squared: f_n;
 
     protected _normalize : ff_v;
     protected _normalize_in_place : f_v;
 
     get length() : number {
         return this._length(
+            this.arrays,
+            this.id
+        );
+    }
+
+    get length_squared() : number {
+        return this._length_squared(
             this.arrays,
             this.id
         );
@@ -436,6 +430,29 @@ export class BaseDirection extends BaseVector {
 }
 
 export class BasePosition extends BaseVector {
+    _distance: ff_n;
+    _distance_squared: ff_n;
+
+    squared_distance_to(other: this) : number {
+        return this._distance_squared(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+    }
+
+    distance_to(other: this) : number {
+        return this._distance(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+    }
+
     to(other: this, out: BaseDirection) : typeof out {
         this._subtract(
             other.arrays,

@@ -1,5 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { InverseMatrixMixin, BaseMatrix, BaseRotationMatrix } from "./base.js";
+import { BaseRotationMatrix } from "./base.js";
 import { Direction3D } from "./vec3.js";
 const temp_matrix = new Float32Array(9);
 export const set_identity = (a, i) => {
@@ -253,7 +253,7 @@ export const set_rotation_around_z = (a, i, cos, sin) => {
     a[1][i] = sin;
     a[4][i] = -sin;
 };
-export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)) {
+export class Matrix3x3 extends BaseRotationMatrix {
     constructor(id, arrays, i = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]), j = new Direction3D(id, [arrays[3], arrays[4], arrays[5]]), k = new Direction3D(id, [arrays[6], arrays[7], arrays[8]])) {
         super(id, arrays);
         this.id = id;
@@ -265,15 +265,15 @@ export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)
         this._equals = equals;
         this._is_identity = is_identity;
         this._set_identity = set_identity;
-        this._set_rotation_around_x = set_rotation_around_x;
-        this._set_rotation_around_y = set_rotation_around_y;
-        this._set_rotation_around_z = set_rotation_around_z;
         this._inverse = inverse;
         this._inverse_in_place = inverse_in_place;
         this._transpose = transpose;
         this._transpose_in_place = transpose_in_place;
         this._multiply = multiply;
         this._multiply_in_place = multiply_in_place;
+        this._set_rotation_around_x = set_rotation_around_x;
+        this._set_rotation_around_y = set_rotation_around_y;
+        this._set_rotation_around_z = set_rotation_around_z;
     }
 }
 //# sourceMappingURL=mat3x3.js.map

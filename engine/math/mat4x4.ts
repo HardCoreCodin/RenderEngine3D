@@ -1,11 +1,11 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {BaseMatrix} from "./base.js";
+import {BaseRotationMatrix} from "./base.js";
 import {Direction4D, Position4D} from "./vec4.js";
 import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix4x4Values} from "../types.js";
 
 const temp_matrix = new Float32Array(16);
 
-export const set__to_identity : f_v = (a: Matrix4x4Values, i: number) : void => {
+export const set_identity : f_v = (a: Matrix4x4Values, i: number) : void => {
     a[0][i] = 1;
     a[1][i] = 0;
     a[2][i] = 0;
@@ -550,15 +550,12 @@ export const set_rotation_around_z : fnn_v = (
     a[4][i] = -sin;
 };
 
-export class Matrix4x4 extends BaseMatrix {
+export class Matrix4x4 extends BaseRotationMatrix {
     protected _dim: number = 16;
 
     protected _equals: ff_b = equals;
     protected _is_identity: f_b = is_identity;
-    protected _set_to_identity: f_v = set__to_identity;
-    protected _set_rotation_around_x: fnn_v = set_rotation_around_x;
-    protected _set_rotation_around_y: fnn_v = set_rotation_around_y;
-    protected _set_rotation_around_z: fnn_v = set_rotation_around_z;
+    protected _set_identity: f_v = set_identity;
 
     protected _inverse: ff_v = inverse;
     protected _inverse_in_place: f_v = inverse_in_place;
@@ -569,6 +566,10 @@ export class Matrix4x4 extends BaseMatrix {
     protected _multiply : fff_v = multiply;
     protected _multiply_in_place : ff_v = multiply_in_place;
 
+    protected _set_rotation_around_x: fnn_v = set_rotation_around_x;
+    protected _set_rotation_around_y: fnn_v = set_rotation_around_y;
+    protected _set_rotation_around_z: fnn_v = set_rotation_around_z;
+
     constructor(
         public id: number,
         public arrays: Matrix4x4Values,
@@ -576,7 +577,7 @@ export class Matrix4x4 extends BaseMatrix {
         public j: Direction4D = new Direction4D(id, [arrays[4], arrays[5], arrays[6], arrays[7]]),
         public k: Direction4D = new Direction4D(id, [arrays[8], arrays[9], arrays[10], arrays[11]]),
         public t: Position4D = new Position4D(id, [arrays[12], arrays[13], arrays[14], arrays[15]])
-) {
+    ) {
         super(id, arrays);
     }
 }

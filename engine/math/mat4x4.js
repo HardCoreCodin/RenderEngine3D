@@ -1,8 +1,8 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { BaseMatrix } from "./base.js";
+import { BaseRotationMatrix } from "./base.js";
 import { Direction4D, Position4D } from "./vec4.js";
 const temp_matrix = new Float32Array(16);
-export const set__to_identity = (a, i) => {
+export const set_identity = (a, i) => {
     a[0][i] = 1;
     a[1][i] = 0;
     a[2][i] = 0;
@@ -449,7 +449,7 @@ export const set_rotation_around_z = (a, i, cos, sin) => {
     a[1][i] = sin;
     a[4][i] = -sin;
 };
-export class Matrix4x4 extends BaseMatrix {
+export class Matrix4x4 extends BaseRotationMatrix {
     constructor(id, arrays, i = new Direction4D(id, [arrays[0], arrays[1], arrays[2], arrays[3]]), j = new Direction4D(id, [arrays[4], arrays[5], arrays[6], arrays[7]]), k = new Direction4D(id, [arrays[8], arrays[9], arrays[10], arrays[11]]), t = new Position4D(id, [arrays[12], arrays[13], arrays[14], arrays[15]])) {
         super(id, arrays);
         this.id = id;
@@ -461,16 +461,16 @@ export class Matrix4x4 extends BaseMatrix {
         this._dim = 16;
         this._equals = equals;
         this._is_identity = is_identity;
-        this._set_to_identity = set__to_identity;
-        this._set_rotation_around_x = set_rotation_around_x;
-        this._set_rotation_around_y = set_rotation_around_y;
-        this._set_rotation_around_z = set_rotation_around_z;
+        this._set_identity = set_identity;
         this._inverse = inverse;
         this._inverse_in_place = inverse_in_place;
         this._transpose = transpose;
         this._transpose_in_place = transpose_in_place;
         this._multiply = multiply;
         this._multiply_in_place = multiply_in_place;
+        this._set_rotation_around_x = set_rotation_around_x;
+        this._set_rotation_around_y = set_rotation_around_y;
+        this._set_rotation_around_z = set_rotation_around_z;
     }
 }
 //# sourceMappingURL=mat4x4.js.map
