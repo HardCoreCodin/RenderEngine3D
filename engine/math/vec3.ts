@@ -1,6 +1,12 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {ColorMixin, DirectionMixin, PositionMixin, Vector} from "./base.js";
-import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, FloatArrays3, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
+import {
+    VectorConstructor,
+    BaseColor3D,
+    BaseUV3D,
+    BasePosition3D,
+    BaseDirection3D
+} from "./base.js";
+import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, Vector3DValues, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
 
 let temp_number: number;
 const temp_lhs = new Float32Array(3);
@@ -8,7 +14,7 @@ const temp_rhs = new Float32Array(3);
 const temp_matrix = new Float32Array(9);
 
 export const length : f_n = (
-    a: FloatArrays3, i: number
+    a: Vector3DValues, i: number
 ) : number => Math.hypot(
     a[0][i],
     a[1][i],
@@ -16,8 +22,8 @@ export const length : f_n = (
 );
 
 export const distance : ff_n = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : number => Math.hypot(
     (b[0][j] - a[0][i]),
     (b[1][j] - a[1][i]),
@@ -25,7 +31,7 @@ export const distance : ff_n = (
 );
 
 export const length_squared : f_n = (
-    a: FloatArrays3, i: number
+    a: Vector3DValues, i: number
 ) : number => (
     a[0][i]**2 +
     a[1][i]**2 +
@@ -33,8 +39,8 @@ export const length_squared : f_n = (
 );
 
 export const distance_squared : ff_n = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : number => (
     (b[0][j] - a[0][i])**2 +
     (b[1][j] - a[1][i])**2 +
@@ -42,8 +48,8 @@ export const distance_squared : ff_n = (
 );
 
 export const equals : ff_b = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : boolean => {
     if (i === j && ((Object.is(a, b)) || (
         (Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
@@ -59,9 +65,9 @@ export const equals : ff_b = (
 };
 
 export const linearly_interpolate: ffnf_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number, t: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number, t: number,
+    o: Vector3DValues, k: number
 ) : void => {
     o[0][k] = (1-t)*a[0][i] + t*(b[0][j]);
     o[1][k] = (1-t)*a[1][i] + t*(b[1][j]);
@@ -69,9 +75,9 @@ export const linearly_interpolate: ffnf_v = (
 };
 
 export const add : fff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number,
+    o: Vector3DValues, k: number
 ) : void => {
     o[0][k] = a[0][i] + b[0][j];
     o[1][k] = a[1][i] + b[1][j];
@@ -79,8 +85,8 @@ export const add : fff_v = (
 };
 
 export const add_in_place : ff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : void => {
     a[0][i] += b[0][j];
     a[1][i] += b[1][j];
@@ -88,9 +94,9 @@ export const add_in_place : ff_v = (
 };
 
 export const subtract : fff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number,
+    o: Vector3DValues, k: number
 ) : void => {
     o[0][k] = a[0][i] - b[0][j];
     o[1][k] = a[1][i] - b[1][j];
@@ -98,8 +104,8 @@ export const subtract : fff_v = (
 };
 
 export const subtract_in_place : ff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : void => {
     a[0][i] -= b[0][j];
     a[1][i] -= b[1][j];
@@ -107,8 +113,8 @@ export const subtract_in_place : ff_v = (
 };
 
 export const divide : fnf_v = (
-    a: FloatArrays3, i: number, n: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number, n: number,
+    o: Vector3DValues, k: number
 ) : void => {
     o[0][k] = a[0][i] / n;
     o[1][k] = a[1][i] / n;
@@ -116,7 +122,7 @@ export const divide : fnf_v = (
 };
 
 export const divide_in_place : fn_v = (
-    a: FloatArrays3, i: number, n: number
+    a: Vector3DValues, i: number, n: number
 ) : void => {
     a[0][i] /= n;
     a[1][i] /= n;
@@ -124,8 +130,8 @@ export const divide_in_place : fn_v = (
 };
 
 export const scale : fnf_v = (
-    a: FloatArrays3, i: number, n: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number, n: number,
+    o: Vector3DValues, k: number
 ) : void => {
     o[0][k] = a[0][i] * n;
     o[1][k] = a[1][i] * n;
@@ -133,7 +139,7 @@ export const scale : fnf_v = (
 };
 
 export const scale_in_place : fn_v = (
-    a: FloatArrays3, i: number, n: number
+    a: Vector3DValues, i: number, n: number
 ) : void => {
     a[0][i] *= n;
     a[1][i] *= n;
@@ -141,8 +147,8 @@ export const scale_in_place : fn_v = (
 };
 
 export const normalize : ff_v = (
-    a: FloatArrays3, i: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number,
+    o: Vector3DValues, k: number
 ) : void => {
     temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
 
@@ -152,7 +158,7 @@ export const normalize : ff_v = (
 };
 
 export const normalize_in_place : f_v = (
-    a: FloatArrays3, i: number
+    a: Vector3DValues, i: number
 ) : void => {
     temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
 
@@ -162,8 +168,8 @@ export const normalize_in_place : f_v = (
 };
 
 export const dot : ff_n = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : number => (
     a[0][i] * b[0][j] +
     a[1][i] * b[1][j] +
@@ -171,9 +177,9 @@ export const dot : ff_n = (
 );
 
 export const cross : fff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number,
-    o: FloatArrays3, k: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number,
+    o: Vector3DValues, k: number
 ) : void => {
     if (
         (
@@ -201,8 +207,8 @@ export const cross : fff_v = (
 };
 
 export const cross_in_place : ff_v = (
-    a: FloatArrays3, i: number,
-    b: FloatArrays3, j: number
+    a: Vector3DValues, i: number,
+    b: Vector3DValues, j: number
 ) : void => {
     temp_lhs[0] = a[0][i];
     temp_lhs[1] = a[1][i];
@@ -218,9 +224,9 @@ export const cross_in_place : ff_v = (
 };
 
 export const multiply : fff_v = (
-    a: FloatArrays3, i: number,
+    a: Vector3DValues, i: number,
     b: Matrix3x3Values, j: number,
-    o: FloatArrays3, k: number
+    o: Vector3DValues, k: number
 ) : void => {
     if (k === i && (
             (Object.is(o, a)) || (
@@ -237,7 +243,7 @@ export const multiply : fff_v = (
 };
 
 export const multiply_in_place : ff_v = (
-    a: FloatArrays3, i: number,
+    a: Vector3DValues, i: number,
     b: Matrix3x3Values, j: number
 ) : void => {
     temp_lhs[0] = a[0][i];
@@ -261,9 +267,7 @@ export const multiply_in_place : ff_v = (
     a[2][i] = temp_lhs[0]*temp_matrix[2] + temp_lhs[1]*temp_matrix[5] + temp_lhs[2]*temp_matrix[8];
 };
 
-class Vector3D extends Vector {
-    protected _dim: number = 3;
-
+const Vector3DMixin = (BaseClass: VectorConstructor) => class extends BaseClass {
     protected _equals: ff_b = equals;
     protected _linearly_interpolate: ffnf_v = linearly_interpolate;
 
@@ -281,29 +285,12 @@ class Vector3D extends Vector {
 
     protected _multiply : fff_v = multiply;
     protected _multiply_in_place : ff_v = multiply_in_place;
-}
+};
 
-export class Color3D extends ColorMixin(Vector3D) {
-    set r(r: number) {this.data[0][this.id] = r}
-    set g(g: number) {this.data[0][this.id] = g}
-    set b(b: number) {this.data[2][this.id] = b}
-
-    get r() : number {return this.data[0][this.id]}
-    get g() : number {return this.data[1][this.id]}
-    get b() : number {return this.data[2][this.id]}
-}
-
-export class Position3D extends PositionMixin(Vector3D) {
-    set x(x: number) {this.data[0][this.id] = x}
-    set y(y: number) {this.data[1][this.id] = y}
-    set z(z: number) {this.data[2][this.id] = z}
-
-    get x() : number {return this.data[0][this.id]}
-    get y() : number {return this.data[1][this.id]}
-    get z() : number {return this.data[2][this.id]}
-}
-
-export class Direction3D extends DirectionMixin(Vector3D) {
+export class UV3D extends Vector3DMixin(BaseUV3D) {}
+export class Color3D extends Vector3DMixin(BaseColor3D) {}
+export class Position3D extends Vector3DMixin(BasePosition3D) {}
+export class Direction3D extends Vector3DMixin(BaseDirection3D) {
     protected _dot: ff_n = dot;
     protected _length: f_n = length;
 
@@ -312,99 +299,4 @@ export class Direction3D extends DirectionMixin(Vector3D) {
 
     protected _cross : fff_v = cross;
     protected _cross_in_place : ff_v = cross_in_place;
-
-    set x(x: number) {this.data[0][this.id] = x}
-    set y(y: number) {this.data[1][this.id] = y}
-    set z(z: number) {this.data[2][this.id] = z}
-
-    get x() : number {return this.data[0][this.id]}
-    get y() : number {return this.data[1][this.id]}
-    get z() : number {return this.data[2][this.id]}
 }
-
-// type Constructor<T> = new(...args: any[]) => T;
-//
-// export function Vector3DFunctions<T extends Constructor<{}>>(BaseClass: T) {
-//     return class extends BaseClass {
-//         protected _dim: number = 3;
-//
-//         protected _equals: ff_b = equals;
-//         protected _linearly_interpolate: ffnf_v = linearly_interpolate;
-//
-//         protected _add: fff_v = add;
-//         protected _add_in_place: ff_v = add_in_place;
-//
-//         protected _subtract: fff_v = subtract;
-//         protected _subtract_in_place: ff_v = subtract_in_place;
-//
-//         protected _scale: fnf_v = scale;
-//         protected _scale_in_place: fn_v = scale_in_place;
-//
-//         protected _divide: fnf_v = divide;
-//         protected _divide_in_place: fn_v = divide_in_place;
-//
-//         protected _multiply : fmf_v = multiply;
-//         protected _multiply_in_place : fm_v = multiply_in_place;
-//     }
-// }
-
-// export class Position3D extends Vector3DFunctions(Position) {
-//     set x(x) {this.data[0][this.id] = x}
-//     set y(y) {this.data[1][this.id] = y}
-//     set z(z) {this.data[2][this.id] = z}
-//
-//     get x() : number {return this.data[0][this.id]}
-//     get y() : number {return this.data[1][this.id]}
-//     get z() : number {return this.data[2][this.id]}
-// }
-
-// export class Color3D extends Vector {
-//     protected typed_arra[1]_length: number = 3;
-//
-//     protected _equals: ff_b = equals;
-//     protected _linearly_interpolate: out_b[1]_op = linearly_interpolate;
-//
-//     protected _add: fff_v = add;
-//     protected _add_in_place: ff_v = add_in_place;
-//
-//     protected _subtract: fff_v = subtract;
-//     protected _subtract_in_place: ff_v = subtract_in_place;
-//
-//     protected _scale: fnf_v = scale;
-//     protected _scale_in_place: fn_v = scale_in_place;
-//
-//     protected _divide: fnf_v = divide;
-//     protected _divide_in_place: fn_v = divide_in_place;
-//
-//     protected _multiply : fff_v = multiply;
-//     protected _multiply_in_place : ff_v = multiply_in_place;
-//
-//     set r(r) {this.typed_arra[1][this.typed_arra[1]_offset  ] = r}
-//     set g(g) {this.typed_arra[1][this.typed_arra[1]_offset+1] = g}
-//     set b(b) {this.typed_arra[1][this.typed_arra[1]_offset+2] = b}
-//
-//     get r() : number {return this.typed_arra[1][this.typed_arra[1]_offset  ]}
-//     get g() : number {return this.typed_arra[1][this.typed_arra[1]_offset+1]}
-//     get b() : number {return this.typed_arra[1][this.typed_arra[1]_offset+2]}
-//
-//
-//
-//     toString() : string {
-//         return `rgb(${this.r*255}, ${this.g*255}, ${this.b*255})`
-//     }
-// }
-//
-// export class Colors3D {
-//     constructor(
-//         public readonly count: number,
-//         public readonly stride: number = 3,
-//         public readonly buffer = new Float32Buffer(count, stride),
-//         public readonly current = new Color3D(buffer.sub_arra[1]s[0])
-//     ) {}
-//
-//     at(index: number, current: Color3D = this.current) : Color3D {
-//         current.buffer = this.buffer.sub_arra[1]s[index];
-//         return current;
-//     }
-// }
-

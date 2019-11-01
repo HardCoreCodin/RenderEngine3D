@@ -1,7 +1,7 @@
 import {
     Matrix4x4Values,
     FloatArrays2,
-    FloatArrays3,
+    Vector3DValues,
     FloatArrays4,
     Matrix3x3Values,
     Values,
@@ -54,7 +54,7 @@ export const float2 = (length: number) : FloatArrays2 => [
     new Float32Array(length)
 ];
 
-export const float3 = (length: number) : FloatArrays3 => [
+export const float3 = (length: number) : Vector3DValues => [
     new Float32Array(length),
     new Float32Array(length),
     new Float32Array(length)
@@ -117,7 +117,7 @@ export const rgb = (
     r?: number | Color3D,
     g: number = 0,
     b: number = 0,
-    data: FloatArrays3 = float3(1),
+    data: Vector3DValues = float3(1),
     id: number = 0,
     out: Color3D = new Color3D(id, data)
 ): Color3D => {
@@ -133,7 +133,7 @@ export const dir3 = (
     x?: number | Direction3D,
     y: number = 0,
     z: number = 0,
-    data: FloatArrays3 = float3(1),
+    data: Vector3DValues = float3(1),
     id: number = 0,
     out: Direction3D = new Direction3D(id, data)
 ): Direction3D => {
@@ -149,7 +149,7 @@ export const pos3 = (
     x?: number | Position3D,
     y: number = 0,
     z: number = 0,
-    data: FloatArrays3 = float3(1),
+    data: Vector3DValues = float3(1),
     id: number = 0,
     out: Position3D = new Position3D(id, data)
 ): Position3D => {

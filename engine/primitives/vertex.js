@@ -1,15 +1,17 @@
-import Position3D from "../linalng/3D/position.js";
-import Position4D from "../linalng/4D/position.js";
-import Direction4D from "../linalng/4D/direction.js";
-import Color3D from "../linalng/3D/color.js";
+import { Position3D, Color3D } from "../math/vec3.js";
+import { Position4D, Direction4D } from "../math/vec4.js";
 export default class Vertex {
-    constructor(position = new Position4D(), normal = new Direction4D(), uvs = new Position3D(), color = new Color3D()) {
+    constructor(position, normal, uvs, color) {
         this.position = position;
         this.normal = normal;
         this.uvs = uvs;
         this.color = color;
         this.copy = (new_vertex = new Vertex()) => new_vertex.setTo(this);
     }
+    static fromBuffers() {
+        return new Vertex();
+    }
+    ;
     toNDC() {
         const w = this.position.buffer[3];
         if (w !== 1)

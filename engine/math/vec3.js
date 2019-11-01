@@ -1,5 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { ColorMixin, DirectionMixin, PositionMixin, Vector } from "./base.js";
+import { BaseColor3D, BaseUV3D, BasePosition3D, BaseDirection3D } from "./base.js";
 let temp_number;
 const temp_lhs = new Float32Array(3);
 const temp_rhs = new Float32Array(3);
@@ -133,10 +133,9 @@ export const multiply_in_place = (a, i, b, j) => {
     a[1][i] = temp_lhs[0] * temp_matrix[1] + temp_lhs[1] * temp_matrix[4] + temp_lhs[2] * temp_matrix[7];
     a[2][i] = temp_lhs[0] * temp_matrix[2] + temp_lhs[1] * temp_matrix[5] + temp_lhs[2] * temp_matrix[8];
 };
-class Vector3D extends Vector {
+const Vector3DMixin = (BaseClass) => class extends BaseClass {
     constructor() {
         super(...arguments);
-        this._dim = 3;
         this._equals = equals;
         this._linearly_interpolate = linearly_interpolate;
         this._add = add;
@@ -150,24 +149,14 @@ class Vector3D extends Vector {
         this._multiply = multiply;
         this._multiply_in_place = multiply_in_place;
     }
+};
+export class UV3D extends Vector3DMixin(BaseUV3D) {
 }
-export class Color3D extends ColorMixin(Vector3D) {
-    set r(r) { this.data[0][this.id] = r; }
-    set g(g) { this.data[0][this.id] = g; }
-    set b(b) { this.data[2][this.id] = b; }
-    get r() { return this.data[0][this.id]; }
-    get g() { return this.data[1][this.id]; }
-    get b() { return this.data[2][this.id]; }
+export class Color3D extends Vector3DMixin(BaseColor3D) {
 }
-export class Position3D extends PositionMixin(Vector3D) {
-    set x(x) { this.data[0][this.id] = x; }
-    set y(y) { this.data[1][this.id] = y; }
-    set z(z) { this.data[2][this.id] = z; }
-    get x() { return this.data[0][this.id]; }
-    get y() { return this.data[1][this.id]; }
-    get z() { return this.data[2][this.id]; }
+export class Position3D extends Vector3DMixin(BasePosition3D) {
 }
-export class Direction3D extends DirectionMixin(Vector3D) {
+export class Direction3D extends Vector3DMixin(BaseDirection3D) {
     constructor() {
         super(...arguments);
         this._dot = dot;
@@ -177,94 +166,5 @@ export class Direction3D extends DirectionMixin(Vector3D) {
         this._cross = cross;
         this._cross_in_place = cross_in_place;
     }
-    set x(x) { this.data[0][this.id] = x; }
-    set y(y) { this.data[1][this.id] = y; }
-    set z(z) { this.data[2][this.id] = z; }
-    get x() { return this.data[0][this.id]; }
-    get y() { return this.data[1][this.id]; }
-    get z() { return this.data[2][this.id]; }
 }
-// type Constructor<T> = new(...args: any[]) => T;
-//
-// export function Vector3DFunctions<T extends Constructor<{}>>(BaseClass: T) {
-//     return class extends BaseClass {
-//         protected _dim: number = 3;
-//
-//         protected _equals: ff_b = equals;
-//         protected _linearly_interpolate: ffnf_v = linearly_interpolate;
-//
-//         protected _add: fff_v = add;
-//         protected _add_in_place: ff_v = add_in_place;
-//
-//         protected _subtract: fff_v = subtract;
-//         protected _subtract_in_place: ff_v = subtract_in_place;
-//
-//         protected _scale: fnf_v = scale;
-//         protected _scale_in_place: fn_v = scale_in_place;
-//
-//         protected _divide: fnf_v = divide;
-//         protected _divide_in_place: fn_v = divide_in_place;
-//
-//         protected _multiply : fmf_v = multiply;
-//         protected _multiply_in_place : fm_v = multiply_in_place;
-//     }
-// }
-// export class Position3D extends Vector3DFunctions(Position) {
-//     set x(x) {this.data[0][this.id] = x}
-//     set y(y) {this.data[1][this.id] = y}
-//     set z(z) {this.data[2][this.id] = z}
-//
-//     get x() : number {return this.data[0][this.id]}
-//     get y() : number {return this.data[1][this.id]}
-//     get z() : number {return this.data[2][this.id]}
-// }
-// export class Color3D extends Vector {
-//     protected typed_arra[1]_length: number = 3;
-//
-//     protected _equals: ff_b = equals;
-//     protected _linearly_interpolate: out_b[1]_op = linearly_interpolate;
-//
-//     protected _add: fff_v = add;
-//     protected _add_in_place: ff_v = add_in_place;
-//
-//     protected _subtract: fff_v = subtract;
-//     protected _subtract_in_place: ff_v = subtract_in_place;
-//
-//     protected _scale: fnf_v = scale;
-//     protected _scale_in_place: fn_v = scale_in_place;
-//
-//     protected _divide: fnf_v = divide;
-//     protected _divide_in_place: fn_v = divide_in_place;
-//
-//     protected _multiply : fff_v = multiply;
-//     protected _multiply_in_place : ff_v = multiply_in_place;
-//
-//     set r(r) {this.typed_arra[1][this.typed_arra[1]_offset  ] = r}
-//     set g(g) {this.typed_arra[1][this.typed_arra[1]_offset+1] = g}
-//     set b(b) {this.typed_arra[1][this.typed_arra[1]_offset+2] = b}
-//
-//     get r() : number {return this.typed_arra[1][this.typed_arra[1]_offset  ]}
-//     get g() : number {return this.typed_arra[1][this.typed_arra[1]_offset+1]}
-//     get b() : number {return this.typed_arra[1][this.typed_arra[1]_offset+2]}
-//
-//
-//
-//     toString() : string {
-//         return `rgb(${this.r*255}, ${this.g*255}, ${this.b*255})`
-//     }
-// }
-//
-// export class Colors3D {
-//     constructor(
-//         public readonly count: number,
-//         public readonly stride: number = 3,
-//         public readonly buffer = new Float32Buffer(count, stride),
-//         public readonly current = new Color3D(buffer.sub_arra[1]s[0])
-//     ) {}
-//
-//     at(index: number, current: Color3D = this.current) : Color3D {
-//         current.buffer = this.buffer.sub_arra[1]s[index];
-//         return current;
-//     }
-// }
 //# sourceMappingURL=vec3.js.map

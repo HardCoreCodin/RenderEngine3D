@@ -1,5 +1,6 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { Matrix } from "./base.js";
+import { BaseMatrix } from "./base.js";
+import { Direction4D, Position4D } from "./vec4.js";
 const temp_matrix = new Float32Array(16);
 export const set__to_identity = (a, i) => {
     a[0][i] = 1;
@@ -137,9 +138,9 @@ export const transpose = (a, i, o, k) => {
 };
 export const transpose_in_place = (a, i) => {
     [
-        a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
+        a[1][i], a[2][i], a[3][i], a[4][i], a[6][i], a[7][i], a[8][i], a[9][i], a[11][i], a[12][i], a[13][i], a[14][i]
     ] = [
-        a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
+        a[4][i], a[8][i], a[12][i], a[1][i], a[9][i], a[13][i], a[2][i], a[6][i], a[14][i], a[3][i], a[7][i], a[11][i]
     ];
 };
 export const equals = (a, i, b, j) => {
@@ -448,11 +449,11 @@ export const set_rotation_around_z = (a, i, cos, sin) => {
     a[1][i] = sin;
     a[4][i] = -sin;
 };
-export class Matrix4x4 extends Matrix {
-    constructor(id, data, i = new Direction4D(id, [data[0], data[1], data[2], data[3]]), j = new Direction4D(id, [data[4], data[5], data[6], data[7]]), k = new Direction4D(id, [data[8], data[9], data[10], data[11]]), t = new Position4D(id, [data[12], data[13], data[14], data[15]])) {
-        super(id, data);
+export class Matrix4x4 extends BaseMatrix {
+    constructor(id, arrays, i = new Direction4D(id, [arrays[0], arrays[1], arrays[2], arrays[3]]), j = new Direction4D(id, [arrays[4], arrays[5], arrays[6], arrays[7]]), k = new Direction4D(id, [arrays[8], arrays[9], arrays[10], arrays[11]]), t = new Position4D(id, [arrays[12], arrays[13], arrays[14], arrays[15]])) {
+        super(id, arrays);
         this.id = id;
-        this.data = data;
+        this.arrays = arrays;
         this.i = i;
         this.j = j;
         this.k = k;

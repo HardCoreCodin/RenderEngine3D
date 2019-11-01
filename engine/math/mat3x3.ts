@@ -1,5 +1,5 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Matrix} from "./base.js";
+import {InverseMatrixMixin, BaseMatrix, BaseRotationMatrix} from "./base.js";
 import {Direction3D} from "./vec3.js";
 import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix3x3Values} from "../types.js";
 
@@ -123,8 +123,7 @@ export const transpose : ff_v = (
 };
 
 export const transpose_in_place : f_v = (a: Matrix3x3Values, i: number) : void => {[
-    a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
-] = [
+    a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]] = [
     a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
 ]};
 
@@ -342,12 +341,12 @@ export const set_rotation_around_z : fnn_v = (
     cos: number,
     sin: number
 ) : void => {
-    a[0][i] = a[4][i] = cos;
+    a[0][i] = a[3][i] = cos;
     a[1][i] = sin;
-    a[3][i] = -sin;
+    a[4][i] = -sin;
 };
 
-export class Matrix3x3 extends Matrix {
+export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)) {
     protected _dim: number = 9;
 
     protected _equals: ff_b = equals;
@@ -368,12 +367,12 @@ export class Matrix3x3 extends Matrix {
 
     constructor(
         public id: number,
-        public data: Matrix3x3Values,
-        public i: Direction3D = new Direction3D(id, [data[0], data[1], data[2]]),
-        public j: Direction3D = new Direction3D(id, [data[3], data[4], data[5]]),
-        public k: Direction3D = new Direction3D(id, [data[6], data[7], data[8]])
+        public arrays: Matrix3x3Values,
+        public i: Direction3D = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]),
+        public j: Direction3D = new Direction3D(id, [arrays[3], arrays[4], arrays[5]]),
+        public k: Direction3D = new Direction3D(id, [arrays[6], arrays[7], arrays[8]])
     ) {
-        super(id, data);
+        super(id, arrays);
     }
 }
 

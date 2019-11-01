@@ -1,15 +1,19 @@
-import Position3D from "../linalng/3D/position.js";
-import Position4D from "../linalng/4D/position.js";
-import Direction4D from "../linalng/4D/direction.js";
-import Color3D from "../linalng/3D/color.js";
+import {Position3D, Direction3D, Color3D} from "../math/vec3.js";
+import {Position4D, Direction4D, Color4D} from "../math/vec4.js";
 
 export default class Vertex {
     constructor(
-        public position: Position4D = new Position4D(),
-        public normal: Direction4D = new Direction4D(),
-        public uvs: Position3D = new Position3D(),
-        public color: Color3D = new Color3D()
+        public position: Position3D | Position4D,
+        public normal?: Direction3D | Direction4D,
+        public uvs?: Position3D,
+        public color?: Color3D | Color4D
     ) {}
+
+    static fromBuffers(
+
+    ) : this {
+        return new Vertex()
+    };
 
     copy = (
         new_vertex: Vertex = new Vertex()

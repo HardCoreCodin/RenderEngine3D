@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Matrix} from "./base.js";
-import {Direction3D} from "./vec3.js";
+import {BaseMatrix} from "./base.js";
+import {Direction4D, Position4D} from "./vec4.js";
 import {f_b, f_v, ff_b, ff_v, fff_v, fnn_v, Matrix4x4Values} from "../types.js";
 
 const temp_matrix = new Float32Array(16);
@@ -189,10 +189,9 @@ export const transpose : ff_v = (
 };
 
 export const transpose_in_place : f_v = (a: Matrix4x4Values, i: number) : void => {[
-    a[1][i], a[2][i], a[3][i], a[5][i], a[6][i], a[7][i]
-] = [
-    a[3][i], a[6][i], a[1][i], a[7][i], a[2][i], a[5][i]
-]};
+    a[1][i], a[2][i], a[3][i], a[4][i], a[6][i], a[7][i], a[8][i], a[9][i], a[11][i], a[12][i], a[13][i], a[14][i]] = [
+    a[4][i], a[8][i], a[12][i], a[1][i], a[9][i], a[13][i], a[2][i], a[6][i], a[14][i], a[3][i], a[7][i], a[11][i]]
+};
 
 export const equals : ff_b = (
     a: Matrix4x4Values, i: number,
@@ -551,7 +550,7 @@ export const set_rotation_around_z : fnn_v = (
     a[4][i] = -sin;
 };
 
-export class Matrix4x4 extends Matrix {
+export class Matrix4x4 extends BaseMatrix {
     protected _dim: number = 16;
 
     protected _equals: ff_b = equals;
@@ -572,13 +571,13 @@ export class Matrix4x4 extends Matrix {
 
     constructor(
         public id: number,
-        public data: Matrix4x4Values,
-        public i: Direction4D = new Direction4D(id, [data[0], data[1], data[2], data[3]]),
-        public j: Direction4D = new Direction4D(id, [data[4], data[5], data[6], data[7]]),
-        public k: Direction4D = new Direction4D(id, [data[8], data[9], data[10], data[11]]),
-        public t: Position4D = new Position4D(id, [data[12], data[13], data[14], data[15]])
+        public arrays: Matrix4x4Values,
+        public i: Direction4D = new Direction4D(id, [arrays[0], arrays[1], arrays[2], arrays[3]]),
+        public j: Direction4D = new Direction4D(id, [arrays[4], arrays[5], arrays[6], arrays[7]]),
+        public k: Direction4D = new Direction4D(id, [arrays[8], arrays[9], arrays[10], arrays[11]]),
+        public t: Position4D = new Position4D(id, [arrays[12], arrays[13], arrays[14], arrays[15]])
 ) {
-        super(id, data);
+        super(id, arrays);
     }
 }
 

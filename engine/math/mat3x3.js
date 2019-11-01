@@ -1,5 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { Matrix } from "./base.js";
+import { InverseMatrixMixin, BaseMatrix, BaseRotationMatrix } from "./base.js";
 import { Direction3D } from "./vec3.js";
 const temp_matrix = new Float32Array(9);
 export const set_identity = (a, i) => {
@@ -249,15 +249,15 @@ export const set_rotation_around_y = (a, i, cos, sin) => {
     a[6][i] = -sin;
 };
 export const set_rotation_around_z = (a, i, cos, sin) => {
-    a[0][i] = a[4][i] = cos;
+    a[0][i] = a[3][i] = cos;
     a[1][i] = sin;
-    a[3][i] = -sin;
+    a[4][i] = -sin;
 };
-export class Matrix3x3 extends Matrix {
-    constructor(id, data, i = new Direction3D(id, [data[0], data[1], data[2]]), j = new Direction3D(id, [data[3], data[4], data[5]]), k = new Direction3D(id, [data[6], data[7], data[8]])) {
-        super(id, data);
+export class Matrix3x3 extends BaseRotationMatrix(InverseMatrixMixin(BaseMatrix)) {
+    constructor(id, arrays, i = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]), j = new Direction3D(id, [arrays[3], arrays[4], arrays[5]]), k = new Direction3D(id, [arrays[6], arrays[7], arrays[8]])) {
+        super(id, arrays);
         this.id = id;
-        this.data = data;
+        this.arrays = arrays;
         this.i = i;
         this.j = j;
         this.k = k;

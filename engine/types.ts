@@ -58,6 +58,12 @@ export type Values = FloatArrays2 | FloatArrays3 | FloatArrays4;
 export type FaceValues = Values;
 export type SharedVertexValues = Values;
 export type UnsharedVertexValues = [Values, Values, Values];
+
+export type Vector2DValues = FloatArrays2;
+export type Vector3DValues = FloatArrays3;
+export type Vector4DValues = FloatArrays4;
+
+export type Matrix2x2Values = FloatArrays4;
 export type Matrix3x3Values = FloatArrays9;
 export type Matrix4x4Values = FloatArrays16;
 
