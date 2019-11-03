@@ -18,13 +18,6 @@ export default class Base {
             out.arrays[dim][out.id] = array[this.id];
         return out;
     }
-    equals(other) {
-        if (Object.is(other, this))
-            return true;
-        if (!Object.is(this.constructor, other.constructor))
-            return false;
-        return this._equals(this.arrays, this.id, other.arrays, other.id);
-    }
     setFromOther(other) {
         for (const [dim, array] of other.arrays.entries())
             this.arrays[dim][this.id] = array[other.id];

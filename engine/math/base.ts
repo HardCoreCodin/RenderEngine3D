@@ -9,7 +9,6 @@ abstract class AbstractBase {
 
 export default class Base implements AbstractBase {
     protected _dim: number;
-    protected _equals: ff_b;
 
     constructor(
         public arrays: VectorValues | MatrixValues,
@@ -24,22 +23,6 @@ export default class Base implements AbstractBase {
             out.arrays[dim][out.id] = array[this.id];
 
         return out;
-    }
-
-    equals(other: this) : boolean {
-        if (Object.is(other, this))
-            return true;
-
-        if (!Object.is(this.constructor, other.constructor))
-            return false;
-
-        return this._equals(
-            this.arrays,
-            this.id,
-
-            other.arrays,
-            other.id
-        );
     }
 
     setFromOther(other: this) : this {

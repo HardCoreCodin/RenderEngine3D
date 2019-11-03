@@ -1,409 +1,401 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, Vector3DValues, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
+import {Vector3DValues} from "../types.js";
 import {AbstractVector, ColorMixin} from "./vec.js";
 import {BaseMatrix} from "./base.js";
 
-let temp_number: number;
-const temp_lhs = new Float32Array(3);
-const temp_rhs = new Float32Array(3);
-const temp_matrix = new Float32Array(9);
+let tn: number;
+const _temp_buffer = new Float32Array(15);
+const t1 = _temp_buffer.slice(0, 3);
+const t2 = _temp_buffer.slice(3, 6);
+const tm = _temp_buffer.slice(6);
 
-export const length : f_n = (
-    a: Vector3DValues, i: number
-) : number => Math.hypot(
-    a[0][i],
-    a[1][i],
-    a[2][i]
+let ox: Float32Array;
+let oy: Float32Array;
+let oz: Float32Array;
+
+let ax: Float32Array;
+let ay: Float32Array;
+let az: Float32Array;
+
+let bx: Float32Array;
+let by: Float32Array;
+let bz: Float32Array;
+
+let m11: Float32Array;
+let m12: Float32Array;
+let m13: Float32Array;
+
+let m21: Float32Array;
+let m22: Float32Array;
+let m23: Float32Array;
+
+let m31: Float32Array;
+let m32: Float32Array;
+let m33: Float32Array;
+
+export const invert = (ai: number) : void => {
+    ax[ai] = -ax[ai];
+    ay[ai] = -ay[ai];
+    az[ai] = -az[ai];
+};
+
+export const length = (ai: number) : number => Math.hypot(
+    ax[ai],
+    ay[ai],
+    az[ai]
 );
 
-export const distance : ff_n = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : number => Math.hypot(
-    (b[0][j] - a[0][i]),
-    (b[1][j] - a[1][i]),
-    (b[2][j] - a[2][i])
+export const distance = (ai: number, bi: number) : number => Math.hypot(
+    (bx[bi] - ax[ai]),
+    (by[bi] - ay[ai]),
+    (bz[bi] - az[ai])
 );
 
-export const length_squared : f_n = (
-    a: Vector3DValues, i: number
-) : number => (
-    a[0][i]**2 +
-    a[1][i]**2 +
-    a[2][i]**2
+export const length_squared = (ai: number) : number =>
+    ax[ai] ** 2 +
+    ay[ai] ** 2 +
+    az[ai] ** 2;
+
+export const distance_squared = (ai: number, bi: number) : number => (
+    (bx[bi] - ax[ai]) ** 2 +
+    (by[bi] - ay[ai]) ** 2 +
+    (bz[bi] - az[ai]) ** 2
 );
 
-export const distance_squared : ff_n = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : number => (
-    (b[0][j] - a[0][i])**2 +
-    (b[1][j] - a[1][i])**2 +
-    (b[2][j] - a[2][i])**2
-);
+export const equals = (ai: number, bi: number) : boolean =>
+    ax[ai].toFixed(PRECISION_DIGITS) ===
+    bx[bi].toFixed(PRECISION_DIGITS) &&
+    ay[ai].toFixed(PRECISION_DIGITS) ===
+    by[bi].toFixed(PRECISION_DIGITS) &&
+    az[ai].toFixed(PRECISION_DIGITS) ===
+    bz[bi].toFixed(PRECISION_DIGITS);
 
-export const equals : ff_b = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : boolean => {
-    if (i === j && ((Object.is(a, b)) || (
-        (Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
-        (Object.is(a[1], b[1]) || Object.is(a[1].buffer, b[1].buffer)) &&
-        (Object.is(a[2], b[2]) || Object.is(a[2].buffer, b[2].buffer))
-    ))) return true;
-
-    if (a[0][i].toFixed(PRECISION_DIGITS) !== b[0][j].toFixed(PRECISION_DIGITS)) return false;
-    if (a[1][i].toFixed(PRECISION_DIGITS) !== b[1][j].toFixed(PRECISION_DIGITS)) return false;
-    if (a[2][i].toFixed(PRECISION_DIGITS) !== b[2][j].toFixed(PRECISION_DIGITS)) return false;
-
-    return true;
+export const linearly_interpolate = (ai: number, bi: number, oi: number, t: number) : void => {
+    ox[oi] = (1-t)*ax[ai] + t*(bx[bi]);
+    oy[oi] = (1-t)*ay[ai] + t*(by[bi]);
+    oz[oi] = (1-t)*az[ai] + t*(bz[bi]);
 };
 
-export const linearly_interpolate: ffnf_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number, t: number,
-    o: Vector3DValues, k: number
-) : void => {
-    o[0][k] = (1-t)*a[0][i] + t*(b[0][j]);
-    o[1][k] = (1-t)*a[1][i] + t*(b[1][j]);
-    o[2][k] = (1-t)*a[2][i] + t*(b[2][j]);
+export const add = (ai: number, bi: number, oi: number) : void => {
+    ox[oi] = ax[ai] + bx[bi];
+    oy[oi] = ay[ai] + by[bi];
+    oz[oi] = az[ai] + bz[bi];
 };
 
-export const add : fff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number,
-    o: Vector3DValues, k: number
-) : void => {
-    o[0][k] = a[0][i] + b[0][j];
-    o[1][k] = a[1][i] + b[1][j];
-    o[2][k] = a[2][i] + b[2][j];
+export const add_in_place = (ai: number, bi: number) : void => {
+    ax[ai] += bx[bi];
+    ay[ai] += by[bi];
+    az[ai] += bz[bi];
 };
 
-export const add_in_place : ff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : void => {
-    a[0][i] += b[0][j];
-    a[1][i] += b[1][j];
-    a[2][i] += b[2][j];
+export const subtract = (ai: number, bi: number, oi: number) : void => {
+    ox[oi] = ax[ai] - bx[bi];
+    oy[oi] = ay[ai] - by[bi];
+    oz[oi] = az[ai] - bz[bi];
 };
 
-export const subtract : fff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number,
-    o: Vector3DValues, k: number
-) : void => {
-    o[0][k] = a[0][i] - b[0][j];
-    o[1][k] = a[1][i] - b[1][j];
-    o[2][k] = a[2][i] - b[2][j];
+export const subtract_in_place = (ai: number, bi: number) : void => {
+    ax[ai] -= bx[bi];
+    ay[ai] -= by[bi];
+    az[ai] -= bz[bi];
 };
 
-export const subtract_in_place : ff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : void => {
-    a[0][i] -= b[0][j];
-    a[1][i] -= b[1][j];
-    a[2][i] -= b[2][j];
+export const divide = (ai: number, oi: number, n: number) : void => {
+    ox[oi] = ax[ai] / n;
+    oy[oi] = ay[ai] / n;
+    oz[oi] = az[ai] / n;
 };
 
-export const divide : fnf_v = (
-    a: Vector3DValues, i: number, n: number,
-    o: Vector3DValues, k: number
-) : void => {
-    o[0][k] = a[0][i] / n;
-    o[1][k] = a[1][i] / n;
-    o[2][k] = a[2][i] / n;
+export const divide_in_place = (ai: number, n: number) : void => {
+    ax[ai] /= n;
+    ay[ai] /= n;
+    az[ai] /= n;
 };
 
-export const divide_in_place : fn_v = (
-    a: Vector3DValues, i: number, n: number
-) : void => {
-    a[0][i] /= n;
-    a[1][i] /= n;
-    a[2][i] /= n;
+export const scale = (ai: number, oi: number, n: number) : void => {
+    ox[oi] = ax[ai] * n;
+    oy[oi] = ay[ai] * n;
+    oz[oi] = az[ai] * n;
 };
 
-export const scale : fnf_v = (
-    a: Vector3DValues, i: number, n: number,
-    o: Vector3DValues, k: number
-) : void => {
-    o[0][k] = a[0][i] * n;
-    o[1][k] = a[1][i] * n;
-    o[2][k] = a[2][i] * n;
+export const scale_in_place = (ai: number, n: number) : void => {
+    ax[ai] *= n;
+    ay[ai] *= n;
+    az[ai] *= n;
 };
 
-export const scale_in_place : fn_v = (
-    a: Vector3DValues, i: number, n: number
-) : void => {
-    a[0][i] *= n;
-    a[1][i] *= n;
-    a[2][i] *= n;
+export const normalize = (ai: number, oi: number) : void => {
+    tn = Math.hypot(
+        ax[ai],
+        ay[ai],
+        az[ai]
+    );
+
+    ox[oi] = ax[ai] / tn;
+    oy[oi] = ay[ai] / tn;
+    oz[oi] = az[ai] / tn;
 };
 
-export const normalize : ff_v = (
-    a: Vector3DValues, i: number,
-    o: Vector3DValues, k: number
-) : void => {
-    temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
+export const normalize_in_place = (ai: number) : void => {
+    tn = Math.hypot(
+        ax[ai],
+        ay[ai],
+        az[ai]
+    );
 
-    o[0][k] = a[0][i] / temp_number;
-    o[1][k] = a[1][i] / temp_number;
-    o[2][k] = a[2][i] / temp_number;
+    ax[ai] /= tn;
+    ay[ai] /= tn;
+    az[ai] /= tn;
 };
 
-export const normalize_in_place : f_v = (
-    a: Vector3DValues, i: number
-) : void => {
-    temp_number = Math.hypot(a[0][i], a[1][i], a[2][i]);
+export const dot = (ai: number, bi: number) : number =>
+    ax[ai] * bx[bi] +
+    ay[ai] * by[bi] +
+    az[ai] * bz[bi];
 
-    a[0][i] /= temp_number;
-    a[1][i] /= temp_number;
-    a[2][i] /= temp_number;
+export const cross = (ai: number, bi: number, oi: number) : void => {
+    ox[oi] =
+        ay[ai] * bz[bi] -
+        az[ai] * by[bi];
+
+    oy[oi] =
+        az[ai] * bx[bi] -
+        ax[ai] * bz[bi];
+
+    oz[oi] =
+        ax[ai] * by[bi] -
+        ay[ai] * bx[bi];
 };
 
-export const dot : ff_n = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : number => (
-    a[0][i] * b[0][j] +
-    a[1][i] * b[1][j] +
-    a[2][i] * b[2][j]
-);
+export const cross_in_place = (ai: number, bi: number) : void => {
+    t1[0] = ax[ai];
+    t1[1] = ay[ai];
+    t1[2] = az[ai];
 
-export const cross : fff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number,
-    o: Vector3DValues, k: number
-) : void => {
-    if (
-        (
-            k === i && (
-                (Object.is(o, a)) || (
-                    (Object.is(o[0], a[0]) || Object.is(o[0].buffer, a[0].buffer)) &&
-                    (Object.is(o[1], a[1]) || Object.is(o[1].buffer, a[1].buffer)) &&
-                    (Object.is(o[2], a[2]) || Object.is(o[2].buffer, a[2].buffer))
-                )
-            )
-        ) || (
-            k === j && (
-                (Object.is(o, b)) || (
-                    (Object.is(o[0], b[0]) || Object.is(o[0].buffer, b[0].buffer)) &&
-                    (Object.is(o[1], b[1]) || Object.is(o[1].buffer, b[1].buffer)) &&
-                    (Object.is(o[2], b[2]) || Object.is(o[2].buffer, b[2].buffer))
-                )
-            )
-        )
-    ) throw `Can not cross - shared buffer detected! (Use cross_in_place)`;
+    t2[0] = bx[bi];
+    t2[1] = by[bi];
+    t2[2] = bz[bi];
 
-    o[0][k] = a[1][i]*b[2][j] - a[2][i]*b[1][j];
-    o[1][k] = a[2][i]*b[0][j] - a[0][i]*b[2][j];
-    o[2][k] = a[0][i]*b[1][j] - a[1][i]*b[0][j];
+    ax[ai] =
+        t1[1] * t2[2] -
+        t1[2] * t2[1];
+
+    ay[ai] =
+        t1[2] * t2[0] -
+        t1[0] * t2[2];
+
+    az[ai] =
+        t1[0] * t2[1] -
+        t1[1] * t2[0];
 };
 
-export const cross_in_place : ff_v = (
-    a: Vector3DValues, i: number,
-    b: Vector3DValues, j: number
-) : void => {
-    temp_lhs[0] = a[0][i];
-    temp_lhs[1] = a[1][i];
-    temp_lhs[2] = a[2][i];
+export const multiply = (ai: number, bi: number, oi: number) : void => {
+    ox[oi] =
+        ax[ai] * m11[bi] +
+        ay[ai] * m21[bi] +
+        az[ai] * m31[bi];
 
-    temp_rhs[0] = b[0][j];
-    temp_rhs[1] = b[1][j];
-    temp_rhs[2] = b[2][j];
+    oy[oi] =
+        ax[ai] * m12[bi] +
+        ay[ai] * m22[bi] +
+        az[ai] * m32[bi];
 
-    a[0][i] = temp_lhs[1]*temp_rhs[2] - temp_lhs[2]*temp_rhs[1];
-    a[1][i] = temp_lhs[2]*temp_rhs[0] - temp_lhs[0]*temp_rhs[2];
-    a[2][i] = temp_lhs[0]*temp_rhs[1] - temp_lhs[1]*temp_rhs[0];
+    oz[oi] =
+        ax[ai] * m13[bi] +
+        ay[ai] * m23[bi] +
+        az[ai] * m33[bi];
 };
 
-export const multiply : fff_v = (
-    a: Vector3DValues, i: number,
-    b: Matrix3x3Values, j: number,
-    o: Vector3DValues, k: number
-) : void => {
-    if (k === i && (
-            (Object.is(o, a)) || (
-                (Object.is(o[0], a[0]) || Object.is(o[0].buffer, a[0].buffer)) &&
-                (Object.is(o[1], a[1]) || Object.is(o[1].buffer, a[1].buffer)) &&
-                (Object.is(o[2], a[2]) || Object.is(o[2].buffer, a[2].buffer))
-            )
-        )
-    ) throw `Can not multiply - shared buffer detected! (Use matrix_multiply_in_place)`;
+export const multiply_in_place = (ai: number, bi: number) : void => {
+    t1[0] = ax[ai];
+    t1[1] = ay[ai];
+    t1[2] = az[ai];
 
-    o[0][k] = a[0][i]*b[0][j] + a[1][i]*b[3][j] + a[2][i]*b[6][j];
-    o[1][k] = a[0][i]*b[1][j] + a[1][i]*b[4][j] + a[2][i]*b[7][j];
-    o[2][k] = a[0][i]*b[2][j] + a[1][i]*b[5][j] + a[2][i]*b[8][j];
-};
+    tm[0] = m11[bi];
+    tm[1] = m12[bi];
+    tm[2] = m13[bi];
 
-export const multiply_in_place : ff_v = (
-    a: Vector3DValues, i: number,
-    b: Matrix3x3Values, j: number
-) : void => {
-    temp_lhs[0] = a[0][i];
-    temp_lhs[1] = a[1][i];
-    temp_lhs[2] = a[2][i];
+    tm[3] = m21[bi];
+    tm[4] = m22[bi];
+    tm[5] = m23[bi];
 
-    temp_matrix[0] = b[0][j];
-    temp_matrix[1] = b[1][j];
-    temp_matrix[2] = b[2][j];
+    tm[6] = m31[bi];
+    tm[7] = m32[bi];
+    tm[8] = m33[bi];
 
-    temp_matrix[3] = b[3][j];
-    temp_matrix[4] = b[4][j];
-    temp_matrix[5] = b[5][j];
+    ax[ai] =
+        t1[0] * tm[0] +
+        t1[1] * tm[3] +
+        t1[2] * tm[6];
 
-    temp_matrix[6] = b[6][j];
-    temp_matrix[7] = b[7][j];
-    temp_matrix[8] = b[8][j];
+    ay[ai] =
+        t1[0] * tm[1] +
+        t1[1] * tm[4] +
+        t1[2] * tm[7];
 
-    a[0][i] = temp_lhs[0]*temp_matrix[0] + temp_lhs[1]*temp_matrix[3] + temp_lhs[2]*temp_matrix[6];
-    a[1][i] = temp_lhs[0]*temp_matrix[1] + temp_lhs[1]*temp_matrix[4] + temp_lhs[2]*temp_matrix[7];
-    a[2][i] = temp_lhs[0]*temp_matrix[2] + temp_lhs[1]*temp_matrix[5] + temp_lhs[2]*temp_matrix[8];
+    az[ai] =
+        t1[0] * tm[2] +
+        t1[1] * tm[5] +
+        t1[2] * tm[8];
 };
 
 export class Vector3D extends AbstractVector {
     public arrays: Vector3DValues;
     protected _dim: number = 3;
 
-    lerp(to: this, by: number, out: this): this {
-        linearly_interpolate(
-            this.arrays,
-            this.id,
+    is_same = (other: this) : boolean =>
+        Object.is(this, other) || ((this.id === other.id) && (
+        Object.is(this.arrays, other.arrays) ||
+        Object.is(this.arrays[0], other.arrays[0]) ||
+        Object.is(this.arrays[1], other.arrays[1]) ||
+        Object.is(this.arrays[2], other.arrays[2]) ||
+        Object.is(this.arrays[0].buffer, other.arrays[0].buffer) ||
+        Object.is(this.arrays[1].buffer, other.arrays[1].buffer) ||
+        Object.is(this.arrays[2].buffer, other.arrays[2].buffer) ));
 
-            to.arrays,
-            to.id,
+    lerp(to: this, _by: number, out: this) : this {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = to.arrays;
+        [ox, oy, oz] = out.arrays;
 
-            by,
-
-            out.arrays,
-            out.id
-        );
+        linearly_interpolate(this.id, to.id, out.id, _by);
 
         return out;
     }
 
-    add(other: this): this {
-        add_in_place(
-            this.arrays,
-            this.id,
+    add(other: this) : this {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
 
-            other.arrays,
-            other.id
-        );
+        add_in_place(this.id, other.id);
 
         return this;
     }
 
-    sub(other: this): this {
-        subtract_in_place(
-            this.arrays,
-            this.id,
+    sub(other: this) : this {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
 
-            other.arrays,
-            other.id
-        );
+        subtract_in_place(this.id, other.id);
 
         return this;
     }
 
-    div(denominator: number): this {
-        divide_in_place(
-            this.arrays,
-            this.id,
+    div(by: number) : this {
+        [ax, ay, az] = this.arrays;
 
-            denominator
-        );
+        divide_in_place(this.id, by);
 
         return this;
     }
 
-    mul(factor_or_matrix: number | BaseMatrix): this {
+    mul(factor_or_matrix: number | BaseMatrix) : this {
+        [ax, ay, az] = this.arrays;
+
         if (typeof factor_or_matrix === 'number')
-            scale_in_place(
-                this.arrays,
-                this.id,
+            scale_in_place(this.id, factor_or_matrix);
+        else {
+            [
+                m11, m12, m13,
+                m21, m22, m23,
+                m31, m32, m33,
+            ] = factor_or_matrix.arrays;
 
-                factor_or_matrix
-            );
-        else
-            multiply_in_place(
-                this.arrays,
-                this.id,
-
-                factor_or_matrix.arrays,
-                factor_or_matrix.id
-            );
+            multiply_in_place(this.id, factor_or_matrix.id);
+        }
 
         return this;
     }
 
-    plus(other: this, out: this): this {
-        add(
-            this.arrays,
-            this.id,
+    plus(other: this, out: this) : this {
+        if (this.is_same(out))
+            return out.add(other);
 
-            other.arrays,
-            other.id,
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+        [ox, oy, oz] = out.arrays;
 
-            out.arrays,
-            out.id
-        );
+        add(this.id, other.id, out.id);
 
         return out;
     }
 
-    minus(other: this, out: this): this {
-        subtract(
-            this.arrays,
-            this.id,
+    minus(other: this, out: this) : this {
+        if (this.is_same(other)) {
+            out.arrays[0][out.id] =
+                out.arrays[1][out.id] =
+                    out.arrays[2][out.id] = 0;
+            return out;
+        }
 
-            other.arrays,
-            other.id,
+        if (this.is_same(out))
+            return out.sub(other);
 
-            out.arrays,
-            out.id
-        );
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+        [ox, oy, oz] = out.arrays;
 
-        return out;
-    }
-
-    over(denominator: number, out: this): this {
-        divide(
-            this.arrays,
-            this.id,
-
-            denominator,
-
-            out.arrays,
-            out.id
-        );
+        subtract(this.id, other.id, out.id);
 
         return out;
     }
 
-    times(factor_or_matrix: number | BaseMatrix, out: this): this {
+    over(by: number, out: this) : this {
+        if (this.is_same(out))
+            return out.div(by);
+
+        [ax, ay, az] = this.arrays;
+        [ox, oy, oz] = out.arrays;
+
+        divide(this.id, out.id, by);
+
+        return out;
+    }
+
+    times(factor_or_matrix: number | BaseMatrix, out: this) : this {
+        if (this.is_same(out))
+            return out.mul(factor_or_matrix);
+
+        [ax, ay, az] = this.arrays;
+        [ox, oy, oz] = out.arrays;
+
         if (typeof factor_or_matrix === 'number')
-            scale(
-                this.arrays,
-                this.id,
+            scale(this.id, out.id, factor_or_matrix);
+        else{
+            [
+                m11, m12, m13,
+                m21, m22, m23,
+                m31, m32, m33,
+            ] = factor_or_matrix.arrays;
 
-                factor_or_matrix,
+            multiply(this.id, factor_or_matrix.id, out.id);
+        }
 
-                out.arrays,
-                out.id
-            );
-        else
-            multiply(
-                this.arrays,
-                this.id,
+        return out;
+    }
+}
 
-                factor_or_matrix.arrays,
-                factor_or_matrix.id,
+export class Position3D extends Vector3D {
+    squaredDistanceTo(other: this) : number {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
 
-                out.arrays,
-                out.id
-            );
+        return distance_squared(this.id, other.id);
+    }
+
+    distanceTo(other: this) : number {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+
+        return distance(this.id, other.id);
+    }
+
+    to(other: this, out: Direction3D) : Direction3D {
+        [ax, ay, az] = other.arrays;
+        [bx, by, bz] = this.arrays;
+        [ox, oy, oz] = out.arrays;
+
+        subtract(this.id, other.id, out.id);
 
         return out;
     }
@@ -417,113 +409,90 @@ export class Vector3D extends AbstractVector {
     get z(): number {return this.arrays[2][this.id]}
 }
 
-export class Position3D extends Vector3D {
-    get length(): number {
-        return length(
-            this.arrays,
-            this.id
-        );
-    }
-
-    get length_squared(): number {
-        return length_squared(
-            this.arrays,
-            this.id
-        );
-    }
-
-    dot(other: this): number {
-        return dot(
-            this.arrays,
-            this.id,
-
-            other.arrays,
-            other.id
-        );
-    }
-
-    normalize(): this {
-        normalize_in_place(
-            this.arrays,
-            this.id
-        );
-
-        return this;
-    }
-
-    normalized(out: this): this {
-        normalize(
-            this.arrays,
-            this.id,
-
-            out.arrays,
-            out.id
-        );
-
-        return out;
-    }
-
-    squaredDistanceTo(other: this): number {
-        return distance_squared(
-            this.arrays,
-            this.id,
-
-            other.arrays,
-            other.id
-        );
-    }
-
-    distanceTo = (other: this) : number => distance(
-        this.arrays,
-        this.id,
-
-        other.arrays,
-        other.id
-    );
-
-    to(other: this, out: Direction3D): Direction3D {
-        subtract(
-            other.arrays,
-            other.id,
-
-            this.arrays,
-            this.id,
-
-            out.arrays,
-            out.id
-        );
-
-        return out;
-    }
-}
-
 export class Direction3D extends Vector3D {
-    cross(other: this): this {
-        cross_in_place(
-            this.arrays,
-            this.id,
+    get length() : number {
+        [ax, ay, az] = this.arrays;
 
-            other.arrays,
-            other.id
-        );
+        return length(this.id);
+    }
+
+    get length_squared() : number {
+        [ax, ay, az] = this.arrays;
+
+        return length_squared(this.id);
+    }
+
+    dot(other: this) : number {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+
+        return dot(this.id, other.id);
+    }
+
+    invert() : this {
+        [ax, ay, az] = this.arrays;
+        invert(this.id);
+        return this;
+    }
+
+    normalize() : this {
+        if (this.length_squared === 1)
+            return this;
+
+        [ax, ay, az] = this.arrays;
+        normalize_in_place(this.id);
 
         return this;
     }
 
-    crossedWith(other: this, out: this): this {
-        cross(
-            this.arrays,
-            this.id,
+    normalized(out: this) : this {
+        if (this.is_same(out))
+            return out.normalize();
 
-            other.arrays,
-            other.id,
+        if (this.length_squared === 1)
+            return out.setFromOther(this);
 
-            out.arrays,
-            out.id
-        );
+        [ax, ay, az] = this.arrays;
+        [ox, oy, oz] = out.arrays;
+
+        normalize(this.id, out.id);
 
         return out;
     }
+
+    cross(other: this) : this {
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+
+        cross_in_place(this.id, other.id);
+
+        return this;
+    }
+
+    crossedWith(other: this, out: this) : this {
+        if (out.is_same(this))
+            return out.cross(other);
+
+        if (out.is_same(other)) {
+            out.cross(this);
+            return out.invert();
+        }
+
+        [ax, ay, az] = this.arrays;
+        [bx, by, bz] = other.arrays;
+        [ox, oy, oz] = out.arrays;
+        cross(this.id, other.id, out.id);
+
+        return out;
+    }
+
+    set x(x: number) {this.arrays[0][this.id] = x}
+    set y(y: number) {this.arrays[1][this.id] = y}
+    set z(z: number) {this.arrays[2][this.id] = z}
+
+    get x(): number {return this.arrays[0][this.id]}
+    get y(): number {return this.arrays[1][this.id]}
+    get z(): number {return this.arrays[2][this.id]}
 }
 
 export class UV3D extends Vector3D {
