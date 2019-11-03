@@ -1,5 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { BaseColor3D, BaseUV3D, BasePosition3D, BaseDirection3D } from "./base.js";
+import { AbstractVector, ColorMixin } from "./vec.js";
 let temp_number;
 const temp_lhs = new Float32Array(3);
 const temp_rhs = new Float32Array(3);
@@ -133,44 +133,114 @@ export const multiply_in_place = (a, i, b, j) => {
     a[1][i] = temp_lhs[0] * temp_matrix[1] + temp_lhs[1] * temp_matrix[4] + temp_lhs[2] * temp_matrix[7];
     a[2][i] = temp_lhs[0] * temp_matrix[2] + temp_lhs[1] * temp_matrix[5] + temp_lhs[2] * temp_matrix[8];
 };
-const Vector3DMixin = (BaseClass) => class extends BaseClass {
+export class Vector3D extends AbstractVector {
     constructor() {
         super(...arguments);
-        this._equals = equals;
-        this._linearly_interpolate = linearly_interpolate;
-        this._add = add;
-        this._add_in_place = add_in_place;
-        this._subtract = subtract;
-        this._subtract_in_place = subtract_in_place;
-        this._scale = scale;
-        this._scale_in_place = scale_in_place;
-        this._divide = divide;
-        this._divide_in_place = divide_in_place;
-        this._multiply = multiply;
-        this._multiply_in_place = multiply_in_place;
+        this._dim = 3;
     }
-};
-export class UV3D extends Vector3DMixin(BaseUV3D) {
+    lerp(to, by, out) {
+        linearly_interpolate(this.arrays, this.id, to.arrays, to.id, by, out.arrays, out.id);
+        return out;
+    }
+    add(other) {
+        add_in_place(this.arrays, this.id, other.arrays, other.id);
+        return this;
+    }
+    sub(other) {
+        subtract_in_place(this.arrays, this.id, other.arrays, other.id);
+        return this;
+    }
+    div(denominator) {
+        divide_in_place(this.arrays, this.id, denominator);
+        return this;
+    }
+    mul(factor_or_matrix) {
+        if (typeof factor_or_matrix === 'number')
+            scale_in_place(this.arrays, this.id, factor_or_matrix);
+        else
+            multiply_in_place(this.arrays, this.id, factor_or_matrix.arrays, factor_or_matrix.id);
+        return this;
+    }
+    plus(other, out) {
+        add(this.arrays, this.id, other.arrays, other.id, out.arrays, out.id);
+        return out;
+    }
+    minus(other, out) {
+        subtract(this.arrays, this.id, other.arrays, other.id, out.arrays, out.id);
+        return out;
+    }
+    over(denominator, out) {
+        divide(this.arrays, this.id, denominator, out.arrays, out.id);
+        return out;
+    }
+    times(factor_or_matrix, out) {
+        if (typeof factor_or_matrix === 'number')
+            scale(this.arrays, this.id, factor_or_matrix, out.arrays, out.id);
+        else
+            multiply(this.arrays, this.id, factor_or_matrix.arrays, factor_or_matrix.id, out.arrays, out.id);
+        return out;
+    }
+    set x(x) { this.arrays[0][this.id] = x; }
+    set y(y) { this.arrays[1][this.id] = y; }
+    set z(z) { this.arrays[2][this.id] = z; }
+    get x() { return this.arrays[0][this.id]; }
+    get y() { return this.arrays[1][this.id]; }
+    get z() { return this.arrays[2][this.id]; }
 }
-export class Color3D extends Vector3DMixin(BaseColor3D) {
-}
-export class Position3D extends Vector3DMixin(BasePosition3D) {
+export class Position3D extends Vector3D {
     constructor() {
         super(...arguments);
-        this._distance = distance;
-        this._distance_squared = distance_squared;
+        this.distanceTo = (other) => distance(this.arrays, this.id, other.arrays, other.id);
+    }
+    get length() {
+        return length(this.arrays, this.id);
+    }
+    get length_squared() {
+        return length_squared(this.arrays, this.id);
+    }
+    dot(other) {
+        return dot(this.arrays, this.id, other.arrays, other.id);
+    }
+    normalize() {
+        normalize_in_place(this.arrays, this.id);
+        return this;
+    }
+    normalized(out) {
+        normalize(this.arrays, this.id, out.arrays, out.id);
+        return out;
+    }
+    squaredDistanceTo(other) {
+        return distance_squared(this.arrays, this.id, other.arrays, other.id);
+    }
+    to(other, out) {
+        subtract(other.arrays, other.id, this.arrays, this.id, out.arrays, out.id);
+        return out;
     }
 }
-export class Direction3D extends Vector3DMixin(BaseDirection3D) {
-    constructor() {
-        super(...arguments);
-        this._dot = dot;
-        this._length = length;
-        this._length_squared = length_squared;
-        this._normalize = normalize;
-        this._normalize_in_place = normalize_in_place;
-        this._cross = cross;
-        this._cross_in_place = cross_in_place;
+export class Direction3D extends Vector3D {
+    cross(other) {
+        cross_in_place(this.arrays, this.id, other.arrays, other.id);
+        return this;
     }
+    crossedWith(other, out) {
+        cross(this.arrays, this.id, other.arrays, other.id, out.arrays, out.id);
+        return out;
+    }
+}
+export class UV3D extends Vector3D {
+    set u(u) { this.arrays[0][this.id] = u; }
+    set v(v) { this.arrays[1][this.id] = v; }
+    set w(w) { this.arrays[2][this.id] = w; }
+    get u() { return this.arrays[0][this.id]; }
+    get v() { return this.arrays[1][this.id]; }
+    get w() { return this.arrays[2][this.id]; }
+}
+export class Color3D extends ColorMixin(Vector3D) {
+    set r(r) { this.arrays[0][this.id] = r; }
+    set g(g) { this.arrays[1][this.id] = g; }
+    set b(b) { this.arrays[2][this.id] = b; }
+    get r() { return this.arrays[0][this.id]; }
+    get g() { return this.arrays[1][this.id]; }
+    get b() { return this.arrays[2][this.id]; }
 }
 //# sourceMappingURL=vec3.js.map

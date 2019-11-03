@@ -62,10 +62,12 @@ export type UnsharedVertexValues = [Values, Values, Values];
 export type Vector2DValues = FloatArrays2;
 export type Vector3DValues = FloatArrays3;
 export type Vector4DValues = FloatArrays4;
+export type VectorValues = Vector2DValues | Vector3DValues | Vector4DValues;
 
 export type Matrix2x2Values = FloatArrays4;
 export type Matrix3x3Values = FloatArrays9;
 export type Matrix4x4Values = FloatArrays16;
+export type MatrixValues = Matrix2x2Values | Matrix3x3Values | Matrix4x4Values;
 
 export type f_v = (a: FloatArrays, i: number) => void;
 export type f_b = (a: FloatArrays, i: number) => boolean;

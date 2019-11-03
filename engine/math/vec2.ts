@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {VectorConstructor, BaseUV2D, BasePosition2D, BaseDirection2D } from "./base.js";
 import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, fn_v, fnf_v, Vector2DValues, Matrix2x2Values} from "../types.js";
+import {BaseDirection2D, BasePosition2D, BaseUV2D, VectorConstructor} from "./vec.js";
 
 let temp_number: number;
 const temp_vector = new Float32Array(2);

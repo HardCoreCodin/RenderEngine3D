@@ -1,6 +1,6 @@
 import { PRECISION_DIGITS } from "../constants.js";
 import { cross, cross_in_place } from "./vec3.js";
-import { BaseColor4D, BasePosition4D, BaseDirection4D } from "./base.js";
+import { BaseColor4D, BaseDirection4D, BasePosition4D } from "./vec.js";
 let temp_number;
 const temp_lhs = new Float32Array(3);
 const temp_matrix = new Float32Array(9);

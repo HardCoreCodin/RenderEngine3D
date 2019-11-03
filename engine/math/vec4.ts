@@ -1,7 +1,7 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {cross, cross_in_place} from "./vec3.js";
-import {VectorConstructor, BaseColor4D, BasePosition4D, BaseDirection4D} from "./base.js";
 import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, fn_v, fnf_v, Vector4DValues, Matrix4x4Values} from "../types.js";
+import {BaseColor4D, BaseDirection4D, BasePosition4D, VectorConstructor} from "./vec.js";
 
 let temp_number: number;
 const temp_lhs = new Float32Array(3);

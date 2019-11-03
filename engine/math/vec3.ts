@@ -1,6 +1,7 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {VectorConstructor, BaseColor3D, BaseUV3D, BasePosition3D, BaseDirection3D} from "./base.js";
 import {f_n, f_v, ff_b, ff_n, ff_v, fff_v, ffnf_v, Vector3DValues, Matrix3x3Values, fn_v, fnf_v} from "../types.js";
+import {AbstractVector, ColorMixin} from "./vec.js";
+import {BaseMatrix} from "./base.js";
 
 let temp_number: number;
 const temp_lhs = new Float32Array(3);
@@ -261,40 +262,286 @@ export const multiply_in_place : ff_v = (
     a[2][i] = temp_lhs[0]*temp_matrix[2] + temp_lhs[1]*temp_matrix[5] + temp_lhs[2]*temp_matrix[8];
 };
 
-const Vector3DMixin = (BaseClass: VectorConstructor) => class extends BaseClass {
-    protected _equals: ff_b = equals;
-    protected _linearly_interpolate: ffnf_v = linearly_interpolate;
+export class Vector3D extends AbstractVector {
+    public arrays: Vector3DValues;
+    protected _dim: number = 3;
 
-    protected _add: fff_v = add;
-    protected _add_in_place: ff_v = add_in_place;
+    lerp(to: this, by: number, out: this): this {
+        linearly_interpolate(
+            this.arrays,
+            this.id,
 
-    protected _subtract: fff_v = subtract;
-    protected _subtract_in_place: ff_v = subtract_in_place;
+            to.arrays,
+            to.id,
 
-    protected _scale: fnf_v = scale;
-    protected _scale_in_place: fn_v = scale_in_place;
+            by,
 
-    protected _divide: fnf_v = divide;
-    protected _divide_in_place: fn_v = divide_in_place;
+            out.arrays,
+            out.id
+        );
 
-    protected _multiply : fff_v = multiply;
-    protected _multiply_in_place : ff_v = multiply_in_place;
-};
+        return out;
+    }
 
-export class UV3D extends Vector3DMixin(BaseUV3D) {}
-export class Color3D extends Vector3DMixin(BaseColor3D) {}
-export class Position3D extends Vector3DMixin(BasePosition3D) {
-    _distance: ff_n = distance;
-    _distance_squared: ff_n = distance_squared;
+    add(other: this): this {
+        add_in_place(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+
+        return this;
+    }
+
+    sub(other: this): this {
+        subtract_in_place(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+
+        return this;
+    }
+
+    div(denominator: number): this {
+        divide_in_place(
+            this.arrays,
+            this.id,
+
+            denominator
+        );
+
+        return this;
+    }
+
+    mul(factor_or_matrix: number | BaseMatrix): this {
+        if (typeof factor_or_matrix === 'number')
+            scale_in_place(
+                this.arrays,
+                this.id,
+
+                factor_or_matrix
+            );
+        else
+            multiply_in_place(
+                this.arrays,
+                this.id,
+
+                factor_or_matrix.arrays,
+                factor_or_matrix.id
+            );
+
+        return this;
+    }
+
+    plus(other: this, out: this): this {
+        add(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+
+    minus(other: this, out: this): this {
+        subtract(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+
+    over(denominator: number, out: this): this {
+        divide(
+            this.arrays,
+            this.id,
+
+            denominator,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+
+    times(factor_or_matrix: number | BaseMatrix, out: this): this {
+        if (typeof factor_or_matrix === 'number')
+            scale(
+                this.arrays,
+                this.id,
+
+                factor_or_matrix,
+
+                out.arrays,
+                out.id
+            );
+        else
+            multiply(
+                this.arrays,
+                this.id,
+
+                factor_or_matrix.arrays,
+                factor_or_matrix.id,
+
+                out.arrays,
+                out.id
+            );
+
+        return out;
+    }
+
+    set x(x: number) {this.arrays[0][this.id] = x}
+    set y(y: number) {this.arrays[1][this.id] = y}
+    set z(z: number) {this.arrays[2][this.id] = z}
+
+    get x(): number {return this.arrays[0][this.id]}
+    get y(): number {return this.arrays[1][this.id]}
+    get z(): number {return this.arrays[2][this.id]}
 }
-export class Direction3D extends Vector3DMixin(BaseDirection3D) {
-    protected _dot: ff_n = dot;
-    protected _length: f_n = length;
-    protected _length_squared: f_n = length_squared;
 
-    protected _normalize : ff_v = normalize;
-    protected _normalize_in_place : f_v = normalize_in_place;
+export class Position3D extends Vector3D {
+    get length(): number {
+        return length(
+            this.arrays,
+            this.id
+        );
+    }
 
-    protected _cross : fff_v = cross;
-    protected _cross_in_place : ff_v = cross_in_place;
+    get length_squared(): number {
+        return length_squared(
+            this.arrays,
+            this.id
+        );
+    }
+
+    dot(other: this): number {
+        return dot(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+    }
+
+    normalize(): this {
+        normalize_in_place(
+            this.arrays,
+            this.id
+        );
+
+        return this;
+    }
+
+    normalized(out: this): this {
+        normalize(
+            this.arrays,
+            this.id,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+
+    squaredDistanceTo(other: this): number {
+        return distance_squared(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+    }
+
+    distanceTo = (other: this) : number => distance(
+        this.arrays,
+        this.id,
+
+        other.arrays,
+        other.id
+    );
+
+    to(other: this, out: Direction3D): Direction3D {
+        subtract(
+            other.arrays,
+            other.id,
+
+            this.arrays,
+            this.id,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+}
+
+export class Direction3D extends Vector3D {
+    cross(other: this): this {
+        cross_in_place(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id
+        );
+
+        return this;
+    }
+
+    crossedWith(other: this, out: this): this {
+        cross(
+            this.arrays,
+            this.id,
+
+            other.arrays,
+            other.id,
+
+            out.arrays,
+            out.id
+        );
+
+        return out;
+    }
+}
+
+export class UV3D extends Vector3D {
+    set u(u: number) {this.arrays[0][this.id] = u}
+    set v(v: number) {this.arrays[1][this.id] = v}
+    set w(w: number) {this.arrays[2][this.id] = w}
+
+    get u(): number {return this.arrays[0][this.id]}
+    get v(): number {return this.arrays[1][this.id]}
+    get w(): number {return this.arrays[2][this.id]}
+}
+
+export class Color3D extends ColorMixin(Vector3D) {
+    set r(r: number) {this.arrays[0][this.id] = r}
+    set g(g: number) {this.arrays[1][this.id] = g}
+    set b(b: number) {this.arrays[2][this.id] = b}
+
+    get r(): number {return this.arrays[0][this.id]}
+    get g(): number {return this.arrays[1][this.id]}
+    get b(): number {return this.arrays[2][this.id]}
 }
