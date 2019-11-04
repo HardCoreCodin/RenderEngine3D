@@ -1,516 +1,522 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Vector3DValues} from "../types.js";
-import {AbstractVector, ColorMixin} from "./vec.js";
-import {BaseMatrix} from "./base.js";
+import {Matrix3x3} from "./mat3x3.js";
 
-let tn: number;
-const _temp_buffer = new Float32Array(15);
-const t1 = _temp_buffer.slice(0, 3);
-const t2 = _temp_buffer.slice(3, 6);
-const tm = _temp_buffer.slice(6);
+let t_x, t_y, t_z, t_n, out_id, other_id, this_id: number;
+let a_x, a_y, a_z, m11, m12, m13,
+    b_x, b_y, b_z, m21, m22, m23,
+    o_x, o_y, o_z, m31, m32, m33 : Float32Array;
 
-let ox: Float32Array;
-let oy: Float32Array;
-let oz: Float32Array;
+const equals = (a: number, b: number) : boolean =>
+    a_x[a].toFixed(PRECISION_DIGITS) ===
+    b_x[b].toFixed(PRECISION_DIGITS) &&
 
-let ax: Float32Array;
-let ay: Float32Array;
-let az: Float32Array;
+    a_y[a].toFixed(PRECISION_DIGITS) ===
+    b_y[b].toFixed(PRECISION_DIGITS) &&
 
-let bx: Float32Array;
-let by: Float32Array;
-let bz: Float32Array;
+    a_z[a].toFixed(PRECISION_DIGITS) ===
+    b_z[b].toFixed(PRECISION_DIGITS);
 
-let m11: Float32Array;
-let m12: Float32Array;
-let m13: Float32Array;
+const same = (a: number, b: number) : boolean => a === b &&
+    (Object.is(a_x, b_x) || (Object.is(a_x.buffer, b_x.buffer) && a_x.offset == b_x.offset)) &&
+    (Object.is(a_y, b_y) || (Object.is(a_y.buffer, b_y.buffer) && a_y.offset == b_y.offset)) &&
+    (Object.is(a_z, b_z) || (Object.is(a_z.buffer, b_z.buffer) && a_z.offset == b_z.offset));
 
-let m21: Float32Array;
-let m22: Float32Array;
-let m23: Float32Array;
-
-let m31: Float32Array;
-let m32: Float32Array;
-let m33: Float32Array;
-
-export const invert = (ai: number) : void => {
-    ax[ai] = -ax[ai];
-    ay[ai] = -ay[ai];
-    az[ai] = -az[ai];
+const invert = (a: number) : void => {
+    a_x[a] = -a_x[a];
+    a_y[a] = -a_y[a];
+    a_z[a] = -a_z[a];
 };
 
-export const length = (ai: number) : number => Math.hypot(
-    ax[ai],
-    ay[ai],
-    az[ai]
+const length = (a: number) : number => Math.hypot(
+    a_x[a],
+    a_y[a],
+    a_z[a]
 );
 
-export const distance = (ai: number, bi: number) : number => Math.hypot(
-    (bx[bi] - ax[ai]),
-    (by[bi] - ay[ai]),
-    (bz[bi] - az[ai])
+const distance = (a: number, b: number) : number => Math.hypot(
+    (b_x[b] - a_x[a]),
+    (b_y[b] - a_y[a]),
+    (b_z[b] - a_z[a])
 );
 
-export const length_squared = (ai: number) : number =>
-    ax[ai] ** 2 +
-    ay[ai] ** 2 +
-    az[ai] ** 2;
+const length_squared = (a: number) : number =>
+    a_x[a] ** 2 +
+    a_y[a] ** 2 +
+    a_z[a] ** 2;
 
-export const distance_squared = (ai: number, bi: number) : number => (
-    (bx[bi] - ax[ai]) ** 2 +
-    (by[bi] - ay[ai]) ** 2 +
-    (bz[bi] - az[ai]) ** 2
+const distance_squared = (a: number, b: number) : number => (
+    (b_x[b] - a_x[a]) ** 2 +
+    (b_y[b] - a_y[a]) ** 2 +
+    (b_z[b] - a_z[a]) ** 2
 );
 
-export const equals = (ai: number, bi: number) : boolean =>
-    ax[ai].toFixed(PRECISION_DIGITS) ===
-    bx[bi].toFixed(PRECISION_DIGITS) &&
-    ay[ai].toFixed(PRECISION_DIGITS) ===
-    by[bi].toFixed(PRECISION_DIGITS) &&
-    az[ai].toFixed(PRECISION_DIGITS) ===
-    bz[bi].toFixed(PRECISION_DIGITS);
-
-export const linearly_interpolate = (ai: number, bi: number, oi: number, t: number) : void => {
-    ox[oi] = (1-t)*ax[ai] + t*(bx[bi]);
-    oy[oi] = (1-t)*ay[ai] + t*(by[bi]);
-    oz[oi] = (1-t)*az[ai] + t*(bz[bi]);
+const linearly_interpolate = (a: number, b: number, o: number, t: number) : void => {
+    o_x[o] = (1-t)*a_x[a] + t*(b_x[b]);
+    o_y[o] = (1-t)*a_y[a] + t*(b_y[b]);
+    o_z[o] = (1-t)*a_z[a] + t*(b_z[b]);
 };
 
-export const add = (ai: number, bi: number, oi: number) : void => {
-    ox[oi] = ax[ai] + bx[bi];
-    oy[oi] = ay[ai] + by[bi];
-    oz[oi] = az[ai] + bz[bi];
+const add = (a: number, b: number, o: number) : void => {
+    o_x[o] = a_x[a] + b_x[b];
+    o_y[o] = a_y[a] + b_y[b];
+    o_z[o] = a_z[a] + b_z[b];
 };
 
-export const add_in_place = (ai: number, bi: number) : void => {
-    ax[ai] += bx[bi];
-    ay[ai] += by[bi];
-    az[ai] += bz[bi];
+const add_in_place = (a: number, b: number) : void => {
+    a_x[a] += b_x[b];
+    a_y[a] += b_y[b];
+    a_z[a] += b_z[b];
 };
 
-export const subtract = (ai: number, bi: number, oi: number) : void => {
-    ox[oi] = ax[ai] - bx[bi];
-    oy[oi] = ay[ai] - by[bi];
-    oz[oi] = az[ai] - bz[bi];
+const subtract = (a: number, b: number, o: number) : void => {
+    o_x[o] = a_x[a] - b_x[b];
+    o_y[o] = a_y[a] - b_y[b];
+    o_z[o] = a_z[a] - b_z[b];
 };
 
-export const subtract_in_place = (ai: number, bi: number) : void => {
-    ax[ai] -= bx[bi];
-    ay[ai] -= by[bi];
-    az[ai] -= bz[bi];
+const subtract_in_place = (a: number, b: number) : void => {
+    a_x[a] -= b_x[b];
+    a_y[a] -= b_y[b];
+    a_z[a] -= b_z[b];
 };
 
-export const divide = (ai: number, oi: number, n: number) : void => {
-    ox[oi] = ax[ai] / n;
-    oy[oi] = ay[ai] / n;
-    oz[oi] = az[ai] / n;
+const divide = (a: number, o: number, n: number) : void => {
+    o_x[o] = a_x[a] / n;
+    o_y[o] = a_y[a] / n;
+    o_z[o] = a_z[a] / n;
 };
 
-export const divide_in_place = (ai: number, n: number) : void => {
-    ax[ai] /= n;
-    ay[ai] /= n;
-    az[ai] /= n;
+const divide_in_place = (a: number, n: number) : void => {
+    a_x[a] /= n;
+    a_y[a] /= n;
+    a_z[a] /= n;
 };
 
-export const scale = (ai: number, oi: number, n: number) : void => {
-    ox[oi] = ax[ai] * n;
-    oy[oi] = ay[ai] * n;
-    oz[oi] = az[ai] * n;
+const scale = (a: number, o: number, n: number) : void => {
+    o_x[o] = a_x[a] * n;
+    o_y[o] = a_y[a] * n;
+    o_z[o] = a_z[a] * n;
 };
 
-export const scale_in_place = (ai: number, n: number) : void => {
-    ax[ai] *= n;
-    ay[ai] *= n;
-    az[ai] *= n;
+const scale_in_place = (a: number, n: number) : void => {
+    a_x[a] *= n;
+    a_y[a] *= n;
+    a_z[a] *= n;
 };
 
-export const normalize = (ai: number, oi: number) : void => {
-    tn = Math.hypot(
-        ax[ai],
-        ay[ai],
-        az[ai]
+const normalize = (a: number, o: number) : void => {
+    t_n = Math.hypot(
+        a_x[a],
+        a_y[a],
+        a_z[a]
     );
 
-    ox[oi] = ax[ai] / tn;
-    oy[oi] = ay[ai] / tn;
-    oz[oi] = az[ai] / tn;
+    o_x[o] = a_x[a] / t_n;
+    o_y[o] = a_y[a] / t_n;
+    o_z[o] = a_z[a] / t_n;
 };
 
-export const normalize_in_place = (ai: number) : void => {
-    tn = Math.hypot(
-        ax[ai],
-        ay[ai],
-        az[ai]
+const normalize_in_place = (a: number) : void => {
+    t_n = Math.hypot(
+        a_x[a],
+        a_y[a],
+        a_z[a]
     );
 
-    ax[ai] /= tn;
-    ay[ai] /= tn;
-    az[ai] /= tn;
+    a_x[a] /= t_n;
+    a_y[a] /= t_n;
+    a_z[a] /= t_n;
 };
 
-export const dot = (ai: number, bi: number) : number =>
-    ax[ai] * bx[bi] +
-    ay[ai] * by[bi] +
-    az[ai] * bz[bi];
+const dot = (a: number, b: number) : number =>
+    a_x[a] * b_x[b] +
+    a_y[a] * b_y[b] +
+    a_z[a] * b_z[b];
 
-export const cross = (ai: number, bi: number, oi: number) : void => {
-    ox[oi] =
-        ay[ai] * bz[bi] -
-        az[ai] * by[bi];
-
-    oy[oi] =
-        az[ai] * bx[bi] -
-        ax[ai] * bz[bi];
-
-    oz[oi] =
-        ax[ai] * by[bi] -
-        ay[ai] * bx[bi];
+const cross = (a: number, b: number, o: number) : void => {
+    o_x[o] = a_y[a]*b_z[b] - a_z[a]*b_y[b];
+    o_y[o] = a_z[a]*b_x[b] - a_x[a]*b_z[b];
+    o_z[o] = a_x[a]*b_y[b] - a_y[a]*b_x[b];
 };
 
-export const cross_in_place = (ai: number, bi: number) : void => {
-    t1[0] = ax[ai];
-    t1[1] = ay[ai];
-    t1[2] = az[ai];
+const cross_in_place = (a: number, b: number) : void => {
+    t_x = a_x[a];
+    t_y = a_y[a];
+    t_z = a_z[a];
 
-    t2[0] = bx[bi];
-    t2[1] = by[bi];
-    t2[2] = bz[bi];
-
-    ax[ai] =
-        t1[1] * t2[2] -
-        t1[2] * t2[1];
-
-    ay[ai] =
-        t1[2] * t2[0] -
-        t1[0] * t2[2];
-
-    az[ai] =
-        t1[0] * t2[1] -
-        t1[1] * t2[0];
+    a_x[a] = t_y*b_z[b] - t_z*b_y[b];
+    a_y[a] = t_z*b_x[b] - t_x*b_z[b];
+    a_z[a] = t_x*b_y[b] - t_y*b_x[b];
 };
 
-export const multiply = (ai: number, bi: number, oi: number) : void => {
-    ox[oi] =
-        ax[ai] * m11[bi] +
-        ay[ai] * m21[bi] +
-        az[ai] * m31[bi];
-
-    oy[oi] =
-        ax[ai] * m12[bi] +
-        ay[ai] * m22[bi] +
-        az[ai] * m32[bi];
-
-    oz[oi] =
-        ax[ai] * m13[bi] +
-        ay[ai] * m23[bi] +
-        az[ai] * m33[bi];
+const multiply = (a: number, b: number, o: number) : void => {
+    o_x[o] = a_x[a]*m11[b] + a_y[a]*m21[b] + a_z[a]*m31[b];
+    o_y[o] = a_x[a]*m12[b] + a_y[a]*m22[b] + a_z[a]*m32[b];
+    o_z[o] = a_x[a]*m13[b] + a_y[a]*m23[b] + a_z[a]*m33[b];
 };
 
-export const multiply_in_place = (ai: number, bi: number) : void => {
-    t1[0] = ax[ai];
-    t1[1] = ay[ai];
-    t1[2] = az[ai];
+const multiply_in_place = (a: number, b: number) : void => {
+    t_x = a_x[a];
+    t_y = a_y[a];
+    t_z = a_z[a];
 
-    tm[0] = m11[bi];
-    tm[1] = m12[bi];
-    tm[2] = m13[bi];
-
-    tm[3] = m21[bi];
-    tm[4] = m22[bi];
-    tm[5] = m23[bi];
-
-    tm[6] = m31[bi];
-    tm[7] = m32[bi];
-    tm[8] = m33[bi];
-
-    ax[ai] =
-        t1[0] * tm[0] +
-        t1[1] * tm[3] +
-        t1[2] * tm[6];
-
-    ay[ai] =
-        t1[0] * tm[1] +
-        t1[1] * tm[4] +
-        t1[2] * tm[7];
-
-    az[ai] =
-        t1[0] * tm[2] +
-        t1[1] * tm[5] +
-        t1[2] * tm[8];
+    a_x[a] = t_x*m11[b] + t_y*m21[b] + t_z*m31[b];
+    a_y[a] = t_x*m12[b] + t_y*m22[b] + t_z*m32[b];
+    a_z[a] = t_x*m13[b] + t_y*m23[b] + t_z*m33[b];
 };
 
-export class Vector3D extends AbstractVector {
-    public arrays: Vector3DValues;
-    protected _dim: number = 3;
+export class Vector3D {
+    constructor(
+        readonly _x: Float32Array,
+        readonly _y: Float32Array,
+        readonly _z: Float32Array,
 
-    is_same = (other: this) : boolean =>
-        Object.is(this, other) || ((this.id === other.id) && (
-        Object.is(this.arrays, other.arrays) ||
-        Object.is(this.arrays[0], other.arrays[0]) ||
-        Object.is(this.arrays[1], other.arrays[1]) ||
-        Object.is(this.arrays[2], other.arrays[2]) ||
-        Object.is(this.arrays[0].buffer, other.arrays[0].buffer) ||
-        Object.is(this.arrays[1].buffer, other.arrays[1].buffer) ||
-        Object.is(this.arrays[2].buffer, other.arrays[2].buffer) ));
-
-    lerp(to: this, _by: number, out: this) : this {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = to.arrays;
-        [ox, oy, oz] = out.arrays;
-
-        linearly_interpolate(this.id, to.id, out.id, _by);
-
-        return out;
+        public id: number = 0,
+        // public readonly arrays: readonly [
+        //     Float32Array,
+        //     Float32Array,
+        //     Float32Array
+        // ] = [_x, _y, _z],
+    ) {
+        if (id < 0) throw `ID must be positive integer, got ${id}`;
     }
 
-    add(other: this) : this {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly copyTo = (out: this) : this => {
+        this_id = this.id;
+        out_id = out.id;
+
+        out._x[out_id] = this._x[this_id];
+        out._y[out_id] = this._y[this_id];
+        out._z[out_id] = this._z[this_id];
+
+        return out;
+    };
+
+    readonly setFromOther = (other: this) : this => {
+        this_id = this.id;
+        other_id = other.id;
+
+        this._x[this_id] = other._x[other_id];
+        this._y[this_id] = other._y[other_id];
+        this._z[this_id] = other._z[other_id];
+
+        return this;
+    };
+
+    readonly setTo = (x: number, y: number, z: number) : this => {
+        this_id = this.id;
+
+        this._x[this_id] = x;
+        this._y[this_id] = y;
+        this._z[this_id] = z;
+
+        return this;
+    };
+
+    readonly isSameAs = (other: this) : boolean => {
+        set_a(this);
+        set_b(other);
+
+        return same(this.id, other.id);
+    };
+
+    readonly equals = (other: this) : boolean => {
+        set_a(this);
+        set_b(other);
+
+        if (same(this.id, other.id))
+            return true;
+
+        return equals(this.id, other.id);
+    };
+
+    readonly lerp = (to: this, by: number, out: this) : this => {
+        set_a(this);
+        set_b(to);
+        set_o(out);
+
+        linearly_interpolate(this.id, to.id, out.id, by);
+
+        return out;
+    };
+
+    readonly add = (other: this) : this => {
+        set_a(this);
+        set_b(other);
 
         add_in_place(this.id, other.id);
 
         return this;
-    }
+    };
 
-    sub(other: this) : this {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly sub = (other: this) : this => {
+        set_a(this);
+        set_b(other);
 
         subtract_in_place(this.id, other.id);
 
         return this;
-    }
+    };
 
-    div(by: number) : this {
-        [ax, ay, az] = this.arrays;
+    readonly div = (by: number) : this => {
+        set_a(this);
 
         divide_in_place(this.id, by);
 
         return this;
-    }
+    };
 
-    mul(factor_or_matrix: number | BaseMatrix) : this {
-        [ax, ay, az] = this.arrays;
+    readonly mul = (factor_or_matrix: number | Matrix3x3) : this => {
+        set_a(this);
 
         if (typeof factor_or_matrix === 'number')
             scale_in_place(this.id, factor_or_matrix);
         else {
-            [
-                m11, m12, m13,
-                m21, m22, m23,
-                m31, m32, m33,
-            ] = factor_or_matrix.arrays;
+            set_m(factor_or_matrix);
 
             multiply_in_place(this.id, factor_or_matrix.id);
         }
 
         return this;
-    }
+    };
 
-    plus(other: this, out: this) : this {
-        if (this.is_same(out))
+    readonly plus = (other: this, out: this) : this => {
+        if (this.isSameAs(out))
             return out.add(other);
 
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_b(other);
+        set_o(out);
 
         add(this.id, other.id, out.id);
 
         return out;
-    }
+    };
 
-    minus(other: this, out: this) : this {
-        if (this.is_same(other)) {
-            out.arrays[0][out.id] =
-                out.arrays[1][out.id] =
-                    out.arrays[2][out.id] = 0;
+    readonly minus = (other: this, out: this) : this => {
+        if (this.isSameAs(other) || this.equals(other)) {
+            out_id = out.id;
+
+            out._x[out_id] = out._y[out_id] = out._z[out_id] = 0;
+
             return out;
         }
 
-        if (this.is_same(out))
+        if (this.isSameAs(out))
             return out.sub(other);
 
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_b(other);
+        set_o(out);
 
         subtract(this.id, other.id, out.id);
 
         return out;
-    }
+    };
 
-    over(by: number, out: this) : this {
-        if (this.is_same(out))
+    readonly over = (by: number, out: this) : this => {
+        if (this.isSameAs(out))
             return out.div(by);
 
-        [ax, ay, az] = this.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_o(out);
 
         divide(this.id, out.id, by);
 
         return out;
-    }
+    };
 
-    times(factor_or_matrix: number | BaseMatrix, out: this) : this {
-        if (this.is_same(out))
+    readonly times = (factor_or_matrix: number | Matrix3x3, out: this) : this => {
+        if (this.isSameAs(out))
             return out.mul(factor_or_matrix);
 
-        [ax, ay, az] = this.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_o(out);
 
         if (typeof factor_or_matrix === 'number')
             scale(this.id, out.id, factor_or_matrix);
-        else{
-            [
-                m11, m12, m13,
-                m21, m22, m23,
-                m31, m32, m33,
-            ] = factor_or_matrix.arrays;
+        else {
+            set_m(factor_or_matrix);
 
             multiply(this.id, factor_or_matrix.id, out.id);
         }
 
         return out;
-    }
+    };
 }
 
 export class Position3D extends Vector3D {
-    squaredDistanceTo(other: this) : number {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly squaredDistanceTo = (other: this) : number => {
+        set_a(this);
+        set_b(other);
 
         return distance_squared(this.id, other.id);
-    }
+    };
 
-    distanceTo(other: this) : number {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly distanceTo = (other: this) : number => {
+        set_a(this);
+        set_b(other);
 
         return distance(this.id, other.id);
-    }
+    };
 
-    to(other: this, out: Direction3D) : Direction3D {
-        [ax, ay, az] = other.arrays;
-        [bx, by, bz] = this.arrays;
-        [ox, oy, oz] = out.arrays;
+    readonly to = (other: this, out: Direction3D) : Direction3D => {
+        set_a(other);
+        set_b(this);
+        set_o(out);
 
-        subtract(this.id, other.id, out.id);
+        subtract(other.id, this.id, out.id);
 
         return out;
-    }
+    };
 
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
+    set x(x: number) {this._x[this.id] = x}
+    set y(y: number) {this._y[this.id] = y}
+    set z(z: number) {this._z[this.id] = z}
 
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
+    get x(): number {return this._x[this.id]}
+    get y(): number {return this._y[this.id]}
+    get z(): number {return this._z[this.id]}
 }
 
 export class Direction3D extends Vector3D {
     get length() : number {
-        [ax, ay, az] = this.arrays;
+        set_a(this);
 
         return length(this.id);
     }
 
     get length_squared() : number {
-        [ax, ay, az] = this.arrays;
+        set_a(this);
 
         return length_squared(this.id);
     }
 
-    dot(other: this) : number {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly dot = (other: this) : number => {
+        set_a(this);
+        set_b(other);
 
         return dot(this.id, other.id);
-    }
+    };
 
-    invert() : this {
-        [ax, ay, az] = this.arrays;
+    readonly invert = () : this => {
+        set_a(this);
+
         invert(this.id);
         return this;
-    }
+    };
 
-    normalize() : this {
+    readonly normalize = () : this => {
         if (this.length_squared === 1)
             return this;
 
-        [ax, ay, az] = this.arrays;
+        set_a(this);
+
         normalize_in_place(this.id);
 
         return this;
-    }
+    };
 
-    normalized(out: this) : this {
-        if (this.is_same(out))
+    readonly normalized = (out: this) : this => {
+        if (this.isSameAs(out))
             return out.normalize();
 
         if (this.length_squared === 1)
             return out.setFromOther(this);
 
-        [ax, ay, az] = this.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_o(out);
 
         normalize(this.id, out.id);
 
         return out;
-    }
+    };
 
-    cross(other: this) : this {
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
+    readonly cross = (other: this) : this => {
+        set_a(this);
+        set_b(other);
 
         cross_in_place(this.id, other.id);
 
         return this;
-    }
+    };
 
-    crossedWith(other: this, out: this) : this {
-        if (out.is_same(this))
+    readonly crossedWith = (other: this, out: this) : this => {
+        if (out.isSameAs(this))
             return out.cross(other);
 
-        if (out.is_same(other)) {
+        if (out.isSameAs(other)) {
             out.cross(this);
             return out.invert();
         }
 
-        [ax, ay, az] = this.arrays;
-        [bx, by, bz] = other.arrays;
-        [ox, oy, oz] = out.arrays;
+        set_a(this);
+        set_b(other);
+        set_o(out);
+
         cross(this.id, other.id, out.id);
 
         return out;
-    }
+    };
 
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
+    set x(x: number) {this._x[this.id] = x}
+    set y(y: number) {this._y[this.id] = y}
+    set z(z: number) {this._z[this.id] = z}
 
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
+    get x(): number {return this._x[this.id]}
+    get y(): number {return this._y[this.id]}
+    get z(): number {return this._z[this.id]}
 }
 
 export class UV3D extends Vector3D {
-    set u(u: number) {this.arrays[0][this.id] = u}
-    set v(v: number) {this.arrays[1][this.id] = v}
-    set w(w: number) {this.arrays[2][this.id] = w}
+    set u(u: number) {this._x[this.id] = u}
+    set v(v: number) {this._y[this.id] = v}
+    set w(w: number) {this._z[this.id] = w}
 
-    get u(): number {return this.arrays[0][this.id]}
-    get v(): number {return this.arrays[1][this.id]}
-    get w(): number {return this.arrays[2][this.id]}
+    get u(): number {return this._x[this.id]}
+    get v(): number {return this._y[this.id]}
+    get w(): number {return this._z[this.id]}
 }
 
-export class Color3D extends ColorMixin(Vector3D) {
-    set r(r: number) {this.arrays[0][this.id] = r}
-    set g(g: number) {this.arrays[1][this.id] = g}
-    set b(b: number) {this.arrays[2][this.id] = b}
+export class Color3D extends Vector3D {
+    readonly setGreyScale = (color: number) : this => {
+        this_id = this.id;
 
-    get r(): number {return this.arrays[0][this.id]}
-    get g(): number {return this.arrays[1][this.id]}
-    get b(): number {return this.arrays[2][this.id]}
+        this._x[this_id] = this._y[this_id] = this._z[this_id] = color;
+
+        return this;
+    };
+
+    set r(r: number) {this._x[this.id] = r}
+    set g(g: number) {this._y[this.id] = g}
+    set b(b: number) {this._z[this.id] = b}
+
+    get r(): number {return this._x[this.id]}
+    get g(): number {return this._y[this.id]}
+    get b(): number {return this._z[this.id]}
 }
+
+const set_a = (a: Vector3D) : void => {
+    a_x = a._x;
+    a_y = a._y;
+    a_z = a._z;
+};
+
+const set_b = (b: Vector3D) : void => {
+    b_x = b._x;
+    b_y = b._y;
+    b_z = b._z;
+};
+
+const set_o = (o: Vector3D) : void => {
+    o_x = o._x;
+    o_y = o._y;
+    o_z = o._z;
+};
+
+
+const set_m = (m: Matrix3x3) : void => {
+    m11 = m._11;  m21 = m._21;  m31 = m._31;
+    m12 = m._12;  m22 = m._22;  m32 = m._32;
+    m13 = m._13;  m23 = m._23;  m33 = m._33;
+};

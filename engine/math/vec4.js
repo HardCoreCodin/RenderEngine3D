@@ -1,213 +1,389 @@
 import { PRECISION_DIGITS } from "../constants.js";
-import { cross, cross_in_place } from "./vec3.js";
-import { BaseColor4D, BaseDirection4D, BasePosition4D } from "./vec.js";
-let temp_number;
-const temp_lhs = new Float32Array(3);
-const temp_matrix = new Float32Array(9);
-export const length = (a, i) => Math.hypot(a[0][i], a[1][i], a[2][i], a[3][i]);
-export const distance = (a, i, b, j) => Math.hypot((b[0][j] - a[0][i]), (b[1][j] - a[1][i]), (b[2][j] - a[2][i]), (b[3][j] - a[3][i]));
-export const length_squared = (a, i) => (Math.pow(a[0][i], 2) +
-    Math.pow(a[1][i], 2) +
-    Math.pow(a[2][i], 2) +
-    Math.pow(a[3][i], 2));
-export const distance_squared = (a, i, b, j) => (Math.pow((b[0][j] - a[0][i]), 2) +
-    Math.pow((b[1][j] - a[1][i]), 2) +
-    Math.pow((b[2][j] - a[2][i]), 2) +
-    Math.pow((b[3][j] - a[3][i]), 2));
-export const equals = (a, i, b, j) => {
-    if (i === j && ((Object.is(a, b)) || ((Object.is(a[0], b[0]) || Object.is(a[0].buffer, b[0].buffer)) &&
-        (Object.is(a[1], b[1]) || Object.is(a[1].buffer, b[1].buffer)) &&
-        (Object.is(a[2], b[2]) || Object.is(a[2].buffer, b[2].buffer)) &&
-        (Object.is(a[3], b[3]) || Object.is(a[3].buffer, b[3].buffer)))))
-        return true;
-    if (a[0][i].toFixed(PRECISION_DIGITS) !== b[0][j].toFixed(PRECISION_DIGITS))
-        return false;
-    if (a[1][i].toFixed(PRECISION_DIGITS) !== b[1][j].toFixed(PRECISION_DIGITS))
-        return false;
-    if (a[2][i].toFixed(PRECISION_DIGITS) !== b[2][j].toFixed(PRECISION_DIGITS))
-        return false;
-    if (a[3][i].toFixed(PRECISION_DIGITS) !== b[3][j].toFixed(PRECISION_DIGITS))
-        return false;
-    return true;
+let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id;
+let a_x, a_y, a_z, a_w, b_x, b_y, b_z, b_w, o_x, o_y, o_z, o_w, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44;
+const equals = (a, b) => a_x[a].toFixed(PRECISION_DIGITS) ===
+    b_x[b].toFixed(PRECISION_DIGITS) &&
+    a_y[a].toFixed(PRECISION_DIGITS) ===
+        b_y[b].toFixed(PRECISION_DIGITS) &&
+    a_z[a].toFixed(PRECISION_DIGITS) ===
+        b_z[b].toFixed(PRECISION_DIGITS) &&
+    a_w[a].toFixed(PRECISION_DIGITS) ===
+        b_w[b].toFixed(PRECISION_DIGITS);
+const same = (a, b) => a === b &&
+    (Object.is(a_x, b_x) || (Object.is(a_x.buffer, b_x.buffer) && a_x.offset == b_x.offset)) &&
+    (Object.is(a_y, b_y) || (Object.is(a_y.buffer, b_y.buffer) && a_y.offset == b_y.offset)) &&
+    (Object.is(a_z, b_z) || (Object.is(a_z.buffer, b_z.buffer) && a_z.offset == b_z.offset)) &&
+    (Object.is(a_w, b_w) || (Object.is(a_w.buffer, b_w.buffer) && a_w.offset == b_w.offset));
+const invert = (a) => {
+    a_x[a] = -a_x[a];
+    a_y[a] = -a_y[a];
+    a_z[a] = -a_z[a];
+    a_w[a] = -a_w[a];
 };
-export const linearly_interpolate = (a, i, b, j, t, o, k) => {
-    o[0][k] = (1 - t) * a[0][i] + t * (b[0][j]);
-    o[1][k] = (1 - t) * a[1][i] + t * (b[1][j]);
-    o[2][k] = (1 - t) * a[2][i] + t * (b[2][j]);
-    o[3][k] = (1 - t) * a[3][i] + t * (b[3][j]);
+const length = (a) => Math.hypot(a_x[a], a_y[a], a_z[a], a_w[a]);
+const distance = (a, b) => Math.hypot((b_x[b] - a_x[a]), (b_y[b] - a_y[a]), (b_z[b] - a_z[a]), (b_w[b] - a_w[a]));
+const length_squared = (a) => Math.pow(a_x[a], 2) +
+    Math.pow(a_y[a], 2) +
+    Math.pow(a_z[a], 2) +
+    Math.pow(a_w[a], 2);
+const distance_squared = (a, b) => (Math.pow((b_x[b] - a_x[a]), 2) +
+    Math.pow((b_y[b] - a_y[a]), 2) +
+    Math.pow((b_z[b] - a_z[a]), 2) +
+    Math.pow((b_w[b] - a_w[a]), 2));
+const linearly_interpolate = (a, b, o, t) => {
+    o_x[o] = (1 - t) * a_x[a] + t * (b_x[b]);
+    o_y[o] = (1 - t) * a_y[a] + t * (b_y[b]);
+    o_z[o] = (1 - t) * a_z[a] + t * (b_z[b]);
+    o_w[o] = (1 - t) * a_w[a] + t * (b_w[b]);
 };
-export const add = (a, i, b, j, o, k) => {
-    o[0][k] = a[0][i] + b[0][j];
-    o[1][k] = a[1][i] + b[1][j];
-    o[2][k] = a[2][i] + b[2][j];
-    o[3][k] = a[3][i] + b[3][j];
+const add = (a, b, o) => {
+    o_x[o] = a_x[a] + b_x[b];
+    o_y[o] = a_y[a] + b_y[b];
+    o_z[o] = a_z[a] + b_z[b];
+    o_w[o] = a_w[a] + b_w[b];
 };
-export const add_in_place = (a, i, b, j) => {
-    a[0][i] += b[0][j];
-    a[1][i] += b[1][j];
-    a[2][i] += b[2][j];
-    a[3][i] += b[3][j];
+const add_in_place = (a, b) => {
+    a_x[a] += b_x[b];
+    a_y[a] += b_y[b];
+    a_z[a] += b_z[b];
+    a_w[a] += b_w[b];
 };
-export const subtract = (a, i, b, j, o, k) => {
-    o[0][k] = a[0][i] - b[0][j];
-    o[1][k] = a[1][i] - b[1][j];
-    o[2][k] = a[2][i] - b[2][j];
-    o[3][k] = a[3][i] - b[3][j];
+const subtract = (a, b, o) => {
+    o_x[o] = a_x[a] - b_x[b];
+    o_y[o] = a_y[a] - b_y[b];
+    o_z[o] = a_z[a] - b_z[b];
+    o_w[o] = a_w[a] - b_w[b];
 };
-export const subtract_in_place = (a, i, b, j) => {
-    a[0][i] -= b[0][j];
-    a[1][i] -= b[1][j];
-    a[2][i] -= b[2][j];
-    a[3][i] -= b[3][j];
+const subtract_in_place = (a, b) => {
+    a_x[a] -= b_x[b];
+    a_y[a] -= b_y[b];
+    a_z[a] -= b_z[b];
+    a_w[a] -= b_w[b];
 };
-export const divide = (a, i, n, o, k) => {
-    o[0][k] = a[0][i] / n;
-    o[1][k] = a[1][i] / n;
-    o[2][k] = a[2][i] / n;
-    o[3][k] = a[3][i] / n;
+const divide = (a, o, n) => {
+    o_x[o] = a_x[a] / n;
+    o_y[o] = a_y[a] / n;
+    o_z[o] = a_z[a] / n;
+    o_w[o] = a_w[a] / n;
 };
-export const divide_in_place = (a, i, n) => {
-    a[0][i] /= n;
-    a[1][i] /= n;
-    a[2][i] /= n;
-    a[3][i] /= n;
+const divide_in_place = (a, n) => {
+    a_x[a] /= n;
+    a_y[a] /= n;
+    a_z[a] /= n;
+    a_w[a] /= n;
 };
-export const scale = (a, i, n, o, k) => {
-    o[0][k] = a[0][i] * n;
-    o[1][k] = a[1][i] * n;
-    o[2][k] = a[2][i] * n;
-    o[3][k] = a[3][i] * n;
+const scale = (a, o, n) => {
+    o_x[o] = a_x[a] * n;
+    o_y[o] = a_y[a] * n;
+    o_z[o] = a_z[a] * n;
+    o_w[o] = a_w[a] * n;
 };
-export const scale_in_place = (a, i, n) => {
-    a[0][i] *= n;
-    a[1][i] *= n;
-    a[2][i] *= n;
-    a[3][i] *= n;
+const scale_in_place = (a, n) => {
+    a_x[a] *= n;
+    a_y[a] *= n;
+    a_z[a] *= n;
+    a_w[a] *= n;
 };
-export const normalize = (a, i, o, k) => {
-    temp_number = Math.hypot(a[0][i], a[1][i], a[2][i], a[3][i]);
-    o[0][k] = a[0][i] / temp_number;
-    o[1][k] = a[1][i] / temp_number;
-    o[2][k] = a[2][i] / temp_number;
-    o[3][k] = a[3][i] / temp_number;
+const normalize = (a, o) => {
+    t_n = Math.hypot(a_x[a], a_y[a], a_z[a], a_w[a]);
+    o_x[o] = a_x[a] / t_n;
+    o_y[o] = a_y[a] / t_n;
+    o_z[o] = a_z[a] / t_n;
+    o_w[o] = a_w[a] / t_n;
 };
-export const normalize_in_place = (a, i) => {
-    temp_number = Math.hypot(a[0][i], a[1][i], a[2][i], a[3][i]);
-    a[0][i] /= temp_number;
-    a[1][i] /= temp_number;
-    a[2][i] /= temp_number;
-    a[3][i] /= temp_number;
+const normalize_in_place = (a) => {
+    t_n = Math.hypot(a_x[a], a_y[a], a_z[a], a_w[a]);
+    a_x[a] /= t_n;
+    a_y[a] /= t_n;
+    a_z[a] /= t_n;
+    a_w[a] /= t_n;
 };
-export const dot = (a, i, b, j) => (a[0][i] * b[0][j] +
-    a[1][i] * b[1][j] +
-    a[2][i] * b[2][j] +
-    a[3][i] * b[3][j]);
-export const multiply = (a, i, b, j, o, k) => {
-    if (k === i && ((Object.is(o, a)) || ((Object.is(o[0], a[0]) || Object.is(o[0].buffer, a[0].buffer)) &&
-        (Object.is(o[1], a[1]) || Object.is(o[1].buffer, a[1].buffer)) &&
-        (Object.is(o[2], a[2]) || Object.is(o[2].buffer, a[2].buffer)) &&
-        (Object.is(o[3], a[3]) || Object.is(o[3].buffer, a[3].buffer)))))
-        throw `Can not multiply - shared buffer detected! (Use matrix_multiply_in_place)`;
-    o[0][k] =
-        a[0][i] * b[0][j] +
-            a[1][i] * b[4][j] +
-            a[2][i] * b[8][j] +
-            a[3][i] * b[12][j];
-    o[1][k] =
-        a[0][i] * b[1][j] +
-            a[1][i] * b[5][j] +
-            a[2][i] * b[9][j] +
-            a[3][i] * b[13][j];
-    o[2][k] =
-        a[0][i] * b[2][j] +
-            a[1][i] * b[6][j] +
-            a[2][i] * b[10][j] +
-            a[3][i] * b[14][j];
-    o[3][k] =
-        a[0][i] * b[3][j] +
-            a[1][i] * b[7][j] +
-            a[2][i] * b[11][j] +
-            a[3][i] * b[15][j];
+const dot = (a, b) => a_x[a] * b_x[b] +
+    a_y[a] * b_y[b] +
+    a_z[a] * b_z[b] +
+    a_w[a] * b_w[b];
+const in_view = (x, y, z, w, n, f) => n <= z && z <= f &&
+    -w <= y && y <= w &&
+    -w <= x && x <= w;
+const out_of_view = (x, y, z, w, n, f) => n > z || z > f ||
+    -w > y || y > w ||
+    -w > x || x > w;
+const multiply = (a, b, o) => {
+    o_x[o] = a_x[a] * m11[b] + a_y[a] * m21[b] + a_z[a] * m31[b] + a_w[a] * m41[b];
+    o_y[o] = a_x[a] * m12[b] + a_y[a] * m22[b] + a_z[a] * m32[b] + a_w[a] * m42[b];
+    o_z[o] = a_x[a] * m13[b] + a_y[a] * m23[b] + a_z[a] * m33[b] + a_w[a] * m43[b];
+    o_w[o] = a_x[a] * m14[b] + a_y[a] * m24[b] + a_z[a] * m34[b] + a_w[a] * m44[b];
 };
-export const multiply_in_place = (a, i, b, j) => {
-    temp_lhs[0] = a[0][i];
-    temp_lhs[1] = a[1][i];
-    temp_lhs[2] = a[2][i];
-    temp_lhs[3] = a[3][i];
-    temp_matrix[0] = b[0][j];
-    temp_matrix[1] = b[1][j];
-    temp_matrix[2] = b[2][j];
-    temp_matrix[3] = b[3][j];
-    temp_matrix[4] = b[4][j];
-    temp_matrix[5] = b[5][j];
-    temp_matrix[6] = b[6][j];
-    temp_matrix[7] = b[7][j];
-    temp_matrix[8] = b[8][j];
-    temp_matrix[9] = b[9][j];
-    temp_matrix[10] = b[10][j];
-    temp_matrix[11] = b[11][j];
-    temp_matrix[12] = b[12][j];
-    temp_matrix[13] = b[13][j];
-    temp_matrix[14] = b[14][j];
-    temp_matrix[15] = b[15][j];
-    a[0][i] =
-        temp_lhs[0] * temp_matrix[0] +
-            temp_lhs[1] * temp_matrix[4] +
-            temp_lhs[2] * temp_matrix[8] +
-            temp_lhs[3] * temp_matrix[12];
-    a[1][i] =
-        temp_lhs[0] * temp_matrix[1] +
-            temp_lhs[1] * temp_matrix[5] +
-            temp_lhs[2] * temp_matrix[9] +
-            temp_lhs[3] * temp_matrix[13];
-    a[2][i] =
-        temp_lhs[0] * temp_matrix[2] +
-            temp_lhs[1] * temp_matrix[6] +
-            temp_lhs[2] * temp_matrix[10] +
-            temp_lhs[3] * temp_matrix[14];
-    a[3][i] =
-        temp_lhs[0] * temp_matrix[3] +
-            temp_lhs[1] * temp_matrix[7] +
-            temp_lhs[2] * temp_matrix[11] +
-            temp_lhs[3] * temp_matrix[15];
+const multiply_in_place = (a, b) => {
+    t_x = a_x[a];
+    t_y = a_y[a];
+    t_z = a_z[a];
+    t_w = a_w[a];
+    a_x[a] = t_x * m11[b] + t_y * m21[b] + t_z * m31[b] + t_w * m41[b];
+    a_y[a] = t_x * m12[b] + t_y * m22[b] + t_z * m32[b] + t_w * m42[b];
+    a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b] + t_w * m43[b];
+    a_w[a] = t_x * m14[b] + t_y * m24[b] + t_z * m34[b] + t_w * m44[b];
 };
-const Vector4DMixin = (BaseClass) => class extends BaseClass {
+export class Vector4D {
+    constructor(_x, _y, _z, _w, id = 0) {
+        this._x = _x;
+        this._y = _y;
+        this._z = _z;
+        this._w = _w;
+        this.id = id;
+        this.copyTo = (out) => {
+            this_id = this.id;
+            out_id = out.id;
+            out._x[out_id] = this._x[this_id];
+            out._y[out_id] = this._y[this_id];
+            out._z[out_id] = this._z[this_id];
+            out._w[out_id] = this._w[this_id];
+            return out;
+        };
+        this.setFromOther = (other) => {
+            this_id = this.id;
+            other_id = other.id;
+            this._x[this_id] = other._x[other_id];
+            this._y[this_id] = other._y[other_id];
+            this._z[this_id] = other._z[other_id];
+            this._w[this_id] = other._w[other_id];
+            return this;
+        };
+        this.setTo = (x, y, z, w) => {
+            this_id = this.id;
+            this._x[this_id] = x;
+            this._y[this_id] = y;
+            this._z[this_id] = z;
+            this._w[this_id] = w;
+            return this;
+        };
+        this.isSameAs = (other) => {
+            set_a(this);
+            set_b(other);
+            return same(this.id, other.id);
+        };
+        this.equals = (other) => {
+            set_a(this);
+            set_b(other);
+            if (same(this.id, other.id))
+                return true;
+            return equals(this.id, other.id);
+        };
+        this.lerp = (to, by, out) => {
+            set_a(this);
+            set_b(to);
+            set_o(out);
+            linearly_interpolate(this.id, to.id, out.id, by);
+            return out;
+        };
+        this.add = (other) => {
+            set_a(this);
+            set_b(other);
+            add_in_place(this.id, other.id);
+            return this;
+        };
+        this.sub = (other) => {
+            set_a(this);
+            set_b(other);
+            subtract_in_place(this.id, other.id);
+            return this;
+        };
+        this.div = (by) => {
+            set_a(this);
+            divide_in_place(this.id, by);
+            return this;
+        };
+        this.mul = (factor_or_matrix) => {
+            set_a(this);
+            if (typeof factor_or_matrix === 'number')
+                scale_in_place(this.id, factor_or_matrix);
+            else {
+                set_m(factor_or_matrix);
+                multiply_in_place(this.id, factor_or_matrix.id);
+            }
+            return this;
+        };
+        this.plus = (other, out) => {
+            if (this.isSameAs(out))
+                return out.add(other);
+            set_a(this);
+            set_b(other);
+            set_o(out);
+            add(this.id, other.id, out.id);
+            return out;
+        };
+        this.minus = (other, out) => {
+            if (this.isSameAs(other) || this.equals(other)) {
+                out_id = out.id;
+                out._x[out_id] = out._y[out_id] = out._z[out_id] = out._w[out_id] = 0;
+                return out;
+            }
+            if (this.isSameAs(out))
+                return out.sub(other);
+            set_a(this);
+            set_b(other);
+            set_o(out);
+            subtract(this.id, other.id, out.id);
+            return out;
+        };
+        this.over = (by, out) => {
+            if (this.isSameAs(out))
+                return out.div(by);
+            set_a(this);
+            set_o(out);
+            divide(this.id, out.id, by);
+            return out;
+        };
+        this.times = (factor_or_matrix, out) => {
+            if (this.isSameAs(out))
+                return out.mul(factor_or_matrix);
+            set_a(this);
+            set_o(out);
+            if (typeof factor_or_matrix === 'number')
+                scale(this.id, out.id, factor_or_matrix);
+            else {
+                set_m(factor_or_matrix);
+                multiply(this.id, factor_or_matrix.id, out.id);
+            }
+            return out;
+        };
+        this.toNDC = () => this.div(this._w[this.id]);
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+    }
+}
+export class Position4D extends Vector4D {
     constructor() {
         super(...arguments);
-        this._dim = 4;
-        this._equals = equals;
-        this._linearly_interpolate = linearly_interpolate;
-        this._add = add;
-        this._add_in_place = add_in_place;
-        this._subtract = subtract;
-        this._subtract_in_place = subtract_in_place;
-        this._scale = scale;
-        this._scale_in_place = scale_in_place;
-        this._divide = divide;
-        this._divide_in_place = divide_in_place;
-        this._multiply = multiply;
-        this._multiply_in_place = multiply_in_place;
+        this.squaredDistanceTo = (other) => {
+            set_a(this);
+            set_b(other);
+            return distance_squared(this.id, other.id);
+        };
+        this.distanceTo = (other) => {
+            set_a(this);
+            set_b(other);
+            return distance(this.id, other.id);
+        };
+        this.to = (other, out) => {
+            set_a(other);
+            set_b(this);
+            set_o(out);
+            subtract(other.id, this.id, out.id);
+            return out;
+        };
+        this.isInView = (near = 0, far = 1) => in_view(this._x[this.id], this._y[this.id], this._z[this.id], this._w[this.id], near, far);
+        this.isOutOfView = (near = 0, far = 1) => out_of_view(this._x[this.id], this._y[this.id], this._z[this.id], this._w[this.id], near, far);
     }
+    set x(x) { this._x[this.id] = x; }
+    set y(y) { this._y[this.id] = y; }
+    set z(z) { this._z[this.id] = z; }
+    set w(w) { this._w[this.id] = w; }
+    get x() { return this._x[this.id]; }
+    get y() { return this._y[this.id]; }
+    get z() { return this._z[this.id]; }
+    get w() { return this._w[this.id]; }
+}
+export class Direction4D extends Vector4D {
+    constructor() {
+        super(...arguments);
+        this.dot = (other) => {
+            set_a(this);
+            set_b(other);
+            return dot(this.id, other.id);
+        };
+        this.invert = () => {
+            set_a(this);
+            invert(this.id);
+            return this;
+        };
+        this.normalize = () => {
+            if (this.length_squared === 1)
+                return this;
+            set_a(this);
+            normalize_in_place(this.id);
+            return this;
+        };
+        this.normalized = (out) => {
+            if (this.isSameAs(out))
+                return out.normalize();
+            if (this.length_squared === 1)
+                return out.setFromOther(this);
+            set_a(this);
+            set_o(out);
+            normalize(this.id, out.id);
+            return out;
+        };
+    }
+    get length() {
+        set_a(this);
+        return length(this.id);
+    }
+    get length_squared() {
+        set_a(this);
+        return length_squared(this.id);
+    }
+    set x(x) { this._x[this.id] = x; }
+    set y(y) { this._y[this.id] = y; }
+    set z(z) { this._z[this.id] = z; }
+    set w(w) { this._w[this.id] = w; }
+    get x() { return this._x[this.id]; }
+    get y() { return this._y[this.id]; }
+    get z() { return this._z[this.id]; }
+    get w() { return this._w[this.id]; }
+}
+export class Color4D extends Vector4D {
+    constructor() {
+        super(...arguments);
+        this.setGreyScale = (color) => {
+            this_id = this.id;
+            this._x[this_id] = this._y[this_id] = this._z[this_id] = this._w[this_id] = color;
+            return this;
+        };
+    }
+    set r(r) { this._x[this.id] = r; }
+    set g(g) { this._y[this.id] = g; }
+    set b(b) { this._z[this.id] = b; }
+    set a(a) { this._w[this.id] = a; }
+    get r() { return this._x[this.id]; }
+    get g() { return this._y[this.id]; }
+    get b() { return this._z[this.id]; }
+    get a() { return this._w[this.id]; }
+}
+const set_a = (a) => {
+    a_x = a._x;
+    a_y = a._y;
+    a_z = a._z;
+    a_w = a._w;
 };
-export class Color4D extends Vector4DMixin(BaseColor4D) {
-}
-export class Position4D extends Vector4DMixin(BasePosition4D) {
-    constructor() {
-        super(...arguments);
-        this._distance = distance;
-        this._distance_squared = distance_squared;
-    }
-}
-export class Direction4D extends Vector4DMixin(BaseDirection4D) {
-    constructor() {
-        super(...arguments);
-        this._dot = dot;
-        this._length = length;
-        this._length_squared = length_squared;
-        this._normalize = normalize;
-        this._normalize_in_place = normalize_in_place;
-        this._cross = cross;
-        this._cross_in_place = cross_in_place;
-    }
-}
+const set_b = (b) => {
+    b_x = b._x;
+    b_y = b._y;
+    b_z = b._z;
+    b_w = b._w;
+};
+const set_o = (o) => {
+    o_x = o._x;
+    o_y = o._y;
+    o_z = o._z;
+    o_w = o._w;
+};
+const set_m = (m) => {
+    m11 = m._11;
+    m21 = m._21;
+    m31 = m._31;
+    m41 = m._41;
+    m12 = m._12;
+    m22 = m._22;
+    m32 = m._32;
+    m42 = m._42;
+    m13 = m._13;
+    m23 = m._23;
+    m33 = m._33;
+    m43 = m._43;
+    m14 = m._14;
+    m24 = m._24;
+    m34 = m._34;
+    m44 = m._44;
+};
 //# sourceMappingURL=vec4.js.map
