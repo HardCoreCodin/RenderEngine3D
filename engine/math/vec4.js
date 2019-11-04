@@ -124,13 +124,20 @@ const multiply_in_place = (a, b) => {
     a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b] + t_w * m43[b];
     a_w[a] = t_x * m14[b] + t_y * m24[b] + t_z * m34[b] + t_w * m44[b];
 };
-export class Vector4D {
+class Base4D {
     constructor(_x, _y, _z, _w, id = 0) {
         this._x = _x;
         this._y = _y;
         this._z = _z;
         this._w = _w;
         this.id = id;
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+    }
+}
+class Vector4D extends Base4D {
+    constructor() {
+        super(...arguments);
         this.copyTo = (out) => {
             this_id = this.id;
             out_id = out.id;
@@ -248,8 +255,6 @@ export class Vector4D {
             return out;
         };
         this.toNDC = () => this.div(this._w[this.id]);
-        if (id < 0)
-            throw `ID must be positive integer, got ${id}`;
     }
 }
 export class Position4D extends Vector4D {
@@ -298,7 +303,7 @@ export class Direction4D extends Vector4D {
             return this;
         };
         this.normalize = () => {
-            if (this.length_squared === 1)
+            if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
                 return this;
             set_a(this);
             normalize_in_place(this.id);
@@ -307,7 +312,7 @@ export class Direction4D extends Vector4D {
         this.normalized = (out) => {
             if (this.isSameAs(out))
                 return out.normalize();
-            if (this.length_squared === 1)
+            if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
                 return out.setFromOther(this);
             set_a(this);
             set_o(out);

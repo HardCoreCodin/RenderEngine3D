@@ -110,12 +110,19 @@ const multiply_in_place = (a, b) => {
     a_y[a] = t_x * m12[b] + t_y * m22[b] + t_z * m32[b];
     a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b];
 };
-export class Vector3D {
+class Base3D {
     constructor(_x, _y, _z, id = 0) {
         this._x = _x;
         this._y = _y;
         this._z = _z;
         this.id = id;
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+    }
+}
+class Vector3D extends Base3D {
+    constructor() {
+        super(...arguments);
         this.copyTo = (out) => {
             this_id = this.id;
             out_id = out.id;
@@ -229,8 +236,6 @@ export class Vector3D {
             }
             return out;
         };
-        if (id < 0)
-            throw `ID must be positive integer, got ${id}`;
     }
 }
 export class Position3D extends Vector3D {
@@ -275,7 +280,7 @@ export class Direction3D extends Vector3D {
             return this;
         };
         this.normalize = () => {
-            if (this.length_squared === 1)
+            if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
                 return this;
             set_a(this);
             normalize_in_place(this.id);
@@ -284,7 +289,7 @@ export class Direction3D extends Vector3D {
         this.normalized = (out) => {
             if (this.isSameAs(out))
                 return out.normalize();
-            if (this.length_squared === 1)
+            if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
                 return out.setFromOther(this);
             set_a(this);
             set_o(out);

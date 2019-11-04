@@ -165,23 +165,33 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_z[a] = t_x*m13[b] + t_y*m23[b] + t_z*m33[b];
 };
 
-export class Vector3D {
+interface IVector3D {
+    _x: Float32Array,
+    _y: Float32Array,
+    _z: Float32Array,
+
+    id: number
+}
+
+interface IAddSub<TOther extends IVector3D = Base3D> extends IVector3D {
+    readonly add : (other: TOther) => this;
+    readonly sub : (other: TOther) => this;
+}
+
+abstract class Base3D implements IVector3D {
     constructor(
         readonly _x: Float32Array,
         readonly _y: Float32Array,
         readonly _z: Float32Array,
 
         public id: number = 0,
-        // public readonly arrays: readonly [
-        //     Float32Array,
-        //     Float32Array,
-        //     Float32Array
-        // ] = [_x, _y, _z],
     ) {
         if (id < 0) throw `ID must be positive integer, got ${id}`;
     }
+}
 
-    readonly copyTo = (out: this) : this => {
+abstract class Vector3D<TOut extends IAddSub = Direction3D, TOther extends IAddSub<TOther> = Direction3D> extends Base3D {
+    readonly copyTo = (out: Base3D) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
@@ -192,7 +202,7 @@ export class Vector3D {
         return out;
     };
 
-    readonly setFromOther = (other: this) : this => {
+    readonly setFromOther = (other: Base3D) : this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -213,14 +223,14 @@ export class Vector3D {
         return this;
     };
 
-    readonly isSameAs = (other: this) : boolean => {
+    readonly isSameAs = (other: Base3D) : boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: this) : boolean => {
+    readonly equals = (other: Base3D) : boolean => {
         set_a(this);
         set_b(other);
 
@@ -240,7 +250,7 @@ export class Vector3D {
         return out;
     };
 
-    readonly add = (other: this) : this => {
+    readonly add = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -249,7 +259,7 @@ export class Vector3D {
         return this;
     };
 
-    readonly sub = (other: this) : this => {
+    readonly sub = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -280,7 +290,7 @@ export class Vector3D {
         return this;
     };
 
-    readonly plus = (other: this, out: this) : this => {
+    readonly plus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(out))
             return out.add(other);
 
@@ -293,7 +303,7 @@ export class Vector3D {
         return out;
     };
 
-    readonly minus = (other: this, out: this) : this => {
+    readonly minus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
@@ -345,7 +355,7 @@ export class Vector3D {
     };
 }
 
-export class Position3D extends Vector3D {
+export class Position3D extends Vector3D<Position3D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -407,7 +417,7 @@ export class Direction3D extends Vector3D {
     };
 
     readonly normalize = () : this => {
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return this;
 
         set_a(this);
@@ -421,7 +431,7 @@ export class Direction3D extends Vector3D {
         if (this.isSameAs(out))
             return out.normalize();
 
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return out.setFromOther(this);
 
         set_a(this);
@@ -468,7 +478,7 @@ export class Direction3D extends Vector3D {
     get z(): number {return this._z[this.id]}
 }
 
-export class UV3D extends Vector3D {
+export class UV3D extends Vector3D<UV3D, UV3D> {
     set u(u: number) {this._x[this.id] = u}
     set v(v: number) {this._y[this.id] = v}
     set w(w: number) {this._z[this.id] = w}
@@ -478,7 +488,7 @@ export class UV3D extends Vector3D {
     get w(): number {return this._z[this.id]}
 }
 
-export class Color3D extends Vector3D {
+export class Color3D extends Vector3D<Color3D, Color3D> {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 
@@ -496,24 +506,23 @@ export class Color3D extends Vector3D {
     get b(): number {return this._z[this.id]}
 }
 
-const set_a = (a: Vector3D) : void => {
+const set_a = (a: Base3D) : void => {
     a_x = a._x;
     a_y = a._y;
     a_z = a._z;
 };
 
-const set_b = (b: Vector3D) : void => {
+const set_b = (b: Base3D) : void => {
     b_x = b._x;
     b_y = b._y;
     b_z = b._z;
 };
 
-const set_o = (o: Vector3D) : void => {
+const set_o = (o: Base3D) : void => {
     o_x = o._x;
     o_y = o._y;
     o_z = o._z;
 };
-
 
 const set_m = (m: Matrix3x3) : void => {
     m11 = m._11;  m21 = m._21;  m31 = m._31;

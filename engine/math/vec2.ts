@@ -1,5 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Matrix2x2} from "./mat2x2.js";
+import {Direction3D} from "./vec3.js";
 
 let t_x, t_y, t_n, out_id, other_id, this_id: number;
 let a_x, a_y, m11, m12,
@@ -123,21 +124,31 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_y[a] = t_x*m12[b] + t_y*m22[b];
 };
 
-export class Vector2D {
+interface IVector2D {
+    _x: Float32Array,
+    _y: Float32Array,
+
+    id: number
+}
+
+interface IAddSub<TOther extends IVector2D = Base2D> extends IVector2D {
+    readonly add : (other: TOther) => this;
+    readonly sub : (other: TOther) => this;
+}
+
+abstract class Base2D implements IVector2D {
     constructor(
         readonly _x: Float32Array,
         readonly _y: Float32Array,
 
         public id: number = 0,
-        // public readonly arrays: readonly [
-        //     Float32Array,
-        //     Float32Array,
-        // ] = [_x, _y],
     ) {
         if (id < 0) throw `ID must be positive integer, got ${id}`;
     }
+}
 
-    readonly copyTo = (out: this) : this => {
+abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddSub<TOther> = Direction2D> extends Base2D {
+    readonly copyTo = (out: Base2D) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
@@ -147,7 +158,7 @@ export class Vector2D {
         return out;
     };
 
-    readonly setFromOther = (other: this) : this => {
+    readonly setFromOther = (other: Base2D) : this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -166,14 +177,14 @@ export class Vector2D {
         return this;
     };
 
-    readonly isSameAs = (other: this) : boolean => {
+    readonly isSameAs = (other: Base2D) : boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: this) : boolean => {
+    readonly equals = (other: Base2D) : boolean => {
         set_a(this);
         set_b(other);
 
@@ -193,7 +204,7 @@ export class Vector2D {
         return out;
     };
 
-    readonly add = (other: this) : this => {
+    readonly add = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -202,7 +213,7 @@ export class Vector2D {
         return this;
     };
 
-    readonly sub = (other: this) : this => {
+    readonly sub = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -233,7 +244,7 @@ export class Vector2D {
         return this;
     };
 
-    readonly plus = (other: this, out: this) : this => {
+    readonly plus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(out))
             return out.add(other);
 
@@ -246,7 +257,7 @@ export class Vector2D {
         return out;
     };
 
-    readonly minus = (other: this, out: this) : this => {
+    readonly minus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
@@ -298,7 +309,7 @@ export class Vector2D {
     };
 }
 
-export class Position2D extends Vector2D {
+export class Position2D extends Vector2D<Position2D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -358,7 +369,7 @@ export class Direction2D extends Vector2D {
     };
 
     readonly normalize = () : this => {
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return this;
 
         set_a(this);
@@ -372,7 +383,7 @@ export class Direction2D extends Vector2D {
         if (this.isSameAs(out))
             return out.normalize();
 
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return out.setFromOther(this);
         
         set_a(this);
@@ -390,7 +401,7 @@ export class Direction2D extends Vector2D {
     get y(): number {return this._y[this.id]}
 }
 
-export class UV2D extends Vector2D {
+export class UV2D extends Vector2D<UV2D, UV2D> {
     set u(u: number) {this._x[this.id] = u}
     set v(v: number) {this._y[this.id] = v}
 
@@ -398,17 +409,17 @@ export class UV2D extends Vector2D {
     get v(): number {return this._y[this.id]}
 }
 
-const set_a = (a: Vector2D) : void => {
+const set_a = (a: Base2D) : void => {
     a_x = a._x;
     a_y = a._y;
 };
 
-const set_b = (b: Vector2D) : void => {
+const set_b = (b: Base2D) : void => {
     b_x = b._x;
     b_y = b._y;
 };
 
-const set_o = (o: Vector2D) : void => {
+const set_o = (o: Base2D) : void => {
     o_x = o._x;
     o_y = o._y;
 };

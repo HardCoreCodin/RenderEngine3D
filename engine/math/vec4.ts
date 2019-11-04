@@ -1,5 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Matrix4x4} from "./mat4x4.js";
+import {Direction3D} from "./vec3.js";
 
 let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id: number;
 let a_x, a_y, a_z, a_w,
@@ -189,7 +190,21 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_w[a] = t_x*m14[b] + t_y*m24[b] + t_z*m34[b] + t_w*m44[b];
 };
 
-export class Vector4D {
+interface IVector4D {
+    _x: Float32Array,
+    _y: Float32Array,
+    _z: Float32Array,
+    _w: Float32Array,
+
+    id: number
+}
+
+interface IAddSub<TOther extends IVector4D = Base4D> extends IVector4D {
+    readonly add : (other: TOther) => this;
+    readonly sub : (other: TOther) => this;
+}
+
+abstract class Base4D implements IVector4D {
     constructor(
         readonly _x: Float32Array,
         readonly _y: Float32Array,
@@ -197,17 +212,13 @@ export class Vector4D {
         readonly _w: Float32Array,
 
         public id: number = 0,
-        // public readonly arrays: readonly [
-        //     Float32Array,
-        //     Float32Array,
-        //     Float32Array,
-        //     Float32Array
-        // ] = [_x, _y, _z, _w],
     ) {
         if (id < 0) throw `ID must be positive integer, got ${id}`;
     }
+}
 
-    readonly copyTo = (out: this) : this => {
+abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddSub<TOther> = Direction4D> extends Base4D {
+    readonly copyTo = (out: Base4D) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
@@ -219,7 +230,7 @@ export class Vector4D {
         return out;
     };
 
-    readonly setFromOther = (other: this) : this => {
+    readonly setFromOther = (other: Base4D) : this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -242,14 +253,14 @@ export class Vector4D {
         return this;
     };
 
-    readonly isSameAs = (other: this) : boolean => {
+    readonly isSameAs = (other: Base4D) : boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: this) : boolean => {
+    readonly equals = (other: Base4D) : boolean => {
         set_a(this);
         set_b(other);
 
@@ -269,7 +280,7 @@ export class Vector4D {
         return out;
     };
 
-    readonly add = (other: this) : this => {
+    readonly add = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -278,7 +289,7 @@ export class Vector4D {
         return this;
     };
 
-    readonly sub = (other: this) : this => {
+    readonly sub = (other: TOther) : this => {
         set_a(this);
         set_b(other);
 
@@ -309,7 +320,7 @@ export class Vector4D {
         return this;
     };
 
-    readonly plus = (other: this, out: this) : this => {
+    readonly plus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(out))
             return out.add(other);
 
@@ -322,7 +333,7 @@ export class Vector4D {
         return out;
     };
 
-    readonly minus = (other: this, out: this) : this => {
+    readonly minus = (other: TOther, out: TOut) : TOut => {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
@@ -376,7 +387,7 @@ export class Vector4D {
     toNDC = () : this => this.div(this._w[this.id]);
 }
 
-export class Position4D extends Vector4D {
+export class Position4D extends Vector4D<Position4D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -458,7 +469,7 @@ export class Direction4D extends Vector4D {
     };
 
     readonly normalize = () : this => {
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return this;
 
         set_a(this);
@@ -472,7 +483,7 @@ export class Direction4D extends Vector4D {
         if (this.isSameAs(out))
             return out.normalize();
 
-        if (this.length_squared === 1)
+        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return out.setFromOther(this);
 
         set_a(this);
@@ -494,7 +505,7 @@ export class Direction4D extends Vector4D {
     get w(): number {return this._w[this.id]}
 }
 
-export class Color4D extends Vector4D {
+export class Color4D extends Vector4D<Color4D, Color4D> {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 
@@ -514,21 +525,21 @@ export class Color4D extends Vector4D {
     get a(): number {return this._w[this.id]}
 }
 
-const set_a = (a: Vector4D) : void => {
+const set_a = (a: Base4D) : void => {
     a_x = a._x;
     a_y = a._y;
     a_z = a._z;
     a_w = a._w;
 };
 
-const set_b = (b: Vector4D) : void => {
+const set_b = (b: Base4D) : void => {
     b_x = b._x;
     b_y = b._y;
     b_z = b._z;
     b_w = b._w;
 };
 
-const set_o = (o: Vector4D) : void => {
+const set_o = (o: Base4D) : void => {
     o_x = o._x;
     o_y = o._y;
     o_z = o._z;
