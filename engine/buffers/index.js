@@ -1,4 +1,8 @@
-import { Uint32Buffer } from "./base.js";
-export const IndexBuffer = Uint32Array;
-export const IndexArrayBuffer = Uint32Buffer;
+// import {Uint32Buffer} from "./base.js";
+//
+// export type IndexBuffer = Uint32Array;
+// export const IndexBuffer = Uint32Array;
+//
+// export type IndexArrayBuffer = Uint32Buffer;
+// export const IndexArrayBuffer = Uint32Buffer;
 //# sourceMappingURL=index.js.map

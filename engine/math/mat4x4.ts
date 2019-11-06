@@ -1,11 +1,13 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Direction4D, Position4D} from "./vec4.js";
+import {Matrix4x4Values} from "../types.js";
+import {Matrix4x4Allocator} from "../allocators.js";
 
 
-let m11, m12, m13, m14,
-    m21, m22, m23, m24,
-    m31, m32, m33, m34,
-    m41, m42, m43, m44,
+let t11, t12, t13, t14,
+    t21, t22, t23, t24,
+    t31, t32, t33, t34,
+    t41, t42, t43, t44,
 
     sin,
     cos,
@@ -49,19 +51,19 @@ const invert = (a: number, o: number) : void => {
 
 const invert_in_place = (a: number) : void => {
     // Store the rotation and translation portions of the matrix in temporary variables:
-    m11 = a11[a];  m21 = a21[a];  m31 = a31[a];  m41 = a41[a];
-    m12 = a12[a];  m22 = a22[a];  m32 = a32[a];  m42 = a42[a];
-    m13 = a13[a];  m23 = a23[a];  m33 = a33[a];  m43 = a43[a];
+    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];  t41 = a41[a];
+    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];  t42 = a42[a];
+    t13 = a13[a];  t23 = a23[a];  t33 = a33[a];  t43 = a43[a];
 
     // Transpose the rotation portion of the matrix:
-                   a21[a] = m12;  a31[a] = m13;
-    a12[a] = m21;                 a32[a] = m23;
-    a13[a] = m31;  a23[a] = m32;
+                   a21[a] = t12;  a31[a] = t13;
+    a12[a] = t21;                 a32[a] = t23;
+    a13[a] = t31;  a23[a] = t32;
 
     // Dot the translation portion of the matrix with the original rotation portion, and invert the results:
-    a41[a] = -(m41*m11 + m42*m12 + m43*m13); // -Dot(original_translation, original_rotation_x)
-    a42[a] = -(m41*m21 + m42*m22 + m43*m23); // -Dot(original_translation, original_rotation_y)
-    a43[a] = -(m41*m31 + m42*m32 + m43*m33); // -Dot(original_translation, original_rotation_z)
+    a41[a] = -(t41*t11 + t42*t12 + t43*t13); // -Dot(original_translation, original_rotation_x)
+    a42[a] = -(t41*t21 + t42*t22 + t43*t23); // -Dot(original_translation, original_rotation_y)
+    a43[a] = -(t41*t31 + t42*t32 + t43*t33); // -Dot(original_translation, original_rotation_z)
     a44[a] = 1;
 };
 
@@ -235,30 +237,30 @@ const multiply = (a: number, b: number, o: number) : void => {
 };
 
 const multiply_in_place = (a: number, b: number) : void => {
-    m11 = a11[a];  m21 = a21[a];  m31 = a31[a];  m41 = a41[a];
-    m12 = a12[a];  m22 = a22[a];  m32 = a32[a];  m42 = a42[a];
-    m13 = a13[a];  m23 = a23[a];  m33 = a33[a];  m43 = a43[a];
-    m14 = a14[a];  m24 = a24[a];  m34 = a34[a];  m44 = a44[a];
+    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];  t41 = a41[a];
+    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];  t42 = a42[a];
+    t13 = a13[a];  t23 = a23[a];  t33 = a33[a];  t43 = a43[a];
+    t14 = a14[a];  t24 = a24[a];  t34 = a34[a];  t44 = a44[a];
 
-    a11[a] = m11*b11[b] + m12*b21[b] + m13*b31[b] + m14*b41[b]; // Row 1 | Column 1
-    a12[a] = m11*b12[b] + m12*b22[b] + m13*b32[b] + m14*b42[b]; // Row 1 | Column 2
-    a13[a] = m11*b13[b] + m12*b23[b] + m13*b33[b] + m14*b43[b]; // Row 1 | Column 3
-    a14[a] = m11*b14[b] + m12*b24[b] + m13*b34[b] + m14*b44[b]; // Row 1 | Column 4
+    a11[a] = t11*b11[b] + t12*b21[b] + t13*b31[b] + t14*b41[b]; // Row 1 | Column 1
+    a12[a] = t11*b12[b] + t12*b22[b] + t13*b32[b] + t14*b42[b]; // Row 1 | Column 2
+    a13[a] = t11*b13[b] + t12*b23[b] + t13*b33[b] + t14*b43[b]; // Row 1 | Column 3
+    a14[a] = t11*b14[b] + t12*b24[b] + t13*b34[b] + t14*b44[b]; // Row 1 | Column 4
 
-    a21[a] = m21*b11[b] + m22*b21[b] + m23*b31[b] + m24*b41[b]; // Row 2 | Column 1
-    a22[a] = m21*b12[b] + m22*b22[b] + m23*b32[b] + m24*b42[b]; // Row 2 | Column 2
-    a23[a] = m21*b13[b] + m22*b23[b] + m23*b33[b] + m24*b43[b]; // Row 2 | Column 3
-    a24[a] = m21*b14[b] + m22*b24[b] + m23*b34[b] + m24*b44[b]; // Row 2 | Column 4
+    a21[a] = t21*b11[b] + t22*b21[b] + t23*b31[b] + t24*b41[b]; // Row 2 | Column 1
+    a22[a] = t21*b12[b] + t22*b22[b] + t23*b32[b] + t24*b42[b]; // Row 2 | Column 2
+    a23[a] = t21*b13[b] + t22*b23[b] + t23*b33[b] + t24*b43[b]; // Row 2 | Column 3
+    a24[a] = t21*b14[b] + t22*b24[b] + t23*b34[b] + t24*b44[b]; // Row 2 | Column 4
 
-    a31[a] = m31*b11[b] + m32*b21[b] + m33*b31[b] + m34*b41[b]; // Row 3 | Column 1
-    a32[a] = m31*b12[b] + m32*b22[b] + m33*b32[b] + m34*b42[b]; // Row 3 | Column 2
-    a33[a] = m31*b13[b] + m32*b23[b] + m33*b33[b] + m34*b43[b]; // Row 3 | Column 3
-    a34[a] = m31*b14[b] + m32*b24[b] + m33*b34[b] + m34*b44[b]; // Row 3 | Column 4
+    a31[a] = t31*b11[b] + t32*b21[b] + t33*b31[b] + t34*b41[b]; // Row 3 | Column 1
+    a32[a] = t31*b12[b] + t32*b22[b] + t33*b32[b] + t34*b42[b]; // Row 3 | Column 2
+    a33[a] = t31*b13[b] + t32*b23[b] + t33*b33[b] + t34*b43[b]; // Row 3 | Column 3
+    a34[a] = t31*b14[b] + t32*b24[b] + t33*b34[b] + t34*b44[b]; // Row 3 | Column 4
 
-    a41[a] = m41*b11[b] + m42*b21[b] + m43*b31[b] + m44*b41[b]; // Row 4 | Column 1
-    a42[a] = m41*b12[b] + m42*b22[b] + m43*b32[b] + m44*b42[b]; // Row 4 | Column 2
-    a43[a] = m41*b13[b] + m42*b23[b] + m43*b33[b] + m44*b43[b]; // Row 4 | Column 3
-    a44[a] = m41*b14[b] + m42*b24[b] + m43*b34[b] + m44*b44[b]; // Row 4 | Column 4
+    a41[a] = t41*b11[b] + t42*b21[b] + t43*b31[b] + t44*b41[b]; // Row 4 | Column 1
+    a42[a] = t41*b12[b] + t42*b22[b] + t43*b32[b] + t44*b42[b]; // Row 4 | Column 2
+    a43[a] = t41*b13[b] + t42*b23[b] + t43*b33[b] + t44*b43[b]; // Row 4 | Column 3
+    a44[a] = t41*b14[b] + t42*b24[b] + t43*b34[b] + t44*b44[b]; // Row 4 | Column 4
 };
 
 const set_rotation_around_x = (a: number, cos: number, sin: number) : void => {
@@ -281,47 +283,35 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 
 
 export class Matrix4x4 {
-    constructor(
-        readonly _11: Float32Array,
-        readonly _12: Float32Array,
-        readonly _13: Float32Array,
-        readonly _14: Float32Array,
+    public id: number;
 
-        readonly _21: Float32Array,
-        readonly _22: Float32Array,
-        readonly _23: Float32Array,
-        readonly _24: Float32Array,
+    readonly m11: Float32Array; readonly m21: Float32Array; readonly m31: Float32Array; readonly m41: Float32Array;
+    readonly m12: Float32Array; readonly m22: Float32Array; readonly m32: Float32Array; readonly m42: Float32Array;
+    readonly m13: Float32Array; readonly m23: Float32Array; readonly m33: Float32Array; readonly m43: Float32Array;
+    readonly m14: Float32Array; readonly m24: Float32Array; readonly m34: Float32Array; readonly m44: Float32Array;
 
-        readonly _31: Float32Array,
-        readonly _32: Float32Array,
-        readonly _33: Float32Array,
-        readonly _34: Float32Array,
+    readonly i: Direction4D;
+    readonly j: Direction4D;
+    readonly k: Direction4D;
+    readonly t: Position4D;
 
-        readonly _41: Float32Array,
-        readonly _42: Float32Array,
-        readonly _43: Float32Array,
-        readonly _44: Float32Array,
+    constructor(arrays: Matrix4x4Values, id: number = 0) {
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
 
-        public id: number = 0,
+        this.id = id;
 
-        public i: Direction4D = new Direction4D(_11, _12, _13, _14, id),
-        public j: Direction4D = new Direction4D(_21, _22, _23, _24, id),
-        public k: Direction4D = new Direction4D(_31, _32, _33, _34, id),
-        public t: Position4D = new Position4D(_41, _42, _43, _44, id)
+        [
+            this.m11, this.m12, this.m13, this.m14,
+            this.m21, this.m22, this.m23, this.m24,
+            this.m31, this.m32, this.m33, this.m34,
+            this.m41, this.m42, this.m43, this.m44,
+        ] = arrays;
 
-        // public readonly arrays: readonly [
-        //     Float32Array, Float32Array, Float32Array, Float32Array,
-        //     Float32Array, Float32Array, Float32Array, Float32Array,
-        //     Float32Array, Float32Array, Float32Array, Float32Array,
-        //     Float32Array, Float32Array, Float32Array, Float32Array,
-        // ] = [
-        //     m11, m12, m13, m14,
-        //     m21, m22, m23, m24,
-        //     m31, m32, m33, m34,
-        //     m41, m42, m43, m44,
-        // ],
-    ) {
-        if (id < 0) throw `ID must be positive integer, got ${id}`;
+        this.i = new Direction4D([this.m11, this.m12, this.m13, this.m14], id);
+        this.j = new Direction4D([this.m21, this.m22, this.m23, this.m24], id);
+        this.k = new Direction4D([this.m31, this.m32, this.m33, this.m34], id);
+        this.t = new Position4D([this.m41, this.m42, this.m43, this.m44], id);
     }
 
     get is_identity() : boolean {
@@ -372,15 +362,15 @@ export class Matrix4x4 {
         this_id = this.id;
         out_id = out.id;
 
-        out._11[out_id] = this._11[this_id];  out._21[out_id] = this._21[this_id];
-        out._12[out_id] = this._12[this_id];  out._22[out_id] = this._22[this_id];
-        out._13[out_id] = this._13[this_id];  out._23[out_id] = this._23[this_id];
-        out._14[out_id] = this._14[this_id];  out._24[out_id] = this._24[this_id];
+        out.m11[out_id] = this.m11[this_id];  out.m21[out_id] = this.m21[this_id];
+        out.m12[out_id] = this.m12[this_id];  out.m22[out_id] = this.m22[this_id];
+        out.m13[out_id] = this.m13[this_id];  out.m23[out_id] = this.m23[this_id];
+        out.m14[out_id] = this.m14[this_id];  out.m24[out_id] = this.m24[this_id];
 
-        out._31[out_id] = this._31[this_id];  out._41[out_id] = this._41[this_id];
-        out._32[out_id] = this._32[this_id];  out._42[out_id] = this._42[this_id];
-        out._33[out_id] = this._33[this_id];  out._43[out_id] = this._43[this_id];
-        out._34[out_id] = this._34[this_id];  out._44[out_id] = this._44[this_id];
+        out.m31[out_id] = this.m31[this_id];  out.m41[out_id] = this.m41[this_id];
+        out.m32[out_id] = this.m32[this_id];  out.m42[out_id] = this.m42[this_id];
+        out.m33[out_id] = this.m33[this_id];  out.m43[out_id] = this.m43[this_id];
+        out.m34[out_id] = this.m34[this_id];  out.m44[out_id] = this.m44[this_id];
 
         return out;
     };
@@ -389,15 +379,15 @@ export class Matrix4x4 {
         this_id = this.id;
         other_id = other.id;
 
-        other._11[other_id] = this._11[this_id];  other._21[other_id] = this._21[this_id];
-        other._12[other_id] = this._12[this_id];  other._22[other_id] = this._22[this_id];
-        other._13[other_id] = this._13[this_id];  other._23[other_id] = this._23[this_id];
-        other._14[other_id] = this._14[this_id];  other._24[other_id] = this._24[this_id];
+        other.m11[other_id] = this.m11[this_id];  other.m21[other_id] = this.m21[this_id];
+        other.m12[other_id] = this.m12[this_id];  other.m22[other_id] = this.m22[this_id];
+        other.m13[other_id] = this.m13[this_id];  other.m23[other_id] = this.m23[this_id];
+        other.m14[other_id] = this.m14[this_id];  other.m24[other_id] = this.m24[this_id];
 
-        other._31[other_id] = this._31[this_id];  other._41[other_id] = this._41[this_id];
-        other._32[other_id] = this._32[this_id];  other._42[other_id] = this._42[this_id];
-        other._33[other_id] = this._33[this_id];  other._43[other_id] = this._43[this_id];
-        other._34[other_id] = this._34[this_id];  other._44[other_id] = this._44[this_id];
+        other.m31[other_id] = this.m31[this_id];  other.m41[other_id] = this.m41[this_id];
+        other.m32[other_id] = this.m32[this_id];  other.m42[other_id] = this.m42[this_id];
+        other.m33[other_id] = this.m33[this_id];  other.m43[other_id] = this.m43[this_id];
+        other.m34[other_id] = this.m34[this_id];  other.m44[other_id] = this.m44[this_id];
 
         return this;
     };
@@ -410,10 +400,10 @@ export class Matrix4x4 {
     ) : this => {
         this_id = this.id;
 
-        this._11[this_id] = m11;  this._21[this_id] = m21;  this._31[this_id] = m31;  this._41[this_id] = m41;
-        this._12[this_id] = m12;  this._22[this_id] = m22;  this._32[this_id] = m32;  this._42[this_id] = m42;
-        this._13[this_id] = m13;  this._23[this_id] = m23;  this._33[this_id] = m33;  this._43[this_id] = m43;
-        this._14[this_id] = m14;  this._24[this_id] = m24;  this._34[this_id] = m34;  this._44[this_id] = m44;
+        this.m11[this_id] = m11;  this.m21[this_id] = m21;  this.m31[this_id] = m31;  this.m41[this_id] = m41;
+        this.m12[this_id] = m12;  this.m22[this_id] = m22;  this.m32[this_id] = m32;  this.m42[this_id] = m42;
+        this.m13[this_id] = m13;  this.m23[this_id] = m23;  this.m33[this_id] = m33;  this.m43[this_id] = m43;
+        this.m14[this_id] = m14;  this.m24[this_id] = m24;  this.m34[this_id] = m34;  this.m44[this_id] = m44;
 
         return this;
     };
@@ -492,10 +482,10 @@ export class Matrix4x4 {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
-            out._11[out_id] = out._21[out_id] = out._31[out_id] = out._41[out_id] =
-            out._12[out_id] = out._22[out_id] = out._32[out_id] = out._42[out_id] =
-            out._13[out_id] = out._23[out_id] = out._33[out_id] = out._43[out_id] =
-            out._14[out_id] = out._24[out_id] = out._34[out_id] = out._44[out_id] = 0;
+            out.m11[out_id] = out.m21[out_id] = out.m31[out_id] = out.m41[out_id] =
+            out.m12[out_id] = out.m22[out_id] = out.m32[out_id] = out.m42[out_id] =
+            out.m13[out_id] = out.m23[out_id] = out.m33[out_id] = out.m43[out_id] =
+            out.m14[out_id] = out.m24[out_id] = out.m34[out_id] = out.m44[out_id] = 0;
             
             return out;
         }
@@ -583,34 +573,65 @@ export class Matrix4x4 {
 }
 
 const set_a = (a: Matrix4x4) : void => {
-    a11 = a._11;  a21 = a._21;  a31 = a._31;  a41 = a._41;
-    a12 = a._12;  a22 = a._22;  a32 = a._32;  a42 = a._42;
-    a13 = a._13;  a23 = a._23;  a33 = a._33;  a43 = a._43;
-    a14 = a._14;  a24 = a._24;  a34 = a._34;  a44 = a._44;
+    a11 = a.m11;  a21 = a.m21;  a31 = a.m31;  a41 = a.m41;
+    a12 = a.m12;  a22 = a.m22;  a32 = a.m32;  a42 = a.m42;
+    a13 = a.m13;  a23 = a.m23;  a33 = a.m33;  a43 = a.m43;
+    a14 = a.m14;  a24 = a.m24;  a34 = a.m34;  a44 = a.m44;
 };
 
 const set_b = (b: Matrix4x4) : void => {
-    b11 = b._11;  b21 = b._21;  b31 = b._31;  b41 = b._41;
-    b12 = b._12;  b22 = b._22;  b32 = b._32;  b42 = b._42;
-    b13 = b._13;  b23 = b._23;  b33 = b._33;  b43 = b._43;
-    b14 = b._14;  b24 = b._24;  b34 = b._34;  b44 = b._44;
+    b11 = b.m11;  b21 = b.m21;  b31 = b.m31;  b41 = b.m41;
+    b12 = b.m12;  b22 = b.m22;  b32 = b.m32;  b42 = b.m42;
+    b13 = b.m13;  b23 = b.m23;  b33 = b.m33;  b43 = b.m43;
+    b14 = b.m14;  b24 = b.m24;  b34 = b.m34;  b44 = b.m44;
 };
 
 const set_o = (o: Matrix4x4) : void => {
-    o11 = o._11;  o21 = o._21;  o31 = o._31;  o41 = o._41;
-    o12 = o._12;  o22 = o._22;  o32 = o._32;  o42 = o._42;
-    o13 = o._13;  o23 = o._23;  o33 = o._33;  o43 = o._43;
-    o14 = o._14;  o24 = o._24;  o34 = o._34;  o44 = o._44;
+    o11 = o.m11;  o21 = o.m21;  o31 = o.m31;  o41 = o.m41;
+    o12 = o.m12;  o22 = o.m22;  o32 = o.m32;  o42 = o.m42;
+    o13 = o.m13;  o23 = o.m23;  o33 = o.m33;  o43 = o.m43;
+    o14 = o.m14;  o24 = o.m24;  o34 = o.m34;  o44 = o.m44;
 };
 
 const set_m = (m: Matrix4x4) : void => {
-    m11 = m._11;  m21 = m._21;  m31 = m._31;  m41 = m._41;
-    m12 = m._12;  m22 = m._22;  m32 = m._32;  m42 = m._42;
-    m13 = m._13;  m23 = m._23;  m33 = m._33;  m43 = m._43;
-    m14 = m._14;  m24 = m._24;  m34 = m._34;  m44 = m._44;
+    t11 = m.m11;  t21 = m.m21;  t31 = m.m31;  t41 = m.m41;
+    t12 = m.m12;  t22 = m.m22;  t32 = m.m32;  t42 = m.m42;
+    t13 = m.m13;  t23 = m.m23;  t33 = m.m33;  t43 = m.m43;
+    t14 = m.m14;  t24 = m.m24;  t34 = m.m34;  t44 = m.m44;
 };
 
 const set_sin_cos = (angle: number) => {
     sin = Math.sin(angle);
     cos = Math.cos(angle);
 };
+
+export const defaultMatrix4x4Allocator = new Matrix4x4Allocator(16);
+
+export function mat4x4() : Matrix4x4;
+export function mat4x4(allocator: Matrix4x4Allocator) : Matrix4x4;
+export function mat4x4(m11: number, m12: number, m13: number, m14: number,
+                       m21: number, m22: number, m23: number, m24: number,
+                       m31: number, m32: number, m33: number, m34: number,
+                       m41: number, m42: number, m43: number, m44: number) : Matrix4x4;
+export function mat4x4(m11: number, m12: number, m13: number, m14: number,
+                       m21: number, m22: number, m23: number, m24: number,
+                       m31: number, m32: number, m33: number, m34: number,
+                       m41: number, m42: number, m43: number, m44: number,
+                       allocator: Matrix4x4Allocator) : Matrix4x4;
+export function mat4x4(
+    numberOrAllocator?: number | Matrix4x4Allocator, m12?: number, m13?: number, m14?: number,
+    m21?: number, m22?: number, m23?: number, m24?: number,
+    m31?: number, m32?: number, m33?: number, m34?: number,
+    m41?: number, m42?: number, m43?: number, m44?: number,
+    allocator?: Matrix4x4Allocator
+) : Matrix4x4 {
+    allocator = numberOrAllocator instanceof Matrix4x4Allocator ? numberOrAllocator : allocator || defaultMatrix4x4Allocator;
+    const result = new Matrix4x4(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(
+        numberOrAllocator, m12, m13, m14,
+        m21, m22, m23, m24,
+        m31, m32, m33, m34,
+        m41, m42, m43, m44
+    );
+    return result;
+}

@@ -5,8 +5,8 @@ import {InputPositions} from "./attribute.js";
 // Cube inputs in quads:
 // =====================
 const mesh_inputs  = new MeshInputs(
-    ATTRIBUTE.position,
     FACE_TYPE.QUAD,
+    ATTRIBUTE.position,
 
     new InputPositions(
         FACE_TYPE.QUAD,
@@ -37,10 +37,10 @@ const mesh_inputs  = new MeshInputs(
     )
 );
 
-const Cube = (
+const makeCube = (
     share: ATTRIBUTE = ATTRIBUTE.position,
     normals: NORMAL_SOURCING = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE,
     colors: COLOR_SOURCING = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE,
 ) : Mesh => new Mesh(mesh_inputs, new MeshOptions(share, normals, colors));
 
-export default Cube;
+export default makeCube;

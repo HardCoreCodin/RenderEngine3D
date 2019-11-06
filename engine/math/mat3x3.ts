@@ -1,9 +1,11 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Direction3D, Position3D} from "./vec3.js";
+import {Matrix3x3Allocator} from "../allocators.js";
+import {Matrix3x3Values} from "../types.js";
 
-let m11, m12, m13,
-    m21, m22, m23,
-    m31, m32, m33,
+let t11, t12, t13,
+    t21, t22, t23,
+    t31, t32, t33,
 
     sin,
     cos,
@@ -43,16 +45,16 @@ const invert = (a: number, o: number) : void => {
 
 const invert_in_place = (a: number) : void => {
     // Store the rotation and translation portions of the matrix in temporary variables:
-    m11 = a11[a];  m21 = a21[a];  m31 = a31[a];
-    m12 = a12[a];  m22 = a22[a];  m32 = a32[a];
+    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];
+    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];
 
     // Transpose the rotation portion of the matrix:
-    a12[a] = m21[a];
-    a21[a] = m12[a];
+    a12[a] = t21[a];
+    a21[a] = t12[a];
 
     // Dot the translation portion of the matrix with the original rotation portion, and invert the results:
-    a31[a] = -(m31*m11 + m32*m12); // -Dot(original_translation, original_rotation_x)
-    a32[a] = -(m31*m21 + m32*m22); // -Dot(original_translation, original_rotation_y)
+    a31[a] = -(t31*t11 + t32*t12); // -Dot(original_translation, original_rotation_x)
+    a32[a] = -(t31*t21 + t32*t22); // -Dot(original_translation, original_rotation_y)
     a33[a] = 1;
 };
 
@@ -179,24 +181,36 @@ const multiply = (a: number, b: number, o: number) : void => {
 };
 
 const multiply_in_place = (a: number, b: number) : void => {
-    m11 = a11[a];  m21 = a21[a];  m31 = a31[a];
-    m12 = a12[a];  m22 = a22[a];  m32 = a32[a];
-    m13 = a13[a];  m23 = a23[a];  m33 = a33[a];
+    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];
+    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];
+    t13 = a13[a];  t23 = a23[a];  t33 = a33[a];
 
-    a11[a] = m11*b11[b] + m12*b21[b] + m13*b31[b]; // Row 1 | Column 1
-    a12[a] = m11*b12[b] + m12*b22[b] + m13*b32[b]; // Row 1 | Column 2
-    a13[a] = m11*b13[b] + m12*b23[b] + m13*b33[b]; // Row 1 | Column 3
+    a11[a] = t11*b11[b] + t12*b21[b] + t13*b31[b]; // Row 1 | Column 1
+    a12[a] = t11*b12[b] + t12*b22[b] + t13*b32[b]; // Row 1 | Column 2
+    a13[a] = t11*b13[b] + t12*b23[b] + t13*b33[b]; // Row 1 | Column 3
 
-    a21[a] = m21*b11[b] + m22*b21[b] + m23*b31[b]; // Row 2 | Column 1
-    a22[a] = m21*b12[b] + m22*b22[b] + m23*b32[b]; // Row 2 | Column 2
-    a23[a] = m21*b13[b] + m22*b23[b] + m23*b33[b]; // Row 2 | Column 3
+    a21[a] = t21*b11[b] + t22*b21[b] + t23*b31[b]; // Row 2 | Column 1
+    a22[a] = t21*b12[b] + t22*b22[b] + t23*b32[b]; // Row 2 | Column 2
+    a23[a] = t21*b13[b] + t22*b23[b] + t23*b33[b]; // Row 2 | Column 3
 
-    a31[a] = m31*b11[b] + m32*b21[b] + m33*b31[b]; // Row 3 | Column 1
-    a32[a] = m31*b12[b] + m32*b22[b] + m33*b32[b]; // Row 3 | Column 2
-    a33[a] = m31*b13[b] + m32*b23[b] + m33*b33[b]; // Row 3 | Column 3
+    a31[a] = t31*b11[b] + t32*b21[b] + t33*b31[b]; // Row 3 | Column 1
+    a32[a] = t31*b12[b] + t32*b22[b] + t33*b32[b]; // Row 3 | Column 2
+    a33[a] = t31*b13[b] + t32*b23[b] + t33*b33[b]; // Row 3 | Column 3
 };
 
-const set_rotation = (a: number, cos: number, sin: number) : void => {
+const set_rotation_around_x = (a: number, cos: number, sin: number) : void => {
+    a33[a] = a22[a] = cos;
+    a23[a] = sin;
+    a32[a] = -sin;
+};
+
+const set_rotation_around_y = (a: number, cos: number, sin: number) : void => {
+    a11[a] = a33[a] = cos;
+    a13[a] = sin;
+    a31[a] = -sin;
+};
+
+const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
     a11[a] = a22[a] = cos;
     a12[a] = sin;
     a21[a] = -sin;
@@ -204,26 +218,33 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 
 
 export class Matrix3x3 {
-    constructor(
-        readonly _11: Float32Array,
-        readonly _12: Float32Array,
-        readonly _13: Float32Array,
+    public id: number;
 
-        readonly _21: Float32Array,
-        readonly _22: Float32Array,
-        readonly _23: Float32Array,
+    readonly m11: Float32Array; readonly m21: Float32Array; readonly m31: Float32Array;
+    readonly m12: Float32Array; readonly m22: Float32Array; readonly m32: Float32Array;
+    readonly m13: Float32Array; readonly m23: Float32Array; readonly m33: Float32Array;
 
-        readonly _31: Float32Array,
-        readonly _32: Float32Array,
-        readonly _33: Float32Array,
+    readonly i: Direction3D;
+    readonly j: Direction3D;
+    readonly k: Direction3D;
+    readonly t: Position3D;
 
-        public id: number = 0,
+    constructor(arrays: Matrix3x3Values, id: number = 0) {
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
 
-        public i: Direction3D = new Direction3D(_11, _12, _13, id),
-        public j: Direction3D = new Direction3D(_21, _22, _23, id),
-        public t: Position3D = new Position3D(_31, _32, _33, id)
-    ) {
-        if (id < 0) throw `ID must be positive integer, got ${id}`;
+        this.id = id;
+
+        [
+            this.m11, this.m12, this.m13,
+            this.m21, this.m22, this.m23,
+            this.m31, this.m32, this.m33,
+        ] = arrays;
+
+        this.i = new Direction3D([this.m11, this.m12, this.m13], id);
+        this.j = new Direction3D([this.m21, this.m22, this.m23], id);
+        this.k = new Direction3D([this.m31, this.m32, this.m33], id);
+        this.t = new Position3D([this.m31, this.m32, this.m33], id);
     }
 
     get is_identity() : boolean {
@@ -274,9 +295,9 @@ export class Matrix3x3 {
         this_id = this.id;
         out_id = out.id;
 
-        out._11[out_id] = this._11[this_id];  out._21[out_id] = this._21[this_id]; out._31[out_id] = this._31[this_id];
-        out._12[out_id] = this._12[this_id];  out._22[out_id] = this._22[this_id]; out._32[out_id] = this._32[this_id];
-        out._13[out_id] = this._13[this_id];  out._23[out_id] = this._23[this_id]; out._33[out_id] = this._33[this_id];
+        out.m11[out_id] = this.m11[this_id];  out.m21[out_id] = this.m21[this_id]; out.m31[out_id] = this.m31[this_id];
+        out.m12[out_id] = this.m12[this_id];  out.m22[out_id] = this.m22[this_id]; out.m32[out_id] = this.m32[this_id];
+        out.m13[out_id] = this.m13[this_id];  out.m23[out_id] = this.m23[this_id]; out.m33[out_id] = this.m33[this_id];
 
         return out;
     };
@@ -285,17 +306,17 @@ export class Matrix3x3 {
         this_id = this.id;
         other_id = other.id;
 
-        other._11[other_id] = this._11[this_id];
-        other._12[other_id] = this._12[this_id];
-        other._13[other_id] = this._13[this_id];
+        other.m11[other_id] = this.m11[this_id];
+        other.m12[other_id] = this.m12[this_id];
+        other.m13[other_id] = this.m13[this_id];
 
-        other._21[other_id] = this._21[this_id];
-        other._22[other_id] = this._22[this_id];
-        other._23[other_id] = this._23[this_id];
+        other.m21[other_id] = this.m21[this_id];
+        other.m22[other_id] = this.m22[this_id];
+        other.m23[other_id] = this.m23[this_id];
 
-        other._31[other_id] = this._31[this_id];
-        other._32[other_id] = this._32[this_id];
-        other._33[other_id] = this._33[this_id];
+        other.m31[other_id] = this.m31[this_id];
+        other.m32[other_id] = this.m32[this_id];
+        other.m33[other_id] = this.m33[this_id];
 
         return this;
     };
@@ -307,9 +328,9 @@ export class Matrix3x3 {
     ) : this => {
         this_id = this.id;
 
-        this._11[this_id] = m11;  this._21[this_id] = m21;  this._31[this_id] = m31;
-        this._12[this_id] = m12;  this._22[this_id] = m22;  this._32[this_id] = m32;
-        this._13[this_id] = m13;  this._23[this_id] = m23;  this._33[this_id] = m33;
+        this.m11[this_id] = m11;  this.m21[this_id] = m21;  this.m31[this_id] = m31;
+        this.m12[this_id] = m12;  this.m22[this_id] = m22;  this.m32[this_id] = m32;
+        this.m13[this_id] = m13;  this.m23[this_id] = m23;  this.m33[this_id] = m33;
 
         return this;
     };
@@ -388,9 +409,9 @@ export class Matrix3x3 {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
-            out._11[out_id] = out._21[out_id] = out._31[out_id] =
-            out._12[out_id] = out._22[out_id] = out._32[out_id] =
-            out._13[out_id] = out._23[out_id] = out._33[out_id] = 0;
+            out.m11[out_id] = out.m21[out_id] = out.m31[out_id] =
+            out.m12[out_id] = out.m22[out_id] = out.m32[out_id] =
+            out.m13[out_id] = out.m23[out_id] = out.m33[out_id] = 0;
 
             return out;
         }
@@ -437,7 +458,8 @@ export class Matrix3x3 {
         return out;
     };
 
-    setRotation(angle, reset=true) : this {
+
+    setRotationAroundX(angle, reset=true) : this {
         if (reset) {
             set_a(this);
             set_to_identity(this.id);
@@ -445,37 +467,90 @@ export class Matrix3x3 {
 
         set_sin_cos(angle);
 
-        set_rotation(this.id, cos, sin);
+        set_rotation_around_x(this.id, cos, sin);
+
+        return this;
+    }
+
+    setRotationAroundY(angle: number, reset=false) : this {
+        if (reset) {
+            set_a(this);
+            set_to_identity(this.id);
+        }
+
+        set_sin_cos(angle);
+
+        set_rotation_around_y(this.id, cos, sin);
+
+        return this;
+    }
+
+    setRotationAroundZ(angle: number, reset=false) : this {
+        if (reset) {
+            set_a(this);
+            set_to_identity(this.id);
+        }
+
+        set_sin_cos(angle);
+
+        set_rotation_around_z(this.id, cos, sin);
 
         return this;
     }
 }
 
 const set_a = (a: Matrix3x3) : void => {
-    a11 = a._11;  a21 = a._21;  a31 = a._31;
-    a12 = a._12;  a22 = a._22;  a32 = a._32;
-    a13 = a._13;  a23 = a._23;  a33 = a._33;
+    a11 = a.m11;  a21 = a.m21;  a31 = a.m31;
+    a12 = a.m12;  a22 = a.m22;  a32 = a.m32;
+    a13 = a.m13;  a23 = a.m23;  a33 = a.m33;
 };
 
 const set_b = (b: Matrix3x3) : void => {
-    b11 = b._11;  b21 = b._21;  b31 = b._31;
-    b12 = b._12;  b22 = b._22;  b32 = b._32;
-    b13 = b._13;  b23 = b._23;  b33 = b._33;
+    b11 = b.m11;  b21 = b.m21;  b31 = b.m31;
+    b12 = b.m12;  b22 = b.m22;  b32 = b.m32;
+    b13 = b.m13;  b23 = b.m23;  b33 = b.m33;
 };
 
 const set_o = (o: Matrix3x3) : void => {
-    o11 = o._11;  o21 = o._21;  o31 = o._31;
-    o12 = o._12;  o22 = o._22;  o32 = o._32;
-    o13 = o._13;  o23 = o._23;  o33 = o._33;
+    o11 = o.m11;  o21 = o.m21;  o31 = o.m31;
+    o12 = o.m12;  o22 = o.m22;  o32 = o.m32;
+    o13 = o.m13;  o23 = o.m23;  o33 = o.m33;
 };
 
 const set_m = (m: Matrix3x3) : void => {
-    m11 = m._11;  m21 = m._21;  m31 = m._31;
-    m12 = m._12;  m22 = m._22;  m32 = m._32;
-    m13 = m._13;  m23 = m._23;  m33 = m._33;
+    t11 = m.m11;  t21 = m.m21;  t31 = m.m31;
+    t12 = m.m12;  t22 = m.m22;  t32 = m.m32;
+    t13 = m.m13;  t23 = m.m23;  t33 = m.m33;
 };
 
 const set_sin_cos = (angle: number) => {
     sin = Math.sin(angle);
     cos = Math.cos(angle);
 };
+
+export const defaultMatrix3x3Allocator = new Matrix3x3Allocator(16);
+
+export function mat3x3() : Matrix3x3;
+export function mat3x3(allocator: Matrix3x3Allocator) : Matrix3x3;
+export function mat3x3(m11: number, m12: number, m13: number,
+                       m21: number, m22: number, m23: number,
+                       m31: number, m32: number, m33: number,) : Matrix3x3;
+export function mat3x3(m11: number, m12: number, m13: number,
+                       m21: number, m22: number, m23: number,
+                       m31: number, m32: number, m33: number,
+                       allocator: Matrix3x3Allocator) : Matrix3x3;
+export function mat3x3(
+    numberOrAllocator?: number | Matrix3x3Allocator, m12?: number, m13?: number,
+    m21?: number, m22?: number, m23?: number,
+    m31?: number, m32?: number, m33?: number,
+    allocator?: Matrix3x3Allocator
+) : Matrix3x3 {
+    allocator = numberOrAllocator instanceof Matrix3x3Allocator ? numberOrAllocator : allocator || defaultMatrix3x3Allocator;
+    const result = new Matrix3x3(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(
+        numberOrAllocator, m12, m13,
+        m21, m22, m23,
+        m31, m32, m33
+    );
+    return result;
+}

@@ -38,26 +38,27 @@ export type IntArray = Uint32Array;
 export type IntArrays = Uint32Array[];
 export type IntArrays3 = [Uint32Array, Uint32Array, Uint32Array];
 
-
-export type FloatArrays2 = readonly [Float32Array, Float32Array];
-export type FloatArrays3 = readonly [Float32Array, Float32Array, Float32Array];
-export type FloatArrays4 = readonly [Float32Array, Float32Array, Float32Array, Float32Array];
+export const FloatArray = Float32Array;
+export type FloatArray = Float32Array;
+export type FloatArrays2 = readonly [FloatArray, FloatArray];
+export type FloatArrays3 = readonly [FloatArray, FloatArray, FloatArray];
+export type FloatArrays4 = readonly [FloatArray, FloatArray, FloatArray, FloatArray];
 export type FloatArrays9 = readonly [
-    Float32Array, Float32Array, Float32Array,
-    Float32Array, Float32Array, Float32Array,
-    Float32Array, Float32Array, Float32Array
+    FloatArray, FloatArray, FloatArray,
+    FloatArray, FloatArray, FloatArray,
+    FloatArray, FloatArray, FloatArray
 ];
 export type FloatArrays16 = readonly [
-    Float32Array, Float32Array, Float32Array, Float32Array,
-    Float32Array, Float32Array, Float32Array, Float32Array,
-    Float32Array, Float32Array, Float32Array, Float32Array,
-    Float32Array, Float32Array, Float32Array, Float32Array
+    FloatArray, FloatArray, FloatArray, FloatArray,
+    FloatArray, FloatArray, FloatArray, FloatArray,
+    FloatArray, FloatArray, FloatArray, FloatArray,
+    FloatArray, FloatArray, FloatArray, FloatArray
 ];
-export type FloatArrays = readonly Float32Array[];
-export type Values = FloatArrays2 | FloatArrays3 | FloatArrays4;
-export type FaceValues = Values;
-export type SharedVertexValues = Values;
-export type UnsharedVertexValues = [Values, Values, Values];
+export type FloatArrays = readonly FloatArray[];
+export type FloatValues = FloatArrays2 | FloatArrays3 | FloatArrays4;
+export type FaceValues = FloatValues;
+export type SharedVertexValues = FloatValues;
+export type UnsharedVertexValues = [FloatValues, FloatValues, FloatValues];
 
 export type Vector2DValues = FloatArrays2;
 export type Vector3DValues = FloatArrays3;
@@ -69,32 +70,14 @@ export type Matrix3x3Values = FloatArrays9;
 export type Matrix4x4Values = FloatArrays16;
 export type MatrixValues = Matrix2x2Values | Matrix3x3Values | Matrix4x4Values;
 
-export type f_v = (a: FloatArrays, i: number) => void;
-export type f_b = (a: FloatArrays, i: number) => boolean;
-export type f_n = (a: FloatArrays, i: number) => number;
-export type fn_v = (a: FloatArrays, i: number, n: number) => void;
-export type fnf_v = (a: FloatArrays, i: number, n: number,
-                     o: FloatArrays, k: number) => void;
-export type ff_v = (a: FloatArrays, i: number,
-                    o: FloatArrays, k: number) => void;
-export type ff_b = (a: FloatArrays, i: number,
-                    b: FloatArrays, j: number) => boolean;
-export type ff_n = (a: FloatArrays, i: number,
-                    b: FloatArrays, j: number) => number;
-export type fff_v = (a: FloatArrays, i: number,
-                     b: FloatArrays, j: number,
-                     o: FloatArrays, k: number) => void;
-export type ffnf_v = (a: FloatArrays, i: number,
-                      b: FloatArrays, j: number, t: number,
-                      o: FloatArrays, k: number) => void;
-export type fnn_v = (a: FloatArrays, i: number, cos: number, sin: number) => void;
-
+export type TypedArray = FloatArray | IntArray;
+export type Values = VectorValues | MatrixValues;
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;
 export type FaceInputNum = QuadInputNum | TriangleInputNum;
 export type VertexInputs = PositionInputs | NormalInputs | UVInputs | ColorInputs;
 export type VertexInputStr = PositionInputStr | ColorInputStr | NormalInputStr | UVInputStr;
 export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum | UVInputNum;
-export type VertexValues = Values | UnsharedVertexValues;
-export type VertexFacesValues = IntArrays;
-export type FaceVerticesValues = IntArrays3;
+export type VertexValues = SharedVertexValues | UnsharedVertexValues;
+export type VertexFacesIndices = IntArrays;
+export type FaceVertexIndices = IntArrays3;

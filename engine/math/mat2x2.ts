@@ -1,8 +1,10 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Direction2D} from "./vec2.js";
+import {Matrix2x2Values} from "../types.js";
+import {Matrix2x2Allocator} from "../allocators.js";
 
-let m11, m12,
-    m21, m22,
+let t11, t12,
+    t21, t22,
 
     sin,
     cos,
@@ -108,14 +110,14 @@ const multiply = (a: number, b: number, o: number) : void => {
 };
 
 const multiply_in_place = (a: number, b: number) : void => {
-    m11 = a11[a];  m21 = a21[a];
-    m12 = a12[a];  m22 = a22[a];
+    t11 = a11[a];  t21 = a21[a];
+    t12 = a12[a];  t22 = a22[a];
 
-    a11[a] = m11*b11[b] + m12*b21[b]; // Row 1 | Column 1
-    a12[a] = m11*b12[b] + m12*b22[b]; // Row 1 | Column 2
+    a11[a] = t11*b11[b] + t12*b21[b]; // Row 1 | Column 1
+    a12[a] = t11*b12[b] + t12*b22[b]; // Row 1 | Column 2
 
-    a21[a] = m21*b11[b] + m22*b21[b]; // Row 2 | Column 1
-    a22[a] = m21*b12[b] + m22*b22[b]; // Row 2 | Column 2
+    a21[a] = t21*b11[b] + t22*b21[b]; // Row 2 | Column 1
+    a22[a] = t21*b12[b] + t22*b22[b]; // Row 2 | Column 2
 };
 
 const set_rotation = (a: number, cos: number, sin: number) : void => {
@@ -126,19 +128,27 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 
 
 export class Matrix2x2 {
-    constructor(
-        readonly _11: Float32Array,
-        readonly _12: Float32Array,
+    public id: number;
 
-        readonly _21: Float32Array,
-        readonly _22: Float32Array,
+    readonly m11: Float32Array; readonly m21: Float32Array;
+    readonly m12: Float32Array; readonly m22: Float32Array;
 
-        public id: number = 0,
+    readonly i: Direction2D;
+    readonly j: Direction2D;
 
-        public i: Direction2D = new Direction2D(_11, _12, id),
-        public j: Direction2D = new Direction2D(_21, _22, id),
-    ) {
-        if (id < 0) throw `ID must be positive integer, got ${id}`;
+    constructor(arrays: Matrix2x2Values, id: number = 0) {
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+
+        this.id = id;
+
+        [
+            this.m11, this.m12,
+            this.m21, this.m22,
+        ] = arrays;
+
+        this.i = new Direction2D([this.m11, this.m12], id);
+        this.j = new Direction2D([this.m21, this.m22], id);
     }
 
     get is_identity() : boolean {
@@ -173,8 +183,8 @@ export class Matrix2x2 {
         this_id = this.id;
         out_id = out.id;
 
-        out._11[out_id] = this._11[this_id];  out._21[out_id] = this._21[this_id];
-        out._12[out_id] = this._12[this_id];  out._22[out_id] = this._22[this_id];
+        out.m11[out_id] = this.m11[this_id];  out.m21[out_id] = this.m21[this_id];
+        out.m12[out_id] = this.m12[this_id];  out.m22[out_id] = this.m22[this_id];
 
         return out;
     };
@@ -183,11 +193,11 @@ export class Matrix2x2 {
         this_id = this.id;
         other_id = other.id;
 
-        other._11[other_id] = this._11[this_id];
-        other._12[other_id] = this._12[this_id];
+        other.m11[other_id] = this.m11[this_id];
+        other.m12[other_id] = this.m12[this_id];
 
-        other._21[other_id] = this._21[this_id];
-        other._22[other_id] = this._22[this_id];
+        other.m21[other_id] = this.m21[this_id];
+        other.m22[other_id] = this.m22[this_id];
 
         return this;
     };
@@ -198,8 +208,8 @@ export class Matrix2x2 {
     ) : this => {
         this_id = this.id;
 
-        this._11[this_id] = m11;  this._21[this_id] = m21;
-        this._12[this_id] = m12;  this._22[this_id] = m22;
+        this.m11[this_id] = m11;  this.m21[this_id] = m21;
+        this.m12[this_id] = m12;  this.m22[this_id] = m22;
 
         return this;
     };
@@ -278,8 +288,8 @@ export class Matrix2x2 {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
-            out._11[out_id] = out._21[out_id] =
-            out._12[out_id] = out._22[out_id] = 0;
+            out.m11[out_id] = out.m21[out_id] =
+            out.m12[out_id] = out.m22[out_id] = 0;
 
             return out;
         }
@@ -341,26 +351,49 @@ export class Matrix2x2 {
 }
 
 const set_a = (a: Matrix2x2) : void => {
-    a11 = a._11;  a21 = a._21;
-    a12 = a._12;  a22 = a._22;
+    a11 = a.m11;  a21 = a.m21;
+    a12 = a.m12;  a22 = a.m22;
 };
 
 const set_b = (b: Matrix2x2) : void => {
-    b11 = b._11;  b21 = b._21;
-    b12 = b._12;  b22 = b._22;
+    b11 = b.m11;  b21 = b.m21;
+    b12 = b.m12;  b22 = b.m22;
 };
 
 const set_o = (o: Matrix2x2) : void => {
-    o11 = o._11;  o21 = o._21;
-    o12 = o._12;  o22 = o._22;
+    o11 = o.m11;  o21 = o.m21;
+    o12 = o.m12;  o22 = o.m22;
 };
 
 const set_m = (m: Matrix2x2) : void => {
-    m11 = m._11;  m21 = m._21;
-    m12 = m._12;  m22 = m._22;
+    t11 = m.m11;  t21 = m.m21;
+    t12 = m.m12;  t22 = m.m22;
 };
 
 const set_sin_cos = (angle: number) => {
     sin = Math.sin(angle);
     cos = Math.cos(angle);
 };
+
+export const defaultMatrix2x2Allocator = new Matrix2x2Allocator(16);
+
+export function mat2x2() : Matrix2x2;
+export function mat2x2(allocator: Matrix2x2Allocator) : Matrix2x2;
+export function mat2x2(m11: number, m12: number,
+                       m21: number, m22: number) : Matrix2x2;
+export function mat2x2(m11: number, m12: number,
+                       m21: number, m22: number,
+                       allocator: Matrix2x2Allocator) : Matrix2x2;
+export function mat2x2(
+    numberOrAllocator?: number | Matrix2x2Allocator, m12?: number,
+    m21?: number, m22?: number,
+    allocator?: Matrix2x2Allocator
+) : Matrix2x2 {
+    allocator = numberOrAllocator instanceof Matrix2x2Allocator ? numberOrAllocator : allocator || defaultMatrix2x2Allocator;
+    const result = new Matrix2x2(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(
+        numberOrAllocator, m12,
+        m21, m22
+    );
+    return result;
+}

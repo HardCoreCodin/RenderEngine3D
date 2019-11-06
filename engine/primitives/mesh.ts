@@ -1,98 +1,124 @@
 import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
-import {
-    Faces,
-    FaceVertices,
-    InputColors,
-    InputNormals,
-    InputPositions,
-    InputUVs,
-    VertexFaces,
-    Vertices
-} from "./attribute.js";
+import {Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices} from "./attribute.js";
+import {IAllocators, IAllocatorSizes} from "../allocators.js";
+import {NumArrays} from "../types.js";
 
 export class Mesh {
-    public readonly faces: Faces = new Faces();
-    public readonly vertices: Vertices = new Vertices();
+    public readonly face: Faces = new Faces();
+    public readonly face_count: number;
 
-    public face_vertices: FaceVertices = new FaceVertices();
-    public vertex_faces: VertexFaces = new VertexFaces();
+    public readonly vertex: Vertices = new Vertices();
+    public readonly vertex_count: number;
 
-    public face_count: number;
-    public vertex_count: number;
+    constructor(
+        private readonly _inputs: MeshInputs,
+        public options: MeshOptions = new MeshOptions(),
+    ) {
+        _inputs.init();
+        const positions = _inputs.position;
 
-    constructor(inputs: MeshInputs, options: MeshOptions = new MeshOptions()) {
-        this.load(inputs, options);
+        this.face_count = positions.faces[0].length;
+        this.vertex_count = positions.vertices[0].length;
     }
 
-    load(inputs: MeshInputs, options: MeshOptions) {
-        options.sanitize(inputs);
-        inputs.sanitize();
+    get sizes() : IAllocatorSizes {
+        this.options.sanitize(this._inputs);
 
-        this.face_count = inputs.position.faces[0].length;
-        this.vertex_count = inputs.position.vertices[0].length;
+        let vec2D: number = 0;
+        let vec3D: number = 0;
+
+        const vertex_attributes: ATTRIBUTE = this.options.vertex_attributes;
+        const face_attributes: ATTRIBUTE = this.options.face_attributes;
+
+        const vertex_size = this.vertex_count * 4;
+        vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.normal) vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.color) vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.uv) vec2D += vertex_size;
+
+        if (face_attributes & ATTRIBUTE.position) vec3D += this.face_count;
+        if (face_attributes & ATTRIBUTE.normal) vec3D += this.face_count;
+        if (face_attributes & ATTRIBUTE.color) vec3D += this.face_count;
+
+        const result: IAllocatorSizes = {
+            face_vertices: this.face.count,
+            vertex_faces: this._inputs.vertex_faces.size
+        };
+
+        result.vec3D = vec3D;
+        if (vec2D)
+            result.vec2D = vec2D;
+
+        return result;
+    }
+
+    load(allocators: IAllocators) {
+        const positions = this._inputs.position;
+        const normals = this._inputs.normal;
+        const colors = this._inputs.color;
+        const uvs = this._inputs.uv;
 
         // Init::
-        this.vertices.init(this.vertex_count, options.vertex_attributes, options.share);
-        this.faces.init(this.face_count, options.face_attributes);
-        this.face_vertices.load(inputs.position);
+        this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
+        this.vertex.faces.init(allocators.vertex_faces, this._inputs.vertex_faces.size);
+        this.vertex.faces.load(this._inputs.vertex_faces.vertex_faces);
+
+        this.face.init(allocators, this.face_count, this.options.face_attributes);
+        this.face.vertices.load(positions.faces);
 
         // Load:
-        this.vertices.position.load(inputs.position, this.face_vertices);
-        if (options.include_uvs && inputs.uv)
-            this.vertices.uv.load(inputs.uv, this.face_vertices);
+        this.vertex.positions.load(positions, this.face.vertices);
+        if (this.options.include_uvs)
+            this.vertex.uvs.load(uvs, this.face.vertices);
 
-        if (options.normal === NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE ||
-            options.color === COLOR_SOURCING.GATHER_VERTEX__GENERATE_FACE
-        ) this.vertex_faces.load(this.vertex_count, this.face_vertices);
-
-        switch (options.normal) {
+        switch (this.options.normal) {
             case NORMAL_SOURCING.NO_VERTEX__NO_FACE: break;
             case NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE:
-                this.faces.normal.pull(this.vertices.position, this.face_vertices);
+                this.face.normals.pull(this.vertex.positions, this.face.vertices);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE:
-                this.vertices.normal.load(inputs.normal, this.face_vertices);
+                this.vertex.normals.load(normals, this.face.vertices);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                this.vertices.normal.load(inputs.normal, this.face_vertices);
-                this.faces.normal.pull(this.vertices.position, this.face_vertices);
+                this.vertex.normals.load(normals, this.face.vertices);
+                this.face.normals.pull(this.vertex.positions, this.face.vertices);
                 break;
             case NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this.faces.normal.pull(this.vertices.position, this.face_vertices);
-                this.vertices.normal.pull(this.faces.normal, this.vertex_faces);
+                this.face.normals.pull(this.vertex.positions, this.face.vertices);
+                this.vertex.normals.pull(this.face.normals, this.vertex.faces);
                 break;
         }
 
-        switch (options.color) {
+        switch (this.options.color) {
             case COLOR_SOURCING.NO_VERTEX__NO_FACE: break;
             case COLOR_SOURCING.NO_VERTEX__GENERATE_FACE:
-                this.faces.color.generate();
+                this.face.colors.generate();
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__NO_FACE:
-                this.vertices.color.generate();
+                this.vertex.colors.generate();
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__GENERATE_FACE:
-                this.faces.color.generate();
-                this.vertices.color.generate();
+                this.face.colors.generate();
+                this.vertex.colors.generate();
                 break;
             case COLOR_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this.faces.color.generate();
-                this.vertices.color.pull(this.faces.color, this.vertex_faces);
+                this.face.colors.generate();
+                this.vertex.colors.pull(this.face.colors, this.vertex.faces);
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__GATHER_FACE:
-                this.vertices.color.generate();
-                this.faces.color.pull(this.vertices.color, this.face_vertices);
+                this.vertex.colors.generate();
+                this.face.colors.pull(this.vertex.colors, this.face.vertices);
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
-                this.vertices.color.load(inputs.color, this.face_vertices);
+                this.vertex.colors.load(colors, this.face.vertices);
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                this.vertices.color.load(inputs.color, this.face_vertices);
-                this.faces.color.generate();
+                this.vertex.colors.load(colors, this.face.vertices);
+                this.face.colors.generate();
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:
-                this.vertices.color.load(inputs.color, this.face_vertices);
-                this.faces.color.pull(this.vertices.color, this.face_vertices);
+                this.vertex.colors.load(colors, this.face.vertices);
+                this.face.colors.pull(this.vertex.colors, this.face.vertices);
         }
     }
 }
@@ -143,40 +169,68 @@ export class MeshOptions {
     }
 
     sanitize(inputs: MeshInputs) {
-        if (inputs.normal === null) {
+        if (!(inputs.included & ATTRIBUTE.normal)) {
             switch (this.normal) {
                 case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE: this.normal = NORMAL_SOURCING.NO_VERTEX__NO_FACE; break;
                 case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE: this.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
             }
         }
-        if (inputs.color === null) {
+
+        if (!(inputs.included & ATTRIBUTE.normal)) {
             switch (this.color) {
                 case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
                 case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE: this.color = COLOR_SOURCING.NO_VERTEX__NO_FACE; break;
                 case COLOR_SOURCING.LOAD_VERTEX__GENERATE_FACE: this.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
             }
         }
+
+        if (!(inputs.included & ATTRIBUTE.uv))
+            this.include_uvs = false;
     }
 }
 
 export class MeshInputs {
+    public readonly vertex_faces = new InputVertexFaces();
+
     constructor(
+        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
         public readonly included: ATTRIBUTE = ATTRIBUTE.position,
-        public readonly face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
         public readonly position: InputPositions = new InputPositions(face_type),
-        public readonly normal: InputNormals = included & ATTRIBUTE.normal ? new InputNormals(face_type) : null,
-        public readonly color: InputColors = included & ATTRIBUTE.color ? new InputColors(face_type) : null,
-        public readonly uv: InputUVs = included & ATTRIBUTE.uv ? new InputUVs(face_type) : null,
+        public readonly normal: InputNormals = new InputNormals(face_type),
+        public readonly color: InputColors = new InputColors(face_type),
+        public readonly uv: InputUVs = new InputUVs(face_type)
     ) {}
 
-    sanitize() {
-        if (this.position.face_type === FACE_TYPE.QUAD)
-            this._triangulate();
+    init() {
+        if (this.face_type === FACE_TYPE.QUAD) {
+            this.position.triangulate();
+            if (this.included & ATTRIBUTE.normal) this.normal.triangulate();
+            if (this.included & ATTRIBUTE.color) this.normal.triangulate();
+            if (this.included & ATTRIBUTE.uv) this.normal.triangulate();
+
+            this.face_type = FACE_TYPE.TRIANGLE;
+        }
+
+        this.vertex_faces.init(this.position);
     }
+}
 
-    private _triangulate(): void {
-        // TODO: Implement...
+class InputVertexFaces {
+    public readonly vertex_faces: NumArrays = [];
+    public size: number;
 
-        this.position.face_type = FACE_TYPE.TRIANGLE;
+    init(inputs: InputPositions) {
+        this.vertex_faces.length = inputs.vertices[0].length;
+        for (let i = 0; i < inputs.vertices[0].length; i++)
+            this.vertex_faces[i] = [];
+
+        this.size = 0;
+        let vertex_id, face_id;
+        for (const face_vertex_ids of inputs.faces) {
+            for ([face_id, vertex_id] of face_vertex_ids.entries()) {
+                this.vertex_faces[vertex_id].push(face_id);
+                this.size++
+            }
+        }
     }
 }

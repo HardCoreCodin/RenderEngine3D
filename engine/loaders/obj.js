@@ -12,7 +12,7 @@ const loadMeshFromObj = (obj, options = new MeshOptions()) => {
         attributes |= 4 /* color */;
     if (has_uvs.test(obj))
         attributes |= 8 /* uv */;
-    const inputs = new MeshInputs(attributes, face_type);
+    const inputs = new MeshInputs(face_type, attributes);
     for (const line of obj.split('\n'))
         if (position_and_color.test(line))
             setPositionAndColor(inputs, position_and_color.exec(line));

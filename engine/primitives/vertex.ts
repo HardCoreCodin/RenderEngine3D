@@ -1,47 +1,29 @@
-import {Vector2DValues, Vector3DValues, Vector4DValues} from "../types.js";
-import {Position3D, Direction3D, Color3D, UV3D} from "../math/vec3.js";
-import {Position4D, Direction4D, Color4D} from "../math/vec4.js";
-import {UV2D} from "../math/vec2.js";
+import {Vector3DValues, Vector4DValues} from "../types.js";
+import {defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba} from "../math/vec4.js";
+import {defaultVector3DAllocator, uvw, UVW} from "../math/vec3.js";
+import {Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {ATTRIBUTE} from "../constants.js";
 
 export default class Vertex {
     constructor(
-        public position: Position3D | Position4D,
-        public normal: Direction3D,
-        public uvs: UV2D | UV3D = null,
-        public color: Color3D | Color4D = null
+        public position: Position4D,
+        public normal?: Direction4D,
+        public color?: RGBA,
+        public uvs?: UVW
     ) {}
 
     static fromBuffers(
-        positions: Vector3DValues | Vector4DValues,
-        normals?: Vector3DValues | Vector4DValues,
-        uvs?: Vector2DValues | Vector3DValues,
-        colors?: Vector3DValues | Vector4DValues
+        positions: Vector4DValues, position_id: number,
+        normals?: Vector4DValues, normal_id?: number,
+        uvs?: Vector3DValues, uv_id?: number,
+        colors?: Vector4DValues, color_id?: number,
     ) : Vertex {
-        return new Vertex(
-            positions.length === 3 ?
-                new Position3D(positions) :
-                new Position4D(positions),
-            normals ?
-                normals.length === 3 ?
-                    new Direction3D(normals) :
-                    new Direction4D(normals)
-                : null,
-            uvs ?
-                uvs.length === 3 ?
-                    new UV3D(uvs) :
-                    new UV2D(uvs)
-                : null,
-            colors ?
-                colors.length === 3 ?
-                    new Direction3D(colors) :
-                    new Direction4D(colors)
-                : null
+        return new Vertex(new Position4D(positions, position_id),
+            normals ? new Direction4D(normals, normal_id) : undefined,
+            colors ? new RGBA(colors, color_id) : undefined,
+            uvs ? new UVW(uvs, uv_id) : undefined
         );
     };
-
-    copy = (
-        new_vertex: Vertex = new Vertex()
-    ) : Vertex => new_vertex.setTo(this);
 
     lerp(
         to: Vertex,
@@ -53,37 +35,43 @@ export default class Vertex {
         if (this.color) this.color.lerp(to.color, by, out.color);
         if (this.normal) {
             this.normal.lerp(to.normal, by, out.normal);
-            this.normal.normalize();
+            out.normal.normalize();
         }
 
         return out;
     }
 
+    setFromOther(other: Vertex) : Vertex {
+        this.position.setFromOther(other.position);
+        this.normal!.setFromOther(other.normal);
+        this.uvs!.setFromOther(other.uvs);
+        this.color!.setFromOther(other.color);
+
+        return this;
+    }
+
     setTo(
-        position: Position4D | Vertex = new Position4D(),
+        position: Position4D,
         normal?: Direction4D,
-        uv_coords?: Position3D,
-        color?: Color3D
+        uv_coords?: UVW,
+        color?: RGBA
     ) : Vertex {
-        if (position instanceof Vertex) {
-            this.position.setTo(position.position);
-            this.normal.setTo(position.normal);
-            this.uvs.setTo(position.uvs);
-            this.color.setTo(position.color);
-        } else if (position instanceof Position4D) {
-            this.position.setTo(position);
-
-            if (normal instanceof Direction4D)
-                this.normal.setTo(normal);
-
-            if (uv_coords instanceof Position3D)
-                this.uvs.setTo(uv_coords);
-
-            if (color instanceof Color3D)
-                this.color.setTo(color);
-        } else
-            throw `Invalid input (position/vertex): ${position}`;
+        this.position.setFromOther(position);
+        this.normal!.setFromOther(normal);
+        this.uvs!.setFromOther(uv_coords);
+        this.color!.setFromOther(color);
 
         return this;
     }
 }
+
+export const vert = (
+    include: ATTRIBUTE = ATTRIBUTE.position,
+    vector4D_allocator: Vector4DAllocator = defaultVector4DAllocator,
+    vector3D_allocator: Vector3DAllocator = defaultVector3DAllocator
+) : Vertex => new Vertex(
+    pos4D(vector4D_allocator),
+    include & ATTRIBUTE.normal ? dir4D(vector4D_allocator) : undefined,
+    include & ATTRIBUTE.color ? rgba(vector4D_allocator) : undefined,
+    include & ATTRIBUTE.uv ? uvw(vector3D_allocator) : undefined
+);

@@ -1,4 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
+import { Vector4DAllocator } from "../allocators.js";
 let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id;
 let a_x, a_y, a_z, a_w, b_x, b_y, b_z, b_w, o_x, o_y, o_z, o_w, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44;
 const equals = (a, b) => a_x[a].toFixed(PRECISION_DIGITS) ===
@@ -125,14 +126,11 @@ const multiply_in_place = (a, b) => {
     a_w[a] = t_x * m14[b] + t_y * m24[b] + t_z * m34[b] + t_w * m44[b];
 };
 class Base4D {
-    constructor(_x, _y, _z, _w, id = 0) {
-        this._x = _x;
-        this._y = _y;
-        this._z = _z;
-        this._w = _w;
-        this.id = id;
+    constructor(arrays, id = 0) {
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;
+        this.id = id;
+        [this.xs, this.ys, this.zs, this.ws] = arrays;
     }
 }
 class Vector4D extends Base4D {
@@ -141,27 +139,27 @@ class Vector4D extends Base4D {
         this.copyTo = (out) => {
             this_id = this.id;
             out_id = out.id;
-            out._x[out_id] = this._x[this_id];
-            out._y[out_id] = this._y[this_id];
-            out._z[out_id] = this._z[this_id];
-            out._w[out_id] = this._w[this_id];
+            out.xs[out_id] = this.xs[this_id];
+            out.ys[out_id] = this.ys[this_id];
+            out.zs[out_id] = this.zs[this_id];
+            out.ws[out_id] = this.ws[this_id];
             return out;
         };
         this.setFromOther = (other) => {
             this_id = this.id;
             other_id = other.id;
-            this._x[this_id] = other._x[other_id];
-            this._y[this_id] = other._y[other_id];
-            this._z[this_id] = other._z[other_id];
-            this._w[this_id] = other._w[other_id];
+            this.xs[this_id] = other.xs[other_id];
+            this.ys[this_id] = other.ys[other_id];
+            this.zs[this_id] = other.zs[other_id];
+            this.ws[this_id] = other.ws[other_id];
             return this;
         };
         this.setTo = (x, y, z, w) => {
             this_id = this.id;
-            this._x[this_id] = x;
-            this._y[this_id] = y;
-            this._z[this_id] = z;
-            this._w[this_id] = w;
+            this.xs[this_id] = x;
+            this.ys[this_id] = y;
+            this.zs[this_id] = z;
+            this.ws[this_id] = w;
             return this;
         };
         this.isSameAs = (other) => {
@@ -222,7 +220,7 @@ class Vector4D extends Base4D {
         this.minus = (other, out) => {
             if (this.isSameAs(other) || this.equals(other)) {
                 out_id = out.id;
-                out._x[out_id] = out._y[out_id] = out._z[out_id] = out._w[out_id] = 0;
+                out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = out.ws[out_id] = 0;
                 return out;
             }
             if (this.isSameAs(out))
@@ -254,7 +252,13 @@ class Vector4D extends Base4D {
             }
             return out;
         };
-        this.toNDC = () => this.div(this._w[this.id]);
+        this.toNDC = () => this.div(this.ws[this.id]);
+    }
+    set arrays(arrays) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+        this.ws = arrays[3];
     }
 }
 export class Position4D extends Vector4D {
@@ -277,17 +281,17 @@ export class Position4D extends Vector4D {
             subtract(other.id, this.id, out.id);
             return out;
         };
-        this.isInView = (near = 0, far = 1) => in_view(this._x[this.id], this._y[this.id], this._z[this.id], this._w[this.id], near, far);
-        this.isOutOfView = (near = 0, far = 1) => out_of_view(this._x[this.id], this._y[this.id], this._z[this.id], this._w[this.id], near, far);
+        this.isInView = (near = 0, far = 1) => in_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
+        this.isOutOfView = (near = 0, far = 1) => out_of_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
     }
-    set x(x) { this._x[this.id] = x; }
-    set y(y) { this._y[this.id] = y; }
-    set z(z) { this._z[this.id] = z; }
-    set w(w) { this._w[this.id] = w; }
-    get x() { return this._x[this.id]; }
-    get y() { return this._y[this.id]; }
-    get z() { return this._z[this.id]; }
-    get w() { return this._w[this.id]; }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    set w(w) { this.ws[this.id] = w; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
+    get w() { return this.ws[this.id]; }
 }
 export class Direction4D extends Vector4D {
     constructor() {
@@ -328,67 +332,89 @@ export class Direction4D extends Vector4D {
         set_a(this);
         return length_squared(this.id);
     }
-    set x(x) { this._x[this.id] = x; }
-    set y(y) { this._y[this.id] = y; }
-    set z(z) { this._z[this.id] = z; }
-    set w(w) { this._w[this.id] = w; }
-    get x() { return this._x[this.id]; }
-    get y() { return this._y[this.id]; }
-    get z() { return this._z[this.id]; }
-    get w() { return this._w[this.id]; }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    set w(w) { this.ws[this.id] = w; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
+    get w() { return this.ws[this.id]; }
 }
-export class Color4D extends Vector4D {
+export class RGBA extends Vector4D {
     constructor() {
         super(...arguments);
         this.setGreyScale = (color) => {
             this_id = this.id;
-            this._x[this_id] = this._y[this_id] = this._z[this_id] = this._w[this_id] = color;
+            this.xs[this_id] = this.ys[this_id] = this.zs[this_id] = this.ws[this_id] = color;
             return this;
         };
     }
-    set r(r) { this._x[this.id] = r; }
-    set g(g) { this._y[this.id] = g; }
-    set b(b) { this._z[this.id] = b; }
-    set a(a) { this._w[this.id] = a; }
-    get r() { return this._x[this.id]; }
-    get g() { return this._y[this.id]; }
-    get b() { return this._z[this.id]; }
-    get a() { return this._w[this.id]; }
+    set r(r) { this.xs[this.id] = r; }
+    set g(g) { this.ys[this.id] = g; }
+    set b(b) { this.zs[this.id] = b; }
+    set a(a) { this.ws[this.id] = a; }
+    get r() { return this.xs[this.id]; }
+    get g() { return this.ys[this.id]; }
+    get b() { return this.zs[this.id]; }
+    get a() { return this.ws[this.id]; }
 }
 const set_a = (a) => {
-    a_x = a._x;
-    a_y = a._y;
-    a_z = a._z;
-    a_w = a._w;
+    a_x = a.xs;
+    a_y = a.ys;
+    a_z = a.zs;
+    a_w = a.ws;
 };
 const set_b = (b) => {
-    b_x = b._x;
-    b_y = b._y;
-    b_z = b._z;
-    b_w = b._w;
+    b_x = b.xs;
+    b_y = b.ys;
+    b_z = b.zs;
+    b_w = b.ws;
 };
 const set_o = (o) => {
-    o_x = o._x;
-    o_y = o._y;
-    o_z = o._z;
-    o_w = o._w;
+    o_x = o.xs;
+    o_y = o.ys;
+    o_z = o.zs;
+    o_w = o.ws;
 };
 const set_m = (m) => {
-    m11 = m._11;
-    m21 = m._21;
-    m31 = m._31;
-    m41 = m._41;
-    m12 = m._12;
-    m22 = m._22;
-    m32 = m._32;
-    m42 = m._42;
-    m13 = m._13;
-    m23 = m._23;
-    m33 = m._33;
-    m43 = m._43;
-    m14 = m._14;
-    m24 = m._24;
-    m34 = m._34;
-    m44 = m._44;
+    m11 = m.m11;
+    m21 = m.m21;
+    m31 = m.m31;
+    m41 = m.m41;
+    m12 = m.m12;
+    m22 = m.m22;
+    m32 = m.m32;
+    m42 = m.m42;
+    m13 = m.m13;
+    m23 = m.m23;
+    m33 = m.m33;
+    m43 = m.m43;
+    m14 = m.m14;
+    m24 = m.m24;
+    m34 = m.m34;
+    m44 = m.m44;
 };
+export const defaultVector4DAllocator = new Vector4DAllocator(16);
+export function pos4D(numberOrAllocator, y, z, w, allocator) {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new Position4D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z, w);
+    return result;
+}
+export function dir4D(numberOrAllocator, y, z, w, allocator) {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new Direction4D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z, w);
+    return result;
+}
+export function rgba(numberOrAllocator, g, b, a, allocator) {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new RGBA(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, g, b, a);
+    return result;
+}
 //# sourceMappingURL=vec4.js.map

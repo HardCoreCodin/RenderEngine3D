@@ -1,6 +1,9 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Matrix2x2} from "./mat2x2.js";
 import {Direction3D} from "./vec3.js";
+import {IVector2D} from "./interfaces.js";
+import {Vector2DValues} from "../types.js";
+import {Vector2DAllocator} from "../allocators.js";
 
 let t_x, t_y, t_n, out_id, other_id, this_id: number;
 let a_x, a_y, m11, m12,
@@ -124,36 +127,39 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_y[a] = t_x*m12[b] + t_y*m22[b];
 };
 
-interface IVector2D {
-    _x: Float32Array,
-    _y: Float32Array,
-
-    id: number
-}
-
 interface IAddSub<TOther extends IVector2D = Base2D> extends IVector2D {
     readonly add : (other: TOther) => this;
     readonly sub : (other: TOther) => this;
 }
 
 abstract class Base2D implements IVector2D {
-    constructor(
-        readonly _x: Float32Array,
-        readonly _y: Float32Array,
+    public id: number;
 
-        public id: number = 0,
-    ) {
-        if (id < 0) throw `ID must be positive integer, got ${id}`;
+    public xs: Float32Array;
+    public ys: Float32Array;
+
+    constructor(arrays: Vector2DValues, id: number = 0) {
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+
+        this.id = id;
+
+        [this.xs, this.ys] = arrays;
     }
 }
 
 abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddSub<TOther> = Direction2D> extends Base2D {
+    set arrays(arrays: readonly [Float32Array, Float32Array]) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+    }
+
     readonly copyTo = (out: Base2D) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
-        out._x[out_id] = this._x[this_id];
-        out._y[out_id] = this._y[this_id];
+        out.xs[out_id] = this.xs[this_id];
+        out.ys[out_id] = this.ys[this_id];
 
         return out;
     };
@@ -162,17 +168,17 @@ abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddS
         this_id = this.id;
         other_id = other.id;
 
-        this._x[this_id] = other._x[other_id];
-        this._y[this_id] = other._y[other_id];
+        this.xs[this_id] = other.xs[other_id];
+        this.ys[this_id] = other.ys[other_id];
 
         return this;
     };
 
     readonly setTo = (x: number, y: number) : this => {
         this_id = this.id;
-        
-        this._x[this_id] = x;
-        this._y[this_id] = y;
+
+        this.xs[this_id] = x;
+        this.ys[this_id] = y;
 
         return this;
     };
@@ -261,7 +267,7 @@ abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddS
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
-            out._x[out_id] = out._y[out_id] = 0;
+            out.xs[out_id] = out.ys[out_id] = 0;
 
             return out;
         }
@@ -334,11 +340,11 @@ export class Position2D extends Vector2D<Position2D> {
         return out;
     };
 
-    set x(x: number) {this._x[this.id] = x}
-    set y(y: number) {this._y[this.id] = y}
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
 
-    get x(): number {return this._x[this.id]}
-    get y(): number {return this._y[this.id]}
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
 }
 
 export class Direction2D extends Vector2D {
@@ -385,7 +391,7 @@ export class Direction2D extends Vector2D {
 
         if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
             return out.setFromOther(this);
-        
+
         set_a(this);
         set_o(out);
 
@@ -394,37 +400,107 @@ export class Direction2D extends Vector2D {
         return out;
     };
 
-    set x(x: number) {this._x[this.id] = x}
-    set y(y: number) {this._y[this.id] = y}
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
 
-    get x(): number {return this._x[this.id]}
-    get y(): number {return this._y[this.id]}
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
 }
 
-export class UV2D extends Vector2D<UV2D, UV2D> {
-    set u(u: number) {this._x[this.id] = u}
-    set v(v: number) {this._y[this.id] = v}
+export class UV extends Vector2D<UV, UV> {
+    set u(u: number) {this.xs[this.id] = u}
+    set v(v: number) {this.ys[this.id] = v}
 
-    get u(): number {return this._x[this.id]}
-    get v(): number {return this._y[this.id]}
+    get u(): number {return this.xs[this.id]}
+    get v(): number {return this.ys[this.id]}
 }
 
 const set_a = (a: Base2D) : void => {
-    a_x = a._x;
-    a_y = a._y;
+    a_x = a.xs;
+    a_y = a.ys;
 };
 
 const set_b = (b: Base2D) : void => {
-    b_x = b._x;
-    b_y = b._y;
+    b_x = b.xs;
+    b_y = b.ys;
 };
 
 const set_o = (o: Base2D) : void => {
-    o_x = o._x;
-    o_y = o._y;
+    o_x = o.xs;
+    o_y = o.ys;
 };
 
 const set_m = (m: Matrix2x2) : void => {
-    m11 = m._11;  m21 = m._21;
-    m12 = m._12;  m22 = m._22;
+    m11 = m.m11;  m21 = m.m21;
+    m12 = m.m12;  m22 = m.m22;
 };
+
+export const defaultVector2DAllocator = new Vector2DAllocator(16);
+
+export function pos2D() : Position2D;
+export function pos2D(allocator: Vector2DAllocator) : Position2D;
+export function pos2D(x: number, y: number) : Position2D;
+export function pos2D(x: number, y: number, allocator: Vector2DAllocator) : Position2D;
+export function pos2D(
+    numberOrAllocator?: number | Vector2DAllocator, y?: number,
+    allocator?: Vector2DAllocator
+) : Position2D {
+    allocator = numberOrAllocator instanceof Vector2DAllocator ? numberOrAllocator : allocator || defaultVector2DAllocator;
+    const result = new Position2D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y);
+    return result;
+}
+
+export function dir2D() : Direction2D;
+export function dir2D(allocator: Vector2DAllocator) : Direction2D;
+export function dir2D(x: number, y: number) : Direction2D;
+export function dir2D(x: number, y: number, allocator: Vector2DAllocator) : Direction2D;
+export function dir2D(
+    numberOrAllocator?: number | Vector2DAllocator, y?: number,
+    allocator?: Vector2DAllocator
+) : Direction2D {
+    allocator = numberOrAllocator instanceof Vector2DAllocator ? numberOrAllocator : allocator || defaultVector2DAllocator;
+    const result = new Direction2D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y);
+    return result;
+}
+
+export function uv() : UV;
+export function uv(allocator: Vector2DAllocator) : UV;
+export function uv(u: number, v: number) : UV;
+export function uv(u: number, v: number, allocator: Vector2DAllocator) : UV;
+export function uv(
+    numberOrAllocator?: number | Vector2DAllocator, v?: number,
+    allocator?: Vector2DAllocator
+) : UV {
+    allocator = numberOrAllocator instanceof Vector2DAllocator ? numberOrAllocator : allocator || defaultVector2DAllocator;
+    const result = new UV(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, v);
+    return result;
+}
+
+
+//
+// type Vec2DConstructor<Vec2D extends Base2D> = new (arrays: Vector2DValues, id: number) => Vec2D
+//
+// const makeVec2DFactory = <T extends Vec2DConstructor<Base2D>>(Constructor : T) => {
+//     type Vec2 = InstanceType<typeof Constructor>;
+//
+//     function vec2<Vec2>() : Vec2;
+//     function vec2<Vec2>(allocator: Vector2DAllocator) : Vec2;
+//     function vec2<Vec2>(x: number, y: number, allocator: Vector2DAllocator) : Vec2;
+//     function vec2<Vec2>(xOrAllocator?: number | Vector2DAllocator, y?: number, allocator?: Vector2DAllocator) : Base2D {
+//         if (typeof xOrAllocator === 'number') {
+//             allocator = allocator || Vector2DAllocator;
+//             const vec = new Constructor(allocator.allocate(), allocator.current);
+//             vec.xs[vec.id] = xOrAllocator;
+//             vec.ys[vec.id];
+//
+//             return vec;
+//         }
+//     }
+//
+//     return vec2;
+// };
+//
+// export const pos2D = makeVec2DFactory(Position2D);

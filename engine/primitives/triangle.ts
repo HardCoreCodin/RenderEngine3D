@@ -1,21 +1,23 @@
-import Matrix4x4 from "../linalng/4D/matrix.js";
-import Direction4D from "../linalng/4D/direction.js";
-import Position4D from "../linalng/4D/position.js";
-import Position3D from "../linalng/3D/position.js";
-import Color4D, {rgba} from "../linalng/4D/color.js";
+import {Matrix4x4} from "../math/mat4x4.js";
+import {defaultVector3DAllocator, Position3D} from "../math/vec3.js";
+import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba, defaultVector4DAllocator} from "../math/vec4.js";
+import Vertex, {vert} from "./vertex.js";
+import {float4} from "../factories.js";
+import {Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {ATTRIBUTE} from "../constants.js";
+import {Mesh} from "./mesh.js";
 
-export class Triangle {
+export default class Triangle {
     constructor(
-        public v0: Vertex = new Vertex(),
-        public v1: Vertex = new Vertex(),
-        public v2: Vertex = new Vertex(),
+        public v1: Vertex,
+        public v2: Vertex,
+        public v3: Vertex,
 
-        private vertices = [v0, v1, v2],
+        public normal?: Direction4D,
+        public color?: RGBA,
+        public position?: Position4D,
 
-        public position: Position4D = new Position4D(),
-        public normal: Direction4D = new Direction4D(),
-        public color: Color4D = new Color4D(),
-        public uvs: Position3D = new Position3D(),
+        private vertices = [v1, v2, v3]
     ) {}
 
     isInView(
@@ -23,9 +25,9 @@ export class Triangle {
         far: number = 1
     ) : boolean {
         return (
-            this.v0.isInView(near, far) &&
-            this.v1.isInView(near, far) &&
-            this.v2.isInView(near, far)
+            this.v1.position.isInView(near, far) &&
+            this.v2.position.isInView(near, far) &&
+            this.v3.position.isInView(near, far)
         );
     }
 
@@ -34,36 +36,37 @@ export class Triangle {
         far: number = 1
     ) : boolean {
         return (
-            this.v0.isOutOfView(near, far) &&
-            this.v1.isOutOfView(near, far) &&
-            this.v2.isOutOfView(near, far)
+            this.v1.position.isOutOfView(near, far) &&
+            this.v2.position.isOutOfView(near, far) &&
+            this.v3.position.isOutOfView(near, far)
         );
     }
 
-    asNDC = (new_triangle = new Triangle()) : Triangle => new_triangle.setTo(this).toNDC();
+    asNDC = (new_triangle: Triangle) : Triangle => new_triangle.setFromOther(this).toNDC();
     toNDC = () : Triangle => {
-        this.v0.toNDC();
-        this.v1.toNDC();
-        this.v2.toNDC();
+        this.v1.position.toNDC();
+        this.v2.position.toNDC();
+        this.v3.position.toNDC();
 
         return this;
     };
 
     transformedBy = (
         matrix: Matrix4x4,
-        new_triangle: Triangle = new Triangle()
-    ) : Triangle => new_triangle.setTo(this).transformTo(matrix);
+        new_triangle: Triangle
+    ) : Triangle => new_triangle.setFromOther(this).transformTo(matrix);
+
     transformTo(matrix: Matrix4x4) : Triangle {
-        this.v0.position.mul(matrix);
         this.v1.position.mul(matrix);
         this.v2.position.mul(matrix);
+        this.v3.position.mul(matrix);
 
         return this;
     }
 
     // private static vertex_horizontal_compare = (
-    //     v1: Vertex,
-    //     v2: Vertex
+    //     v1: HVertex,
+    //     v2: HVertex
     // ) : number => v2.position.y - v2.position.y;
     //
     // sort_vertices_vertically = () => this.vertices.sort(Triangle.vertex_horizontal_compare);
@@ -74,28 +77,28 @@ export class Triangle {
         near: number = 0
     ) : void => {
         const from = this.vertices[from_index];
-        const from_z = from.position.buffer[2];
+        const from_z = from.position.z;
 
         if (from_z === near)
             return;
 
         const to = this.vertices[to_index];
-        const to_z = to.position.buffer[2];
+        const to_z = to.position.z;
 
         const distance = from_z - to_z;
         if (distance) {
             const by = (from_z - near) / distance;
             if (by === 1)
-                from.setTo(to);
+                from.setFromOther(to);
             else
                 from.lerp(to, by, to);
         }
     };
 
     clipToNearClippingPlane(near: number, extra_triangle: Triangle) : number {
-        const v0_is_outside = this.v0.position.buffer[2] < near;
-        const v1_is_outside = this.v1.position.buffer[2] < near;
-        const v2_is_outside = this.v2.position.buffer[2] < near;
+        const v0_is_outside = this.v1.position.z < near;
+        const v1_is_outside = this.v2.position.z < near;
+        const v2_is_outside = this.v3.position.z < near;
 
         // Early return if the triangle is fully outside/inside the frustum
         if (v0_is_outside && v1_is_outside && v2_is_outside) return 0;
@@ -140,18 +143,18 @@ export class Triangle {
             // The two new vertices need to be on the near clipping plane:
             this.sendToNearClippingPlane(i1, o1, near);
             this.sendToNearClippingPlane(i1, o2, near);
-            this.color = rgba(1);
+            this.color = red;
 
             return 1; // A single (smaller)triangle
         } else {
-            extra_triangle.setTo(this);
+            extra_triangle.setFromOther(this);
             // Two vertices are inside the frustum.
             // Clipping forms a quad which needs to be split into 2 triangles.
             // The first is the original (only smaller, as above).
             this.sendToNearClippingPlane(i1, o1, near);
-            this.color = rgba(0, 1);
+            this.color = green;
             // The second is a new extra triangle, sharing 2 vertices
-            extra_triangle.vertices[i1].setTo(this.vertices[o1]);
+            extra_triangle.vertices[i1].setFromOther(this.vertices[o1]);
             extra_triangle.sendToNearClippingPlane(i2, o1, near);
 
             return 2; // Two adjacent triangles
@@ -159,7 +162,7 @@ export class Triangle {
     }
 
     setTo(
-        p0: Position4D | Triangle,
+        p0: Position4D,
         p1?: Position4D,
         p2?: Position4D,
 
@@ -167,61 +170,53 @@ export class Triangle {
         uv1?: Position3D,
         uv2?: Position3D,
 
-        color?: Color4D
+        color?: RGBA
     ) : Triangle {
-        if (p0 instanceof Triangle) {
-            this.v0.position.setTo(p0.v0.position);
-            this.v1.position.setTo(p0.v1.position);
-            this.v2.position.setTo(p0.v2.position);
+        this.v1.position.setFromOther(p0);
+        if (p1) this.v2.position.setFromOther(p1);
+        if (p2) this.v3.position.setFromOther(p2);
+        if (uv0) this.v1.uvs.setFromOther(uv0);
+        if (uv1) this.v2.uvs.setFromOther(uv1);
+        if (uv2) this.v3.uvs.setFromOther(uv2);
 
-            this.v0.uvs.setTo(p0.v0.uvs);
-            this.v1.uvs.setTo(p0.v1.uvs);
-            this.v2.uvs.setTo(p0.v2.uvs);
-
-            this.color.setTo(p0.color);
-        } else if (p0 instanceof Position4D) {
-            this.v0.position.setTo(p0);
-            if (p1 instanceof Position4D) this.v1.position.setTo(p1);
-            if (p2 instanceof Position4D) this.v2.position.setTo(p2);
-            if (uv0 instanceof Position3D) this.v0.uvs.setTo(uv0);
-            if (uv1 instanceof Position3D) this.v1.uvs.setTo(uv1);
-            if (uv2 instanceof Position3D) this.v2.uvs.setTo(uv2);
-        }
-
-        if (color instanceof Color4D)
-            this.color.setTo(color);
+        if (color instanceof RGBA)
+            this.color.setFromOther(color);
 
         return this;
     }
 
-    copy = (new_triangle = new Triangle()) : Triangle => new_triangle.setTo(this);
+    setFromOther(triangle: this) : this {
+        this.v1.position.setFromOther(triangle.v1.position);
+        this.v2.position.setFromOther(triangle.v2.position);
+        this.v3.position.setFromOther(triangle.v3.position);
+
+        this.v1.uvs.setFromOther(triangle.v1.uvs);
+        this.v2.uvs.setFromOther(triangle.v2.uvs);
+        this.v3.uvs.setFromOther(triangle.v3.uvs);
+
+        this.color.setFromOther(triangle.color);
+
+        return this;
+    }
 }
 
+// temp colors:
+const temp = float4(2);
+const red = new RGBA(temp);
+const green = new RGBA(temp);
+red.r = red.a = green.g = green.a = green.id = 1;
+
 export const tri = (
-    v0: Vertex | Position4D | Triangle = new Vertex(),
-    v1: Vertex | Position4D = new Vertex(),
-    v2: Vertex | Position4D = new Vertex()
-): Triangle => {
-    if (v0 instanceof Triangle)
-        return new Triangle(
-            v0.v0.copy(),
-            v0.v1.copy(),
-            v0.v2.copy()
-        );
+    include_vertex_attributes: ATTRIBUTE = ATTRIBUTE.position,
+    include_face_attributes: ATTRIBUTE = ATTRIBUTE.normal,
+    vector4D_allocator: Vector4DAllocator = defaultVector4DAllocator,
+    vector3D_allocator: Vector3DAllocator = defaultVector3DAllocator
+) : Triangle => new Triangle(
+    vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator),
+    vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator),
+    vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator),
 
-    if (v0 instanceof Position4D &&
-        v1 instanceof Position4D &&
-        v2 instanceof Position4D)
-        return new Triangle(
-            new Vertex(v0),
-            new Vertex(v1),
-            new Vertex(v2)
-        );
-
-    if (v0 instanceof Vertex &&
-        v1 instanceof Vertex &&
-        v2 instanceof Vertex)
-        return new Triangle(v0, v1, v2);
-
-    throw `Invalid arguments! ${v0}, ${v1}, ${v2}`;
-};
+    include_face_attributes & ATTRIBUTE.position ? dir4D(vector4D_allocator) : undefined,
+    include_face_attributes & ATTRIBUTE.normal ? rgba(vector4D_allocator) : undefined,
+    include_face_attributes & ATTRIBUTE.color ? pos4D(vector4D_allocator) : undefined,
+);

@@ -1,49 +1,30 @@
-import { IntArray } from "../types.js";
-import { float, float3, num2, num3, num4 } from "../factories.js";
-import { cross, normalize, subtract } from "../math/vec3.js";
+import { float3, num2, num3, num4 } from "../factories.js";
+import { Direction3D, Position3D } from "../math/vec3.js";
 export class FaceVertices {
-    constructor(input_positions = null) {
-        this.values = [null, null, null];
-        if (input_positions)
-            this.load(input_positions);
+    init(allocator, size) {
+        if (!(this.indices && this.indices[0].length === size))
+            this.indices = allocator.allocate(size);
     }
-    load(input_positions) {
-        const face_count = input_positions.faces[0].length;
-        for (const [i, buffer] of this.values.entries()) {
-            if (buffer === null || buffer.length !== face_count)
-                this.values[i] = new IntArray(face_count);
-        }
-        this.values[0].set(input_positions.faces[0]);
-        this.values[1].set(input_positions.faces[1]);
-        this.values[2].set(input_positions.faces[2]);
+    load(inputs) {
+        this.indices[0].set(inputs[0]);
+        this.indices[1].set(inputs[1]);
+        this.indices[2].set(inputs[2]);
     }
 }
 export class VertexFaces {
-    constructor(vertex_count = 0, face_vertices = null) {
-        this._temp_array = [];
-        this._buffer = null;
-        this.values = [];
-        if (vertex_count && face_vertices)
-            this.load(vertex_count, face_vertices);
+    constructor() {
+        this.indices = [];
     }
-    load(vertex_count, face_vertices) {
-        this._temp_array.length = vertex_count;
-        for (let i = 0; i < vertex_count; i++)
-            this._temp_array[i] = [];
-        let vertex_id, face_id, relations = 0;
-        for (const face_vertex_ids of face_vertices.values) {
-            for ([face_id, vertex_id] of face_vertex_ids.entries()) {
-                this._temp_array[vertex_id].push(face_id);
-                relations++;
-            }
-        }
-        this.values.length = vertex_count;
-        if (this._buffer === null || this._buffer.length !== relations)
-            this._buffer = new Uint32Array(relations);
+    init(allocator, size) {
+        if (!(this._buffer && this._buffer.length === size))
+            this._buffer = allocator.allocate(size)[0];
+    }
+    load(inputs) {
+        this.indices.length = inputs.length;
         let offset = 0;
-        for (const [i, array] of this._temp_array.entries()) {
-            this.values[i] = this._buffer.subarray(offset, array.length);
-            this.values[i].set(array);
+        for (const [i, array] of inputs.entries()) {
+            this.indices[i] = this._buffer.subarray(offset, array.length);
+            this.indices[i].set(array);
             offset += array.length;
         }
     }
@@ -51,27 +32,10 @@ export class VertexFaces {
 export class Attribute {
     constructor() {
         this.dim = 3 /* _3D */;
-        switch (this.id) {
-            case 1 /* position */:
-                this.name = 'position';
-                break;
-            case 2 /* normal */:
-                this.name = 'normal';
-                break;
-            case 4 /* color */:
-                this.name = 'color';
-                break;
-            case 8 /* uv */:
-                this.name = 'uv';
-                break;
-            default:
-                throw `Invalid attribute id ${this.id}! ` +
-                    'Only supports position, normal, color or uv.';
-        }
     }
 }
 export class InputAttribute extends Attribute {
-    constructor(face_type = 3 /* TRIANGLE */, vertices = null, faces = null) {
+    constructor(face_type = 3 /* TRIANGLE */, vertices, faces) {
         super();
         this.face_type = face_type;
         this.vertices = vertices;
@@ -99,6 +63,22 @@ export class InputAttribute extends Attribute {
                     throw `Invalid vertex dimension ${this.dim}! Only supports 2D or 3D.`;
             }
     }
+    triangulate() {
+        if (this.face_type === 4 /* QUAD */) {
+            const v4 = this.faces.pop();
+            const quad_count = v4.length;
+            const [v1, v2, v3] = this.faces;
+            v1.length *= 2;
+            v2.length *= 2;
+            v3.length *= 2;
+            for (let quad_id = 0; quad_id < quad_count; quad_id++) {
+                v1[quad_id + quad_count] = v1[quad_id];
+                v2[quad_id + quad_count] = v3[quad_id];
+                v3[quad_id + quad_count] = v4[quad_id];
+            }
+            this.face_type = 3 /* TRIANGLE */;
+        }
+    }
     getValue(value, is_index) {
         let error;
         if (typeof value === "number") {
@@ -119,12 +99,12 @@ export class InputAttribute extends Attribute {
             return this.getValue(+value, is_index);
         else
             error = `Got ${typeof value} ${value} instead or a number or a string`;
-        throw `Invalid ${this.name} ${is_index ? 'index' : 'value'}! ${error}`;
+        throw `Invalid ${this} ${is_index ? 'index' : 'value'}! ${error}`;
     }
     checkInputSize(input_size, is_index) {
         const required_size = is_index ? this.face_type : this.dim;
         if (input_size !== required_size)
-            throw `Invalid ${this.name} ${is_index ? 'indices' : 'values'} input! Got ${input_size} ${is_index ? 'vertices per face' : 'dimensions'} instead of ${required_size}`;
+            throw `Invalid ${this} ${is_index ? 'indices' : 'values'} input! Got ${input_size} ${is_index ? 'vertices per face' : 'dimensions'} instead of ${required_size}`;
     }
     pushVertex(vertex) {
         this.checkInputSize(vertex.length, false);
@@ -138,20 +118,23 @@ export class InputAttribute extends Attribute {
     }
 }
 class BaseVertexAttribute extends Attribute {
-    constructor(length, is_shared = true) {
-        super();
-        this.length = length;
-        this.is_shared = is_shared;
-        this.shared_values = null;
-        this.unshared_values = null;
-        if (!!is_shared)
-            this.shared_values = float(length, this.dim);
-        else
-            this.unshared_values = [
-                float(length, this.dim),
-                float(length, this.dim),
-                float(length, this.dim)
-            ];
+    constructor() {
+        super(...arguments);
+        this.unshared_values = [undefined, undefined, undefined];
+    }
+    init(allocator, size, is_shared = this.is_shared) {
+        this.is_shared = !!(is_shared);
+        if (is_shared) {
+            if (!(this.shared_values && this.shared_values[0].length === size))
+                this.shared_values = allocator.allocate(size);
+        }
+        else {
+            if (!(this.unshared_values[0] && this.unshared_values[0].length === size)) {
+                this.unshared_values[0] = allocator.allocate(size);
+                this.unshared_values[1] = allocator.allocate(size);
+                this.unshared_values[2] = allocator.allocate(size);
+            }
+        }
     }
 }
 class AbstractLoadableVertexAttribute extends BaseVertexAttribute {
@@ -180,7 +163,7 @@ class AbstractPulledVertexAttribute extends AbstractLoadableVertexAttribute {
     pull(face_attribute, vertex_faces) {
         if (this.is_shared) // Average vertex-attribute values from their related face's attribute values:
             for (const [vertex_component, face_component] of zip(this.shared_values, face_attribute.face_values))
-                for (const [vertex_id, face_ids] of vertex_faces.values.entries()) {
+                for (const [vertex_id, face_ids] of vertex_faces.indices.entries()) {
                     let accumulator = 0;
                     // For each component 'accumulate-in' the face-value of all the faces of this vertex:
                     for (let face_id of face_ids)
@@ -194,10 +177,9 @@ class AbstractPulledVertexAttribute extends AbstractLoadableVertexAttribute {
     }
 }
 class BaseFaceAttribute extends Attribute {
-    constructor(length) {
-        super();
-        this.face_values = null;
-        this.face_values = float(length, this.dim);
+    init(allocator, size) {
+        if (!(this.face_values && this.face_values[0].length === size))
+            this.face_values = allocator.allocate(size);
     }
 }
 class AbstractFaceAttribute extends BaseFaceAttribute {
@@ -210,6 +192,7 @@ class AbstractFaceAttribute extends BaseFaceAttribute {
             for (const [output, ...inputs] of zip(this.face_values, ...vertex_attribute.unshared_values))
                 for (const [face_id, values] of [...zip(...inputs)].entries())
                     output[face_id] = avg(values);
+        // this.initCurrent();
     }
 }
 class VertexPositions extends AbstractLoadableVertexAttribute {
@@ -285,27 +268,22 @@ export class FaceNormals extends AbstractFaceAttribute {
         this.id = 2 /* normal */;
     }
     pull(attribute, face_vertices) {
-        const [ids_0, ids_1, ids_2] = face_vertices.values;
-        let values_0, values_1, values_2;
+        const [ids_0, ids_1, ids_2] = face_vertices.indices;
+        face_normal.arrays = this.face_values;
         if (attribute.is_shared)
-            values_0 = values_1 = values_2 = attribute.shared_values;
+            pos1.arrays = pos2.arrays = pos3.arrays = attribute.shared_values;
         else
-            [
-                values_0, values_1, values_2
-            ] = face_vertices.values;
-        let id_0, id_1, id_2;
+            [pos1.arrays, pos2.arrays, pos3.arrays] = attribute.unshared_values;
         for (let face_id = 0; face_id < this.face_values[0].length; face_id++) {
+            face_normal.id = face_id;
             if (attribute.is_shared) {
-                id_0 = ids_0[face_id];
-                id_1 = ids_1[face_id];
-                id_2 = ids_2[face_id];
+                pos1.id = ids_0[face_id];
+                pos2.id = ids_1[face_id];
+                pos3.id = ids_2[face_id];
             }
             else
-                id_0 = id_1 = id_2 = face_id;
-            subtract(values_1, id_1, values_0, id_0, temp, 0);
-            subtract(values_2, id_2, values_0, id_0, temp, 1);
-            cross(temp, 0, temp, 1, temp, 2);
-            normalize(temp, 2, this.face_values, face_id);
+                pos1.id = pos2.id = pos3.id = face_id;
+            pos1.to(pos2, dir1).crossedWith(pos1.to(pos3, dir2), dir3).normalized(face_normal);
         }
     }
 }
@@ -320,9 +298,6 @@ export class FaceColors extends AbstractFaceAttribute {
 }
 class AbstractCollection {
     constructor() {
-        this.position = null;
-        this.normal = null;
-        this.color = null;
         this._validateParameters = () => (this._validate(this.count, 'Count') &&
             this._validate(this.included, 'included', 0b0001, 0b1111));
     }
@@ -346,47 +321,52 @@ class AbstractCollection {
     }
 }
 export class Faces extends AbstractCollection {
-    constructor(count, included) {
-        super();
-        if (count !== undefined)
-            this.init(count, included);
+    constructor() {
+        super(...arguments);
+        this.positions = new FacePositions();
+        this.normals = new FaceNormals();
+        this.colors = new FaceColors();
+        this.vertices = new FaceVertices();
     }
-    init(count, included) {
+    init(allocators, count, included) {
         this.count = count;
         this.included = included;
         if (!this._validateParameters())
             throw `Invalid parameters! count: ${count} included: ${included}`;
+        this.vertices.init(allocators.face_vertices, count);
         if (included & 1 /* position */)
-            this.position = new FacePositions(count);
+            this.positions.init(allocators.vec3D, count);
         if (included & 2 /* normal */)
-            this.normal = new FaceNormals(count);
+            this.normals.init(allocators.vec3D, count);
         if (included & 4 /* color */)
-            this.color = new FaceColors(count);
+            this.colors.init(allocators.vec3D, count);
     }
 }
 export class Vertices extends AbstractCollection {
-    constructor(count, included, shared) {
-        super();
-        this.uv = null;
+    constructor() {
+        super(...arguments);
+        this.positions = new VertexPositions();
+        this.normals = new VertexNormals();
+        this.colors = new VertexColors();
+        this.uvs = new VertexUVs();
+        this.faces = new VertexFaces();
         this._validateParameters = () => (this._validate(this.count, 'Count') &&
             this._validate(this.included, 'included', 0b0001, 0b1111) &&
             this._validate(this.shared, 'shared', 0b0000, 0b1111));
-        if (count !== undefined)
-            this.init(count, included, shared);
     }
-    init(count, included, shared) {
+    init(allocators, count, included, shared) {
         this.count = count;
         this.included = included;
         this.shared = shared;
         if (!this._validateParameters())
             throw `Invalid parameters! count: ${count} included: ${included}`;
-        this.position = new VertexPositions(count, shared & 1 /* position */);
+        this.positions.init(allocators.vec3D, count, shared & 1 /* position */);
         if (included & 2 /* normal */)
-            this.normal = new VertexNormals(count, shared & 2 /* normal */);
+            this.normals.init(allocators.vec3D, count, shared & 2 /* normal */);
         if (included & 4 /* color */)
-            this.color = new VertexColors(count, shared & 4 /* color */);
+            this.colors.init(allocators.vec3D, count, shared & 4 /* color */);
         if (included & 8 /* uv */)
-            this.uv = new VertexUVs(count, shared & 8 /* uv */);
+            this.uvs.init(allocators.vec2D, count, shared & 8 /* uv */);
     }
 }
 const randomize = (values) => {
@@ -397,6 +377,13 @@ const randomize = (values) => {
 };
 // Temporary float arrays for computations:
 const temp = float3(3);
+const dir1 = new Direction3D(temp, 0);
+const dir2 = new Direction3D(temp, 1);
+const dir3 = new Direction3D(temp, 2);
+const pos1 = new Position3D(temp);
+const pos2 = new Position3D(temp);
+const pos3 = new Position3D(temp);
+const face_normal = new Direction3D(temp);
 function* zip(...iterables) {
     let iterators = iterables.map(i => i[Symbol.iterator]());
     while (true) {
@@ -413,4 +400,22 @@ const avg = (values) => {
         sum += value;
     return sum / values.length;
 };
+function* iter2(a, b, r = [0, a[0], b[0]]) {
+    for (let i = 0; i < a.length; i++) {
+        r[0] = i;
+        r[1] = a[i];
+        r[2] = b[i];
+        yield r;
+    }
+}
+function* iter3(a, b, c) {
+    const result = [0, a[0], b[0], c[0]];
+    for (let i = 0; i < a.length; i++) {
+        result[0] = i;
+        result[1] = a[i];
+        result[2] = b[i];
+        result[3] = c[i];
+        yield result;
+    }
+}
 //# sourceMappingURL=attribute.js.map

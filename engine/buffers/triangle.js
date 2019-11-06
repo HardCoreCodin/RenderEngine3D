@@ -14,9 +14,9 @@ export default class Triangles {
         this.indices = indices;
     }
     at(index, current = new Triangle()) {
-        this.vertices.at(this.indices.sub_arrays[index][0], current.v0);
-        this.vertices.at(this.indices.sub_arrays[index][1], current.v1);
-        this.vertices.at(this.indices.sub_arrays[index][2], current.v2);
+        this.vertices.at(this.indices.sub_arrays[index][0], current.v1);
+        this.vertices.at(this.indices.sub_arrays[index][1], current.v2);
+        this.vertices.at(this.indices.sub_arrays[index][2], current.v3);
         this.positions.at(index, current.position);
         this.normals.at(index, current.normal);
         this.colors.at(index, current.color);

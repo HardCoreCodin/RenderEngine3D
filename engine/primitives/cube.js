@@ -2,7 +2,7 @@ import { Mesh, MeshInputs, MeshOptions } from "./mesh.js";
 import { InputPositions } from "./attribute.js";
 // Cube inputs in quads:
 // =====================
-const mesh_inputs = new MeshInputs(1 /* position */, 4 /* QUAD */, new InputPositions(4 /* QUAD */, 
+const mesh_inputs = new MeshInputs(4 /* QUAD */, 1 /* position */, new InputPositions(4 /* QUAD */, 
 // Vertex position values:
 [
     [
@@ -25,6 +25,6 @@ const mesh_inputs = new MeshInputs(1 /* position */, 4 /* QUAD */, new InputPosi
     [2, 6, 7, 3, 5, 6],
     [3, 2, 6, 7, 4, 7],
 ]));
-const Cube = (share = 1 /* position */, normals = 1 /* NO_VERTEX__GENERATE_FACE */, colors = 1 /* NO_VERTEX__GENERATE_FACE */) => new Mesh(mesh_inputs, new MeshOptions(share, normals, colors));
-export default Cube;
+const makeCube = (share = 1 /* position */, normals = 1 /* NO_VERTEX__GENERATE_FACE */, colors = 1 /* NO_VERTEX__GENERATE_FACE */) => new Mesh(mesh_inputs, new MeshOptions(share, normals, colors));
+export default makeCube;
 //# sourceMappingURL=cube.js.map

@@ -1,18 +1,25 @@
-import Matrix4x4 from "../linalng/4D/matrix.js";
-import Transform from "./transform.js";
-import Position4D from "../linalng/4D/position.js";
-import Position3D from "../linalng/3D/position.js";
+import { trans } from "./transform.js";
+import { Position3D } from "../math/vec3.js";
+import { defaultVector4DAllocator, pos4D } from "../math/vec4.js";
+import { defaultMatrix4x4Allocator } from "../math/mat4x4.js";
+import { defaultMatrix3x3Allocator } from "../math/mat3x3.js";
 export default class Camera {
-    constructor(options = new CameraOptions()) {
+    constructor(transform, 
+    // Position in space (0, 0, 0, 1) with perspective projection applied to it
+    projected_position, 
+    // Location in world space
+    position = new Position3D([
+        transform.translation.xs,
+        transform.translation.ys,
+        transform.translation.zs
+    ], transform.translation.id), options = new CameraOptions()) {
+        this.transform = transform;
+        this.projected_position = projected_position;
+        this.position = position;
         this.options = options;
-        this.transform = new Transform();
-        // Location in world space
-        this.position = new Position3D(this.transform.translation.buffer.subarray(0, 3));
-        // Position in space (0, 0, 0, 1) with perspective projection applied to it
-        this.projected_position = new Position4D();
     }
     // Matrix that converts from view space to clip space
-    getProjectionMatrix(projection_matrix = new Matrix4x4().setToIdentity()) {
+    getProjectionMatrix(projection_matrix) {
         projection_matrix.setTo(this.options.perspective_factor, 0, 0, 0, 0, this.options.perspective_factor * this.options.aspect_ratio, 0, 0, 0, 0, this.options.far / this.options.depth_span, 1, 0, 0, (-this.options.far * this.options.near) / this.options.depth_span, 0);
         this.projected_position.w = 1;
         this.projected_position.z = 0;
@@ -104,4 +111,5 @@ export class CameraOptions {
         }
     }
 }
+export const cam = (matrix4x4_allocator = defaultMatrix4x4Allocator, matrix3x3_allocator = defaultMatrix3x3Allocator, positions_allocator = defaultVector4DAllocator) => new Camera(trans(matrix4x4_allocator, matrix3x3_allocator), pos4D(positions_allocator));
 //# sourceMappingURL=camera.js.map

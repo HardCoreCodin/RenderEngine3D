@@ -1,4 +1,6 @@
 export const PRECISION_DIGITS = 3;
+export const CACHE_LINE_SIZE = 64;
+export const FLOAT_SIZE = 4;
 
 export const enum FACE_VERTEX_NUMBER {
     _1,
@@ -12,9 +14,12 @@ export const enum FACE_TYPE {
 }
 
 export const enum DIM {
+    _1D = 1,
     _2D = 2,
-    _3D,
-    _4D,
+    _3D = 3,
+    _4D = 4,
+    _9D = 9,
+    _16D = 16,
 }
 
 export const enum ATTRIBUTE {

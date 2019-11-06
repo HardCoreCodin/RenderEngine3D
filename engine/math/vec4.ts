@@ -1,6 +1,8 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import {Matrix4x4} from "./mat4x4.js";
-import {Direction3D} from "./vec3.js";
+import {IDirection, IPosition, IVector4D} from "./interfaces.js";
+import {Vector4DValues} from "../types.js";
+import {Vector4DAllocator} from "../allocators.js";
 
 let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id: number;
 let a_x, a_y, a_z, a_w,
@@ -190,42 +192,45 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_w[a] = t_x*m14[b] + t_y*m24[b] + t_z*m34[b] + t_w*m44[b];
 };
 
-interface IVector4D {
-    _x: Float32Array,
-    _y: Float32Array,
-    _z: Float32Array,
-    _w: Float32Array,
-
-    id: number
-}
-
 interface IAddSub<TOther extends IVector4D = Base4D> extends IVector4D {
     readonly add : (other: TOther) => this;
     readonly sub : (other: TOther) => this;
 }
 
 abstract class Base4D implements IVector4D {
-    constructor(
-        readonly _x: Float32Array,
-        readonly _y: Float32Array,
-        readonly _z: Float32Array,
-        readonly _w: Float32Array,
+    public id: number;
 
-        public id: number = 0,
-    ) {
-        if (id < 0) throw `ID must be positive integer, got ${id}`;
+    public xs: Float32Array;
+    public ys: Float32Array;
+    public zs: Float32Array;
+    public ws: Float32Array;
+
+    constructor(arrays: Vector4DValues, id: number = 0) {
+        if (id < 0)
+            throw `ID must be positive integer, got ${id}`;
+
+        this.id = id;
+
+        [this.xs, this.ys, this.zs, this.ws] = arrays;
     }
 }
 
 abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddSub<TOther> = Direction4D> extends Base4D {
+    set arrays(arrays: Vector4DValues) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+        this.ws = arrays[3];
+    }
+
     readonly copyTo = (out: Base4D) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
-        out._x[out_id] = this._x[this_id];
-        out._y[out_id] = this._y[this_id];
-        out._z[out_id] = this._z[this_id];
-        out._w[out_id] = this._w[this_id];
+        out.xs[out_id] = this.xs[this_id];
+        out.ys[out_id] = this.ys[this_id];
+        out.zs[out_id] = this.zs[this_id];
+        out.ws[out_id] = this.ws[this_id];
 
         return out;
     };
@@ -234,10 +239,10 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
         this_id = this.id;
         other_id = other.id;
 
-        this._x[this_id] = other._x[other_id];
-        this._y[this_id] = other._y[other_id];
-        this._z[this_id] = other._z[other_id];
-        this._w[this_id] = other._w[other_id];
+        this.xs[this_id] = other.xs[other_id];
+        this.ys[this_id] = other.ys[other_id];
+        this.zs[this_id] = other.zs[other_id];
+        this.ws[this_id] = other.ws[other_id];
 
         return this;
     };
@@ -245,10 +250,10 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
     readonly setTo = (x: number, y: number, z: number, w: number) : this => {
         this_id = this.id;
 
-        this._x[this_id] = x;
-        this._y[this_id] = y;
-        this._z[this_id] = z;
-        this._w[this_id] = w;
+        this.xs[this_id] = x;
+        this.ys[this_id] = y;
+        this.zs[this_id] = z;
+        this.ws[this_id] = w;
 
         return this;
     };
@@ -337,7 +342,7 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
-            out._x[out_id] = out._y[out_id] = out._z[out_id] = out._w[out_id] = 0;
+            out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = out.ws[out_id] = 0;
 
             return out;
         }
@@ -384,10 +389,10 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
         return out;
     };
 
-    toNDC = () : this => this.div(this._w[this.id]);
+    toNDC = () : this => this.div(this.ws[this.id]);
 }
 
-export class Position4D extends Vector4D<Position4D> {
+export class Position4D extends Vector4D<Position4D> implements IPosition {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -413,35 +418,35 @@ export class Position4D extends Vector4D<Position4D> {
     };
 
     readonly isInView = (near: number = 0, far: number = 1) : boolean => in_view(
-        this._x[this.id],
-        this._y[this.id],
-        this._z[this.id],
-        this._w[this.id],
+        this.xs[this.id],
+        this.ys[this.id],
+        this.zs[this.id],
+        this.ws[this.id],
         near,
         far
     );
 
     readonly isOutOfView = (near: number = 0, far: number = 1) : boolean => out_of_view(
-        this._x[this.id],
-        this._y[this.id],
-        this._z[this.id],
-        this._w[this.id],
+        this.xs[this.id],
+        this.ys[this.id],
+        this.zs[this.id],
+        this.ws[this.id],
         near,
         far
     );
 
-    set x(x: number) {this._x[this.id] = x}
-    set y(y: number) {this._y[this.id] = y}
-    set z(z: number) {this._z[this.id] = z}
-    set w(w: number) {this._w[this.id] = w}
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
+    set z(z: number) {this.zs[this.id] = z}
+    set w(w: number) {this.ws[this.id] = w}
 
-    get x(): number {return this._x[this.id]}
-    get y(): number {return this._y[this.id]}
-    get z(): number {return this._z[this.id]}
-    get w(): number {return this._w[this.id]}
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
+    get z(): number {return this.zs[this.id]}
+    get w(): number {return this.ws[this.id]}
 }
 
-export class Direction4D extends Vector4D {
+export class Direction4D extends Vector4D implements IDirection {
     get length() : number {
         set_a(this);
 
@@ -494,61 +499,105 @@ export class Direction4D extends Vector4D {
         return out;
     };
 
-    set x(x: number) {this._x[this.id] = x}
-    set y(y: number) {this._y[this.id] = y}
-    set z(z: number) {this._z[this.id] = z}
-    set w(w: number) {this._w[this.id] = w}
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
+    set z(z: number) {this.zs[this.id] = z}
+    set w(w: number) {this.ws[this.id] = w}
 
-    get x(): number {return this._x[this.id]}
-    get y(): number {return this._y[this.id]}
-    get z(): number {return this._z[this.id]}
-    get w(): number {return this._w[this.id]}
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
+    get z(): number {return this.zs[this.id]}
+    get w(): number {return this.ws[this.id]}
 }
 
-export class Color4D extends Vector4D<Color4D, Color4D> {
+export class RGBA extends Vector4D<RGBA, RGBA> {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 
-        this._x[this_id] = this._y[this_id] = this._z[this_id] = this._w[this_id] = color;
+        this.xs[this_id] = this.ys[this_id] = this.zs[this_id] = this.ws[this_id] = color;
 
         return this;
     };
 
-    set r(r: number) {this._x[this.id] = r}
-    set g(g: number) {this._y[this.id] = g}
-    set b(b: number) {this._z[this.id] = b}
-    set a(a: number) {this._w[this.id] = a}
+    set r(r: number) {this.xs[this.id] = r}
+    set g(g: number) {this.ys[this.id] = g}
+    set b(b: number) {this.zs[this.id] = b}
+    set a(a: number) {this.ws[this.id] = a}
 
-    get r(): number {return this._x[this.id]}
-    get g(): number {return this._y[this.id]}
-    get b(): number {return this._z[this.id]}
-    get a(): number {return this._w[this.id]}
+    get r(): number {return this.xs[this.id]}
+    get g(): number {return this.ys[this.id]}
+    get b(): number {return this.zs[this.id]}
+    get a(): number {return this.ws[this.id]}
 }
 
 const set_a = (a: Base4D) : void => {
-    a_x = a._x;
-    a_y = a._y;
-    a_z = a._z;
-    a_w = a._w;
+    a_x = a.xs;
+    a_y = a.ys;
+    a_z = a.zs;
+    a_w = a.ws;
 };
 
 const set_b = (b: Base4D) : void => {
-    b_x = b._x;
-    b_y = b._y;
-    b_z = b._z;
-    b_w = b._w;
+    b_x = b.xs;
+    b_y = b.ys;
+    b_z = b.zs;
+    b_w = b.ws;
 };
 
 const set_o = (o: Base4D) : void => {
-    o_x = o._x;
-    o_y = o._y;
-    o_z = o._z;
-    o_w = o._w;
+    o_x = o.xs;
+    o_y = o.ys;
+    o_z = o.zs;
+    o_w = o.ws;
 };
 
 const set_m = (m: Matrix4x4) : void => {
-    m11 = m._11;  m21 = m._21;  m31 = m._31;  m41 = m._41;
-    m12 = m._12;  m22 = m._22;  m32 = m._32;  m42 = m._42;
-    m13 = m._13;  m23 = m._23;  m33 = m._33;  m43 = m._43;
-    m14 = m._14;  m24 = m._24;  m34 = m._34;  m44 = m._44;
+    m11 = m.m11;  m21 = m.m21;  m31 = m.m31;  m41 = m.m41;
+    m12 = m.m12;  m22 = m.m22;  m32 = m.m32;  m42 = m.m42;
+    m13 = m.m13;  m23 = m.m23;  m33 = m.m33;  m43 = m.m43;
+    m14 = m.m14;  m24 = m.m24;  m34 = m.m34;  m44 = m.m44;
 };
+
+export const defaultVector4DAllocator = new Vector4DAllocator(16);
+
+export function pos4D() : Position4D;
+export function pos4D(allocator: Vector4DAllocator) : Position4D;
+export function pos4D(x: number, y: number, z: number, w: number) : Position4D;
+export function pos4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Position4D;
+export function pos4D(
+    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w?: number,
+    allocator?: Vector4DAllocator
+) : Position4D {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new Position4D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y, z, w);
+    return result;
+}
+
+export function dir4D() : Direction4D;
+export function dir4D(allocator: Vector4DAllocator) : Direction4D;
+export function dir4D(x: number, y: number, z: number, w: number) : Direction4D;
+export function dir4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Direction4D;
+export function dir4D(
+    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w?: number,
+    allocator?: Vector4DAllocator
+) : Direction4D {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new Direction4D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y, z, w);
+    return result;
+}
+
+export function rgba() : RGBA;
+export function rgba(allocator: Vector4DAllocator) : RGBA;
+export function rgba(r: number, g: number, b: number, a:number) : RGBA;
+export function rgba(r: number, g: number, b: number, a:number, allocator: Vector4DAllocator) : RGBA;
+export function rgba(
+    numberOrAllocator?: number | Vector4DAllocator, g?: number, b?: number, a?: number,
+    allocator?: Vector4DAllocator
+) : RGBA {
+    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
+    const result = new RGBA(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, g, b, a);
+    return result;
+}

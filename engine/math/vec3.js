@@ -1,4 +1,5 @@
 import { PRECISION_DIGITS } from "../constants.js";
+import { Vector3DAllocator } from "../allocators.js";
 let t_x, t_y, t_z, t_n, out_id, other_id, this_id;
 let a_x, a_y, a_z, m11, m12, m13, b_x, b_y, b_z, m21, m22, m23, o_x, o_y, o_z, m31, m32, m33;
 const equals = (a, b) => a_x[a].toFixed(PRECISION_DIGITS) ===
@@ -111,13 +112,11 @@ const multiply_in_place = (a, b) => {
     a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b];
 };
 class Base3D {
-    constructor(_x, _y, _z, id = 0) {
-        this._x = _x;
-        this._y = _y;
-        this._z = _z;
-        this.id = id;
+    constructor(arrays, id = 0) {
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;
+        this.id = id;
+        [this.xs, this.ys, this.zs] = arrays;
     }
 }
 class Vector3D extends Base3D {
@@ -126,24 +125,24 @@ class Vector3D extends Base3D {
         this.copyTo = (out) => {
             this_id = this.id;
             out_id = out.id;
-            out._x[out_id] = this._x[this_id];
-            out._y[out_id] = this._y[this_id];
-            out._z[out_id] = this._z[this_id];
+            out.xs[out_id] = this.xs[this_id];
+            out.ys[out_id] = this.ys[this_id];
+            out.zs[out_id] = this.zs[this_id];
             return out;
         };
         this.setFromOther = (other) => {
             this_id = this.id;
             other_id = other.id;
-            this._x[this_id] = other._x[other_id];
-            this._y[this_id] = other._y[other_id];
-            this._z[this_id] = other._z[other_id];
+            this.xs[this_id] = other.xs[other_id];
+            this.ys[this_id] = other.ys[other_id];
+            this.zs[this_id] = other.zs[other_id];
             return this;
         };
         this.setTo = (x, y, z) => {
             this_id = this.id;
-            this._x[this_id] = x;
-            this._y[this_id] = y;
-            this._z[this_id] = z;
+            this.xs[this_id] = x;
+            this.ys[this_id] = y;
+            this.zs[this_id] = z;
             return this;
         };
         this.isSameAs = (other) => {
@@ -204,7 +203,7 @@ class Vector3D extends Base3D {
         this.minus = (other, out) => {
             if (this.isSameAs(other) || this.equals(other)) {
                 out_id = out.id;
-                out._x[out_id] = out._y[out_id] = out._z[out_id] = 0;
+                out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = 0;
                 return out;
             }
             if (this.isSameAs(out))
@@ -237,6 +236,11 @@ class Vector3D extends Base3D {
             return out;
         };
     }
+    set arrays(arrays) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+    }
 }
 export class Position3D extends Vector3D {
     constructor() {
@@ -259,12 +263,12 @@ export class Position3D extends Vector3D {
             return out;
         };
     }
-    set x(x) { this._x[this.id] = x; }
-    set y(y) { this._y[this.id] = y; }
-    set z(z) { this._z[this.id] = z; }
-    get x() { return this._x[this.id]; }
-    get y() { return this._y[this.id]; }
-    get z() { return this._z[this.id]; }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
 }
 export class Direction3D extends Vector3D {
     constructor() {
@@ -324,61 +328,90 @@ export class Direction3D extends Vector3D {
         set_a(this);
         return length_squared(this.id);
     }
-    set x(x) { this._x[this.id] = x; }
-    set y(y) { this._y[this.id] = y; }
-    set z(z) { this._z[this.id] = z; }
-    get x() { return this._x[this.id]; }
-    get y() { return this._y[this.id]; }
-    get z() { return this._z[this.id]; }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
 }
-export class UV3D extends Vector3D {
-    set u(u) { this._x[this.id] = u; }
-    set v(v) { this._y[this.id] = v; }
-    set w(w) { this._z[this.id] = w; }
-    get u() { return this._x[this.id]; }
-    get v() { return this._y[this.id]; }
-    get w() { return this._z[this.id]; }
+export class UVW extends Vector3D {
+    set u(u) { this.xs[this.id] = u; }
+    set v(v) { this.ys[this.id] = v; }
+    set w(w) { this.zs[this.id] = w; }
+    get u() { return this.xs[this.id]; }
+    get v() { return this.ys[this.id]; }
+    get w() { return this.zs[this.id]; }
 }
-export class Color3D extends Vector3D {
+export class RGB extends Vector3D {
     constructor() {
         super(...arguments);
         this.setGreyScale = (color) => {
             this_id = this.id;
-            this._x[this_id] = this._y[this_id] = this._z[this_id] = color;
+            this.xs[this_id] = this.ys[this_id] = this.zs[this_id] = color;
             return this;
         };
     }
-    set r(r) { this._x[this.id] = r; }
-    set g(g) { this._y[this.id] = g; }
-    set b(b) { this._z[this.id] = b; }
-    get r() { return this._x[this.id]; }
-    get g() { return this._y[this.id]; }
-    get b() { return this._z[this.id]; }
+    set r(r) { this.xs[this.id] = r; }
+    set g(g) { this.ys[this.id] = g; }
+    set b(b) { this.zs[this.id] = b; }
+    get r() { return this.xs[this.id]; }
+    get g() { return this.ys[this.id]; }
+    get b() { return this.zs[this.id]; }
 }
 const set_a = (a) => {
-    a_x = a._x;
-    a_y = a._y;
-    a_z = a._z;
+    a_x = a.xs;
+    a_y = a.ys;
+    a_z = a.zs;
 };
 const set_b = (b) => {
-    b_x = b._x;
-    b_y = b._y;
-    b_z = b._z;
+    b_x = b.xs;
+    b_y = b.ys;
+    b_z = b.zs;
 };
 const set_o = (o) => {
-    o_x = o._x;
-    o_y = o._y;
-    o_z = o._z;
+    o_x = o.xs;
+    o_y = o.ys;
+    o_z = o.zs;
 };
 const set_m = (m) => {
-    m11 = m._11;
-    m21 = m._21;
-    m31 = m._31;
-    m12 = m._12;
-    m22 = m._22;
-    m32 = m._32;
-    m13 = m._13;
-    m23 = m._23;
-    m33 = m._33;
+    m11 = m.m11;
+    m21 = m.m21;
+    m31 = m.m31;
+    m12 = m.m12;
+    m22 = m.m22;
+    m32 = m.m32;
+    m13 = m.m13;
+    m23 = m.m23;
+    m33 = m.m33;
 };
+export const defaultVector3DAllocator = new Vector3DAllocator(15);
+export function pos3D(numberOrAllocator, y, z, allocator) {
+    allocator = numberOrAllocator instanceof Vector3DAllocator ? numberOrAllocator : allocator || defaultVector3DAllocator;
+    const result = new Position3D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z);
+    return result;
+}
+export function dir3D(numberOrAllocator, y, z, allocator) {
+    allocator = numberOrAllocator instanceof Vector3DAllocator ? numberOrAllocator : allocator || defaultVector3DAllocator;
+    const result = new Direction3D(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z);
+    return result;
+}
+export function uvw(numberOrAllocator, v, w, allocator) {
+    allocator = numberOrAllocator instanceof Vector3DAllocator ? numberOrAllocator : allocator || defaultVector3DAllocator;
+    const result = new UVW(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, v, w);
+    return result;
+}
+export function rgb(numberOrAllocator, g, b, allocator) {
+    allocator = numberOrAllocator instanceof Vector3DAllocator ? numberOrAllocator : allocator || defaultVector3DAllocator;
+    const result = new RGB(allocator.allocate(), allocator.current);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, g, b);
+    return result;
+}
 //# sourceMappingURL=vec3.js.map

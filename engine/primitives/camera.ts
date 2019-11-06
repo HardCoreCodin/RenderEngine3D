@@ -1,25 +1,30 @@
-import Matrix4x4 from "../linalng/4D/matrix.js";
-import Transform from "./transform.js";
-import Position4D from "../linalng/4D/position.js";
-import Position3D from "../linalng/3D/position.js";
+import Transform, {trans} from "./transform.js";
+import {Position3D} from "../math/vec3.js";
+import {defaultVector4DAllocator, pos4D, Position4D} from "../math/vec4.js";
+import {defaultMatrix4x4Allocator, Matrix4x4} from "../math/mat4x4.js";
+import {Matrix3x3Allocator, Matrix4x4Allocator, Vector4DAllocator} from "../allocators.js";
+import {defaultMatrix3x3Allocator} from "../math/mat3x3.js";
 
 export default class Camera {
-    public readonly transform = new Transform();
-
-    // Location in world space
-    public readonly position = new Position3D(this.transform.translation.buffer.subarray(0, 3));
-
-    // Position in space (0, 0, 0, 1) with perspective projection applied to it
-    public readonly projected_position = new Position4D();
-
     constructor(
+        public readonly transform: Transform,
+
+        // Position in space (0, 0, 0, 1) with perspective projection applied to it
+        public readonly projected_position: Position4D,
+
+        // Location in world space
+        public readonly position = new Position3D([
+            transform.translation.xs,
+            transform.translation.ys,
+            transform.translation.zs],
+            transform.translation.id
+        ),
+
         public options: CameraOptions = new CameraOptions()
     ) {}
 
     // Matrix that converts from view space to clip space
-    getProjectionMatrix(
-        projection_matrix: Matrix4x4 = new Matrix4x4().setToIdentity()
-    ) : Matrix4x4 {
+    getProjectionMatrix(projection_matrix: Matrix4x4) : Matrix4x4 {
         projection_matrix.setTo(
             this.options.perspective_factor, 0, 0, 0,
             0, this.options.perspective_factor * this.options.aspect_ratio, 0, 0,
@@ -162,3 +167,9 @@ export class CameraOptions {
         }
     }
 }
+
+export const cam = (
+    matrix4x4_allocator: Matrix4x4Allocator = defaultMatrix4x4Allocator,
+    matrix3x3_allocator: Matrix3x3Allocator = defaultMatrix3x3Allocator,
+    positions_allocator: Vector4DAllocator = defaultVector4DAllocator
+) : Camera => new Camera(trans(matrix4x4_allocator, matrix3x3_allocator), pos4D(positions_allocator));

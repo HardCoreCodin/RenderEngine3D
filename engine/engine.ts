@@ -1,11 +1,11 @@
 import Screen from "./screen.js";
-import Camera from "./primitives/camera.js";
-import Matrix4x4 from "./linalng/4D/matrix.js";
-import Direction4D, {dir4} from "./linalng/4D/direction.js";
-import {tri, Triangle} from "./primitives/triangle.js";
+import Camera, {cam} from "./primitives/camera.js";
+import Triangle, {tri} from "./primitives/triangle.js";
 import {FPSController} from "./input.js";
-import {rgb} from "./linalng/3D/color.js";
-import {Meshes} from "./types";
+import {Mesh} from "./primitives/mesh.js";
+import {dir4D} from "./math/vec4.js";
+import {rgb} from "./math/vec3.js";
+import {mat4x4} from "./math/mat4x4.js";
 
 export default class Engine3D {
     private depth_buffer: Float32Array;
@@ -13,34 +13,34 @@ export default class Engine3D {
     private last_timestamp = 0;
     private delta_time = 0;
 
-    private ray = new Direction4D();
+    private ray = dir4D();
 
     private turntable_angle = 0;
     private turntable_rotation_speed = 0.05;
 
-    private light_direction = dir4(0, 0, -1).normalize(); // Illumination
+    private light_direction = dir4D(0, 0, -1, 0).normalize(); // Illumination
 
     private extra_triangle = tri();
     private triangle_in_clip_space = tri();
     private triangle_in_ndc_space = tri();
     private triangle_in_screen_space = tri();
-    private triangle_normal = dir4();
+    private triangle_normal = dir4D();
     private triangle_color = rgb();
     private triangle_count: number;
     private triangles_to_raster: Triangle[] = [];
 
-    private world_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from world space to clip space
-    private world_space_to_camera_space = Matrix4x4.Identity();	// Matrix that converts from world space to view space
-    private local_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from local space to clip space
-    private camera_space_to_clip_space = Matrix4x4.Identity();	// Matrix that converts from view space to clip space
-    private ndc_to_screen_space = Matrix4x4.Identity();	// Matrix that converts from NDC space to screen space
+    private world_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from world space to clip space
+    private world_space_to_camera_space = mat4x4().setToIdentity();	// Matrix that converts from world space to view space
+    private local_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from local space to clip space
+    private camera_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from view space to clip space
+    private ndc_to_screen_space = mat4x4().setToIdentity();	// Matrix that converts from NDC space to screen space
 
     constructor(
         private readonly canvas: HTMLCanvasElement,
-        public meshes: Meshes = [],
-        public camera = new Camera(),
-        public screen = new Screen(canvas),
-        private fps_controller = new FPSController(camera, canvas)
+        public readonly meshes: Mesh[],
+        public readonly camera: Camera = cam(),
+        public readonly screen: Screen = new Screen(canvas),
+        private readonly fps_controller = new FPSController(camera, canvas)
     ) {}
 
     private draw = (timestamp) => {
@@ -72,7 +72,7 @@ export default class Engine3D {
             this.fps_controller.position_changed) {
 
             // Make view matrix from camera
-            this.camera.transform.matrix.inverse(this.world_space_to_camera_space);
+            this.camera.transform.matrix.inverted(this.world_space_to_camera_space);
         }
 
         // Update camera options
