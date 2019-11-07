@@ -125,7 +125,7 @@ const multiply_in_place = (a, b) => {
     a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b] + t_w * m43[b];
     a_w[a] = t_x * m14[b] + t_y * m24[b] + t_z * m34[b] + t_w * m44[b];
 };
-class Base4D {
+export class Base4D {
     constructor(arrays, id = 0) {
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;
@@ -396,25 +396,31 @@ const set_m = (m) => {
     m44 = m.m44;
 };
 export const defaultVector4DAllocator = new Vector4DAllocator(16);
-export function pos4D(numberOrAllocator, y, z, w, allocator) {
+export function pos4D(numberOrAllocator, y, z, w = 1, allocator) {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new Position4D(allocator.allocate(), allocator.current);
     if (typeof numberOrAllocator === 'number')
         result.setTo(numberOrAllocator, y, z, w);
+    else
+        result.w = 1;
     return result;
 }
-export function dir4D(numberOrAllocator, y, z, w, allocator) {
+export function dir4D(numberOrAllocator, y, z, w = 0, allocator) {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new Direction4D(allocator.allocate(), allocator.current);
     if (typeof numberOrAllocator === 'number')
         result.setTo(numberOrAllocator, y, z, w);
+    else
+        result.w = 0;
     return result;
 }
-export function rgba(numberOrAllocator, g, b, a, allocator) {
+export function rgba(numberOrAllocator, g, b, a = 1, allocator) {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new RGBA(allocator.allocate(), allocator.current);
     if (typeof numberOrAllocator === 'number')
         result.setTo(numberOrAllocator, g, b, a);
+    else
+        result.a = 1;
     return result;
 }
 //# sourceMappingURL=vec4.js.map

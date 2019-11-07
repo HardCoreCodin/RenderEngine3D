@@ -1,8 +1,8 @@
 import {IVector3D, IVector4D} from "../math/interfaces.js";
-import {defaultMatrix3x3Allocator, mat3x3, Matrix3x3} from "../math/mat3x3.js";
-import {defaultMatrix4x4Allocator, mat4x4, Matrix4x4} from "../math/mat4x4.js";
+import Matrix3x3, {defaultMatrix3x3Allocator, mat3x3} from "../math/mat3x3.js";
+import Matrix4x4, {defaultMatrix4x4Allocator, mat4x4} from "../math/mat4x4.js";
 import {Position4D} from "../math/vec4.js";
-import {Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
+import {IAllocatorSizes, Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
 
 export class EulerRotation {
     // Rotation angles for X, Y and Z:
@@ -117,6 +117,11 @@ export class EulerRotation {
 }
 
 export default class Transform {
+    static readonly SIZE: IAllocatorSizes = {
+        mat4x4: 1,
+        mat3x3: 3
+    };
+
     constructor(
         public readonly matrix: Matrix4x4,
         public readonly rotation_matrix_x: Matrix3x3,

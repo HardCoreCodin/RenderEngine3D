@@ -111,7 +111,7 @@ const multiply_in_place = (a, b) => {
     a_y[a] = t_x * m12[b] + t_y * m22[b] + t_z * m32[b];
     a_z[a] = t_x * m13[b] + t_y * m23[b] + t_z * m33[b];
 };
-class Base3D {
+export class Base3D {
     constructor(arrays, id = 0) {
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;

@@ -1,7 +1,7 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Matrix2x2} from "./mat2x2.js";
+import Matrix2x2 from "./mat2x2.js";
 import {Direction3D} from "./vec3.js";
-import {IVector2D} from "./interfaces.js";
+import {IDirection, IPosition, IUV, IVector2D} from "./interfaces.js";
 import {Vector2DValues} from "../types.js";
 import {Vector2DAllocator} from "../allocators.js";
 
@@ -132,7 +132,7 @@ interface IAddSub<TOther extends IVector2D = Base2D> extends IVector2D {
     readonly sub : (other: TOther) => this;
 }
 
-abstract class Base2D implements IVector2D {
+export abstract class Base2D implements IVector2D {
     public id: number;
 
     public xs: Float32Array;
@@ -315,7 +315,7 @@ abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddS
     };
 }
 
-export class Position2D extends Vector2D<Position2D> {
+export class Position2D extends Vector2D<Position2D> implements IPosition {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -347,7 +347,7 @@ export class Position2D extends Vector2D<Position2D> {
     get y(): number {return this.ys[this.id]}
 }
 
-export class Direction2D extends Vector2D {
+export class Direction2D extends Vector2D implements IDirection {
     get length() : number {
         set_a(this);
 
@@ -407,7 +407,7 @@ export class Direction2D extends Vector2D {
     get y(): number {return this.ys[this.id]}
 }
 
-export class UV extends Vector2D<UV, UV> {
+export class UV extends Vector2D<UV, UV> implements IUV {
     set u(u: number) {this.xs[this.id] = u}
     set v(v: number) {this.ys[this.id] = v}
 

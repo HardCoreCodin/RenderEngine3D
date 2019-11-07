@@ -1,4 +1,4 @@
-import Direction3D from "./linalng/3D/direction.js";
+import { dir3D } from "./math/vec3.js";
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
 const LEFT_kEY_CODE = 65; // A
@@ -21,21 +21,21 @@ const pressed = {
     pitch_up: false,
     pitch_down: false
 };
-export class FPSController {
-    constructor(camera, canvas, movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, _forward_direction = new Direction3D(), look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
+export default class FPSController {
+    constructor(camera, canvas, forward_movement, right_movement, _forward_direction, movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
     right_direction = camera.transform.rotation.matrix.i) {
         this.camera = camera;
         this.canvas = canvas;
+        this.forward_movement = forward_movement;
+        this.right_movement = right_movement;
+        this._forward_direction = _forward_direction;
         this.movement_speed = movement_speed;
         this.rotation_speed = rotation_speed;
         this.mouse_sensitivity = mouse_sensitivity;
-        this._forward_direction = _forward_direction;
         this.look_direction = look_direction;
         this.right_direction = right_direction;
         this.position_changed = false;
         this.direction_changed = false;
-        this.forward_movement = new Direction3D();
-        this.right_movement = new Direction3D();
         this.on_mousemove = (mouse_event) => {
             this.mouse_x = mouse_event.clientX - this.canvas.offsetLeft;
             this.mouse_y = mouse_event.clientY - this.canvas.offsetTop;
@@ -186,4 +186,8 @@ export class FPSController {
         }
     }
 }
+FPSController.SIZE = {
+    vec3D: 3
+};
+export const fps = (camera, canvas, allocator) => new FPSController(camera, canvas, dir3D(allocator), dir3D(allocator), dir3D(allocator));
 //# sourceMappingURL=input.js.map

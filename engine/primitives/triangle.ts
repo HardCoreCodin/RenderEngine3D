@@ -1,13 +1,25 @@
-import {Matrix4x4} from "../math/mat4x4.js";
-import {defaultVector3DAllocator, Position3D} from "../math/vec3.js";
-import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba, defaultVector4DAllocator} from "../math/vec4.js";
 import Vertex, {vert} from "./vertex.js";
+import Matrix4x4 from "../math/mat4x4.js";
+import {Position3D} from "../math/vec3.js";
+import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba} from "../math/vec4.js";
 import {float4} from "../factories.js";
-import {Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {AllocatorSizes, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
 import {ATTRIBUTE} from "../constants.js";
-import {Mesh} from "./mesh.js";
 
 export default class Triangle {
+    static SIZE = (
+        include_vertex_attributes: ATTRIBUTE = ATTRIBUTE.position,
+        include_face_attributes: ATTRIBUTE = ATTRIBUTE.normal,
+    ) : AllocatorSizes => new AllocatorSizes(Vertex.SIZE(include_vertex_attributes)).times(3).add({
+        vec4D: (
+            include_face_attributes & ATTRIBUTE.position ? 1 : 0
+        ) + (
+            include_face_attributes & ATTRIBUTE.normal ? 1 : 0
+        ) + (
+            include_face_attributes & ATTRIBUTE.color ? 1 : 0
+        )
+    });
+
     constructor(
         public v1: Vertex,
         public v2: Vertex,
@@ -207,10 +219,10 @@ const green = new RGBA(temp);
 red.r = red.a = green.g = green.a = green.id = 1;
 
 export const tri = (
+    vector4D_allocator: Vector4DAllocator,
+    vector3D_allocator: Vector3DAllocator,
     include_vertex_attributes: ATTRIBUTE = ATTRIBUTE.position,
     include_face_attributes: ATTRIBUTE = ATTRIBUTE.normal,
-    vector4D_allocator: Vector4DAllocator = defaultVector4DAllocator,
-    vector3D_allocator: Vector3DAllocator = defaultVector3DAllocator
 ) : Triangle => new Triangle(
     vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator),
     vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator),

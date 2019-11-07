@@ -1,36 +1,23 @@
 import Screen from "./screen.js";
-import { cam } from "./primitives/camera.js";
-import { tri } from "./primitives/triangle.js";
-import { FPSController } from "./input.js";
+import Camera, { cam } from "./objects/camera.js";
+import Triangle, { tri } from "./primitives/triangle.js";
+import FPSController, { fps } from "./input.js";
+import { mat4x4 } from "./math/mat4x4.js";
 import { dir4D } from "./math/vec4.js";
 import { rgb } from "./math/vec3.js";
-import { mat4x4 } from "./math/mat4x4.js";
+import Transform from "./objects/transform.js";
+import { rend } from "./objects/renderable.js";
 export default class Engine3D {
-    constructor(canvas, meshes, camera = cam(), screen = new Screen(canvas), fps_controller = new FPSController(camera, canvas)) {
+    constructor(canvas, meshes) {
         this.canvas = canvas;
         this.meshes = meshes;
-        this.camera = camera;
-        this.screen = screen;
-        this.fps_controller = fps_controller;
+        this.mesh_renderers = [];
         this.frame_time = 1000 / 60;
         this.last_timestamp = 0;
         this.delta_time = 0;
-        this.ray = dir4D();
         this.turntable_angle = 0;
         this.turntable_rotation_speed = 0.05;
-        this.light_direction = dir4D(0, 0, -1, 0).normalize(); // Illumination
-        this.extra_triangle = tri();
-        this.triangle_in_clip_space = tri();
-        this.triangle_in_ndc_space = tri();
-        this.triangle_in_screen_space = tri();
-        this.triangle_normal = dir4D();
-        this.triangle_color = rgb();
         this.triangles_to_raster = [];
-        this.world_space_to_clip_space = mat4x4().setToIdentity(); // Matrix that converts from world space to clip space
-        this.world_space_to_camera_space = mat4x4().setToIdentity(); // Matrix that converts from world space to view space
-        this.local_space_to_clip_space = mat4x4().setToIdentity(); // Matrix that converts from local space to clip space
-        this.camera_space_to_clip_space = mat4x4().setToIdentity(); // Matrix that converts from view space to clip space
-        this.ndc_to_screen_space = mat4x4().setToIdentity(); // Matrix that converts from NDC space to screen space
         this.draw = (timestamp) => {
             this.delta_time = (timestamp - this.last_timestamp) / this.frame_time;
             this.last_timestamp = timestamp;
@@ -43,6 +30,31 @@ export default class Engine3D {
             // }
             requestAnimationFrame(this.draw);
         };
+        this.screen = new Screen(canvas);
+        // Compute allocator sizes:
+        this.allocator_sizes = Triangle.SIZE().times(4).add(Engine3D.SIZE);
+        for (const mesh of meshes)
+            this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
+        // Allocate memory:
+        this.allocators = this.allocator_sizes.allocate();
+        // Load...
+        for (const mesh of meshes)
+            this.mesh_renderers.push(rend(mesh.load(this.allocators), this.allocators));
+        this.camera = cam(this.allocators);
+        this.camera_space_to_clip_space = this.camera.projection_matrix;
+        this.fps_controller = fps(this.camera, canvas, this.allocators.vec3D);
+        this.ray = dir4D(this.allocators.vec4D);
+        this.light_direction = dir4D(0, 0, -1, 0, this.allocators.vec4D);
+        this.extra_triangle = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_clip_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_ndc_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_screen_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_normal = dir4D(this.allocators.vec4D);
+        this.triangle_color = rgb(this.allocators.vec3D);
+        this.world_space_to_clip_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.world_space_to_camera_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.local_space_to_clip_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.ndc_to_screen_space = mat4x4(this.allocators.mat4x4).setToIdentity();
     }
     start() {
         requestAnimationFrame(this.draw);
@@ -65,7 +77,7 @@ export default class Engine3D {
         const opts = this.camera.options;
         // Update projection matrix from camera (if needed);
         if (opts.projection_parameters_changed)
-            this.camera.getProjectionMatrix(this.camera_space_to_clip_space);
+            this.camera.updateProjection();
         // Update concatenated world -> clip space matrix (if needed):
         if (this.fps_controller.direction_changed ||
             this.fps_controller.position_changed)
@@ -81,14 +93,14 @@ export default class Engine3D {
         // Store triangles for rasterizining later
         this.triangles_to_raster.length = 0;
         // Draw Meshes
-        for (const mesh of this.meshes) {
+        for (const mesh_renderer of this.mesh_renderers) {
             // mesh.transform.rotation.y = this.turntable_angle;
             // Update concatenated local->view and local->clip matrices:
-            mesh.transform.matrix.times(this.world_space_to_clip_space, this.local_space_to_clip_space);
+            mesh_renderer.transform.matrix.times(this.world_space_to_clip_space, this.local_space_to_clip_space);
             // Draw Triangles
             let triangle;
-            for (let t = 0; t < mesh.triangles.count; t++) {
-                triangle = mesh.triangles.at(t);
+            for (let t = 0; t < mesh_renderer.mesh.face_count; t++) {
+                triangle = mesh_renderer.mesh.vertex.triangles.at(t);
                 // Generate clip-space triangle:
                 triangle.transformedBy(this.local_space_to_clip_space, this.triangle_in_clip_space);
                 // Frustum culling:
@@ -227,4 +239,9 @@ export default class Engine3D {
         }
     }
 }
+Engine3D.SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
+    mat4x4: 4,
+    vec4D: 3,
+    vec3D: 1
+});
 //# sourceMappingURL=engine.js.map

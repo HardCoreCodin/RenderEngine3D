@@ -127,7 +127,7 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 };
 
 
-export class Matrix2x2 {
+export default class Matrix2x2 {
     public id: number;
 
     readonly m11: Float32Array; readonly m21: Float32Array;

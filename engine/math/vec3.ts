@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Matrix3x3} from "./mat3x3.js";
-import {IDirection, IPosition, IVector3D} from "./interfaces.js";
+import Matrix3x3 from "./mat3x3.js";
+import {IColor, IDirection, IPosition, IUV, IVector3D} from "./interfaces.js";
 import {Vector3DValues} from "../types.js";
 import {Vector3DAllocator} from "../allocators.js";
 
@@ -173,7 +173,7 @@ interface IAddSub<TOther extends IVector3D = Base3D> extends IVector3D {
     readonly sub : (other: TOther) => this;
 }
 
-abstract class Base3D implements IVector3D {
+export abstract class Base3D implements IVector3D {
     public id: number;
 
     public xs: Float32Array;
@@ -484,7 +484,7 @@ export class Direction3D extends Vector3D implements IDirection {
     get z(): number {return this.zs[this.id]}
 }
 
-export class UVW extends Vector3D<UVW, UVW> {
+export class UVW extends Vector3D<UVW, UVW> implements IUV{
     set u(u: number) {this.xs[this.id] = u}
     set v(v: number) {this.ys[this.id] = v}
     set w(w: number) {this.zs[this.id] = w}
@@ -494,7 +494,7 @@ export class UVW extends Vector3D<UVW, UVW> {
     get w(): number {return this.zs[this.id]}
 }
 
-export class RGB extends Vector3D<RGB, RGB> {
+export class RGB extends Vector3D<RGB, RGB> implements IColor {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 

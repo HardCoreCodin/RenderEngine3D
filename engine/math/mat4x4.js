@@ -344,7 +344,7 @@ const set_rotation_around_z = (a, cos, sin) => {
     a12[a] = sin;
     a21[a] = -sin;
 };
-export class Matrix4x4 {
+export default class Matrix4x4 {
     constructor(arrays, id = 0) {
         this.setToIdentity = () => {
             set_a(this);

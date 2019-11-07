@@ -1,29 +1,25 @@
 import {Vector3DValues, Vector4DValues} from "../types.js";
 import {defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba} from "../math/vec4.js";
 import {defaultVector3DAllocator, uvw, UVW} from "../math/vec3.js";
-import {Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {IAllocatorSizes, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
 import {ATTRIBUTE} from "../constants.js";
 
 export default class Vertex {
+    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({
+        vec4D: 1 + (
+            include & ATTRIBUTE.normal ? 1 : 0
+        ) + (
+            include & ATTRIBUTE.color ? 1 : 0
+        ),
+        vec3D: include & ATTRIBUTE.uv ? 1 : 0
+    });
+
     constructor(
         public position: Position4D,
         public normal?: Direction4D,
         public color?: RGBA,
         public uvs?: UVW
     ) {}
-
-    static fromBuffers(
-        positions: Vector4DValues, position_id: number,
-        normals?: Vector4DValues, normal_id?: number,
-        uvs?: Vector3DValues, uv_id?: number,
-        colors?: Vector4DValues, color_id?: number,
-    ) : Vertex {
-        return new Vertex(new Position4D(positions, position_id),
-            normals ? new Direction4D(normals, normal_id) : undefined,
-            colors ? new RGBA(colors, color_id) : undefined,
-            uvs ? new UVW(uvs, uv_id) : undefined
-        );
-    };
 
     lerp(
         to: Vertex,
@@ -62,6 +58,18 @@ export default class Vertex {
         this.color!.setFromOther(color);
 
         return this;
+    }
+}
+
+export class VertexView extends Vertex {
+    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({});
+
+    constructor(
+        private readonly position_attribute
+    ) {
+        super(
+            new Position4D()
+        )
     }
 }
 

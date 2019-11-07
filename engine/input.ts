@@ -1,5 +1,6 @@
-import Camera from "./primitives/camera.js";
-import Direction3D from "./linalng/3D/direction.js";
+import Camera from "./objects/camera.js";
+import {IAllocatorSizes, Vector3DAllocator} from "./allocators.js";
+import {dir3D, Direction3D} from "./math/vec3.js";
 
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
@@ -33,7 +34,11 @@ const pressed = {
     pitch_down: false
 };
 
-export class FPSController {
+export default class FPSController {
+    static readonly SIZE: IAllocatorSizes = {
+        vec3D: 3
+    };
+
     public position_changed: boolean = false;
     public direction_changed: boolean = false;
 
@@ -43,9 +48,6 @@ export class FPSController {
     private last_mouse_x: number;
     private last_mouse_y: number;
 
-    private forward_movement = new Direction3D();
-    private right_movement = new Direction3D();
-
     private movement_amount: number;
     private rotation_amount: number;
 
@@ -53,11 +55,14 @@ export class FPSController {
         private readonly camera: Camera,
         private readonly canvas: HTMLCanvasElement,
 
+        private readonly forward_movement: Direction3D,
+        private readonly right_movement: Direction3D,
+        private readonly _forward_direction: Direction3D,
+
         public movement_speed: number = 0.1,
         public rotation_speed: number = 0.01,
         public mouse_sensitivity: number = 0.1,
 
-        private readonly _forward_direction = new Direction3D(),
         private readonly look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
         private readonly right_direction = camera.transform.rotation.matrix.i, // The player's right direction
     ) {
@@ -203,3 +208,9 @@ export class FPSController {
         }
     }
 }
+
+export const fps = (
+    camera: Camera,
+    canvas: HTMLCanvasElement,
+    allocator: Vector3DAllocator
+) : FPSController => new FPSController(camera, canvas, dir3D(allocator), dir3D(allocator), dir3D(allocator));

@@ -1,5 +1,5 @@
-import { defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba } from "../math/vec4.js";
-import { defaultVector3DAllocator, uvw, UVW } from "../math/vec3.js";
+import { defaultVector4DAllocator, dir4D, pos4D, Position4D, rgba } from "../math/vec4.js";
+import { defaultVector3DAllocator, uvw } from "../math/vec3.js";
 export default class Vertex {
     constructor(position, normal, color, uvs) {
         this.position = position;
@@ -7,10 +7,6 @@ export default class Vertex {
         this.color = color;
         this.uvs = uvs;
     }
-    static fromBuffers(positions, position_id, normals, normal_id, uvs, uv_id, colors, color_id) {
-        return new Vertex(new Position4D(positions, position_id), normals ? new Direction4D(normals, normal_id) : undefined, colors ? new RGBA(colors, color_id) : undefined, uvs ? new UVW(uvs, uv_id) : undefined);
-    }
-    ;
     lerp(to, by, out) {
         this.position.lerp(to.position, by, out.position);
         if (this.uvs)
@@ -38,5 +34,16 @@ export default class Vertex {
         return this;
     }
 }
+Vertex.SIZE = (include) => ({
+    vec4D: 1 + (include & 2 /* normal */ ? 1 : 0) + (include & 4 /* color */ ? 1 : 0),
+    vec3D: include & 8 /* uv */ ? 1 : 0
+});
+export class VertexView extends Vertex {
+    constructor(position_attribute) {
+        super(new Position4D());
+        this.position_attribute = position_attribute;
+    }
+}
+VertexView.SIZE = (include) => ({});
 export const vert = (include = 1 /* position */, vector4D_allocator = defaultVector4DAllocator, vector3D_allocator = defaultVector3DAllocator) => new Vertex(pos4D(vector4D_allocator), include & 2 /* normal */ ? dir4D(vector4D_allocator) : undefined, include & 4 /* color */ ? rgba(vector4D_allocator) : undefined, include & 8 /* uv */ ? uvw(vector3D_allocator) : undefined);
 //# sourceMappingURL=vertex.js.map

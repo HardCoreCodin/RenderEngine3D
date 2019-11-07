@@ -1,9 +1,9 @@
 import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
 import {Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices} from "./attribute.js";
-import {IAllocators, IAllocatorSizes} from "../allocators.js";
+import {Allocators, AllocatorSizes} from "../allocators.js";
 import {NumArrays} from "../types.js";
 
-export class Mesh {
+export default class Mesh {
     public readonly face: Faces = new Faces();
     public readonly face_count: number;
 
@@ -21,7 +21,7 @@ export class Mesh {
         this.vertex_count = positions.vertices[0].length;
     }
 
-    get sizes() : IAllocatorSizes {
+    get allocator_sizes() : AllocatorSizes {
         this.options.sanitize(this._inputs);
 
         let vec2D: number = 0;
@@ -40,19 +40,20 @@ export class Mesh {
         if (face_attributes & ATTRIBUTE.normal) vec3D += this.face_count;
         if (face_attributes & ATTRIBUTE.color) vec3D += this.face_count;
 
-        const result: IAllocatorSizes = {
+        const result = new AllocatorSizes({
+            vec3D: vec3D,
+
             face_vertices: this.face.count,
             vertex_faces: this._inputs.vertex_faces.size
-        };
+        });
 
-        result.vec3D = vec3D;
         if (vec2D)
             result.vec2D = vec2D;
 
         return result;
     }
 
-    load(allocators: IAllocators) {
+    load(allocators: Allocators) : this {
         const positions = this._inputs.position;
         const normals = this._inputs.normal;
         const colors = this._inputs.color;
@@ -61,7 +62,7 @@ export class Mesh {
         // Init::
         this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
         this.vertex.faces.init(allocators.vertex_faces, this._inputs.vertex_faces.size);
-        this.vertex.faces.load(this._inputs.vertex_faces.vertex_faces);
+        this.vertex.faces.load(this._inputs.vertex_faces.number_arrays);
 
         this.face.init(allocators, this.face_count, this.options.face_attributes);
         this.face.vertices.load(positions.faces);
@@ -120,6 +121,8 @@ export class Mesh {
                 this.vertex.colors.load(colors, this.face.vertices);
                 this.face.colors.pull(this.vertex.colors, this.face.vertices);
         }
+
+        return this;
     }
 }
 
@@ -216,19 +219,19 @@ export class MeshInputs {
 }
 
 class InputVertexFaces {
-    public readonly vertex_faces: NumArrays = [];
+    public readonly number_arrays: NumArrays = [];
     public size: number;
 
     init(inputs: InputPositions) {
-        this.vertex_faces.length = inputs.vertices[0].length;
+        this.number_arrays.length = inputs.vertices[0].length;
         for (let i = 0; i < inputs.vertices[0].length; i++)
-            this.vertex_faces[i] = [];
+            this.number_arrays[i] = [];
 
         this.size = 0;
         let vertex_id, face_id;
         for (const face_vertex_ids of inputs.faces) {
             for ([face_id, vertex_id] of face_vertex_ids.entries()) {
-                this.vertex_faces[vertex_id].push(face_id);
+                this.number_arrays[vertex_id].push(face_id);
                 this.size++
             }
         }

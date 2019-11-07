@@ -1,47 +1,95 @@
 import Screen from "./screen.js";
-import Camera, {cam} from "./primitives/camera.js";
+import Mesh from "./primitives/mesh.js";
+import Camera, {cam} from "./objects/camera.js";
 import Triangle, {tri} from "./primitives/triangle.js";
-import {FPSController} from "./input.js";
-import {Mesh} from "./primitives/mesh.js";
-import {dir4D} from "./math/vec4.js";
-import {rgb} from "./math/vec3.js";
-import {mat4x4} from "./math/mat4x4.js";
+import FPSController, {fps} from "./input.js";
+import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
+import {dir4D, Direction4D} from "./math/vec4.js";
+import {rgb, RGB} from "./math/vec3.js";
+import {Allocators, AllocatorSizes} from "./allocators.js";
+import Transform, {trans} from "./objects/transform.js";
+import MeshRenderer, {rend} from "./objects/renderable.js";
 
 export default class Engine3D {
+    static SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
+        mat4x4: 4,
+        vec4D: 3,
+        vec3D: 1
+    });
+
+    private readonly screen: Screen;
+    private readonly camera: Camera;
+    private readonly fps_controller: FPSController;
+    private readonly mesh_renderers: MeshRenderer[] = [];
+
+    private readonly allocators: Allocators;
+    private readonly allocator_sizes: AllocatorSizes;
+
     private depth_buffer: Float32Array;
     private frame_time = 1000 / 60;
     private last_timestamp = 0;
     private delta_time = 0;
 
-    private ray = dir4D();
+    private readonly ray: Direction4D;
 
     private turntable_angle = 0;
     private turntable_rotation_speed = 0.05;
 
-    private light_direction = dir4D(0, 0, -1, 0).normalize(); // Illumination
+    private light_direction: Direction4D; // Illumination
 
-    private extra_triangle = tri();
-    private triangle_in_clip_space = tri();
-    private triangle_in_ndc_space = tri();
-    private triangle_in_screen_space = tri();
-    private triangle_normal = dir4D();
-    private triangle_color = rgb();
+    private readonly extra_triangle: Triangle;
+    private readonly triangle_in_clip_space: Triangle;
+    private readonly triangle_in_ndc_space: Triangle;
+    private readonly triangle_in_screen_space: Triangle;
+    private readonly triangle_normal: Direction4D;
+    private readonly triangle_color: RGB;
+
     private triangle_count: number;
     private triangles_to_raster: Triangle[] = [];
 
-    private world_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from world space to clip space
-    private world_space_to_camera_space = mat4x4().setToIdentity();	// Matrix that converts from world space to view space
-    private local_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from local space to clip space
-    private camera_space_to_clip_space = mat4x4().setToIdentity();	// Matrix that converts from view space to clip space
-    private ndc_to_screen_space = mat4x4().setToIdentity();	// Matrix that converts from NDC space to screen space
+    private readonly world_space_to_clip_space: Matrix4x4;	// Matrix that converts from world space to clip space
+    private readonly world_space_to_camera_space: Matrix4x4;	// Matrix that converts from world space to view space
+    private readonly local_space_to_clip_space: Matrix4x4;	// Matrix that converts from local space to clip space
+    private readonly camera_space_to_clip_space : Matrix4x4;	// Matrix that converts from view space to clip space
+    private readonly ndc_to_screen_space: Matrix4x4;	// Matrix that converts from NDC space to screen space
 
     constructor(
         private readonly canvas: HTMLCanvasElement,
-        public readonly meshes: Mesh[],
-        public readonly camera: Camera = cam(),
-        public readonly screen: Screen = new Screen(canvas),
-        private readonly fps_controller = new FPSController(camera, canvas)
-    ) {}
+        public readonly meshes: Mesh[]
+    ) {
+        this.screen = new Screen(canvas);
+
+        // Compute allocator sizes:
+        this.allocator_sizes = Triangle.SIZE().times(4).add(Engine3D.SIZE);
+        for (const mesh of meshes)
+            this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
+
+        // Allocate memory:
+        this.allocators = this.allocator_sizes.allocate();
+
+        // Load...
+        for (const mesh of meshes)
+            this.mesh_renderers.push(rend(mesh.load(this.allocators), this.allocators));
+
+        this.camera = cam(this.allocators);
+        this.camera_space_to_clip_space = this.camera.projection_matrix;
+        this.fps_controller = fps(this.camera, canvas, this.allocators.vec3D);
+
+        this.ray = dir4D(this.allocators.vec4D);
+        this.light_direction = dir4D(0, 0, -1, 0, this.allocators.vec4D);
+
+        this.extra_triangle = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_clip_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_ndc_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_in_screen_space = tri(this.allocators.vec4D, this.allocators.vec3D);
+        this.triangle_normal = dir4D(this.allocators.vec4D);
+        this.triangle_color = rgb(this.allocators.vec3D);
+
+        this.world_space_to_clip_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.world_space_to_camera_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.local_space_to_clip_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+        this.ndc_to_screen_space = mat4x4(this.allocators.mat4x4).setToIdentity();
+    }
 
     private draw = (timestamp) => {
         this.delta_time = (timestamp - this.last_timestamp) / this.frame_time;
@@ -90,7 +138,7 @@ export default class Engine3D {
 
         // Update projection matrix from camera (if needed);
         if (opts.projection_parameters_changed)
-            this.camera.getProjectionMatrix(this.camera_space_to_clip_space);
+            this.camera.updateProjection();
 
         // Update concatenated world -> clip space matrix (if needed):
         if (this.fps_controller.direction_changed ||
@@ -113,19 +161,19 @@ export default class Engine3D {
         this.triangles_to_raster.length = 0;
 
         // Draw Meshes
-        for (const mesh of this.meshes) {
+        for (const mesh_renderer of this.mesh_renderers) {
             // mesh.transform.rotation.y = this.turntable_angle;
 
             // Update concatenated local->view and local->clip matrices:
-            mesh.transform.matrix.times(
+            mesh_renderer.transform.matrix.times(
                 this.world_space_to_clip_space,
                 this.local_space_to_clip_space
             );
 
             // Draw Triangles
             let triangle: Triangle;
-            for (let t = 0; t < mesh.triangles.count; t++) {
-                triangle = mesh.triangles.at(t);
+            for (let t = 0; t < mesh_renderer.mesh.face_count; t++) {
+                triangle = mesh_renderer.mesh.vertex.triangles.at(t);
 
                 // Generate clip-space triangle:
                 triangle.transformedBy(

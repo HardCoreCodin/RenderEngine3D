@@ -11,8 +11,6 @@ import {
     NumArrays4,
     NumArrays
 } from "./types.js";
-import {RGB, Direction3D, Position3D} from "./math/vec3.js";
-import {Matrix3x3} from "./math/mat3x3.js";
 import {DIM} from "./constants";
 
 export const num2 = (length: number = 0) : NumArrays2 => [

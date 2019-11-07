@@ -1,5 +1,6 @@
 import { Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices } from "./attribute.js";
-export class Mesh {
+import { AllocatorSizes } from "../allocators.js";
+export default class Mesh {
     constructor(_inputs, options = new MeshOptions()) {
         this._inputs = _inputs;
         this.options = options;
@@ -10,7 +11,7 @@ export class Mesh {
         this.face_count = positions.faces[0].length;
         this.vertex_count = positions.vertices[0].length;
     }
-    get sizes() {
+    get allocator_sizes() {
         this.options.sanitize(this._inputs);
         let vec2D = 0;
         let vec3D = 0;
@@ -30,11 +31,11 @@ export class Mesh {
             vec3D += this.face_count;
         if (face_attributes & 4 /* color */)
             vec3D += this.face_count;
-        const result = {
+        const result = new AllocatorSizes({
+            vec3D: vec3D,
             face_vertices: this.face.count,
             vertex_faces: this._inputs.vertex_faces.size
-        };
-        result.vec3D = vec3D;
+        });
         if (vec2D)
             result.vec2D = vec2D;
         return result;
@@ -47,7 +48,7 @@ export class Mesh {
         // Init::
         this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
         this.vertex.faces.init(allocators.vertex_faces, this._inputs.vertex_faces.size);
-        this.vertex.faces.load(this._inputs.vertex_faces.vertex_faces);
+        this.vertex.faces.load(this._inputs.vertex_faces.number_arrays);
         this.face.init(allocators, this.face_count, this.options.face_attributes);
         this.face.vertices.load(positions.faces);
         // Load:
@@ -102,6 +103,7 @@ export class Mesh {
                 this.vertex.colors.load(colors, this.face.vertices);
                 this.face.colors.pull(this.vertex.colors, this.face.vertices);
         }
+        return this;
     }
 }
 export class MeshOptions {
@@ -185,17 +187,17 @@ export class MeshInputs {
 }
 class InputVertexFaces {
     constructor() {
-        this.vertex_faces = [];
+        this.number_arrays = [];
     }
     init(inputs) {
-        this.vertex_faces.length = inputs.vertices[0].length;
+        this.number_arrays.length = inputs.vertices[0].length;
         for (let i = 0; i < inputs.vertices[0].length; i++)
-            this.vertex_faces[i] = [];
+            this.number_arrays[i] = [];
         this.size = 0;
         let vertex_id, face_id;
         for (const face_vertex_ids of inputs.faces) {
             for ([face_id, vertex_id] of face_vertex_ids.entries()) {
-                this.vertex_faces[vertex_id].push(face_id);
+                this.number_arrays[vertex_id].push(face_id);
                 this.size++;
             }
         }

@@ -1,6 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
-import {Matrix4x4} from "./mat4x4.js";
-import {IDirection, IPosition, IVector4D} from "./interfaces.js";
+import Matrix4x4 from "./mat4x4.js";
+import {IColor, IDirection, IPosition, IVector4D} from "./interfaces.js";
 import {Vector4DValues} from "../types.js";
 import {Vector4DAllocator} from "../allocators.js";
 
@@ -197,7 +197,7 @@ interface IAddSub<TOther extends IVector4D = Base4D> extends IVector4D {
     readonly sub : (other: TOther) => this;
 }
 
-abstract class Base4D implements IVector4D {
+export abstract class Base4D implements IVector4D {
     public id: number;
 
     public xs: Float32Array;
@@ -510,7 +510,7 @@ export class Direction4D extends Vector4D implements IDirection {
     get w(): number {return this.ws[this.id]}
 }
 
-export class RGBA extends Vector4D<RGBA, RGBA> {
+export class RGBA extends Vector4D<RGBA, RGBA> implements IColor {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 
@@ -565,12 +565,15 @@ export function pos4D(allocator: Vector4DAllocator) : Position4D;
 export function pos4D(x: number, y: number, z: number, w: number) : Position4D;
 export function pos4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Position4D;
 export function pos4D(
-    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w?: number,
+    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w: number = 1,
     allocator?: Vector4DAllocator
 ) : Position4D {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new Position4D(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y, z, w);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z, w);
+    else
+        result.w = 1;
     return result;
 }
 
@@ -579,12 +582,15 @@ export function dir4D(allocator: Vector4DAllocator) : Direction4D;
 export function dir4D(x: number, y: number, z: number, w: number) : Direction4D;
 export function dir4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Direction4D;
 export function dir4D(
-    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w?: number,
+    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w: number = 0,
     allocator?: Vector4DAllocator
 ) : Direction4D {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new Direction4D(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, y, z, w);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, y, z, w);
+    else
+        result.w = 0;
     return result;
 }
 
@@ -593,11 +599,14 @@ export function rgba(allocator: Vector4DAllocator) : RGBA;
 export function rgba(r: number, g: number, b: number, a:number) : RGBA;
 export function rgba(r: number, g: number, b: number, a:number, allocator: Vector4DAllocator) : RGBA;
 export function rgba(
-    numberOrAllocator?: number | Vector4DAllocator, g?: number, b?: number, a?: number,
+    numberOrAllocator?: number | Vector4DAllocator, g?: number, b?: number, a: number = 1,
     allocator?: Vector4DAllocator
 ) : RGBA {
     allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
     const result = new RGBA(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number') result.setTo(numberOrAllocator, g, b, a);
+    if (typeof numberOrAllocator === 'number')
+        result.setTo(numberOrAllocator, g, b, a);
+    else
+        result.a = 1;
     return result;
 }

@@ -1,7 +1,7 @@
-import { defaultVector3DAllocator } from "../math/vec3.js";
-import { RGBA, pos4D, dir4D, rgba, defaultVector4DAllocator } from "../math/vec4.js";
-import { vert } from "./vertex.js";
+import Vertex, { vert } from "./vertex.js";
+import { RGBA, pos4D, dir4D, rgba } from "../math/vec4.js";
 import { float4 } from "../factories.js";
+import { AllocatorSizes } from "../allocators.js";
 export default class Triangle {
     constructor(v1, v2, v3, normal, color, position, vertices = [v1, v2, v3]) {
         this.v1 = v1;
@@ -150,10 +150,13 @@ export default class Triangle {
         return this;
     }
 }
+Triangle.SIZE = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new AllocatorSizes(Vertex.SIZE(include_vertex_attributes)).times(3).add({
+    vec4D: (include_face_attributes & 1 /* position */ ? 1 : 0) + (include_face_attributes & 2 /* normal */ ? 1 : 0) + (include_face_attributes & 4 /* color */ ? 1 : 0)
+});
 // temp colors:
 const temp = float4(2);
 const red = new RGBA(temp);
 const green = new RGBA(temp);
 red.r = red.a = green.g = green.a = green.id = 1;
-export const tri = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */, vector4D_allocator = defaultVector4DAllocator, vector3D_allocator = defaultVector3DAllocator) => new Triangle(vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), include_face_attributes & 1 /* position */ ? dir4D(vector4D_allocator) : undefined, include_face_attributes & 2 /* normal */ ? rgba(vector4D_allocator) : undefined, include_face_attributes & 4 /* color */ ? pos4D(vector4D_allocator) : undefined);
+export const tri = (vector4D_allocator, vector3D_allocator, include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new Triangle(vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), vert(include_vertex_attributes, vector4D_allocator, vector3D_allocator), include_face_attributes & 1 /* position */ ? dir4D(vector4D_allocator) : undefined, include_face_attributes & 2 /* normal */ ? rgba(vector4D_allocator) : undefined, include_face_attributes & 4 /* color */ ? pos4D(vector4D_allocator) : undefined);
 //# sourceMappingURL=triangle.js.map

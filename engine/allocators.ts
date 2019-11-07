@@ -17,7 +17,7 @@ abstract class AbstractArraysAllocator<ArraysType> {
     public readonly length;
     public current: number = 0;
 
-    protected constructor(protected readonly _size: number) {
+    constructor(protected readonly _size: number) {
         this.length = this._dim * _size;
         this._buffer = this._createBuffer();
 
@@ -133,16 +133,18 @@ export class VertexFacesIndicesAllocator extends AbstractIntArraysAllocator<Vert
     ];
 }
 
-export interface IAllocators {
-    mat3x3: Matrix3x3Allocator,
-    mat4x4: Matrix4x4Allocator,
+export class Allocators {
+    constructor(
+        public readonly mat3x3: Matrix3x3Allocator,
+        public readonly mat4x4: Matrix4x4Allocator,
 
-    vec2D: Vector2DAllocator,
-    vec3D: Vector3DAllocator,
-    vec4D: Vector4DAllocator,
+        public readonly vec2D: Vector2DAllocator,
+        public readonly vec3D: Vector3DAllocator,
+        public readonly vec4D: Vector4DAllocator,
 
-    face_vertices: FaceVertexIndexAllocator,
-    vertex_faces: VertexFacesIndicesAllocator
+        public readonly face_vertices: FaceVertexIndexAllocator,
+        public readonly vertex_faces: VertexFacesIndicesAllocator
+    ) {}
 }
 
 export interface IAllocatorSizes {
@@ -155,4 +157,62 @@ export interface IAllocatorSizes {
 
     face_vertices?: number,
     vertex_faces?: number
+}
+
+export class AllocatorSizes implements IAllocatorSizes {
+    constructor(
+        initial_values: IAllocatorSizes,
+
+        public mat3x3: number = initial_values.mat3x3 | 0,
+        public mat4x4: number = initial_values.mat4x4 | 0,
+
+        public vec2D: number = initial_values.vec2D | 0,
+        public vec3D: number = initial_values.vec3D | 0,
+        public vec4D: number = initial_values.vec4D | 0,
+
+        public face_vertices: number = initial_values.face_vertices | 0,
+        public vertex_faces: number  = initial_values.vertex_faces | 0
+    ) {}
+
+    copy = () : AllocatorSizes => new AllocatorSizes(this);
+    addedWith = (other: IAllocatorSizes) : AllocatorSizes => this.copy().add(other);
+    add = (other: IAllocatorSizes) : AllocatorSizes => {
+        if (other.mat3x3) this.mat3x3 += other.mat3x3;
+        if (other.mat4x4) this.mat4x4 += other.mat4x4;
+
+        if (other.vec2D) this.vec2D += other.vec2D;
+        if (other.vec3D) this.vec3D += other.vec3D;
+        if (other.vec4D) this.vec4D += other.vec4D;
+
+        if (other.face_vertices) this.face_vertices += other.face_vertices;
+        if (other.vertex_faces) this.vertex_faces += other.vertex_faces;
+
+        return this;
+    };
+
+    times = (factor: number) : AllocatorSizes => {
+        if (this.mat3x3) this.mat3x3 *= factor;
+        if (this.mat4x4) this.mat4x4 *= factor;
+
+        if (this.vec2D) this.vec2D *= factor;
+        if (this.vec3D) this.vec3D *= factor;
+        if (this.vec4D) this.vec4D *= factor;
+
+        if (this.face_vertices) this.face_vertices *= factor;
+        if (this.vertex_faces) this.vertex_faces *= factor;
+
+        return this;
+    };
+
+    allocate = () : Allocators => new Allocators(
+        new Matrix3x3Allocator(this.mat3x3),
+        new Matrix4x4Allocator(this.mat4x4),
+
+        new Vector2DAllocator(this.vec2D),
+        new Vector3DAllocator(this.vec3D),
+        new Vector4DAllocator(this.vec4D),
+
+        new FaceVertexIndexAllocator(this.face_vertices),
+        new VertexFacesIndicesAllocator(this.vertex_faces)
+    );
 }
