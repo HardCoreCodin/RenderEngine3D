@@ -220,7 +220,7 @@ abstract class Vector3D<
         this.zs = arrays[2];
     }
 
-    readonly copyTo = (out: Base3D) : typeof out => {
+    readonly copyTo = (out: this) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
@@ -231,7 +231,7 @@ abstract class Vector3D<
         return out;
     };
 
-    readonly setFromOther = (other: Base3D) : this => {
+    readonly setFromOther = (other: this) : this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -242,14 +242,14 @@ abstract class Vector3D<
         return this;
     };
 
-    readonly isSameAs = (other: Base3D) : boolean => {
+    readonly isSameAs = (other: this) : boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: Base3D) : boolean => {
+    readonly equals = (other: this) : boolean => {
         set_a(this);
         set_b(other);
 
@@ -310,8 +310,8 @@ abstract class Vector3D<
     };
 
     readonly plus = (other: TOther, out: TOut) : TOut => {
-        if (this.isSameAs(out))
-            return out.add(other);
+        // if (this.isSameAs(out))
+        //     return out.add(other);
 
         set_a(this);
         set_b(other);
@@ -323,16 +323,16 @@ abstract class Vector3D<
     };
 
     readonly minus = (other: TOther, out: TOut) : TOut => {
-        if (this.isSameAs(other) || this.equals(other)) {
-            out_id = out.id;
-
-            out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = 0;
-
-            return out;
-        }
-
-        if (this.isSameAs(out))
-            return out.sub(other);
+        // if (this.isSameAs(other) || this.equals(other)) {
+        //     out_id = out.id;
+        //
+        //     out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = 0;
+        //
+        //     return out;
+        // }
+        //
+        // if (this.isSameAs(out))
+        //     return out.sub(other);
 
         set_a(this);
         set_b(other);

@@ -198,8 +198,8 @@ class Vector3D extends Base3D {
             return this;
         };
         this.plus = (other, out) => {
-            if (this.isSameAs(out))
-                return out.add(other);
+            // if (this.isSameAs(out))
+            //     return out.add(other);
             set_a(this);
             set_b(other);
             set_o(out);
@@ -207,13 +207,16 @@ class Vector3D extends Base3D {
             return out;
         };
         this.minus = (other, out) => {
-            if (this.isSameAs(other) || this.equals(other)) {
-                out_id = out.id;
-                out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = 0;
-                return out;
-            }
-            if (this.isSameAs(out))
-                return out.sub(other);
+            // if (this.isSameAs(other) || this.equals(other)) {
+            //     out_id = out.id;
+            //
+            //     out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = 0;
+            //
+            //     return out;
+            // }
+            //
+            // if (this.isSameAs(out))
+            //     return out.sub(other);
             set_a(this);
             set_b(other);
             set_o(out);

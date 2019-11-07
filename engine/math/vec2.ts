@@ -167,7 +167,7 @@ abstract class Vector2D<
         this.ys = arrays[1];
     }
 
-    readonly copyTo = (out: Base2D) : typeof out => {
+    readonly copyTo = (out: this) : typeof out => {
         this_id = this.id;
         out_id = out.id;
 
@@ -177,7 +177,7 @@ abstract class Vector2D<
         return out;
     };
 
-    readonly setFromOther = (other: Base2D) : this => {
+    readonly setFromOther = (other: this) : this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -187,14 +187,14 @@ abstract class Vector2D<
         return this;
     };
 
-    readonly isSameAs = (other: Base2D) : boolean => {
+    readonly isSameAs = (other: this) : boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: Base2D) : boolean => {
+    readonly equals = (other: this) : boolean => {
         set_a(this);
         set_b(other);
 
@@ -255,8 +255,8 @@ abstract class Vector2D<
     };
 
     readonly plus = (other: TOther, out: TOut) : TOut => {
-        if (this.isSameAs(out))
-            return out.add(other);
+        // if (this.isSameAs(out))
+        //     return out.add(other);
 
         set_a(this);
         set_b(other);
@@ -268,16 +268,16 @@ abstract class Vector2D<
     };
 
     readonly minus = (other: TOther, out: TOut) : TOut => {
-        if (this.isSameAs(other) || this.equals(other)) {
-            out_id = out.id;
-
-            out.xs[out_id] = out.ys[out_id] = 0;
-
-            return out;
-        }
-
-        if (this.isSameAs(out))
-            return out.sub(other);
+        // if (this.isSameAs(other) || this.equals(other)) {
+        //     out_id = out.id;
+        //
+        //     out.xs[out_id] = out.ys[out_id] = 0;
+        //
+        //     return out;
+        // }
+        //
+        // if (this.isSameAs(out))
+        //     return out.sub(other);
 
         set_a(this);
         set_b(other);

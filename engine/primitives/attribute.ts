@@ -24,7 +24,7 @@ import {
 } from "../allocators.js";
 import {UV} from "../math/vec2.js";
 import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
-import {IBaseVector, IColor, IDirection, IPosition, IUV, IVector} from "../math/interfaces.js";
+import {IBaseVector, IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
 
 export abstract class Attribute {
     public readonly id: ATTRIBUTE;
