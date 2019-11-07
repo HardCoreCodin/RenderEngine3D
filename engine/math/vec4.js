@@ -127,11 +127,27 @@ const multiply_in_place = (a, b) => {
 };
 export class Base4D {
     constructor(arrays, id = 0) {
+        this.setTo = (x, y, z, w) => {
+            this_id = this.id;
+            this.xs[this_id] = x;
+            this.ys[this_id] = y;
+            this.zs[this_id] = z;
+            this.ws[this_id] = w;
+            return this;
+        };
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;
         this.id = id;
         [this.xs, this.ys, this.zs, this.ws] = arrays;
     }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    set w(w) { this.ws[this.id] = w; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
+    get w() { return this.ws[this.id]; }
 }
 class Vector4D extends Base4D {
     constructor() {
@@ -152,14 +168,6 @@ class Vector4D extends Base4D {
             this.ys[this_id] = other.ys[other_id];
             this.zs[this_id] = other.zs[other_id];
             this.ws[this_id] = other.ws[other_id];
-            return this;
-        };
-        this.setTo = (x, y, z, w) => {
-            this_id = this.id;
-            this.xs[this_id] = x;
-            this.ys[this_id] = y;
-            this.zs[this_id] = z;
-            this.ws[this_id] = w;
             return this;
         };
         this.isSameAs = (other) => {
@@ -284,14 +292,6 @@ export class Position4D extends Vector4D {
         this.isInView = (near = 0, far = 1) => in_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
         this.isOutOfView = (near = 0, far = 1) => out_of_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
     }
-    set x(x) { this.xs[this.id] = x; }
-    set y(y) { this.ys[this.id] = y; }
-    set z(z) { this.zs[this.id] = z; }
-    set w(w) { this.ws[this.id] = w; }
-    get x() { return this.xs[this.id]; }
-    get y() { return this.ys[this.id]; }
-    get z() { return this.zs[this.id]; }
-    get w() { return this.ws[this.id]; }
 }
 export class Direction4D extends Vector4D {
     constructor() {
@@ -332,14 +332,6 @@ export class Direction4D extends Vector4D {
         set_a(this);
         return length_squared(this.id);
     }
-    set x(x) { this.xs[this.id] = x; }
-    set y(y) { this.ys[this.id] = y; }
-    set z(z) { this.zs[this.id] = z; }
-    set w(w) { this.ws[this.id] = w; }
-    get x() { return this.xs[this.id]; }
-    get y() { return this.ys[this.id]; }
-    get z() { return this.zs[this.id]; }
-    get w() { return this.ws[this.id]; }
 }
 export class RGBA extends Vector4D {
     constructor() {

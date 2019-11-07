@@ -1,31 +1,30 @@
-import {Vector3DValues, Vector4DValues} from "../types.js";
 import {defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba} from "../math/vec4.js";
 import {defaultVector3DAllocator, uvw, UVW} from "../math/vec3.js";
 import {IAllocatorSizes, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
 import {ATTRIBUTE} from "../constants.js";
+import {Vertices3D, Vertices4D} from "./attribute.js";
+import {IBaseColor, IDirection, IPosition, IUV, IVector} from "../math/interfaces.js";
 
-export default class Vertex {
-    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({
-        vec4D: 1 + (
-            include & ATTRIBUTE.normal ? 1 : 0
-        ) + (
-            include & ATTRIBUTE.color ? 1 : 0
-        ),
-        vec3D: include & ATTRIBUTE.uv ? 1 : 0
-    });
+abstract class AbstractVertex<
+    Position extends IVector & IPosition,
+    Direction extends IVector & IDirection,
+    Color extends IVector & IBaseColor,
+    Uv extends IVector & IUV
+    > {
+    abstract static SIZE = (include: ATTRIBUTE) : IAllocatorSizes;
 
     constructor(
-        public position: Position4D,
-        public normal?: Direction4D,
-        public color?: RGBA,
-        public uvs?: UVW
+        public position: Position,
+        public normal?: Direction,
+        public color?: Color,
+        public uvs?: Uv
     ) {}
 
     lerp(
-        to: Vertex,
+        to: Vertex4D,
         by: number,
-        out: Vertex
-    ) : Vertex {
+        out: Vertex4D
+    ) : Vertex4D {
         this.position.lerp(to.position, by, out.position);
         if (this.uvs) this.uvs.lerp(to.uvs, by, out.uvs);
         if (this.color) this.color.lerp(to.color, by, out.color);
@@ -37,7 +36,7 @@ export default class Vertex {
         return out;
     }
 
-    setFromOther(other: Vertex) : Vertex {
+    setFromOther(other: Vertex4D) : Vertex4D {
         this.position.setFromOther(other.position);
         this.normal!.setFromOther(other.normal);
         this.uvs!.setFromOther(other.uvs);
@@ -51,7 +50,7 @@ export default class Vertex {
         normal?: Direction4D,
         uv_coords?: UVW,
         color?: RGBA
-    ) : Vertex {
+    ) : Vertex4D {
         this.position.setFromOther(position);
         this.normal!.setFromOther(normal);
         this.uvs!.setFromOther(uv_coords);
@@ -61,14 +60,26 @@ export default class Vertex {
     }
 }
 
-export class VertexView extends Vertex {
+export class Vertex4D extends AbstractVertex<Position4D, Direction4D, RGBA, UVW> {
+    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({
+        vec4D: 1 + (
+            include & ATTRIBUTE.normal ? 1 : 0
+        ) + (
+            include & ATTRIBUTE.color ? 1 : 0
+        ),
+        vec3D: include & ATTRIBUTE.uv ? 1 : 0
+    });
+}
+
+export class Vertex4DView extends Vertex4D {
     static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({});
 
     constructor(
-        private readonly position_attribute
+        private readonly vertices: Vertices,
+        public face_vertex_num: number = 0
     ) {
         super(
-            new Position4D()
+            vertices.positions.current
         )
     }
 }

@@ -1,7 +1,6 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import Matrix2x2 from "./mat2x2.js";
-import {Direction3D} from "./vec3.js";
-import {IDirection, IPosition, IUV, IVector2D} from "./interfaces.js";
+import {IVector2D, IAddSub, IBase2D, IPosition2D, IDirection2D, IUV2D} from "./interfaces.js";
 import {Vector2DValues} from "../types.js";
 import {Vector2DAllocator} from "../allocators.js";
 
@@ -127,12 +126,7 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_y[a] = t_x*m12[b] + t_y*m22[b];
 };
 
-interface IAddSub<TOther extends IVector2D = Base2D> extends IVector2D {
-    readonly add : (other: TOther) => this;
-    readonly sub : (other: TOther) => this;
-}
-
-export abstract class Base2D implements IVector2D {
+export abstract class Base2D implements IBase2D {
     public id: number;
 
     public xs: Float32Array;
@@ -146,9 +140,28 @@ export abstract class Base2D implements IVector2D {
 
         [this.xs, this.ys] = arrays;
     }
+
+    readonly setTo = (x: number, y: number) : this => {
+        this_id = this.id;
+
+        this.xs[this_id] = x;
+        this.ys[this_id] = y;
+
+        return this;
+    };
+
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
+
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
 }
 
-abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddSub<TOther> = Direction2D> extends Base2D {
+abstract class Vector2D<
+    TOther extends Base2D & IAddSub<TOther>,
+    TOut extends Base2D & IAddSub<TOther>
+    > extends Base2D implements IVector2D<TOther, TOut> {
+
     set arrays(arrays: readonly [Float32Array, Float32Array]) {
         this.xs = arrays[0];
         this.ys = arrays[1];
@@ -170,15 +183,6 @@ abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddS
 
         this.xs[this_id] = other.xs[other_id];
         this.ys[this_id] = other.ys[other_id];
-
-        return this;
-    };
-
-    readonly setTo = (x: number, y: number) : this => {
-        this_id = this.id;
-
-        this.xs[this_id] = x;
-        this.ys[this_id] = y;
 
         return this;
     };
@@ -315,7 +319,7 @@ abstract class Vector2D<TOut extends IAddSub = Direction3D, TOther extends IAddS
     };
 }
 
-export class Position2D extends Vector2D<Position2D> implements IPosition {
+export class Position2D extends Vector2D<Direction2D, Position2D> implements IPosition2D<Direction2D, Position2D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -339,15 +343,9 @@ export class Position2D extends Vector2D<Position2D> implements IPosition {
 
         return out;
     };
-
-    set x(x: number) {this.xs[this.id] = x}
-    set y(y: number) {this.ys[this.id] = y}
-
-    get x(): number {return this.xs[this.id]}
-    get y(): number {return this.ys[this.id]}
 }
 
-export class Direction2D extends Vector2D implements IDirection {
+export class Direction2D extends Vector2D<Direction2D, Direction2D> implements IDirection2D<Direction2D, Direction2D> {
     get length() : number {
         set_a(this);
 
@@ -407,7 +405,7 @@ export class Direction2D extends Vector2D implements IDirection {
     get y(): number {return this.ys[this.id]}
 }
 
-export class UV extends Vector2D<UV, UV> implements IUV {
+export class UV extends Vector2D<UV, UV> implements IUV2D {
     set u(u: number) {this.xs[this.id] = u}
     set v(v: number) {this.ys[this.id] = v}
 

@@ -2,6 +2,7 @@ import {PRECISION_DIGITS} from "../constants.js";
 import {Direction4D, Position4D} from "./vec4.js";
 import {Matrix4x4Values} from "../types.js";
 import {Matrix4x4Allocator} from "../allocators.js";
+import {IMatrix4x4} from "./interfaces.js";
 
 
 let t11, t12, t13, t14,
@@ -282,7 +283,7 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 };
 
 
-export default class Matrix4x4 {
+export default class Matrix4x4 implements IMatrix4x4 {
     public id: number;
 
     readonly m11: Float32Array; readonly m21: Float32Array; readonly m31: Float32Array; readonly m41: Float32Array;

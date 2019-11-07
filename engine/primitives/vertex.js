@@ -1,6 +1,6 @@
-import { defaultVector4DAllocator, dir4D, pos4D, Position4D, rgba } from "../math/vec4.js";
+import { defaultVector4DAllocator, dir4D, pos4D, rgba } from "../math/vec4.js";
 import { defaultVector3DAllocator, uvw } from "../math/vec3.js";
-export default class Vertex {
+class AbstractVertex {
     constructor(position, normal, color, uvs) {
         this.position = position;
         this.normal = normal;
@@ -34,16 +34,20 @@ export default class Vertex {
         return this;
     }
 }
-Vertex.SIZE = (include) => ({
+AbstractVertex.SIZE = (include) => ;
+export class Vertex4D extends AbstractVertex {
+}
+Vertex4D.SIZE = (include) => ({
     vec4D: 1 + (include & 2 /* normal */ ? 1 : 0) + (include & 4 /* color */ ? 1 : 0),
     vec3D: include & 8 /* uv */ ? 1 : 0
 });
-export class VertexView extends Vertex {
-    constructor(position_attribute) {
-        super(new Position4D());
-        this.position_attribute = position_attribute;
+export class Vertex4DView extends Vertex4D {
+    constructor(vertices, face_vertex_num = 0) {
+        super(vertices.positions.current);
+        this.vertices = vertices;
+        this.face_vertex_num = face_vertex_num;
     }
 }
-VertexView.SIZE = (include) => ({});
+Vertex4DView.SIZE = (include) => ({});
 export const vert = (include = 1 /* position */, vector4D_allocator = defaultVector4DAllocator, vector3D_allocator = defaultVector3DAllocator) => new Vertex(pos4D(vector4D_allocator), include & 2 /* normal */ ? dir4D(vector4D_allocator) : undefined, include & 4 /* color */ ? rgba(vector4D_allocator) : undefined, include & 8 /* uv */ ? uvw(vector3D_allocator) : undefined);
 //# sourceMappingURL=vertex.js.map

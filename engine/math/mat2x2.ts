@@ -2,6 +2,7 @@ import {PRECISION_DIGITS} from "../constants.js";
 import {Direction2D} from "./vec2.js";
 import {Matrix2x2Values} from "../types.js";
 import {Matrix2x2Allocator} from "../allocators.js";
+import {IMatrix2x2} from "./interfaces.js";
 
 let t11, t12,
     t21, t22,
@@ -127,8 +128,8 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 };
 
 
-export default class Matrix2x2 {
-    public id: number;
+export default class Matrix2x2 implements IMatrix2x2 {
+    id: number;
 
     readonly m11: Float32Array; readonly m21: Float32Array;
     readonly m12: Float32Array; readonly m22: Float32Array;
@@ -151,26 +152,26 @@ export default class Matrix2x2 {
         this.j = new Direction2D([this.m21, this.m22], id);
     }
 
-    get is_identity() : boolean {
+    get is_identity(): boolean {
         set_a(this);
         return is_identity(this.id);
     }
 
-    readonly setToIdentity = () : this => {
+    readonly setToIdentity = (): this => {
         set_a(this);
         set_to_identity(this.id);
 
         return this;
     };
 
-    readonly transpose = () : this => {
+    readonly transpose = (): this => {
         set_a(this);
         transpose_in_place(this.id);
 
         return this;
     };
 
-    readonly transposed = (out: this) : this => {
+    readonly transposed = (out: this): this => {
         set_a(this);
         set_o(out);
 
@@ -179,17 +180,19 @@ export default class Matrix2x2 {
         return out;
     };
 
-    readonly copyTo = (out: this) : this => {
+    readonly copyTo = (out: this): this => {
         this_id = this.id;
         out_id = out.id;
 
-        out.m11[out_id] = this.m11[this_id];  out.m21[out_id] = this.m21[this_id];
-        out.m12[out_id] = this.m12[this_id];  out.m22[out_id] = this.m22[this_id];
+        out.m11[out_id] = this.m11[this_id];
+        out.m21[out_id] = this.m21[this_id];
+        out.m12[out_id] = this.m12[this_id];
+        out.m22[out_id] = this.m22[this_id];
 
         return out;
     };
 
-    readonly setFromOther = (other: this) : this => {
+    readonly setFromOther = (other: this): this => {
         this_id = this.id;
         other_id = other.id;
 
@@ -205,23 +208,25 @@ export default class Matrix2x2 {
     readonly setTo = (
         m11: number, m12: number,
         m21: number, m22: number
-    ) : this => {
+    ): this => {
         this_id = this.id;
 
-        this.m11[this_id] = m11;  this.m21[this_id] = m21;
-        this.m12[this_id] = m12;  this.m22[this_id] = m22;
+        this.m11[this_id] = m11;
+        this.m21[this_id] = m21;
+        this.m12[this_id] = m12;
+        this.m22[this_id] = m22;
 
         return this;
     };
 
-    readonly isSameAs = (other: this) : boolean => {
+    readonly isSameAs = (other: this): boolean => {
         set_a(this);
         set_b(other);
 
         return same(this.id, other.id);
     };
 
-    readonly equals = (other: this) : boolean => {
+    readonly equals = (other: this): boolean => {
         set_a(this);
         set_b(other);
 
@@ -231,7 +236,7 @@ export default class Matrix2x2 {
         return equals(this.id, other.id);
     };
 
-    readonly add = (other: this) : this => {
+    readonly add = (other: this): this => {
         set_a(this);
         set_b(other);
 
@@ -240,7 +245,7 @@ export default class Matrix2x2 {
         return this;
     };
 
-    readonly sub = (other: this) : this => {
+    readonly sub = (other: this): this => {
         set_a(this);
         set_b(other);
 
@@ -249,7 +254,7 @@ export default class Matrix2x2 {
         return this;
     };
 
-    readonly div = (by: number) : this => {
+    readonly div = (by: number): this => {
         set_a(this);
 
         divide_in_place(this.id, by);
@@ -257,7 +262,7 @@ export default class Matrix2x2 {
         return this;
     };
 
-    readonly mul = (factor_or_matrix: number | this) : this => {
+    readonly mul = (factor_or_matrix: number | this): this => {
         set_a(this);
 
         if (typeof factor_or_matrix === 'number')
@@ -271,7 +276,7 @@ export default class Matrix2x2 {
         return this;
     };
 
-    readonly plus = (other: this, out: this) : this => {
+    readonly plus = (other: this, out: this): this => {
         if (this.isSameAs(out))
             return out.add(other);
 
@@ -284,12 +289,12 @@ export default class Matrix2x2 {
         return out;
     };
 
-    readonly minus = (other: this, out: this) : this => {
+    readonly minus = (other: this, out: this): this => {
         if (this.isSameAs(other) || this.equals(other)) {
             out_id = out.id;
 
             out.m11[out_id] = out.m21[out_id] =
-            out.m12[out_id] = out.m22[out_id] = 0;
+                out.m12[out_id] = out.m22[out_id] = 0;
 
             return out;
         }
@@ -306,7 +311,7 @@ export default class Matrix2x2 {
         return out;
     };
 
-    readonly over = (by: number, out: this) : this => {
+    readonly over = (by: number, out: this): this => {
         if (this.isSameAs(out))
             return out.div(by);
 
@@ -318,7 +323,7 @@ export default class Matrix2x2 {
         return out;
     };
 
-    readonly times = (factor_or_matrix: number | this, out: this) : this => {
+    readonly times = (factor_or_matrix: number | this, out: this): this => {
         if (this.isSameAs(out))
             return out.mul(factor_or_matrix);
 
@@ -336,7 +341,7 @@ export default class Matrix2x2 {
         return out;
     };
 
-    setRotation(angle, reset=true) : this {
+    setRotation(angle: number, reset:boolean = true): this {
         if (reset) {
             set_a(this);
             set_to_identity(this.id);

@@ -1,13 +1,13 @@
 import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
-import {Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices} from "./attribute.js";
+import {Faces3D, Vertices3D, InputColors, InputNormals, InputPositions, InputUVs} from "./attribute.js";
 import {Allocators, AllocatorSizes} from "../allocators.js";
 import {NumArrays} from "../types.js";
 
 export default class Mesh {
-    public readonly face: Faces = new Faces();
+    public readonly face: Faces3D = new Faces3D();
     public readonly face_count: number;
 
-    public readonly vertex: Vertices = new Vertices();
+    public readonly vertex: Vertices3D = new Vertices3D();
     public readonly vertex_count: number;
 
     constructor(

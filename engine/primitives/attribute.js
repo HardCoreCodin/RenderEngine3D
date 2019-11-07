@@ -368,7 +368,7 @@ export class VertexFaces {
         }
     }
 }
-export class Faces extends AbstractCollection {
+class AbstractFaces extends AbstractCollection {
     constructor() {
         super(...arguments);
         this.positions = new FacePositions();
@@ -390,7 +390,11 @@ export class Faces extends AbstractCollection {
             this.colors.init(allocators.vec3D, count);
     }
 }
-export class Vertices extends AbstractCollection {
+export class Faces3D extends AbstractFaces {
+}
+export class Faces4D extends AbstractFaces {
+}
+class AbstractVertices extends AbstractCollection {
     constructor() {
         super(...arguments);
         this.positions = new VertexPositions();
@@ -416,6 +420,10 @@ export class Vertices extends AbstractCollection {
         if (included & 8 /* uv */)
             this.uvs.init(allocators.vec2D, count, shared & 8 /* uv */);
     }
+}
+export class Vertices3D extends AbstractVertices {
+}
+export class Vertices4D extends AbstractVertices {
 }
 const randomize = (values) => {
     // Assigned random values:

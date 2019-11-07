@@ -113,11 +113,24 @@ const multiply_in_place = (a, b) => {
 };
 export class Base3D {
     constructor(arrays, id = 0) {
+        this.setTo = (x, y, z) => {
+            this_id = this.id;
+            this.xs[this_id] = x;
+            this.ys[this_id] = y;
+            this.zs[this_id] = z;
+            return this;
+        };
         if (id < 0)
             throw `ID must be positive integer, got ${id}`;
         this.id = id;
         [this.xs, this.ys, this.zs] = arrays;
     }
+    set x(x) { this.xs[this.id] = x; }
+    set y(y) { this.ys[this.id] = y; }
+    set z(z) { this.zs[this.id] = z; }
+    get x() { return this.xs[this.id]; }
+    get y() { return this.ys[this.id]; }
+    get z() { return this.zs[this.id]; }
 }
 class Vector3D extends Base3D {
     constructor() {
@@ -136,13 +149,6 @@ class Vector3D extends Base3D {
             this.xs[this_id] = other.xs[other_id];
             this.ys[this_id] = other.ys[other_id];
             this.zs[this_id] = other.zs[other_id];
-            return this;
-        };
-        this.setTo = (x, y, z) => {
-            this_id = this.id;
-            this.xs[this_id] = x;
-            this.ys[this_id] = y;
-            this.zs[this_id] = z;
             return this;
         };
         this.isSameAs = (other) => {

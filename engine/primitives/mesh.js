@@ -1,11 +1,11 @@
-import { Faces, InputColors, InputNormals, InputPositions, InputUVs, Vertices } from "./attribute.js";
+import { Faces3D, Vertices3D, InputColors, InputNormals, InputPositions, InputUVs } from "./attribute.js";
 import { AllocatorSizes } from "../allocators.js";
 export default class Mesh {
     constructor(_inputs, options = new MeshOptions()) {
         this._inputs = _inputs;
         this.options = options;
-        this.face = new Faces();
-        this.vertex = new Vertices();
+        this.face = new Faces3D();
+        this.vertex = new Vertices3D();
         _inputs.init();
         const positions = _inputs.position;
         this.face_count = positions.faces[0].length;

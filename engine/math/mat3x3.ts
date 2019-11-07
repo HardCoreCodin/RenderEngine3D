@@ -2,6 +2,7 @@ import {PRECISION_DIGITS} from "../constants.js";
 import {Direction3D, Position3D} from "./vec3.js";
 import {Matrix3x3Allocator} from "../allocators.js";
 import {Matrix3x3Values} from "../types.js";
+import {IMatrix2x2, IMatrix3x3} from "./interfaces.js";
 
 let t11, t12, t13,
     t21, t22, t23,
@@ -217,7 +218,7 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 };
 
 
-export default class Matrix3x3 {
+export default class Matrix3x3 implements IMatrix3x3 {
     public id: number;
 
     readonly m11: Float32Array; readonly m21: Float32Array; readonly m31: Float32Array;

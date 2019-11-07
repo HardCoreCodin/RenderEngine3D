@@ -1,8 +1,18 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import Matrix4x4 from "./mat4x4.js";
-import {IColor, IDirection, IPosition, IVector4D} from "./interfaces.js";
+import {
+    IBaseColor,
+    IDirection,
+    IPosition,
+    IBase4D,
+    IAddSub,
+    IVector4D,
+    IPosition2D,
+    IPosition4D, IDirection2D, IDirection4D, IColor4D
+} from "./interfaces.js";
 import {Vector4DValues} from "../types.js";
 import {Vector4DAllocator} from "../allocators.js";
+import {Direction2D} from "./vec2.js";
 
 let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id: number;
 let a_x, a_y, a_z, a_w,
@@ -192,12 +202,7 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_w[a] = t_x*m14[b] + t_y*m24[b] + t_z*m34[b] + t_w*m44[b];
 };
 
-interface IAddSub<TOther extends IVector4D = Base4D> extends IVector4D {
-    readonly add : (other: TOther) => this;
-    readonly sub : (other: TOther) => this;
-}
-
-export abstract class Base4D implements IVector4D {
+export abstract class Base4D implements IBase4D {
     public id: number;
 
     public xs: Float32Array;
@@ -213,9 +218,34 @@ export abstract class Base4D implements IVector4D {
 
         [this.xs, this.ys, this.zs, this.ws] = arrays;
     }
+
+    readonly setTo = (x: number, y: number, z: number, w: number) : this => {
+        this_id = this.id;
+
+        this.xs[this_id] = x;
+        this.ys[this_id] = y;
+        this.zs[this_id] = z;
+        this.ws[this_id] = w;
+
+        return this;
+    };
+
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
+    set z(z: number) {this.zs[this.id] = z}
+    set w(w: number) {this.ws[this.id] = w}
+
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
+    get z(): number {return this.zs[this.id]}
+    get w(): number {return this.ws[this.id]}
 }
 
-abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddSub<TOther> = Direction4D> extends Base4D {
+abstract class Vector4D<
+    TOther extends Base4D & IAddSub<TOther>,
+    TOut extends Base4D & IAddSub<TOther>
+    > extends Base4D implements IVector4D<TOther, TOut> {
+
     set arrays(arrays: Vector4DValues) {
         this.xs = arrays[0];
         this.ys = arrays[1];
@@ -243,17 +273,6 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
         this.ys[this_id] = other.ys[other_id];
         this.zs[this_id] = other.zs[other_id];
         this.ws[this_id] = other.ws[other_id];
-
-        return this;
-    };
-
-    readonly setTo = (x: number, y: number, z: number, w: number) : this => {
-        this_id = this.id;
-
-        this.xs[this_id] = x;
-        this.ys[this_id] = y;
-        this.zs[this_id] = z;
-        this.ws[this_id] = w;
 
         return this;
     };
@@ -392,7 +411,7 @@ abstract class Vector4D<TOut extends IAddSub = Direction4D, TOther extends IAddS
     toNDC = () : this => this.div(this.ws[this.id]);
 }
 
-export class Position4D extends Vector4D<Position4D> implements IPosition {
+export class Position4D extends Vector4D<Direction4D, Position4D> implements IPosition4D<Direction4D, Position4D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -434,19 +453,9 @@ export class Position4D extends Vector4D<Position4D> implements IPosition {
         near,
         far
     );
-
-    set x(x: number) {this.xs[this.id] = x}
-    set y(y: number) {this.ys[this.id] = y}
-    set z(z: number) {this.zs[this.id] = z}
-    set w(w: number) {this.ws[this.id] = w}
-
-    get x(): number {return this.xs[this.id]}
-    get y(): number {return this.ys[this.id]}
-    get z(): number {return this.zs[this.id]}
-    get w(): number {return this.ws[this.id]}
 }
 
-export class Direction4D extends Vector4D implements IDirection {
+export class Direction4D extends Vector4D<Direction4D, Direction4D> implements IDirection4D<Direction4D, Direction4D> {
     get length() : number {
         set_a(this);
 
@@ -498,19 +507,9 @@ export class Direction4D extends Vector4D implements IDirection {
 
         return out;
     };
-
-    set x(x: number) {this.xs[this.id] = x}
-    set y(y: number) {this.ys[this.id] = y}
-    set z(z: number) {this.zs[this.id] = z}
-    set w(w: number) {this.ws[this.id] = w}
-
-    get x(): number {return this.xs[this.id]}
-    get y(): number {return this.ys[this.id]}
-    get z(): number {return this.zs[this.id]}
-    get w(): number {return this.ws[this.id]}
 }
 
-export class RGBA extends Vector4D<RGBA, RGBA> implements IColor {
+export class RGBA extends Vector4D<RGBA, RGBA> implements IColor4D {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 

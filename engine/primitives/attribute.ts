@@ -13,7 +13,7 @@ import {
     VertexInputStr,
 } from "../types.js";
 import {float3, num2, num3, num4} from "../factories.js";
-import {Direction3D, Position3D, RGB} from "../math/vec3.js";
+import {Direction3D, Position3D, RGB, UVW} from "../math/vec3.js";
 import {
     Allocators,
     FaceVertexIndexAllocator,
@@ -22,8 +22,9 @@ import {
     Vector4DAllocator,
     VertexFacesIndicesAllocator
 } from "../allocators.js";
-import {IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
 import {UV} from "../math/vec2.js";
+import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
+import {IBaseVector, IColor, IDirection, IPosition, IUV, IVector} from "../math/interfaces.js";
 
 export abstract class Attribute {
     public readonly id: ATTRIBUTE;
@@ -175,7 +176,7 @@ abstract class AbstractVertexAttribute<Vector extends IVector> extends Attribute
 }
 
 abstract class AbstractLoadableVertexAttribute<
-    Vector extends IVector,
+    Vector extends IBaseVector,
     InputAttributeType extends InputAttribute
     > extends AbstractVertexAttribute<Vector> {
 
@@ -204,7 +205,7 @@ abstract class AbstractLoadableVertexAttribute<
 }
 
 abstract class AbstractPulledVertexAttribute<
-    Vector extends IVector,
+    Vector extends IBaseVector,
     InputAttributeType extends InputAttribute,
     FaceAttributeType extends AbstractFaceAttribute<Vector>
     > extends AbstractLoadableVertexAttribute<Vector, InputAttributeType> {
@@ -228,7 +229,7 @@ abstract class AbstractPulledVertexAttribute<
     }
 }
 
-abstract class AbstractFaceAttribute<Vector extends IVector> extends Attribute {
+abstract class AbstractFaceAttribute<Vector extends IBaseVector> extends Attribute {
     public face_values: FaceValues;
     protected Vector: VectorConstructor<Vector>;
     public current: Vector;
@@ -247,8 +248,8 @@ abstract class AbstractFaceAttribute<Vector extends IVector> extends Attribute {
 }
 
 abstract class AbstractPulledFaceAttribute<
-    FaceVector extends IVector,
-    VertexVector extends IVector,
+    FaceVector extends IBaseVector,
+    VertexVector extends IBaseVector,
     VertexAttributeType extends AbstractVertexAttribute<VertexVector>
     > extends AbstractFaceAttribute<FaceVector> {
 
@@ -264,7 +265,7 @@ abstract class AbstractPulledFaceAttribute<
     }
 }
 
-class VertexPositions<Position extends IVector & IPosition>
+class VertexPositions<Position extends IPosition>
     extends AbstractLoadableVertexAttribute<Position, InputPositions> {
 
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
@@ -276,8 +277,8 @@ class VertexPositions<Position extends IVector & IPosition>
 }
 
 class VertexNormals<
-    Direction extends IVector & IDirection,
-    Position extends IVector & IPosition
+    Direction extends IDirection,
+    Position extends IPosition
     > extends AbstractPulledVertexAttribute<
         Direction,
         InputNormals,
@@ -286,7 +287,7 @@ class VertexNormals<
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 }
 
-class VertexColors<Color extends IVector & IColor>
+class VertexColors<Color extends IColor>
     extends AbstractPulledVertexAttribute<
         Color,
         InputColors,
@@ -304,7 +305,7 @@ class VertexColors<Color extends IVector & IColor>
     }
 }
 
-class VertexUVs<UV extends IVector & IUV> extends AbstractLoadableVertexAttribute<UV, InputUVs> {
+class VertexUVs<UV extends IUV> extends AbstractLoadableVertexAttribute<UV, InputUVs> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
 }
 
@@ -313,14 +314,14 @@ export class InputNormals extends InputAttribute {public readonly id = ATTRIBUTE
 export class InputColors extends InputAttribute {public readonly id = ATTRIBUTE.color}
 export class InputUVs extends InputAttribute {public readonly id = ATTRIBUTE.uv; public readonly dim = DIM._2D}
 
-export class FacePositions<Position extends IVector & IPosition>
+export class FacePositions<Position extends IPosition>
     extends AbstractPulledFaceAttribute<Position, Position, VertexPositions<Position>> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
 }
 
 export class FaceNormals<
-    Direction extends IVector & IDirection,
-    Position extends IVector & IPosition
+    Direction extends IDirection,
+    Position extends IPosition
     > extends AbstractPulledFaceAttribute<Direction, Position, VertexPositions<Position>> {
 
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
@@ -375,7 +376,7 @@ export class FaceNormals<
     }
 }
 
-export class FaceColors<Color extends IVector & IColor>
+export class FaceColors<Color extends IColor>
     extends AbstractPulledFaceAttribute<Color, Color, VertexColors<Color>> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
 
@@ -452,10 +453,10 @@ export class VertexFaces {
     }
 }
 
-export class Faces<
-    Position extends IVector & IPosition = Position3D,
-    Direction extends IVector & IDirection = Direction3D,
-    Color extends IVector & IColor = RGB
+abstract class AbstractFaces<
+    Position extends IPosition = Position3D,
+    Direction extends IDirection = Direction3D,
+    Color extends IColor = RGB
     > extends AbstractCollection<
     FacePositions<Position>,
     FaceNormals<Direction, Position>,
@@ -481,11 +482,14 @@ export class Faces<
     }
 }
 
-export class Vertices<
-    Position extends IVector & IPosition = Position3D,
-    Direction extends IVector & IDirection = Direction3D,
-    Color extends IVector & IColor = RGB,
-    Uv extends IVector & IUV = UV
+export class Faces3D extends AbstractFaces<Position3D, Direction3D, RGB> {}
+export class Faces4D extends AbstractFaces<Position4D, Direction4D, RGBA> {}
+
+abstract class AbstractVertices<
+    Position extends IPosition,
+    Direction extends IDirection,
+    Color extends IColor,
+    Uv extends IUV
     > extends AbstractCollection<
     VertexPositions<Position>,
     VertexNormals<Direction, Position>,
@@ -519,6 +523,10 @@ export class Vertices<
         this._validate(this.shared, 'shared', 0b0000, 0b1111)
     );
 }
+
+export class Vertices3D extends AbstractVertices<Position3D, Direction3D, RGB, UV> {}
+export class Vertices4D extends AbstractVertices<Position4D, Direction4D, RGBA, UVW> {}
+
 
 const randomize = (values: readonly Float32Array[]): void => {
     // Assigned random values:

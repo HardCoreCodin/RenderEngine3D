@@ -1,6 +1,12 @@
 import {PRECISION_DIGITS} from "../constants.js";
 import Matrix3x3 from "./mat3x3.js";
-import {IColor, IDirection, IPosition, IUV, IVector3D} from "./interfaces.js";
+import {
+    IBase3D,
+    IAddSub,
+    IVector3D,
+    IPosition3D,
+    IDirection3D, IUV3D, IColor3D
+} from "./interfaces.js";
 import {Vector3DValues} from "../types.js";
 import {Vector3DAllocator} from "../allocators.js";
 
@@ -168,12 +174,7 @@ const multiply_in_place = (a: number, b: number) : void => {
     a_z[a] = t_x*m13[b] + t_y*m23[b] + t_z*m33[b];
 };
 
-interface IAddSub<TOther extends IVector3D = Base3D> extends IVector3D {
-    readonly add : (other: TOther) => this;
-    readonly sub : (other: TOther) => this;
-}
-
-export abstract class Base3D implements IVector3D {
+export abstract class Base3D implements IBase3D {
     public id: number;
 
     public xs: Float32Array;
@@ -188,9 +189,31 @@ export abstract class Base3D implements IVector3D {
 
         [this.xs, this.ys, this.zs] = arrays;
     }
+
+    readonly setTo = (x: number, y: number, z: number) : this => {
+        this_id = this.id;
+
+        this.xs[this_id] = x;
+        this.ys[this_id] = y;
+        this.zs[this_id] = z;
+
+        return this;
+    };
+
+    set x(x: number) {this.xs[this.id] = x}
+    set y(y: number) {this.ys[this.id] = y}
+    set z(z: number) {this.zs[this.id] = z}
+
+    get x(): number {return this.xs[this.id]}
+    get y(): number {return this.ys[this.id]}
+    get z(): number {return this.zs[this.id]}
 }
 
-abstract class Vector3D<TOut extends IAddSub = Direction3D, TOther extends IAddSub<TOther> = Direction3D> extends Base3D {
+abstract class Vector3D<
+    TOther extends Base3D & IAddSub<TOther>,
+    TOut extends Base3D & IAddSub<TOther>
+    > extends Base3D implements IVector3D<TOther, TOut> {
+
     set arrays(arrays: readonly [Float32Array, Float32Array, Float32Array]) {
         this.xs = arrays[0];
         this.ys = arrays[1];
@@ -215,16 +238,6 @@ abstract class Vector3D<TOut extends IAddSub = Direction3D, TOther extends IAddS
         this.xs[this_id] = other.xs[other_id];
         this.ys[this_id] = other.ys[other_id];
         this.zs[this_id] = other.zs[other_id];
-
-        return this;
-    };
-
-    readonly setTo = (x: number, y: number, z: number) : this => {
-        this_id = this.id;
-
-        this.xs[this_id] = x;
-        this.ys[this_id] = y;
-        this.zs[this_id] = z;
 
         return this;
     };
@@ -361,7 +374,7 @@ abstract class Vector3D<TOut extends IAddSub = Direction3D, TOther extends IAddS
     };
 }
 
-export class Position3D extends Vector3D<Position3D> implements IPosition {
+export class Position3D extends Vector3D<Direction3D, Position3D> implements IPosition3D<Direction3D, Position3D> {
     readonly squaredDistanceTo = (other: this) : number => {
         set_a(this);
         set_b(other);
@@ -395,7 +408,7 @@ export class Position3D extends Vector3D<Position3D> implements IPosition {
     get z(): number {return this.zs[this.id]}
 }
 
-export class Direction3D extends Vector3D implements IDirection {
+export class Direction3D extends Vector3D<Direction3D, Direction3D> implements IDirection3D<Direction3D, Direction3D> {
     get length() : number {
         set_a(this);
 
@@ -484,7 +497,7 @@ export class Direction3D extends Vector3D implements IDirection {
     get z(): number {return this.zs[this.id]}
 }
 
-export class UVW extends Vector3D<UVW, UVW> implements IUV{
+export class UVW extends Vector3D<UVW, UVW> implements IUV3D {
     set u(u: number) {this.xs[this.id] = u}
     set v(v: number) {this.ys[this.id] = v}
     set w(w: number) {this.zs[this.id] = w}
@@ -494,7 +507,7 @@ export class UVW extends Vector3D<UVW, UVW> implements IUV{
     get w(): number {return this.zs[this.id]}
 }
 
-export class RGB extends Vector3D<RGB, RGB> implements IColor {
+export class RGB extends Vector3D<RGB, RGB> implements IColor3D {
     readonly setGreyScale = (color: number) : this => {
         this_id = this.id;
 
