@@ -1,4 +1,4 @@
-import {VectorValues} from "../types.js";
+import {Vector2DValues, Vector3DValues, Vector4DValues, VectorValues} from "../types.js";
 
 interface IBase {
     id: number
@@ -36,6 +36,7 @@ export interface IBase2D extends IBase {
     ys: Float32Array,
 
     setTo(x: number, y: number);
+    arrays: readonly [Float32Array, Float32Array];
 
     x: number;
     y: number;
@@ -47,6 +48,7 @@ export interface IBase3D extends IBase {
     zs: Float32Array,
 
     setTo(x: number, y: number, z: number);
+    arrays: readonly [Float32Array, Float32Array, Float32Array];
 
     x: number;
     y: number;
@@ -60,6 +62,7 @@ export interface IBase4D extends IBase {
     ws: Float32Array,
 
     setTo(x: number, y: number, z: number, w: number);
+    arrays: readonly [Float32Array, Float32Array, Float32Array, Float32Array];
 
     x: number;
     y: number;
@@ -187,7 +190,7 @@ export type IColor4D<Other extends IAddSub<Other> & IBase4D = IBaseVectorColor4D
 export type IUV2D<Other extends IAddSub<Other> & IBase2D = IBaseVectorUV2D, Out extends IAddSub<Other> & IBase2D = IBaseVectorUV2D> = IUV<IMatrix2x2, Other, Out>;
 export type IUV3D<Other extends IAddSub<Other> & IBase3D = IBaseVectorUV3D, Out extends IAddSub<Other> & IBase3D = IBaseVectorUV3D> = IUV<IMatrix3x3, Other, Out>;
 
-interface IBaseMatrix extends IBase {
+export interface IBaseMatrix extends IBase {
     is_identity : boolean;
     setToIdentity() : this;
     transpose() : this;
@@ -206,7 +209,7 @@ interface IBaseMatrix extends IBase {
     times(factor_or_matrix: (number | this), out: this) : this;
 }
 
-interface IBaseRotationMatrix extends IBaseMatrix {
+export interface IBaseRotationMatrix extends IBaseMatrix {
     setRotationAroundX(angle: number, reset: boolean): this;
     setRotationAroundY(angle: number, reset: boolean): this;
     setRotationAroundZ(angle: number, reset: boolean): this;
@@ -274,10 +277,4 @@ export interface IMatrix4x4<
     t: Position;
 }
 
-
-// export type IVectorDim = IVector2D | IVector2D | IVector4D;
-// export type IVectorKind = IPosition | IDirection | IColor | IUV;
-// export type IVectorType = IVectorDim & IVectorKind;export type IVectorDim = IVector2D | IVector2D | IVector4D;
-// export type IVectorKind = IPosition | IDirection | IColor | IUV;
-// export type IVectorType = IVectorDim & IVectorKind;
 export type VectorConstructor<VectorInstance extends IVector> = new (arrays: VectorValues, id?: number) => VectorInstance;

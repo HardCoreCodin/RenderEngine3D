@@ -140,6 +140,12 @@ export class Base4D {
         this.id = id;
         [this.xs, this.ys, this.zs, this.ws] = arrays;
     }
+    set arrays(arrays) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+        this.ws = arrays[3];
+    }
     set x(x) { this.xs[this.id] = x; }
     set y(y) { this.ys[this.id] = y; }
     set z(z) { this.zs[this.id] = z; }
@@ -263,13 +269,6 @@ class Vector4D extends Base4D {
             }
             return out;
         };
-        this.toNDC = () => this.div(this.ws[this.id]);
-    }
-    set arrays(arrays) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-        this.zs = arrays[2];
-        this.ws = arrays[3];
     }
 }
 export class Position4D extends Vector4D {
@@ -294,6 +293,7 @@ export class Position4D extends Vector4D {
         };
         this.isInView = (near = 0, far = 1) => in_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
         this.isOutOfView = (near = 0, far = 1) => out_of_view(this.xs[this.id], this.ys[this.id], this.zs[this.id], this.ws[this.id], near, far);
+        this.toNDC = () => this.div(this.ws[this.id]);
     }
 }
 export class Direction4D extends Vector4D {

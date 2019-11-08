@@ -1,7 +1,7 @@
 import Screen from "./screen.js";
 import Mesh from "./primitives/mesh.js";
 import Camera, {cam} from "./objects/camera.js";
-import Triangle, {tri} from "./primitives/triangle.js";
+import Triangle4D, {tri} from "./primitives/triangle.js";
 import FPSController, {fps} from "./input.js";
 import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
 import {dir4D, Direction4D} from "./math/vec4.js";
@@ -37,15 +37,15 @@ export default class Engine3D {
 
     private light_direction: Direction4D; // Illumination
 
-    private readonly extra_triangle: Triangle;
-    private readonly triangle_in_clip_space: Triangle;
-    private readonly triangle_in_ndc_space: Triangle;
-    private readonly triangle_in_screen_space: Triangle;
+    private readonly extra_triangle: Triangle4D;
+    private readonly triangle_in_clip_space: Triangle4D;
+    private readonly triangle_in_ndc_space: Triangle4D;
+    private readonly triangle_in_screen_space: Triangle4D;
     private readonly triangle_normal: Direction4D;
     private readonly triangle_color: RGB;
 
     private triangle_count: number;
-    private triangles_to_raster: Triangle[] = [];
+    private triangles_to_raster: Triangle4D[] = [];
 
     private readonly world_space_to_clip_space: Matrix4x4;	// Matrix that converts from world space to clip space
     private readonly world_space_to_camera_space: Matrix4x4;	// Matrix that converts from world space to view space
@@ -60,7 +60,7 @@ export default class Engine3D {
         this.screen = new Screen(canvas);
 
         // Compute allocator sizes:
-        this.allocator_sizes = Triangle.SIZE().times(4).add(Engine3D.SIZE);
+        this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
         for (const mesh of meshes)
             this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
 
@@ -171,7 +171,7 @@ export default class Engine3D {
             );
 
             // Draw Triangles
-            let triangle: Triangle;
+            let triangle: Triangle4D;
             for (let t = 0; t < mesh_renderer.mesh.face_count; t++) {
                 triangle = mesh_renderer.mesh.vertex.triangles.at(t);
 
@@ -226,8 +226,8 @@ export default class Engine3D {
             // Sort triangles from back to front
             this.triangles_to_raster.sort(
                 (
-                    t1: Triangle,
-                    t2: Triangle
+                    t1: Triangle4D,
+                    t2: Triangle4D
                 ) => (
                     (
                         t2.vertices[0].position.z +
@@ -253,7 +253,7 @@ export default class Engine3D {
         }
     }
 
-    drawTriangle(triangle: Triangle) {
+    drawTriangle(triangle: Triangle4D) {
         triangle.sort_vertices_vertically();
 
         const [x1, y1, z1] = triangle.vertices[0].position.buffer;

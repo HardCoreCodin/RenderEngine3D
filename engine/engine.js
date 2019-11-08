@@ -1,6 +1,6 @@
 import Screen from "./screen.js";
 import Camera, { cam } from "./objects/camera.js";
-import Triangle, { tri } from "./primitives/triangle.js";
+import Triangle4D, { tri } from "./primitives/triangle.js";
 import FPSController, { fps } from "./input.js";
 import { mat4x4 } from "./math/mat4x4.js";
 import { dir4D } from "./math/vec4.js";
@@ -32,7 +32,7 @@ export default class Engine3D {
         };
         this.screen = new Screen(canvas);
         // Compute allocator sizes:
-        this.allocator_sizes = Triangle.SIZE().times(4).add(Engine3D.SIZE);
+        this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
         for (const mesh of meshes)
             this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
         // Allocate memory:

@@ -2,7 +2,6 @@ import { IndexArrayBuffer } from "./index.js";
 import { Positions3D, Positions4D } from "./position.js";
 import { Directions4D } from "./direction.js";
 import { Colors4D } from "./color.js";
-import { Triangle } from "../primitives/triangle.js";
 export default class Triangles {
     constructor(count, vertices, positions = new Positions4D(count), normals = new Directions4D(count), colors = new Colors4D(count), uvs = new Positions3D(count), indices = new IndexArrayBuffer(count, 3)) {
         this.count = count;

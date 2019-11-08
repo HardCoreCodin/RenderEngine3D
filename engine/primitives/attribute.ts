@@ -129,49 +129,43 @@ abstract class AbstractVertexAttribute<Vector extends IVector> extends Attribute
     ];
 
     protected Vector: VectorConstructor<Vector>;
-    public current: Vector;
-    public current_1: Vector;
-    public current_2: Vector;
-    public current_3: Vector;
+    public current: [Vector, Vector, Vector];
 
-    protected _initCurrent() : void {
-        if (this.is_shared && !this.current)
-            this.current = new this.Vector(this.shared_values);
-
-        if (!this.is_shared && !this.current_1) {
-            this.current_1 = new this.Vector(this.unshared_values[0]);
-            this.current_2 = new this.Vector(this.unshared_values[1]);
-            this.current_3 = new this.Vector(this.unshared_values[2]);
-        }
-    };
-
-    setCurrent(id: number) : void {
-        if (this.is_shared)
-            this.current.id = id;
-        else {
-            this.current_1.id = id;
-            this.current_1.id = id;
-            this.current_1.id = id;
-        }
+    setCurrent(
+        id_1: number,
+        id_2: number = id_1,
+        id_3: number = id_1
+    ) : void {
+        this.current[0].id = id_1;
+        this.current[1].id = id_2;
+        this.current[2].id = id_3;
     }
 
     init(allocator: Vector2DAllocator | Vector3DAllocator | Vector4DAllocator,
          size: number,
          is_shared: boolean | number = this.is_shared) {
-        this.is_shared = !!(is_shared);
 
         if (is_shared) {
-            if (!(this.shared_values && this.shared_values[0].length === size))
+            this.is_shared = true;
+
+            if (!this.shared_values)
                 this.shared_values = allocator.allocate(size);
+
+            this.current[0] = new this.Vector(this.shared_values);
+            this.current[1] = new this.Vector(this.shared_values);
+            this.current[2] = new this.Vector(this.shared_values);
         } else {
-            if (!(this.unshared_values[0] && this.unshared_values[0].length === size)) {
+            this.is_shared = false;
+
+            if (!this.unshared_values[0]) {
                 this.unshared_values[0] = allocator.allocate(size);
                 this.unshared_values[1] = allocator.allocate(size);
                 this.unshared_values[2] = allocator.allocate(size);
             }
+            this.current[0] = new this.Vector(this.unshared_values[0]);
+            this.current[1] = new this.Vector(this.unshared_values[1]);
+            this.current[2] = new this.Vector(this.unshared_values[2]);
         }
-
-        this._initCurrent();
     }
 }
 
@@ -338,7 +332,7 @@ export class FaceNormals<
             pos1.arrays = pos2.arrays = pos3.arrays = [
                 attribute.shared_values[0],
                 attribute.shared_values[1],
-                attribute.shared_values[2],
+                attribute.shared_values[2]
             ];
         else {
             pos1.arrays = [
@@ -385,7 +379,7 @@ export class FaceColors<Color extends IColor>
     }
 }
 
-abstract class AbstractCollection<
+class AttributeCollection<
     PositionAttributeType extends Attribute,
     NormalAttributeType extends Attribute,
     ColorAttributeType extends Attribute,
@@ -453,11 +447,11 @@ export class VertexFaces {
     }
 }
 
-abstract class AbstractFaces<
+export class Faces<
     Position extends IPosition = Position3D,
     Direction extends IDirection = Direction3D,
     Color extends IColor = RGB
-    > extends AbstractCollection<
+    > extends AttributeCollection<
     FacePositions<Position>,
     FaceNormals<Direction, Position>,
     FaceColors<Color>
@@ -482,15 +476,15 @@ abstract class AbstractFaces<
     }
 }
 
-export class Faces3D extends AbstractFaces<Position3D, Direction3D, RGB> {}
-export class Faces4D extends AbstractFaces<Position4D, Direction4D, RGBA> {}
+export class Faces3D extends Faces<Position3D, Direction3D, RGB> {}
+export class Faces4D extends Faces<Position4D, Direction4D, RGBA> {}
 
-abstract class AbstractVertices<
-    Position extends IPosition,
-    Direction extends IDirection,
-    Color extends IColor,
-    Uv extends IUV
-    > extends AbstractCollection<
+export class Vertices<
+        Position extends IPosition,
+        Direction extends IDirection,
+        Color extends IColor,
+        Uv extends IUV
+    > extends AttributeCollection<
     VertexPositions<Position>,
     VertexNormals<Direction, Position>,
     VertexColors<Color>
@@ -524,8 +518,8 @@ abstract class AbstractVertices<
     );
 }
 
-export class Vertices3D extends AbstractVertices<Position3D, Direction3D, RGB, UV> {}
-export class Vertices4D extends AbstractVertices<Position4D, Direction4D, RGBA, UVW> {}
+export class Vertices3D extends Vertices<Position3D, Direction3D, RGB, UV> {}
+export class Vertices4D extends Vertices<Position4D, Direction4D, RGBA, UVW> {}
 
 
 const randomize = (values: readonly Float32Array[]): void => {

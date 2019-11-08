@@ -141,13 +141,18 @@ export abstract class Base2D implements IBase2D {
         [this.xs, this.ys] = arrays;
     }
 
-    readonly setTo = (x: number, y: number) : this => {
+    setTo(x: number, y: number) : this {
         this_id = this.id;
 
         this.xs[this_id] = x;
         this.ys[this_id] = y;
 
         return this;
+    };
+
+    set arrays(arrays: readonly [Float32Array, Float32Array]) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
     };
 
     set x(x: number) {this.xs[this.id] = x}
@@ -161,11 +166,6 @@ abstract class Vector2D<
     TOther extends Base2D & IAddSub<TOther>,
     TOut extends Base2D & IAddSub<TOther>
     > extends Base2D implements IVector2D<TOther, TOut> {
-
-    set arrays(arrays: readonly [Float32Array, Float32Array]) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-    }
 
     readonly copyTo = (out: this) : typeof out => {
         this_id = this.id;

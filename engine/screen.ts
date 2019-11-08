@@ -1,4 +1,4 @@
-import {Triangle} from "./primitives/triangle.js";
+import {Triangle4D} from "./primitives/triangle.js";
 
 export default class Screen {
     constructor(

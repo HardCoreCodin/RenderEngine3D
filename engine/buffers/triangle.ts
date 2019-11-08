@@ -3,7 +3,7 @@ import {Positions3D, Positions4D} from "./position.js";
 import {Directions4D} from "./direction.js";
 import {Colors4D} from "./color.js";
 import Vertices from "./vertex.js";
-import {Triangle} from "../primitives/triangle.js";
+import {Triangle4D} from "../primitives/triangle.js";
 
 export default class Triangles {
     constructor(

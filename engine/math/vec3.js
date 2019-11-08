@@ -125,6 +125,11 @@ export class Base3D {
         this.id = id;
         [this.xs, this.ys, this.zs] = arrays;
     }
+    set arrays(arrays) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+    }
     set x(x) { this.xs[this.id] = x; }
     set y(y) { this.ys[this.id] = y; }
     set z(z) { this.zs[this.id] = z; }
@@ -244,11 +249,6 @@ class Vector3D extends Base3D {
             }
             return out;
         };
-    }
-    set arrays(arrays) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-        this.zs = arrays[2];
     }
 }
 export class Position3D extends Vector3D {

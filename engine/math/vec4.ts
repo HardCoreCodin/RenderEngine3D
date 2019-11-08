@@ -10,7 +10,7 @@ import {
     IPosition2D,
     IPosition4D, IDirection2D, IDirection4D, IColor4D
 } from "./interfaces.js";
-import {Vector4DValues} from "../types.js";
+import {Vector3DValues, Vector4DValues} from "../types.js";
 import {Vector4DAllocator} from "../allocators.js";
 import {Direction2D} from "./vec2.js";
 
@@ -230,6 +230,13 @@ export abstract class Base4D implements IBase4D {
         return this;
     };
 
+    set arrays(arrays: readonly [Float32Array, Float32Array, Float32Array, Float32Array]) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+        this.ws = arrays[3];
+    }
+
     set x(x: number) {this.xs[this.id] = x}
     set y(y: number) {this.ys[this.id] = y}
     set z(z: number) {this.zs[this.id] = z}
@@ -245,13 +252,6 @@ abstract class Vector4D<
     TOther extends Base4D & IAddSub<TOther>,
     TOut extends Base4D & IAddSub<TOther>
     > extends Base4D implements IVector4D<TOther, TOut> {
-
-    set arrays(arrays: Vector4DValues) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-        this.zs = arrays[2];
-        this.ws = arrays[3];
-    }
 
     readonly copyTo = (out: this) : typeof out => {
         this_id = this.id;
@@ -407,8 +407,6 @@ abstract class Vector4D<
 
         return out;
     };
-
-    toNDC = () : this => this.div(this.ws[this.id]);
 }
 
 export class Position4D extends Vector4D<Direction4D, Position4D> implements IPosition4D<Direction4D, Position4D> {
@@ -453,6 +451,8 @@ export class Position4D extends Vector4D<Direction4D, Position4D> implements IPo
         near,
         far
     );
+
+    toNDC = () : this => this.div(this.ws[this.id]);
 }
 
 export class Direction4D extends Vector4D<Direction4D, Direction4D> implements IDirection4D<Direction4D, Direction4D> {

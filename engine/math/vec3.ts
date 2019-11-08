@@ -7,7 +7,7 @@ import {
     IPosition3D,
     IDirection3D, IUV3D, IColor3D
 } from "./interfaces.js";
-import {Vector3DValues} from "../types.js";
+import {Vector2DValues, Vector3DValues} from "../types.js";
 import {Vector3DAllocator} from "../allocators.js";
 
 let t_x, t_y, t_z, t_n, out_id, other_id, this_id: number;
@@ -200,6 +200,12 @@ export abstract class Base3D implements IBase3D {
         return this;
     };
 
+    set arrays(arrays: readonly [Float32Array, Float32Array, Float32Array]) {
+        this.xs = arrays[0];
+        this.ys = arrays[1];
+        this.zs = arrays[2];
+    }
+
     set x(x: number) {this.xs[this.id] = x}
     set y(y: number) {this.ys[this.id] = y}
     set z(z: number) {this.zs[this.id] = z}
@@ -213,12 +219,6 @@ abstract class Vector3D<
     TOther extends Base3D & IAddSub<TOther>,
     TOut extends Base3D & IAddSub<TOther>
     > extends Base3D implements IVector3D<TOther, TOut> {
-
-    set arrays(arrays: readonly [Float32Array, Float32Array, Float32Array]) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-        this.zs = arrays[2];
-    }
 
     readonly copyTo = (out: this) : typeof out => {
         this_id = this.id;

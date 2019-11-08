@@ -10,6 +10,8 @@ export default class MeshRenderer extends Object3D {
     ) {
         super(transform);
     }
+
+
 }
 
 export const rend = (mesh: Mesh, allocators: Allocators) : MeshRenderer => new MeshRenderer(mesh, trans(
