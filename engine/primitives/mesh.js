@@ -1,54 +1,48 @@
 import { Faces3D, Vertices3D, InputColors, InputNormals, InputPositions, InputUVs } from "./attribute.js";
 import { AllocatorSizes } from "../allocators.js";
 export default class Mesh {
-    constructor(_inputs, options = new MeshOptions()) {
-        this._inputs = _inputs;
+    constructor(inputs, options = new MeshOptions()) {
+        this.inputs = inputs;
         this.options = options;
-        this.face = new Faces3D();
-        this.vertex = new Vertices3D();
-        _inputs.init();
-        const positions = _inputs.position;
-        this.face_count = positions.faces[0].length;
-        this.vertex_count = positions.vertices[0].length;
+        inputs.init();
+        options.sanitize(this.inputs);
+        this.face_count = inputs.position.faces[0].length;
+        this.vertex_count = inputs.position.vertices[0].length;
+        this.face = new Faces3D(this);
+        this.vertex = new Vertices3D(this);
     }
     get allocator_sizes() {
-        this.options.sanitize(this._inputs);
-        let vec2D = 0;
-        let vec3D = 0;
+        const result = new AllocatorSizes({
+            face_vertices: this.face_count,
+            vertex_faces: this.inputs.vertex_faces.size
+        });
         const vertex_attributes = this.options.vertex_attributes;
         const face_attributes = this.options.face_attributes;
         const vertex_size = this.vertex_count * 4;
-        vec3D += vertex_size;
+        result.vec3D += vertex_size;
         if (vertex_attributes & 2 /* normal */)
-            vec3D += vertex_size;
+            result.vec3D += vertex_size;
         if (vertex_attributes & 4 /* color */)
-            vec3D += vertex_size;
+            result.vec3D += vertex_size;
         if (vertex_attributes & 8 /* uv */)
-            vec2D += vertex_size;
+            result.vec2D += vertex_size;
         if (face_attributes & 1 /* position */)
-            vec3D += this.face_count;
+            result.vec3D += this.face_count;
         if (face_attributes & 2 /* normal */)
-            vec3D += this.face_count;
+            result.vec3D += this.face_count;
         if (face_attributes & 4 /* color */)
-            vec3D += this.face_count;
-        const result = new AllocatorSizes({
-            vec3D: vec3D,
-            face_vertices: this.face.count,
-            vertex_faces: this._inputs.vertex_faces.size
-        });
-        if (vec2D)
-            result.vec2D = vec2D;
+            result.vec3D += this.face_count;
         return result;
     }
     load(allocators) {
-        const positions = this._inputs.position;
-        const normals = this._inputs.normal;
-        const colors = this._inputs.color;
-        const uvs = this._inputs.uv;
+        const positions = this.inputs.position;
+        const normals = this.inputs.normal;
+        const colors = this.inputs.color;
+        const uvs = this.inputs.uv;
         // Init::
         this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
-        this.vertex.faces.init(allocators.vertex_faces, this._inputs.vertex_faces.size);
-        this.vertex.faces.load(this._inputs.vertex_faces.number_arrays);
+        this.vertex.faces.init(allocators.vertex_faces, this.inputs.vertex_faces.size);
+        this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
         this.face.init(allocators, this.face_count, this.options.face_attributes);
         this.face.vertices.load(positions.faces);
         // Load:

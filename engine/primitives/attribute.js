@@ -1,5 +1,6 @@
 import { float3, num2, num3, num4 } from "../factories.js";
 import { Direction3D, Position3D } from "../math/vec3.js";
+import { AllocatorSizes } from "../allocators.js";
 export class Attribute {
 }
 export class InputAttribute extends Attribute {
@@ -308,9 +309,10 @@ export class FaceColors extends AbstractPulledFaceAttribute {
     }
 }
 class AttributeCollection {
-    constructor() {
-        this._validateParameters = () => (this._validate(this.count, 'Count') &&
-            this._validate(this.included, 'included', 0b0001, 0b1111));
+    constructor(mesh) {
+        this.mesh = mesh;
+        this._validateParameters = () => ;
+        this._validateParameters();
     }
     _validate(value, name, min = 0, max = Number.MAX_SAFE_INTEGER) {
         if (Number.isInteger(value)) {
@@ -367,12 +369,13 @@ export class Faces extends AttributeCollection {
         this.normals = new FaceNormals();
         this.colors = new FaceColors();
         this.vertices = new FaceVertices();
+        this._validateParameters = () => {
+            if (!(this._validate(this.mesh.face_count, 'Count') &&
+                this._validate(this.mesh.options.face_attributes, 'included', 0b0001, 0b1111)))
+                throw `Invalid parameters! count: ${this.mesh.face_count} included: ${this.mesh.options.face_attributes}`;
+        };
     }
     init(allocators, count, included) {
-        this.count = count;
-        this.included = included;
-        if (!this._validateParameters())
-            throw `Invalid parameters! count: ${count} included: ${included}`;
         this.vertices.init(allocators.face_vertices, count);
         if (included & 1 /* position */)
             this.positions.init(allocators.vec3D, count);
@@ -394,16 +397,37 @@ export class Vertices extends AttributeCollection {
         this.colors = new VertexColors();
         this.uvs = new VertexUVs();
         this.faces = new VertexFaces();
-        this._validateParameters = () => (this._validate(this.count, 'Count') &&
-            this._validate(this.included, 'included', 0b0001, 0b1111) &&
-            this._validate(this.shared, 'shared', 0b0000, 0b1111));
+        this._validateParameters = () => {
+            if (!(this._validate(this.mesh.vertex_count, 'Count') &&
+                this._validate(this.mesh.options.vertex_attributes, 'included', 0b0001, 0b1111) &&
+                this._validate(this.shared, 'shared', 0b0000, 0b1111)))
+                throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
+        };
+    }
+    get allocator_sizes() {
+        const result = new AllocatorSizes({
+            face_vertices: this.mesh.vertex_count,
+            vertex_faces: this.mesh.inputs.vertex_faces.size
+        });
+        const vertex_attributes = this.mesh.options.vertex_attributes;
+        const face_attributes = this.mesh.options.face_attributes;
+        const vertex_size = this.mesh.vertex_count * 4;
+        result.vec3D += vertex_size;
+        if (vertex_attributes & 2 /* normal */)
+            result.vec3D += vertex_size;
+        if (vertex_attributes & 4 /* color */)
+            result.vec3D += vertex_size;
+        if (vertex_attributes & 8 /* uv */)
+            result.vec2D += vertex_size;
+        if (face_attributes & 1 /* position */)
+            result.vec3D += this.mesh.face_count;
+        if (face_attributes & 2 /* normal */)
+            result.vec3D += this.mesh.face_count;
+        if (face_attributes & 4 /* color */)
+            result.vec3D += this.mesh.face_count;
+        return result;
     }
     init(allocators, count, included, shared) {
-        this.count = count;
-        this.included = included;
-        this.shared = shared;
-        if (!this._validateParameters())
-            throw `Invalid parameters! count: ${count} included: ${included}`;
         this.positions.init(allocators.vec3D, count, shared & 1 /* position */);
         if (included & 2 /* normal */)
             this.normals.init(allocators.vec3D, count, shared & 2 /* normal */);

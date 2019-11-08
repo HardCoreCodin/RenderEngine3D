@@ -215,7 +215,7 @@ export class Triangle3DView extends Triangle3D {
         return this;
     }
 }
-export class Triangle34View extends Triangle4D {
+export class Triangle4DView extends Triangle4D {
     constructor(vertex, face) {
         super(new Vertex4DView(vertex, 0), new Vertex4DView(vertex, 1), new Vertex4DView(vertex, 2), face.normals ? face.normals.current : undefined, face.colors ? face.colors.current : undefined, face.positions ? face.positions.current : undefined);
         this.vertex = vertex;

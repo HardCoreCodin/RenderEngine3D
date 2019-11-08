@@ -15,7 +15,7 @@ import {
 import {float3, num2, num3, num4} from "../factories.js";
 import {Direction3D, Position3D, RGB, UVW} from "../math/vec3.js";
 import {
-    Allocators,
+    Allocators, AllocatorSizes,
     FaceVertexIndexAllocator,
     Vector2DAllocator,
     Vector3DAllocator,
@@ -25,6 +25,7 @@ import {
 import {UV} from "../math/vec2.js";
 import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
 import {IBaseVector, IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
+import Mesh, {MeshOptions} from "./mesh.js";
 
 export abstract class Attribute {
     public readonly id: ATTRIBUTE;
@@ -388,8 +389,11 @@ class AttributeCollection<
     public normals: NormalAttributeType;
     public colors: ColorAttributeType;
 
-    public count: number;
-    public included: number;
+    constructor(
+        public readonly mesh: Mesh
+    ) {
+        this._validateParameters();
+    }
 
     protected _validate(value: number, name: string,  min: number = 0, max: number = Number.MAX_SAFE_INTEGER) : boolean {
         if (Number.isInteger(value)) {
@@ -405,10 +409,7 @@ class AttributeCollection<
         return false;
     }
 
-    protected _validateParameters = () : boolean => (
-        this._validate(this.count, 'Count') &&
-        this._validate(this.included, 'included', 0b0001, 0b1111)
-    );
+    protected _validateParameters = () : void;
 }
 
 export class FaceVertices {
@@ -462,18 +463,20 @@ export class Faces<
     public readonly vertices = new FaceVertices();
 
     init(allocators: Allocators, count: number, included: number) : void {
-        this.count = count;
-        this.included = included;
-
-        if (!this._validateParameters())
-            throw `Invalid parameters! count: ${count} included: ${included}`;
-
         this.vertices.init(allocators.face_vertices, count);
 
         if (included & ATTRIBUTE.position) this.positions.init(allocators.vec3D, count);
         if (included & ATTRIBUTE.normal) this.normals.init(allocators.vec3D, count);
         if (included & ATTRIBUTE.color) this.colors.init(allocators.vec3D, count);
     }
+
+    protected _validateParameters = () : void => {
+        if (!(
+            this._validate(this.mesh.face_count, 'Count') &&
+            this._validate(this.mesh.options.face_attributes, 'included', 0b0001, 0b1111)
+        ))
+            throw `Invalid parameters! count: ${this.mesh.face_count} included: ${this.mesh.options.face_attributes}`;
+    };
 }
 
 export class Faces3D extends Faces<Position3D, Direction3D, RGB> {}
@@ -497,25 +500,43 @@ export class Vertices<
 
     public shared: number;
 
+    get allocator_sizes() : AllocatorSizes {
+        const result = new AllocatorSizes({
+            face_vertices: this.mesh.vertex_count,
+            vertex_faces: this.mesh.inputs.vertex_faces.size
+        });
+
+        const vertex_attributes: ATTRIBUTE = this.mesh.options.vertex_attributes;
+        const face_attributes: ATTRIBUTE = this.mesh.options.face_attributes;
+
+        const vertex_size = this.mesh.vertex_count * 4;
+        result.vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.normal) result.vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.color) result.vec3D += vertex_size;
+        if (vertex_attributes & ATTRIBUTE.uv) result.vec2D += vertex_size;
+
+        if (face_attributes & ATTRIBUTE.position) result.vec3D += this.mesh.face_count;
+        if (face_attributes & ATTRIBUTE.normal) result.vec3D += this.mesh.face_count;
+        if (face_attributes & ATTRIBUTE.color) result.vec3D += this.mesh.face_count;
+
+        return result;
+    }
+
     init(allocators: Allocators, count: number, included: number, shared: number) : void {
-        this.count = count;
-        this.included = included;
-        this.shared = shared;
-
-        if (!this._validateParameters())
-            throw `Invalid parameters! count: ${count} included: ${included}`;
-
         this.positions.init(allocators.vec3D, count, shared & ATTRIBUTE.position);
         if (included & ATTRIBUTE.normal) this.normals.init(allocators.vec3D, count, shared & ATTRIBUTE.normal);
         if (included & ATTRIBUTE.color) this.colors.init(allocators.vec3D, count, shared & ATTRIBUTE.color);
         if (included & ATTRIBUTE.uv) this.uvs.init(allocators.vec2D, count, shared & ATTRIBUTE.uv);
     }
 
-    protected _validateParameters = () : boolean => (
-        this._validate(this.count, 'Count') &&
-        this._validate(this.included, 'included', 0b0001, 0b1111) &&
-        this._validate(this.shared, 'shared', 0b0000, 0b1111)
-    );
+    protected _validateParameters = () : void => {
+        if (!(
+            this._validate(this.mesh.vertex_count, 'Count') &&
+            this._validate(this.mesh.options.vertex_attributes, 'included', 0b0001, 0b1111) &&
+            this._validate(this.shared, 'shared', 0b0000, 0b1111)
+        ))
+            throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
+    };
 }
 
 export class Vertices3D extends Vertices<Position3D, Direction3D, RGB, UV> {}

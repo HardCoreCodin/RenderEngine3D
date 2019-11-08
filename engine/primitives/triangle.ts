@@ -313,8 +313,7 @@ export class Triangle3DView extends Triangle3D<Vertex3DView> {
     }
 }
 
-export class Triangle34View extends Triangle4D<Vertex4DView> {
-
+export class Triangle4DView extends Triangle4D<Vertex4DView> {
     constructor(
         private readonly vertex: Vertices4D,
         private readonly face: Faces4D
