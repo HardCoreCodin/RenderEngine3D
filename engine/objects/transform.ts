@@ -1,4 +1,4 @@
-import {IBase3D, IBase4D} from "../math/interfaces.js";
+import {IVector3D, IVector4D} from "../math/interfaces.js";
 import Matrix3x3, {defaultMatrix3x3Allocator, mat3x3} from "../math/mat3x3.js";
 import Matrix4x4, {defaultMatrix4x4Allocator, mat4x4} from "../math/mat4x4.js";
 import {Position4D} from "../math/vec4.js";
@@ -52,7 +52,7 @@ export class EulerRotation {
             this.computeMatrix();
     }
 
-    set xyz(xyz: IBase3D | IBase4D) {
+    set xyz(xyz: IVector3D | IVector4D) {
         this._x = xyz.xs[xyz.id];
         this._y = xyz.ys[xyz.id];
         this._z = xyz.zs[xyz.id];

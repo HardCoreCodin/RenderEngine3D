@@ -1,6 +1,6 @@
 // import Matrix3x3 from "./matrix.js";
 // import Position3D from "./position.js";
-// import {add, sub, minus, plus, mul, times, div, over, dot, cross, lerp, vecMatMul, equals} from "./arithmatic/vector.js";
+// import {add, sub, minus, plus, mul, times, div, over, dot, cross, lerp, vecMatMul, isEqualTo} from "./arithmatic/vector.js";
 // import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
 //
 // export default class Direction3D  {
@@ -41,7 +41,7 @@
 //         return new_direction;
 //     }
 //
-//     equals(
+//     isEqualTo(
 //         other: Direction3D,
 //         precision_digits: number = 3
 //     ) : boolean {
@@ -51,7 +51,7 @@
 //         if (!(other instanceof Direction3D))
 //             return false;
 //
-//         return equals(this.buffer, other.buffer, precision_digits);
+//         return isEqualTo(this.buffer, other.buffer, precision_digits);
 //     }
 //
 //     normalize() : Direction3D {

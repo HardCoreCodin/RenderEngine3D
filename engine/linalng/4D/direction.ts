@@ -1,6 +1,6 @@
 // import Matrix4x4 from "./matrix.js";
 // import Position4D from "./position.js";
-// import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
+// import {add, sub, minus, plus, mul, times, div, over, vecMatMul, isEqualTo} from "./arithmatic/vector.js";
 // import {dot, cross, lerp} from "../3D/arithmatic/vector.js";
 // import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
 //
@@ -44,7 +44,7 @@
 //         return new_direction;
 //     }
 //
-//     equals(
+//     isEqualTo(
 //         other: Direction4D,
 //         precision_digits: number = 3
 //     ) : boolean {
@@ -54,7 +54,7 @@
 //         if (!(other instanceof Direction4D))
 //             return false;
 //
-//         return equals(this.buffer, other.buffer, precision_digits);
+//         return isEqualTo(this.buffer, other.buffer, precision_digits);
 //     }
 //
 //     normalize() : Direction4D {

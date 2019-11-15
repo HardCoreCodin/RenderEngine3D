@@ -1,557 +1,327 @@
-import {PRECISION_DIGITS} from "../constants.js";
-import {Direction3D, Position3D} from "./vec3.js";
-import {Matrix3x3Allocator} from "../allocators.js";
-import {Matrix3x3Values} from "../types.js";
-import {IMatrix2x2, IMatrix3x3} from "./interfaces.js";
+import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
+import {
+    IBaseArithmaticFunctions,
+    IBaseFunctions,
+    IMatrix3x3,
+    IMatrixFunctions,
+    IRotationMatrixFunctions
+} from "./interfaces.js";
+import {RotationMatrix} from "./mat.js";
+import {__setMatrixArrays} from "./vec3.js";
 
 let t11, t12, t13,
     t21, t22, t23,
-    t31, t32, t33,
+    t31, t32, t33: number;
 
-    sin,
-    cos,
-    out_id,
-    this_id,
-    other_id: number;
+let M11, M12, M13,
+    M21, M22, M23,
+    M31, M32, M33: Float32Array;
 
-let a11, a12, a13,
-    a21, a22, a23,
-    a31, a32, a33,
+let SIZE = 0;
+let TEMP_SIZE = TEMP_STORAGE_SIZE;
 
-    b11, b12, b13,
-    b21, b22, b23,
-    b31, b32, b33,
+let temp_id = 0;
+let id = 0;
 
-    o11, o12, o13,
-    o21, o22, o23,
-    o31, o32, o33: Float32Array;
+export const getNextAvailableID = (temp: boolean = false): number => {
+    if (temp)
+        return SIZE + (temp_id++ % TEMP_SIZE);
+
+    if (id === SIZE)
+        throw 'Buffer overflow!';
+
+    return id++;
+};
+export const allocate = (size: number): void => {
+    SIZE = size;
+    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
+    size += TEMP_SIZE;
+
+    M11 = new Float32Array(size);
+    M12 = new Float32Array(size);
+    M13 = new Float32Array(size);
+
+    M21 = new Float32Array(size);
+    M22 = new Float32Array(size);
+    M23 = new Float32Array(size);
+
+    M31 = new Float32Array(size);
+    M32 = new Float32Array(size);
+    M33 = new Float32Array(size);
+
+    __setMatrixArrays(
+        M11, M12, M13,
+        M21, M22, M23,
+        M31, M32, M33,
+    );
+};
+
+const set_to = (a: number,
+                m11: number, m12: number, m13: number,
+                m21: number, m22: number, m23: number,
+                m31: number, m32: number, m33: number): void => {
+    M11[a] = m11;  M12[a] = m12;  M13[a] = m13;
+    M21[a] = m21;  M22[a] = m22;  M23[a] = m23;
+    M31[a] = m31;  M32[a] = m32;  M33[a] = m33;
+};
+
+const set_all_to = (a: number, value: number): void => {
+    M11[a] = M12[a] = M13[a] = M21[a] = M22[a] = M23[a] = M31[a] = M32[a] = M33[a] = value;
+};
+
+const set_from = (a: number, o: number): void => {
+    M11[a] = M11[o];  M12[a] = M12[o];  M13[a] = M13[o];
+    M21[a] = M21[o];  M22[a] = M22[o];  M23[a] = M23[o];
+    M31[a] = M31[o];  M32[a] = M32[o];  M33[a] = M33[o];
+};
 
 const set_to_identity = (a: number) : void => {
-    a11[a] = a22[a] = a33[a] = 1;
-    a12[a] = a13[a] = a22[a] = a23[a] = a31[a] = a32[a] = 0;
+    M11[a] = M22[a] = M33[a] = 1;
+    M12[a] = M13[a] = M22[a] = M23[a] = M31[a] = M32[a] = 0;
 };
 
 const invert = (a: number, o: number) : void => {
-    o13[o] = a13[a];  o11[o] = a11[a];
-    o23[o] = a23[a];  o22[o] = a22[a];
+    M13[o] = M13[a];  M11[o] = M11[a];
+    M23[o] = M23[a];  M22[o] = M22[a];
 
     // Transpose the rotation portion of the matrix: 
-    o12[o] = a21[a];
-    o21[o] = a12[a];
+    M12[o] = M21[a];
+    M21[o] = M12[a];
 
-    o31[o] = -(a31[a]*a11[a] + a32[a]*a12[a]); // -Dot(original_translation, original_rotation_x)
-    o32[o] = -(a31[a]*a21[a] + a32[a]*a22[a]); // -Dot(original_translation, original_rotation_y)
-    o33[o] = 1;
+    M31[o] = -(M31[a]*M11[a] + M32[a]*M12[a]); // -Dot(original_translation, original_rotation_x)
+    M32[o] = -(M31[a]*M21[a] + M32[a]*M22[a]); // -Dot(original_translation, original_rotation_y)
+    M33[o] = 1;
 };
 
 const invert_in_place = (a: number) : void => {
     // Store the rotation and translation portions of the matrix in temporary variables:
-    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];
-    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];
+    t11 = M11[a];  t21 = M21[a];  t31 = M31[a];
+    t12 = M12[a];  t22 = M22[a];  t32 = M32[a];
 
     // Transpose the rotation portion of the matrix:
-    a12[a] = t21[a];
-    a21[a] = t12[a];
+    M12[a] = t21[a];
+    M21[a] = t12[a];
 
     // Dot the translation portion of the matrix with the original rotation portion, and invert the results:
-    a31[a] = -(t31*t11 + t32*t12); // -Dot(original_translation, original_rotation_x)
-    a32[a] = -(t31*t21 + t32*t22); // -Dot(original_translation, original_rotation_y)
-    a33[a] = 1;
+    M31[a] = -(t31*t11 + t32*t12); // -Dot(original_translation, original_rotation_x)
+    M32[a] = -(t31*t21 + t32*t22); // -Dot(original_translation, original_rotation_y)
+    M33[a] = 1;
 };
 
 const transpose = (a: number, o: number) : void => {
-    o11[o] = a11[a];  o21[o] = a12[a];  o31[o] = a13[a];
-    o12[o] = a21[a];  o22[o] = a22[a];  o32[o] = a23[a];
-    o13[o] = a31[a];  o23[o] = a32[a];  o33[o] = a33[a];
+    M11[o] = M11[a];  M21[o] = M12[a];  M31[o] = M13[a];
+    M12[o] = M21[a];  M22[o] = M22[a];  M32[o] = M23[a];
+    M13[o] = M31[a];  M23[o] = M32[a];  M33[o] = M33[a];
 };
 
 const transpose_in_place = (a: number) : void => {[
-    a12[a], a13[a], a21[a], a23[a], a31[a], a32[a]] = [
-    a21[a], a31[a], a12[a], a32[a], a13[a], a23[a]]
+    M12[a], M13[a], M21[a], M23[a], M31[a], M32[a]] = [
+    M21[a], M31[a], M12[a], M32[a], M13[a], M23[a]]
 };
 
 const equals = (a: number, b: number) : boolean =>
-    a11[a].toFixed(PRECISION_DIGITS) ===
-    b11[b].toFixed(PRECISION_DIGITS) &&
+    M11[a].toFixed(PRECISION_DIGITS) ===
+    M11[b].toFixed(PRECISION_DIGITS) &&
 
-    a12[a].toFixed(PRECISION_DIGITS) ===
-    b12[b].toFixed(PRECISION_DIGITS) &&
+    M12[a].toFixed(PRECISION_DIGITS) ===
+    M12[b].toFixed(PRECISION_DIGITS) &&
 
-    a13[a].toFixed(PRECISION_DIGITS) ===
-    b13[b].toFixed(PRECISION_DIGITS) &&
-
-
-    a21[a].toFixed(PRECISION_DIGITS) ===
-    b21[b].toFixed(PRECISION_DIGITS) &&
-
-    a22[a].toFixed(PRECISION_DIGITS) ===
-    b22[b].toFixed(PRECISION_DIGITS) &&
-
-    a23[a].toFixed(PRECISION_DIGITS) ===
-    b23[b].toFixed(PRECISION_DIGITS) &&
+    M13[a].toFixed(PRECISION_DIGITS) ===
+    M13[b].toFixed(PRECISION_DIGITS) &&
 
 
-    a31[a].toFixed(PRECISION_DIGITS) ===
-    b31[b].toFixed(PRECISION_DIGITS) &&
+    M21[a].toFixed(PRECISION_DIGITS) ===
+    M21[b].toFixed(PRECISION_DIGITS) &&
 
-    a32[a].toFixed(PRECISION_DIGITS) ===
-    b32[b].toFixed(PRECISION_DIGITS) &&
+    M22[a].toFixed(PRECISION_DIGITS) ===
+    M22[b].toFixed(PRECISION_DIGITS) &&
 
-    a33[a].toFixed(PRECISION_DIGITS) ===
-    b33[b].toFixed(PRECISION_DIGITS);
+    M23[a].toFixed(PRECISION_DIGITS) ===
+    M23[b].toFixed(PRECISION_DIGITS) &&
 
-const same = (a: number, b: number) : boolean => a === b &&
-    (Object.is(a11, b11) || (Object.is(a11.buffer, b11.buffer) && a11.offset == b11.offset)) &&
-    (Object.is(a12, b12) || (Object.is(a12.buffer, b12.buffer) && a12.offset == b12.offset)) &&
-    (Object.is(a13, b13) || (Object.is(a13.buffer, b13.buffer) && a13.offset == b13.offset)) &&
 
-    (Object.is(a21, b21) || (Object.is(a21.buffer, b21.buffer) && a21.offset == b21.offset)) &&
-    (Object.is(a22, b22) || (Object.is(a22.buffer, b22.buffer) && a22.offset == b22.offset)) &&
-    (Object.is(a23, b23) || (Object.is(a23.buffer, b23.buffer) && a23.offset == b23.offset)) &&
+    M31[a].toFixed(PRECISION_DIGITS) ===
+    M31[b].toFixed(PRECISION_DIGITS) &&
 
-    (Object.is(a31, b31) || (Object.is(a31.buffer, b31.buffer) && a31.offset == b31.offset)) &&
-    (Object.is(a32, b32) || (Object.is(a32.buffer, b32.buffer) && a32.offset == b32.offset)) &&
-    (Object.is(a33, b33) || (Object.is(a33.buffer, b33.buffer) && a33.offset == b33.offset));
+    M32[a].toFixed(PRECISION_DIGITS) ===
+    M32[b].toFixed(PRECISION_DIGITS) &&
+
+    M33[a].toFixed(PRECISION_DIGITS) ===
+    M33[b].toFixed(PRECISION_DIGITS);
 
 const is_identity = (a: number) : boolean =>
-    a11[a] === 1  &&  a21[a] === 0  &&  a31[a] === 0  &&
-    a12[a] === 0  &&  a22[a] === 1  &&  a32[a] === 0  &&
-    a13[a] === 0  &&  a23[a] === 0  &&  a33[a] === 1;
+    M11[a] === 1  &&  M21[a] === 0  &&  M31[a] === 0  &&
+    M12[a] === 0  &&  M22[a] === 1  &&  M32[a] === 0  &&
+    M13[a] === 0  &&  M23[a] === 0  &&  M33[a] === 1;
 
 const add = (a: number, b: number, o: number) : void => {
-    o11[o] = a11[a] + b11[b];  o21[o] = a21[a] + b21[b];  o31[o] = a31[a] + b31[b];
-    o12[o] = a12[a] + b12[b];  o22[o] = a22[a] + b22[b];  o32[o] = a32[a] + b32[b];
-    o13[o] = a13[a] + b13[b];  o23[o] = a23[a] + b23[b];  o33[o] = a33[a] + b33[b];
+    M11[o] = M11[a] + M11[b];  M21[o] = M21[a] + M21[b];  M31[o] = M31[a] + M31[b];
+    M12[o] = M12[a] + M12[b];  M22[o] = M22[a] + M22[b];  M32[o] = M32[a] + M32[b];
+    M13[o] = M13[a] + M13[b];  M23[o] = M23[a] + M23[b];  M33[o] = M33[a] + M33[b];
 };
 
 const add_in_place = (a: number, b: number) : void => {
-    a11[a] += b11[b];  a21[a] += b21[b];  a31[a] += b31[b];
-    a12[a] += b12[b];  a22[a] += b22[b];  a32[a] += b32[b];
-    a13[a] += b13[b];  a23[a] += b23[b];  a33[a] += b33[b];
+    M11[a] += M11[b];  M21[a] += M21[b];  M31[a] += M31[b];
+    M12[a] += M12[b];  M22[a] += M22[b];  M32[a] += M32[b];
+    M13[a] += M13[b];  M23[a] += M23[b];  M33[a] += M33[b];
 };
 
 const subtract = (a: number, b: number, o: number) : void => {
-    o11[o] = a11[a] - b11[b];  o21[o] = a21[a] - b21[b];  o31[o] = a31[a] - b31[b];
-    o12[o] = a12[a] - b12[b];  o22[o] = a22[a] - b22[b];  o32[o] = a32[a] - b32[b];
-    o13[o] = a13[a] - b13[b];  o23[o] = a23[a] - b23[b];  o33[o] = a33[a] - b33[b];
+    M11[o] = M11[a] - M11[b];  M21[o] = M21[a] - M21[b];  M31[o] = M31[a] - M31[b];
+    M12[o] = M12[a] - M12[b];  M22[o] = M22[a] - M22[b];  M32[o] = M32[a] - M32[b];
+    M13[o] = M13[a] - M13[b];  M23[o] = M23[a] - M23[b];  M33[o] = M33[a] - M33[b];
 };
 
 const subtract_in_place = (a: number, b: number) : void => {
-    a11[a] -= b11[b];  a21[a] -= b21[b];  a31[a] -= b31[b];
-    a12[a] -= b12[b];  a22[a] -= b22[b];  a32[a] -= b32[b];
-    a13[a] -= b13[b];  a23[a] -= b23[b];  a33[a] -= b33[b];
+    M11[a] -= M11[b];  M21[a] -= M21[b];  M31[a] -= M31[b];
+    M12[a] -= M12[b];  M22[a] -= M22[b];  M32[a] -= M32[b];
+    M13[a] -= M13[b];  M23[a] -= M23[b];  M33[a] -= M33[b];
 };
 
 const divide = (a: number, o: number, n: number) : void => {
-    o11[o] = a11[a] / n;  o21[o] = a21[a] / n;  o31[o] = a31[a] / n;
-    o12[o] = a12[a] / n;  o22[o] = a22[a] / n;  o32[o] = a32[a] / n;
-    o13[o] = a13[a] / n;  o23[o] = a23[a] / n;  o33[o] = a33[a] / n;
+    M11[o] = M11[a] / n;  M21[o] = M21[a] / n;  M31[o] = M31[a] / n;
+    M12[o] = M12[a] / n;  M22[o] = M22[a] / n;  M32[o] = M32[a] / n;
+    M13[o] = M13[a] / n;  M23[o] = M23[a] / n;  M33[o] = M33[a] / n;
 };
 
 const divide_in_place = (a: number, n: number) : void => {
-    a11[a] /= n;  a21[a] /= n;  a31[a] /= n;
-    a12[a] /= n;  a22[a] /= n;  a32[a] /= n;
-    a13[a] /= n;  a23[a] /= n;  a33[a] /= n;
+    M11[a] /= n;  M21[a] /= n;  M31[a] /= n;
+    M12[a] /= n;  M22[a] /= n;  M32[a] /= n;
+    M13[a] /= n;  M23[a] /= n;  M33[a] /= n;
 };
 
 const scale = (a: number, o: number, n: number) : void => {
-    o11[o] = a11[a] * n;  o21[o] = a21[a] * n;  o31[o] = a31[a] * n;
-    o12[o] = a12[a] * n;  o22[o] = a22[a] * n;  o32[o] = a32[a] * n;
-    o13[o] = a13[a] * n;  o23[o] = a23[a] * n;  o33[o] = a33[a] * n;
+    M11[o] = M11[a] * n;  M21[o] = M21[a] * n;  M31[o] = M31[a] * n;
+    M12[o] = M12[a] * n;  M22[o] = M22[a] * n;  M32[o] = M32[a] * n;
+    M13[o] = M13[a] * n;  M23[o] = M23[a] * n;  M33[o] = M33[a] * n;
 };
 
 const scale_in_place = (a: number, n: number) : void => {
-    a11[a] *= n;  a21[a] *= n;  a31[a] *= n;
-    a12[a] *= n;  a22[a] *= n;  a32[a] *= n;
-    a13[a] *= n;  a23[a] *= n;  a33[a] *= n;
+    M11[a] *= n;  M21[a] *= n;  M31[a] *= n;
+    M12[a] *= n;  M22[a] *= n;  M32[a] *= n;
+    M13[a] *= n;  M23[a] *= n;  M33[a] *= n;
 };
 
 const multiply = (a: number, b: number, o: number) : void => {
-    o11[o] = a11[a]*b11[b] + a12[a]*b21[b] + a13[a]*b31[b]; // Row 1 | Column 1
-    o12[o] = a11[a]*b12[b] + a12[a]*b22[b] + a13[a]*b32[b]; // Row 1 | Column 2
-    o13[o] = a11[a]*b13[b] + a12[a]*b23[b] + a13[a]*b33[b]; // Row 1 | Column 3
+    M11[o] = M11[a]*M11[b] + M12[a]*M21[b] + M13[a]*M31[b]; // Row 1 | Column 1
+    M12[o] = M11[a]*M12[b] + M12[a]*M22[b] + M13[a]*M32[b]; // Row 1 | Column 2
+    M13[o] = M11[a]*M13[b] + M12[a]*M23[b] + M13[a]*M33[b]; // Row 1 | Column 3
 
-    o21[o] = a21[a]*b11[b] + a22[a]*b21[b] + a23[a]*b31[b]; // Row 2 | Column 1
-    o22[o] = a21[a]*b12[b] + a22[a]*b22[b] + a23[a]*b32[b]; // Row 2 | Column 2
-    o23[o] = a21[a]*b13[b] + a22[a]*b23[b] + a23[a]*b33[b]; // Row 2 | Column 3
+    M21[o] = M21[a]*M11[b] + M22[a]*M21[b] + M23[a]*M31[b]; // Row 2 | Column 1
+    M22[o] = M21[a]*M12[b] + M22[a]*M22[b] + M23[a]*M32[b]; // Row 2 | Column 2
+    M23[o] = M21[a]*M13[b] + M22[a]*M23[b] + M23[a]*M33[b]; // Row 2 | Column 3
 
-    o31[o] = a31[a]*b11[b] + a32[a]*b21[b] + a33[a]*b31[b]; // Row 3 | Column 1
-    o32[o] = a31[a]*b12[b] + a32[a]*b22[b] + a33[a]*b32[b]; // Row 3 | Column 2
-    o33[o] = a31[a]*b13[b] + a32[a]*b23[b] + a33[a]*b33[b]; // Row 3 | Column 3
+    M31[o] = M31[a]*M11[b] + M32[a]*M21[b] + M33[a]*M31[b]; // Row 3 | Column 1
+    M32[o] = M31[a]*M12[b] + M32[a]*M22[b] + M33[a]*M32[b]; // Row 3 | Column 2
+    M33[o] = M31[a]*M13[b] + M32[a]*M23[b] + M33[a]*M33[b]; // Row 3 | Column 3
 
 };
 
 const multiply_in_place = (a: number, b: number) : void => {
-    t11 = a11[a];  t21 = a21[a];  t31 = a31[a];
-    t12 = a12[a];  t22 = a22[a];  t32 = a32[a];
-    t13 = a13[a];  t23 = a23[a];  t33 = a33[a];
+    t11 = M11[a];  t21 = M21[a];  t31 = M31[a];
+    t12 = M12[a];  t22 = M22[a];  t32 = M32[a];
+    t13 = M13[a];  t23 = M23[a];  t33 = M33[a];
 
-    a11[a] = t11*b11[b] + t12*b21[b] + t13*b31[b]; // Row 1 | Column 1
-    a12[a] = t11*b12[b] + t12*b22[b] + t13*b32[b]; // Row 1 | Column 2
-    a13[a] = t11*b13[b] + t12*b23[b] + t13*b33[b]; // Row 1 | Column 3
+    M11[a] = t11*M11[b] + t12*M21[b] + t13*M31[b]; // Row 1 | Column 1
+    M12[a] = t11*M12[b] + t12*M22[b] + t13*M32[b]; // Row 1 | Column 2
+    M13[a] = t11*M13[b] + t12*M23[b] + t13*M33[b]; // Row 1 | Column 3
 
-    a21[a] = t21*b11[b] + t22*b21[b] + t23*b31[b]; // Row 2 | Column 1
-    a22[a] = t21*b12[b] + t22*b22[b] + t23*b32[b]; // Row 2 | Column 2
-    a23[a] = t21*b13[b] + t22*b23[b] + t23*b33[b]; // Row 2 | Column 3
+    M21[a] = t21*M11[b] + t22*M21[b] + t23*M31[b]; // Row 2 | Column 1
+    M22[a] = t21*M12[b] + t22*M22[b] + t23*M32[b]; // Row 2 | Column 2
+    M23[a] = t21*M13[b] + t22*M23[b] + t23*M33[b]; // Row 2 | Column 3
 
-    a31[a] = t31*b11[b] + t32*b21[b] + t33*b31[b]; // Row 3 | Column 1
-    a32[a] = t31*b12[b] + t32*b22[b] + t33*b32[b]; // Row 3 | Column 2
-    a33[a] = t31*b13[b] + t32*b23[b] + t33*b33[b]; // Row 3 | Column 3
+    M31[a] = t31*M11[b] + t32*M21[b] + t33*M31[b]; // Row 3 | Column 1
+    M32[a] = t31*M12[b] + t32*M22[b] + t33*M32[b]; // Row 3 | Column 2
+    M33[a] = t31*M13[b] + t32*M23[b] + t33*M33[b]; // Row 3 | Column 3
 };
 
 const set_rotation_around_x = (a: number, cos: number, sin: number) : void => {
-    a33[a] = a22[a] = cos;
-    a23[a] = sin;
-    a32[a] = -sin;
+    M33[a] = M22[a] = cos;
+    M23[a] = sin;
+    M32[a] = -sin;
 };
 
 const set_rotation_around_y = (a: number, cos: number, sin: number) : void => {
-    a11[a] = a33[a] = cos;
-    a13[a] = sin;
-    a31[a] = -sin;
+    M11[a] = M33[a] = cos;
+    M13[a] = sin;
+    M31[a] = -sin;
 };
 
 const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
-    a11[a] = a22[a] = cos;
-    a12[a] = sin;
-    a21[a] = -sin;
+    M11[a] = M22[a] = cos;
+    M12[a] = sin;
+    M21[a] = -sin;
 };
 
 
-export default class Matrix3x3 implements IMatrix3x3 {
-    public id: number;
+const baseFunctions3x3: IBaseFunctions = {
+    getNextAvailableID,
+    allocate,
 
-    readonly m11: Float32Array; readonly m21: Float32Array; readonly m31: Float32Array;
-    readonly m12: Float32Array; readonly m22: Float32Array; readonly m32: Float32Array;
-    readonly m13: Float32Array; readonly m23: Float32Array; readonly m33: Float32Array;
+    set_to,
+    set_from,
+    set_all_to,
 
-    readonly i: Direction3D;
-    readonly j: Direction3D;
-    readonly k: Direction3D;
-    readonly t: Position3D;
+    equals,
 
-    constructor(arrays: Matrix3x3Values, id: number = 0) {
-        if (id < 0)
-            throw `ID must be positive integer, got ${id}`;
+    invert,
+    invert_in_place
+};
 
-        this.id = id;
+const baseArithmaticFunctions3x3: IBaseArithmaticFunctions = {
+    ...baseFunctions3x3,
 
-        [
-            this.m11, this.m12, this.m13,
-            this.m21, this.m22, this.m23,
-            this.m31, this.m32, this.m33,
-        ] = arrays;
+    add,
+    add_in_place,
 
-        this.i = new Direction3D([this.m11, this.m12, this.m13], id);
-        this.j = new Direction3D([this.m21, this.m22, this.m23], id);
-        this.k = new Direction3D([this.m31, this.m32, this.m33], id);
-        this.t = new Position3D([this.m31, this.m32, this.m33], id);
-    }
+    subtract,
+    subtract_in_place,
 
-    get is_identity() : boolean {
-        set_a(this);
-        return is_identity(this.id);
-    }
+    divide,
+    divide_in_place,
 
-    readonly setToIdentity = () : this => {
-        set_a(this);
-        set_to_identity(this.id);
+    scale,
+    scale_in_place,
 
-        return this;
-    };
+    multiply,
+    multiply_in_place
+};
 
-    readonly transpose = () : this => {
-        set_a(this);
-        transpose_in_place(this.id);
+const matrixFunctions3x3: IMatrixFunctions = {
+    ...baseArithmaticFunctions3x3,
 
-        return this;
-    };
+    is_identity,
+    set_to_identity,
 
-    readonly transposed = (out: this) : this => {
-        set_a(this);
-        set_o(out);
+    transpose,
+    transpose_in_place,
+};
 
-        transpose(this.id, out.id);
+const rotationMatrixFunctions3x3: IRotationMatrixFunctions = {
+    ...matrixFunctions3x3,
 
-        return out;
-    };
+    set_rotation_around_x,
+    set_rotation_around_y,
+    set_rotation_around_z
+};
 
-    readonly invert = () : this => {
-        set_a(this);
-        invert_in_place(this.id);
-
-        return this;
-    };
-
-    readonly inverted = (out: this) : this => {
-        set_a(this);
-        set_o(out);
-
-        invert(this.id, out.id);
-
-        return this;
-    };
-
-    readonly copyTo = (out: this) : this => {
-        this_id = this.id;
-        out_id = out.id;
-
-        out.m11[out_id] = this.m11[this_id];  out.m21[out_id] = this.m21[this_id]; out.m31[out_id] = this.m31[this_id];
-        out.m12[out_id] = this.m12[this_id];  out.m22[out_id] = this.m22[this_id]; out.m32[out_id] = this.m32[this_id];
-        out.m13[out_id] = this.m13[this_id];  out.m23[out_id] = this.m23[this_id]; out.m33[out_id] = this.m33[this_id];
-
-        return out;
-    };
-
-    readonly setFromOther = (other: this) : this => {
-        this_id = this.id;
-        other_id = other.id;
-
-        other.m11[other_id] = this.m11[this_id];
-        other.m12[other_id] = this.m12[this_id];
-        other.m13[other_id] = this.m13[this_id];
-
-        other.m21[other_id] = this.m21[this_id];
-        other.m22[other_id] = this.m22[this_id];
-        other.m23[other_id] = this.m23[this_id];
-
-        other.m31[other_id] = this.m31[this_id];
-        other.m32[other_id] = this.m32[this_id];
-        other.m33[other_id] = this.m33[this_id];
-
-        return this;
-    };
-
-    readonly setTo = (
-        m11: number, m12: number, m13: number,
-        m21: number, m22: number, m23: number,
-        m31: number, m32: number, m33: number,
-    ) : this => {
-        this_id = this.id;
-
-        this.m11[this_id] = m11;  this.m21[this_id] = m21;  this.m31[this_id] = m31;
-        this.m12[this_id] = m12;  this.m22[this_id] = m22;  this.m32[this_id] = m32;
-        this.m13[this_id] = m13;  this.m23[this_id] = m23;  this.m33[this_id] = m33;
-
-        return this;
-    };
-
-    readonly isSameAs = (other: this) : boolean => {
-        set_a(this);
-        set_b(other);
-
-        return same(this.id, other.id);
-    };
-
-    readonly equals = (other: this) : boolean => {
-        set_a(this);
-        set_b(other);
-
-        if (same(this.id, other.id))
-            return true;
-
-        return equals(this.id, other.id);
-    };
-
-    readonly add = (other: this) : this => {
-        set_a(this);
-        set_b(other);
-
-        add_in_place(this.id, other.id);
-
-        return this;
-    };
-
-    readonly sub = (other: this) : this => {
-        set_a(this);
-        set_b(other);
-
-        subtract_in_place(this.id, other.id);
-
-        return this;
-    };
-
-    readonly div = (by: number) : this => {
-        set_a(this);
-
-        divide_in_place(this.id, by);
-
-        return this;
-    };
-
-    readonly mul = (factor_or_matrix: number | this) : this => {
-        set_a(this);
-
-        if (typeof factor_or_matrix === 'number')
-            scale_in_place(this.id, factor_or_matrix);
-        else {
-            set_m(factor_or_matrix);
-
-            multiply_in_place(this.id, factor_or_matrix.id);
-        }
-
-        return this;
-    };
-
-    readonly plus = (other: this, out: this) : this => {
-        if (this.isSameAs(out))
-            return out.add(other);
-
-        set_a(this);
-        set_b(other);
-        set_o(out);
-
-        add(this.id, other.id, out.id);
-
-        return out;
-    };
-
-    readonly minus = (other: this, out: this) : this => {
-        if (this.isSameAs(other) || this.equals(other)) {
-            out_id = out.id;
-
-            out.m11[out_id] = out.m21[out_id] = out.m31[out_id] =
-            out.m12[out_id] = out.m22[out_id] = out.m32[out_id] =
-            out.m13[out_id] = out.m23[out_id] = out.m33[out_id] = 0;
-
-            return out;
-        }
-
-        if (this.isSameAs(out))
-            return out.sub(other);
-
-        set_a(this);
-        set_b(other);
-        set_o(out);
-
-        subtract(this.id, other.id, out.id);
-
-        return out;
-    };
-
-    readonly over = (by: number, out: this) : this => {
-        if (this.isSameAs(out))
-            return out.div(by);
-
-        set_a(this);
-        set_o(out);
-
-        divide(this.id, out.id, by);
-
-        return out;
-    };
-
-    readonly times = (factor_or_matrix: number | this, out: this) : this => {
-        if (this.isSameAs(out))
-            return out.mul(factor_or_matrix);
-
-        set_a(this);
-        set_o(out);
-
-        if (typeof factor_or_matrix === 'number')
-            scale(this.id, out.id, factor_or_matrix);
-        else {
-            set_m(factor_or_matrix);
-
-            multiply(this.id, factor_or_matrix.id, out.id);
-        }
-
-        return out;
-    };
-
-
-    setRotationAroundX(angle, reset=true) : this {
-        if (reset) {
-            set_a(this);
-            set_to_identity(this.id);
-        }
-
-        set_sin_cos(angle);
-
-        set_rotation_around_x(this.id, cos, sin);
-
-        return this;
-    }
-
-    setRotationAroundY(angle: number, reset=false) : this {
-        if (reset) {
-            set_a(this);
-            set_to_identity(this.id);
-        }
-
-        set_sin_cos(angle);
-
-        set_rotation_around_y(this.id, cos, sin);
-
-        return this;
-    }
-
-    setRotationAroundZ(angle: number, reset=false) : this {
-        if (reset) {
-            set_a(this);
-            set_to_identity(this.id);
-        }
-
-        set_sin_cos(angle);
-
-        set_rotation_around_z(this.id, cos, sin);
-
-        return this;
-    }
+export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
+    readonly _ = rotationMatrixFunctions3x3;
 }
 
-const set_a = (a: Matrix3x3) : void => {
-    a11 = a.m11;  a21 = a.m21;  a31 = a.m31;
-    a12 = a.m12;  a22 = a.m22;  a32 = a.m32;
-    a13 = a.m13;  a23 = a.m23;  a33 = a.m33;
-};
+export function mat3(temp: boolean): Matrix3x3;
+export function mat3(
+    m11_or_temp: number|boolean = 0, m12: number = 0, m13: number = 0,
+    m21: number = 0, m22: number = 0, m23: number = 0,
+    m31: number = 0, m32: number = 0, m33: number = 0,
+    temp: boolean = false
+): Matrix3x3 {
+    if (typeof m11_or_temp === "number")
+        return new Matrix3x3(getNextAvailableID(temp)).setTo(
+            m11_or_temp, m12, m13,
+            m21, m22, m23,
+            m31, m32, m33
+        );
 
-const set_b = (b: Matrix3x3) : void => {
-    b11 = b.m11;  b21 = b.m21;  b31 = b.m31;
-    b12 = b.m12;  b22 = b.m22;  b32 = b.m32;
-    b13 = b.m13;  b23 = b.m23;  b33 = b.m33;
-};
-
-const set_o = (o: Matrix3x3) : void => {
-    o11 = o.m11;  o21 = o.m21;  o31 = o.m31;
-    o12 = o.m12;  o22 = o.m22;  o32 = o.m32;
-    o13 = o.m13;  o23 = o.m23;  o33 = o.m33;
-};
-
-const set_m = (m: Matrix3x3) : void => {
-    t11 = m.m11;  t21 = m.m21;  t31 = m.m31;
-    t12 = m.m12;  t22 = m.m22;  t32 = m.m32;
-    t13 = m.m13;  t23 = m.m23;  t33 = m.m33;
-};
-
-const set_sin_cos = (angle: number) => {
-    sin = Math.sin(angle);
-    cos = Math.cos(angle);
-};
-
-export const defaultMatrix3x3Allocator = new Matrix3x3Allocator(16);
-
-export function mat3x3() : Matrix3x3;
-export function mat3x3(allocator: Matrix3x3Allocator) : Matrix3x3;
-export function mat3x3(m11: number, m12: number, m13: number,
-                       m21: number, m22: number, m23: number,
-                       m31: number, m32: number, m33: number,) : Matrix3x3;
-export function mat3x3(m11: number, m12: number, m13: number,
-                       m21: number, m22: number, m23: number,
-                       m31: number, m32: number, m33: number,
-                       allocator: Matrix3x3Allocator) : Matrix3x3;
-export function mat3x3(
-    numberOrAllocator?: number | Matrix3x3Allocator, m12?: number, m13?: number,
-    m21?: number, m22?: number, m23?: number,
-    m31?: number, m32?: number, m33?: number,
-    allocator?: Matrix3x3Allocator
-) : Matrix3x3 {
-    allocator = numberOrAllocator instanceof Matrix3x3Allocator ? numberOrAllocator : allocator || defaultMatrix3x3Allocator;
-    const result = new Matrix3x3(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number') result.setTo(
-        numberOrAllocator, m12, m13,
-        m21, m22, m23,
-        m31, m32, m33
-    );
-    return result;
+    return new Matrix3x3(getNextAvailableID(m11_or_temp));
 }

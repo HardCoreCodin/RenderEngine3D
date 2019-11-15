@@ -1,6 +1,6 @@
 // import Color4D from "../4D/color.js";
 // import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
-// import {add, sub, minus, plus, mul, times, div, over, lerp, equals} from "./arithmatic/vector.js";
+// import {add, sub, minus, plus, mul, times, div, over, lerp, isEqualTo} from "./arithmatic/vector.js";
 //
 // export default class Color3D  {
 //     public buffer: Buffer;
@@ -32,7 +32,7 @@
 //         return new_color;
 //     }
 //
-//     equals(
+//     isEqualTo(
 //         other: Color3D,
 //         precision_digits: number = 3
 //     ) : boolean {
@@ -42,7 +42,7 @@
 //         if (!(other instanceof Color3D))
 //             return false;
 //
-//         return equals(this.buffer, other.buffer, precision_digits);
+//         return isEqualTo(this.buffer, other.buffer, precision_digits);
 //     }
 //
 //     lerp(

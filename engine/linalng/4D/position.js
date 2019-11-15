@@ -1,7 +1,7 @@
 // import Direction4D from "./direction.js";
 // import Matrix4x4 from "./matrix.js";
 // import {Buffer, VectorBufferLength} from "./arithmatic/constants.js";
-// import {add, sub, minus, plus, mul, times, div, over, vecMatMul, equals} from "./arithmatic/vector.js";
+// import {add, sub, minus, plus, mul, times, div, over, vecMatMul, isEqualTo} from "./arithmatic/vector.js";
 // import {lerp} from "../3D/arithmatic/vector.js";
 //
 // export default class Position4D  {
@@ -31,7 +31,7 @@
 //     get z() : number {return this.buffer[2]}
 //     get w() : number {return this.buffer[3]}
 //
-//     equals(
+//     isEqualTo(
 //         other: Position4D,
 //         precision_digits: number = 3
 //     ) : boolean {
@@ -41,7 +41,7 @@
 //         if (!(other instanceof Position4D))
 //             return false;
 //
-//         return equals(this.buffer, other.buffer, precision_digits);
+//         return isEqualTo(this.buffer, other.buffer, precision_digits);
 //     }
 //
 //     copy() : Position4D {

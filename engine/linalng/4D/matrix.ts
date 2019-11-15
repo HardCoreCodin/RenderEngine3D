@@ -1,7 +1,7 @@
 // import Position4D from "./position.js";
 // import Direction4D from "./direction.js";
 // import {
-//     equals,
+//     isEqualTo,
 //     isIdentity,
 //     identity,
 //     inverse,
@@ -68,10 +68,10 @@
 //         return new Matrix4x4(Buffer.from(this.buffer));
 //     }
 //
-//     equals(matrix: Matrix4x4, precision_digits: number = 3) : boolean {
+//     isEqualTo(matrix: Matrix4x4, precision_digits: number = 3) : boolean {
 //         if (Object.is(matrix, this)) return true;
 //         if (!(matrix instanceof Matrix4x4)) return false;
-//         return equals(this.buffer, matrix.buffer, precision_digits);
+//         return isEqualTo(this.buffer, matrix.buffer, precision_digits);
 //     }
 //
 //     get isIdentity() : boolean {return isIdentity(this.buffer)}

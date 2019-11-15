@@ -1,177 +1,226 @@
-import {PRECISION_DIGITS} from "../constants.js";
 import Matrix4x4 from "./mat4x4.js";
-import {
-    IBaseColor,
-    IDirection,
-    IPosition,
-    IBase4D,
-    IAddSub,
-    IVector4D,
-    IPosition2D,
-    IPosition4D, IDirection2D, IDirection4D, IColor4D
-} from "./interfaces.js";
-import {Vector3DValues, Vector4DValues} from "../types.js";
-import {Vector4DAllocator} from "../allocators.js";
-import {Direction2D} from "./vec2.js";
+import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
+import {IBaseFunctions, IBaseArithmaticFunctions, IVectorFunctions, I4D, IRGBA} from "./interfaces.js";
+import {Direction, Position, Vector} from "./vec.js";
 
-let t_x, t_y, t_z, t_w, t_n, out_id, other_id, this_id: number;
-let a_x, a_y, a_z, a_w,
-    b_x, b_y, b_z, b_w,
-    o_x, o_y, o_z, o_w,
-    m11, m12, m13, m14,
-    m21, m22, m23, m24,
-    m31, m32, m33, m34,
-    m41, m42, m43, m44: Float32Array;
+let t_x,
+    t_y,
+    t_z,
+    t_w,
+    t_n: number;
+
+let X, Y, Z, W,
+    M11, M12, M13, M14,
+    M21, M22, M23, M24,
+    M31, M32, M33, M34,
+    M41, M42, M43, M44: Float32Array;
+
+export const __setMatrixArrays = (
+    m11: Float32Array,  m12: Float32Array, m13: Float32Array, m14: Float32Array,
+    m21: Float32Array,  m22: Float32Array, m23: Float32Array, m24: Float32Array,
+    m31: Float32Array,  m32: Float32Array, m33: Float32Array, m34: Float32Array,
+    m41: Float32Array,  m42: Float32Array, m43: Float32Array, m44: Float32Array
+) => {
+    M11 = m11;  M12 = m12;  M13 = m13;  M14 = m14;
+    M21 = m21;  M22 = m22;  M23 = m23;  M24 = m24;
+    M31 = m31;  M32 = m32;  M33 = m33;  M34 = m34;
+    M41 = m41;  M42 = m42;  M43 = m43;  M44 = m44;
+};
+
+let SIZE = 0;
+let TEMP_SIZE = TEMP_STORAGE_SIZE;
+
+let id = 0;
+let temp_id = 0;
+
+export const getNextAvailableID = (temp: boolean = false): number => {
+    if (temp)
+        return SIZE + (temp_id++ % TEMP_SIZE);
+
+    if (id === SIZE)
+        throw 'Buffer overflow!';
+
+    return id++;
+};
+export const allocate = (size: number): void => {
+    SIZE = size;
+    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
+    size += TEMP_SIZE;
+
+    X = new Float32Array(size);
+    Y = new Float32Array(size);
+    Z = new Float32Array(size);
+    W = new Float32Array(size);
+};
+
+const set_to = (a: number, x: number, y: number, z: number): void => {
+    X[a] = x;
+    Y[a] = y;
+    Z[a] = z;
+    W[a] = z;
+};
+
+const set_all_to = (a: number, value: number): void => {
+    X[a] = Y[a] = Z[a] = W[a] = value;
+};
+
+const set_from = (a: number, o: number): void => {
+    X[a] = X[o];
+    Y[a] = Y[o];
+    Z[a] = Z[o];
+    W[a] = W[o];
+};
 
 const equals = (a: number, b: number) : boolean =>
-    a_x[a].toFixed(PRECISION_DIGITS) ===
-    b_x[b].toFixed(PRECISION_DIGITS) &&
+    X[a].toFixed(PRECISION_DIGITS) ===
+    X[b].toFixed(PRECISION_DIGITS) &&
 
-    a_y[a].toFixed(PRECISION_DIGITS) ===
-    b_y[b].toFixed(PRECISION_DIGITS) &&
+    Y[a].toFixed(PRECISION_DIGITS) ===
+    Y[b].toFixed(PRECISION_DIGITS) &&
 
-    a_z[a].toFixed(PRECISION_DIGITS) ===
-    b_z[b].toFixed(PRECISION_DIGITS) &&
+    Z[a].toFixed(PRECISION_DIGITS) ===
+    Z[b].toFixed(PRECISION_DIGITS) &&
 
-    a_w[a].toFixed(PRECISION_DIGITS) ===
-    b_w[b].toFixed(PRECISION_DIGITS);
+    W[a].toFixed(PRECISION_DIGITS) ===
+    W[b].toFixed(PRECISION_DIGITS);
 
-const same = (a: number, b: number) : boolean => a === b &&
-    (Object.is(a_x, b_x) || (Object.is(a_x.buffer, b_x.buffer) && a_x.offset == b_x.offset)) &&
-    (Object.is(a_y, b_y) || (Object.is(a_y.buffer, b_y.buffer) && a_y.offset == b_y.offset)) &&
-    (Object.is(a_z, b_z) || (Object.is(a_z.buffer, b_z.buffer) && a_z.offset == b_z.offset)) &&
-    (Object.is(a_w, b_w) || (Object.is(a_w.buffer, b_w.buffer) && a_w.offset == b_w.offset));
+const invert = (a: number, o: number): void => {
+    X[o] = -X[a];
+    Y[o] = -Y[a];
+    Z[o] = -Z[a];
+    W[o] = -W[a];
+};
 
-const invert = (a: number) : void => {
-    a_x[a] = -a_x[a];
-    a_y[a] = -a_y[a];
-    a_z[a] = -a_z[a];
-    a_w[a] = -a_w[a];
+const invert_in_place = (a: number): void => {
+    X[a] = -X[a];
+    Y[a] = -Y[a];
+    Z[a] = -Z[a];
+    W[a] = -W[a];
 };
 
 const length = (a: number) : number => Math.hypot(
-    a_x[a],
-    a_y[a],
-    a_z[a],
-    a_w[a]
+    X[a],
+    Y[a],
+    Z[a],
+    W[a]
 );
 
 const distance = (a: number, b: number) : number => Math.hypot(
-    (b_x[b] - a_x[a]),
-    (b_y[b] - a_y[a]),
-    (b_z[b] - a_z[a]),
-    (b_w[b] - a_w[a])
+    (X[b] - X[a]),
+    (Y[b] - Y[a]),
+    (Z[b] - Z[a]),
+    (W[b] - W[a])
 );
 
 const length_squared = (a: number) : number =>
-    a_x[a] ** 2 +
-    a_y[a] ** 2 +
-    a_z[a] ** 2 +
-    a_w[a] ** 2;
+    X[a] ** 2 +
+    Y[a] ** 2 +
+    Z[a] ** 2 +
+    W[a] ** 2;
 
 const distance_squared = (a: number, b: number) : number => (
-    (b_x[b] - a_x[a]) ** 2 +
-    (b_y[b] - a_y[a]) ** 2 +
-    (b_z[b] - a_z[a]) ** 2 +
-    (b_w[b] - a_w[a]) ** 2
+    (X[b] - X[a]) ** 2 +
+    (Y[b] - Y[a]) ** 2 +
+    (Z[b] - Z[a]) ** 2 +
+    (W[b] - W[a]) ** 2
 );
 
-const linearly_interpolate = (a: number, b: number, o: number, t: number) : void => {
-    o_x[o] = (1-t)*a_x[a] + t*(b_x[b]);
-    o_y[o] = (1-t)*a_y[a] + t*(b_y[b]);
-    o_z[o] = (1-t)*a_z[a] + t*(b_z[b]);
-    o_w[o] = (1-t)*a_w[a] + t*(b_w[b]);
+const lerp = (a: number, b: number, o: number, t: number) : void => {
+    X[o] = (1-t)*X[a] + t*(X[b]);
+    Y[o] = (1-t)*Y[a] + t*(Y[b]);
+    Z[o] = (1-t)*Z[a] + t*(Z[b]);
+    W[o] = (1-t)*W[a] + t*(W[b]);
 };
 
 const add = (a: number, b: number, o: number) : void => {
-    o_x[o] = a_x[a] + b_x[b];
-    o_y[o] = a_y[a] + b_y[b];
-    o_z[o] = a_z[a] + b_z[b];
-    o_w[o] = a_w[a] + b_w[b];
+    X[o] = X[a] + X[b];
+    Y[o] = Y[a] + Y[b];
+    Z[o] = Z[a] + Z[b];
+    W[o] = W[a] + W[b];
 };
 
 const add_in_place = (a: number, b: number) : void => {
-    a_x[a] += b_x[b];
-    a_y[a] += b_y[b];
-    a_z[a] += b_z[b];
-    a_w[a] += b_w[b];
+    X[a] += X[b];
+    Y[a] += Y[b];
+    Z[a] += Z[b];
+    W[a] += W[b];
 };
 
 const subtract = (a: number, b: number, o: number) : void => {
-    o_x[o] = a_x[a] - b_x[b];
-    o_y[o] = a_y[a] - b_y[b];
-    o_z[o] = a_z[a] - b_z[b];
-    o_w[o] = a_w[a] - b_w[b];
+    X[o] = X[a] - X[b];
+    Y[o] = Y[a] - Y[b];
+    Z[o] = Z[a] - Z[b];
+    W[o] = W[a] - W[b];
 };
 
 const subtract_in_place = (a: number, b: number) : void => {
-    a_x[a] -= b_x[b];
-    a_y[a] -= b_y[b];
-    a_z[a] -= b_z[b];
-    a_w[a] -= b_w[b];
+    X[a] -= X[b];
+    Y[a] -= Y[b];
+    Z[a] -= Z[b];
+    W[a] -= W[b];
 };
 
 const divide = (a: number, o: number, n: number) : void => {
-    o_x[o] = a_x[a] / n;
-    o_y[o] = a_y[a] / n;
-    o_z[o] = a_z[a] / n;
-    o_w[o] = a_w[a] / n;
+    X[o] = X[a] / n;
+    Y[o] = Y[a] / n;
+    Z[o] = Z[a] / n;
+    W[o] = W[a] / n;
 };
 
 const divide_in_place = (a: number, n: number) : void => {
-    a_x[a] /= n;
-    a_y[a] /= n;
-    a_z[a] /= n;
-    a_w[a] /= n;
+    X[a] /= n;
+    Y[a] /= n;
+    Z[a] /= n;
+    W[a] /= n;
 };
 
 const scale = (a: number, o: number, n: number) : void => {
-    o_x[o] = a_x[a] * n;
-    o_y[o] = a_y[a] * n;
-    o_z[o] = a_z[a] * n;
-    o_w[o] = a_w[a] * n;
+    X[o] = X[a] * n;
+    Y[o] = Y[a] * n;
+    Z[o] = Z[a] * n;
+    W[o] = W[a] * n;
 };
 
 const scale_in_place = (a: number, n: number) : void => {
-    a_x[a] *= n;
-    a_y[a] *= n;
-    a_z[a] *= n;
-    a_w[a] *= n;
+    X[a] *= n;
+    Y[a] *= n;
+    Z[a] *= n;
+    W[a] *= n;
 };
 
 const normalize = (a: number, o: number) : void => {
     t_n = Math.hypot(
-        a_x[a],
-        a_y[a],
-        a_z[a],
-        a_w[a]
+        X[a],
+        Y[a],
+        Z[a],
+        W[a]
     );
 
-    o_x[o] = a_x[a] / t_n;
-    o_y[o] = a_y[a] / t_n;
-    o_z[o] = a_z[a] / t_n;
-    o_w[o] = a_w[a] / t_n;
+    X[o] = X[a] / t_n;
+    Y[o] = Y[a] / t_n;
+    Z[o] = Z[a] / t_n;
+    W[o] = W[a] / t_n;
 };
 
 const normalize_in_place = (a: number) : void => {
     t_n = Math.hypot(
-        a_x[a],
-        a_y[a],
-        a_z[a],
-        a_w[a]
+        X[a],
+        Y[a],
+        Z[a],
+        W[a]
     );
 
-    a_x[a] /= t_n;
-    a_y[a] /= t_n;
-    a_z[a] /= t_n;
-    a_w[a] /= t_n;
+    X[a] /= t_n;
+    Y[a] /= t_n;
+    Z[a] /= t_n;
+    W[a] /= t_n;
 };
 
 const dot = (a: number, b: number) : number =>
-    a_x[a] * b_x[b] +
-    a_y[a] * b_y[b] +
-    a_z[a] * b_z[b] +
-    a_w[a] * b_w[b];
+    X[a] * X[b] +
+    Y[a] * Y[b] +
+    Z[a] * Z[b] +
+    W[a] * W[b];
 
 const in_view = (x: number, y: number, z: number, w: number, n: number, f: number) : boolean =>
     n <= z && z <= f &&
@@ -184,428 +233,222 @@ const out_of_view = (x: number, y: number, z: number, w: number, n: number, f: n
     -w > x  || x > w;
 
 const multiply = (a: number, b: number, o: number) : void => {
-    o_x[o] = a_x[a]*m11[b] + a_y[a]*m21[b] + a_z[a]*m31[b] + a_w[a]*m41[b];
-    o_y[o] = a_x[a]*m12[b] + a_y[a]*m22[b] + a_z[a]*m32[b] + a_w[a]*m42[b];
-    o_z[o] = a_x[a]*m13[b] + a_y[a]*m23[b] + a_z[a]*m33[b] + a_w[a]*m43[b];
-    o_w[o] = a_x[a]*m14[b] + a_y[a]*m24[b] + a_z[a]*m34[b] + a_w[a]*m44[b];
+    X[o] = X[a]*M11[b] + Y[a]*M21[b] + Z[a]*M31[b] + W[a]*M41[b];
+    Y[o] = X[a]*M12[b] + Y[a]*M22[b] + Z[a]*M32[b] + W[a]*M42[b];
+    Z[o] = X[a]*M13[b] + Y[a]*M23[b] + Z[a]*M33[b] + W[a]*M43[b];
+    W[o] = X[a]*M14[b] + Y[a]*M24[b] + Z[a]*M34[b] + W[a]*M44[b];
 };
 
 const multiply_in_place = (a: number, b: number) : void => {
-    t_x = a_x[a];
-    t_y = a_y[a];
-    t_z = a_z[a];
-    t_w = a_w[a];
+    t_x = X[a];
+    t_y = Y[a];
+    t_z = Z[a];
+    t_w = W[a];
 
-    a_x[a] = t_x*m11[b] + t_y*m21[b] + t_z*m31[b] + t_w*m41[b];
-    a_y[a] = t_x*m12[b] + t_y*m22[b] + t_z*m32[b] + t_w*m42[b];
-    a_z[a] = t_x*m13[b] + t_y*m23[b] + t_z*m33[b] + t_w*m43[b];
-    a_w[a] = t_x*m14[b] + t_y*m24[b] + t_z*m34[b] + t_w*m44[b];
+    X[a] = t_x*M11[b] + t_y*M21[b] + t_z*M31[b] + t_w*M41[b];
+    Y[a] = t_x*M12[b] + t_y*M22[b] + t_z*M32[b] + t_w*M42[b];
+    Z[a] = t_x*M13[b] + t_y*M23[b] + t_z*M33[b] + t_w*M43[b];
+    W[a] = t_x*M14[b] + t_y*M24[b] + t_z*M34[b] + t_w*M44[b];
 };
 
-export abstract class Base4D implements IBase4D {
-    public id: number;
 
-    public xs: Float32Array;
-    public ys: Float32Array;
-    public zs: Float32Array;
-    public ws: Float32Array;
+const baseFunctions4D: IBaseFunctions = {
+    getNextAvailableID,
+    allocate,
 
-    constructor(arrays: Vector4DValues, id: number = 0) {
-        if (id < 0)
-            throw `ID must be positive integer, got ${id}`;
+    set_to,
+    set_from,
+    set_all_to,
 
-        this.id = id;
+    equals,
 
-        [this.xs, this.ys, this.zs, this.ws] = arrays;
+    invert,
+    invert_in_place
+};
+
+const baseArithmaticFunctions4D: IBaseArithmaticFunctions = {
+    ...baseFunctions4D,
+
+    add,
+    add_in_place,
+
+    subtract,
+    subtract_in_place,
+
+    divide,
+    divide_in_place,
+
+    scale,
+    scale_in_place,
+
+    multiply,
+    multiply_in_place
+};
+
+const vectorFunctions4D: IVectorFunctions = {
+    ...baseArithmaticFunctions4D,
+
+    distance,
+    distance_squared,
+
+    length,
+    length_squared,
+
+    normalize,
+    normalize_in_place,
+
+    dot,
+    lerp
+};
+
+export class Direction4D extends Direction<Matrix4x4> implements I4D {
+    readonly _ = vectorFunctions4D;
+
+    setTo(x: number, y: number, z: number, w: number): this {
+        this._.set_to(this.id, x, y, z, w);
+
+        return this;
     }
 
-    readonly setTo = (x: number, y: number, z: number, w: number) : this => {
-        this_id = this.id;
+    set x(x: number) {X[this.id] = x}
+    set y(y: number) {Y[this.id] = y}
+    set z(z: number) {Y[this.id] = z}
+    set w(w: number) {Y[this.id] = w}
 
-        this.xs[this_id] = x;
-        this.ys[this_id] = y;
-        this.zs[this_id] = z;
-        this.ws[this_id] = w;
-
-        return this;
-    };
-
-    set arrays(arrays: readonly [Float32Array, Float32Array, Float32Array, Float32Array]) {
-        this.xs = arrays[0];
-        this.ys = arrays[1];
-        this.zs = arrays[2];
-        this.ws = arrays[3];
-    }
-
-    set x(x: number) {this.xs[this.id] = x}
-    set y(y: number) {this.ys[this.id] = y}
-    set z(z: number) {this.zs[this.id] = z}
-    set w(w: number) {this.ws[this.id] = w}
-
-    get x(): number {return this.xs[this.id]}
-    get y(): number {return this.ys[this.id]}
-    get z(): number {return this.zs[this.id]}
-    get w(): number {return this.ws[this.id]}
+    get x(): number {return X[this.id]}
+    get y(): number {return Y[this.id]}
+    get z(): number {return Z[this.id]}
+    get w(): number {return W[this.id]}
 }
 
-abstract class Vector4D<
-    TOther extends Base4D & IAddSub<TOther>,
-    TOut extends Base4D & IAddSub<TOther>
-    > extends Base4D implements IVector4D<TOther, TOut> {
-
-    readonly copyTo = (out: this) : typeof out => {
-        this_id = this.id;
-        out_id = out.id;
-
-        out.xs[out_id] = this.xs[this_id];
-        out.ys[out_id] = this.ys[this_id];
-        out.zs[out_id] = this.zs[this_id];
-        out.ws[out_id] = this.ws[this_id];
-
-        return out;
-    };
-
-    readonly setFromOther = (other: this) : this => {
-        this_id = this.id;
-        other_id = other.id;
-
-        this.xs[this_id] = other.xs[other_id];
-        this.ys[this_id] = other.ys[other_id];
-        this.zs[this_id] = other.zs[other_id];
-        this.ws[this_id] = other.ws[other_id];
-
-        return this;
-    };
-
-    readonly isSameAs = (other: this) : boolean => {
-        set_a(this);
-        set_b(other);
-
-        return same(this.id, other.id);
-    };
-
-    readonly equals = (other: this) : boolean => {
-        set_a(this);
-        set_b(other);
-
-        if (same(this.id, other.id))
-            return true;
-
-        return equals(this.id, other.id);
-    };
-
-    readonly lerp = (to: this, by: number, out: this) : this => {
-        set_a(this);
-        set_b(to);
-        set_o(out);
-
-        linearly_interpolate(this.id, to.id, out.id, by);
-
-        return out;
-    };
-
-    readonly add = (other: TOther) : this => {
-        set_a(this);
-        set_b(other);
-
-        add_in_place(this.id, other.id);
-
-        return this;
-    };
-
-    readonly sub = (other: TOther) : this => {
-        set_a(this);
-        set_b(other);
-
-        subtract_in_place(this.id, other.id);
-
-        return this;
-    };
-
-    readonly div = (by: number) : this => {
-        set_a(this);
-
-        divide_in_place(this.id, by);
-
-        return this;
-    };
-
-    readonly mul = (factor_or_matrix: number | Matrix4x4) : this => {
-        set_a(this);
-
-        if (typeof factor_or_matrix === 'number')
-            scale_in_place(this.id, factor_or_matrix);
-        else {
-            set_m(factor_or_matrix);
-
-            multiply_in_place(this.id, factor_or_matrix.id);
-        }
-
-        return this;
-    };
-
-    readonly plus = (other: TOther, out: TOut) : TOut => {
-        // if (this.isSameAs(out))
-        //     return out.add(other);
-
-        set_a(this);
-        set_b(other);
-        set_o(out);
-
-        add(this.id, other.id, out.id);
-
-        return out;
-    };
-
-    readonly minus = (other: TOther, out: TOut) : TOut => {
-        // if (this.isSameAs(other) || this.equals(other)) {
-        //     out_id = out.id;
-        //
-        //     out.xs[out_id] = out.ys[out_id] = out.zs[out_id] = out.ws[out_id] = 0;
-        //
-        //     return out;
-        // }
-        //
-        // if (this.isSameAs(out))
-        //     return out.sub(other);
-
-        set_a(this);
-        set_b(other);
-        set_o(out);
-
-        subtract(this.id, other.id, out.id);
-
-        return out;
-    };
-
-    readonly over = (by: number, out: this) : this => {
-        if (this.isSameAs(out))
-            return out.div(by);
-
-        set_a(this);
-        set_o(out);
-
-        divide(this.id, out.id, by);
-
-        return out;
-    };
-
-    readonly times = (factor_or_matrix: number | Matrix4x4, out: this) : this => {
-        if (this.isSameAs(out))
-            return out.mul(factor_or_matrix);
-
-        set_a(this);
-        set_o(out);
-
-        if (typeof factor_or_matrix === 'number')
-            scale(this.id, out.id, factor_or_matrix);
-        else {
-            set_m(factor_or_matrix);
-
-            multiply(this.id, factor_or_matrix.id, out.id);
-        }
-
-        return out;
-    };
-}
-
-export class Position4D extends Vector4D<Direction4D, Position4D> implements IPosition4D<Direction4D, Position4D> {
-    readonly squaredDistanceTo = (other: this) : number => {
-        set_a(this);
-        set_b(other);
-
-        return distance_squared(this.id, other.id);
-    };
-
-    readonly distanceTo = (other: this) : number => {
-        set_a(this);
-        set_b(other);
-
-        return distance(this.id, other.id);
-    };
-
-    readonly to = (other: this, out: Direction4D) : Direction4D => {
-        set_a(other);
-        set_b(this);
-        set_o(out);
-
-        subtract(other.id, this.id, out.id);
-
-        return out;
-    };
+export class Position4D extends Position<Matrix4x4, Direction4D> implements I4D {
+    readonly _ = vectorFunctions4D;
+    protected readonly _DirectionConstructor = Direction4D;
 
     readonly isInView = (near: number = 0, far: number = 1) : boolean => in_view(
-        this.xs[this.id],
-        this.ys[this.id],
-        this.zs[this.id],
-        this.ws[this.id],
+        X[this.id],
+        Y[this.id],
+        Z[this.id],
+        W[this.id],
         near,
         far
     );
 
     readonly isOutOfView = (near: number = 0, far: number = 1) : boolean => out_of_view(
-        this.xs[this.id],
-        this.ys[this.id],
-        this.zs[this.id],
-        this.ws[this.id],
+        X[this.id],
+        Y[this.id],
+        Z[this.id],
+        W[this.id],
         near,
         far
     );
 
-    toNDC = () : this => this.div(this.ws[this.id]);
-}
+    toNDC = () : this => this.divideBy(W[this.id]);
 
-export class Direction4D extends Vector4D<Direction4D, Direction4D> implements IDirection4D<Direction4D, Direction4D> {
-    get length() : number {
-        set_a(this);
+    setTo(x: number, y: number, z: number, w: number): this {
+        this._.set_to(this.id, x, y, z, w);
 
-        return length(this.id);
+        return this;
     }
 
-    get length_squared() : number {
-        set_a(this);
+    set x(x: number) {X[this.id] = x}
+    set y(y: number) {Y[this.id] = y}
+    set z(z: number) {Y[this.id] = z}
+    set w(w: number) {Y[this.id] = w}
 
-        return length_squared(this.id);
+    get x(): number {return X[this.id]}
+    get y(): number {return Y[this.id]}
+    get z(): number {return Z[this.id]}
+    get w(): number {return W[this.id]}
+}
+
+export class RGBA extends Vector implements IRGBA {
+    readonly _ = vectorFunctions4D;
+
+    setTo(r: number, g: number, b: number, a: number): this {
+        this._.set_to(this.id, r, g, b, a);
+
+        return this;
     }
 
-    readonly dot = (other: this) : number => {
-        set_a(this);
-        set_b(other);
+    set r(r: number) {X[this.id] = r}
+    set g(g: number) {Y[this.id] = g}
+    set b(b: number) {Z[this.id] = b}
+    set a(a: number) {W[this.id] = a}
 
-        return dot(this.id, other.id);
-    };
-
-    readonly invert = () : this => {
-        set_a(this);
-
-        invert(this.id);
-        return this;
-    };
-
-    readonly normalize = () : this => {
-        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
-            return this;
-
-        set_a(this);
-
-        normalize_in_place(this.id);
-
-        return this;
-    };
-
-    readonly normalized = (out: this) : this => {
-        if (this.isSameAs(out))
-            return out.normalize();
-
-        if (this.length_squared.toFixed(PRECISION_DIGITS) === '1.000')
-            return out.setFromOther(this);
-
-        set_a(this);
-        set_o(out);
-
-        normalize(this.id, out.id);
-
-        return out;
-    };
+    get r(): number {return X[this.id]}
+    get g(): number {return Y[this.id]}
+    get b(): number {return Z[this.id]}
+    get a(): number {return W[this.id]}
 }
 
-export class RGBA extends Vector4D<RGBA, RGBA> implements IColor4D {
-    readonly setGreyScale = (color: number) : this => {
-        this_id = this.id;
+export function pos4(temp: boolean): Position4D;
+export function pos4(direction: Direction4D): Position4D;
+export function pos4(
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    temp: boolean
+): Position4D;
+export function pos4(
+    x_or_temp_or_direction: number|boolean|Direction4D = 0,
+    y: number = 0,
+    z: number = 0,
+    w: number = 0,
+    temp: boolean = false
+): Position4D {
+    if (x_or_temp_or_direction === undefined)
+        return new Position4D(getNextAvailableID(true));
 
-        this.xs[this_id] = this.ys[this_id] = this.zs[this_id] = this.ws[this_id] = color;
+    if (typeof x_or_temp_or_direction === "number")
+        return new Position4D(getNextAvailableID(temp)).setTo(x_or_temp_or_direction, y, z, w);
 
-        return this;
-    };
+    if (typeof x_or_temp_or_direction === "boolean")
+        return new Position4D(getNextAvailableID(x_or_temp_or_direction));
 
-    set r(r: number) {this.xs[this.id] = r}
-    set g(g: number) {this.ys[this.id] = g}
-    set b(b: number) {this.zs[this.id] = b}
-    set a(a: number) {this.ws[this.id] = a}
-
-    get r(): number {return this.xs[this.id]}
-    get g(): number {return this.ys[this.id]}
-    get b(): number {return this.zs[this.id]}
-    get a(): number {return this.ws[this.id]}
+    return new Position4D(x_or_temp_or_direction.id);
 }
 
-const set_a = (a: Base4D) : void => {
-    a_x = a.xs;
-    a_y = a.ys;
-    a_z = a.zs;
-    a_w = a.ws;
-};
+export function dir4(temp: boolean): Direction4D;
+export function dir4(position: Position4D): Direction4D;
+export function dir4(
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    temp: boolean
+): Direction4D;
+export function dir4(
+    x_or_temp_or_position: number|boolean|Position4D = 0,
+    y: number = 0,
+    z: number = 0,
+    w: number = 0,
 
-const set_b = (b: Base4D) : void => {
-    b_x = b.xs;
-    b_y = b.ys;
-    b_z = b.zs;
-    b_w = b.ws;
-};
+    temp: boolean = false
+): Direction4D {
+    if (x_or_temp_or_position === undefined)
+        return new Direction4D(getNextAvailableID(true));
 
-const set_o = (o: Base4D) : void => {
-    o_x = o.xs;
-    o_y = o.ys;
-    o_z = o.zs;
-    o_w = o.ws;
-};
+    if (typeof x_or_temp_or_position === "number")
+        return new Direction4D(getNextAvailableID(temp)).setTo(x_or_temp_or_position, y, z, w);
 
-const set_m = (m: Matrix4x4) : void => {
-    m11 = m.m11;  m21 = m.m21;  m31 = m.m31;  m41 = m.m41;
-    m12 = m.m12;  m22 = m.m22;  m32 = m.m32;  m42 = m.m42;
-    m13 = m.m13;  m23 = m.m23;  m33 = m.m33;  m43 = m.m43;
-    m14 = m.m14;  m24 = m.m24;  m34 = m.m34;  m44 = m.m44;
-};
+    if (typeof x_or_temp_or_position === "boolean")
+        return new Direction4D(getNextAvailableID(x_or_temp_or_position));
 
-export const defaultVector4DAllocator = new Vector4DAllocator(16);
-
-export function pos4D() : Position4D;
-export function pos4D(allocator: Vector4DAllocator) : Position4D;
-export function pos4D(x: number, y: number, z: number, w: number) : Position4D;
-export function pos4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Position4D;
-export function pos4D(
-    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w: number = 1,
-    allocator?: Vector4DAllocator
-) : Position4D {
-    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
-    const result = new Position4D(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number')
-        result.setTo(numberOrAllocator, y, z, w);
-    else
-        result.w = 1;
-    return result;
+    return new Direction4D(x_or_temp_or_position.id);
 }
 
-export function dir4D() : Direction4D;
-export function dir4D(allocator: Vector4DAllocator) : Direction4D;
-export function dir4D(x: number, y: number, z: number, w: number) : Direction4D;
-export function dir4D(x: number, y: number, z: number, w: number, allocator: Vector4DAllocator) : Direction4D;
-export function dir4D(
-    numberOrAllocator?: number | Vector4DAllocator, y?: number, z?: number, w: number = 0,
-    allocator?: Vector4DAllocator
-) : Direction4D {
-    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
-    const result = new Direction4D(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number')
-        result.setTo(numberOrAllocator, y, z, w);
-    else
-        result.w = 0;
-    return result;
-}
-
-export function rgba() : RGBA;
-export function rgba(allocator: Vector4DAllocator) : RGBA;
-export function rgba(r: number, g: number, b: number, a:number) : RGBA;
-export function rgba(r: number, g: number, b: number, a:number, allocator: Vector4DAllocator) : RGBA;
+export function rgba(temp: boolean): RGBA;
 export function rgba(
-    numberOrAllocator?: number | Vector4DAllocator, g?: number, b?: number, a: number = 1,
-    allocator?: Vector4DAllocator
-) : RGBA {
-    allocator = numberOrAllocator instanceof Vector4DAllocator ? numberOrAllocator : allocator || defaultVector4DAllocator;
-    const result = new RGBA(allocator.allocate(), allocator.current);
-    if (typeof numberOrAllocator === 'number')
-        result.setTo(numberOrAllocator, g, b, a);
-    else
-        result.a = 1;
-    return result;
+    r_or_temp: number|boolean = 0,
+    g: number = 0,
+    b: number = 0,
+    a: number = 0,
+    temp: boolean = false
+): RGBA {
+    if (typeof r_or_temp === "number")
+        return new RGBA(getNextAvailableID(temp)).setTo(r_or_temp, g, b, a);
+
+    return new RGBA(getNextAvailableID(r_or_temp));
 }

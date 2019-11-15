@@ -1,7 +1,7 @@
 // import Position3D from "./position.js";
 // import Direction3D from "./direction.js";
 // import {
-//     equals,
+//     isEqualTo,
 //     isIdentity,
 //     identity,
 //     transpose,
@@ -49,7 +49,7 @@
 //         return new_matrix;
 //     }
 //
-//     equals(
+//     isEqualTo(
 //         other: Matrix3x3,
 //         precision_digits: number = 3
 //     ) : boolean {
@@ -59,7 +59,7 @@
 //         if (!(other instanceof Matrix3x3))
 //             return false;
 //
-//         return equals(
+//         return isEqualTo(
 //             this.m0,
 //             this.m1,
 //             this.m2,

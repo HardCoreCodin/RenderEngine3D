@@ -24,7 +24,7 @@ import {
 } from "../allocators.js";
 import {UV} from "../math/vec2.js";
 import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
-import {IBaseVector, IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
+import {IVector, IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
 import Mesh, {MeshOptions} from "./mesh.js";
 
 export abstract class Attribute {
@@ -171,7 +171,7 @@ abstract class AbstractVertexAttribute<Vector extends IVector> extends Attribute
 }
 
 abstract class AbstractLoadableVertexAttribute<
-    Vector extends IBaseVector,
+    Vector extends IVector,
     InputAttributeType extends InputAttribute
     > extends AbstractVertexAttribute<Vector> {
 
@@ -200,7 +200,7 @@ abstract class AbstractLoadableVertexAttribute<
 }
 
 abstract class AbstractPulledVertexAttribute<
-    Vector extends IBaseVector,
+    Vector extends IVector,
     InputAttributeType extends InputAttribute,
     FaceAttributeType extends AbstractFaceAttribute<Vector>
     > extends AbstractLoadableVertexAttribute<Vector, InputAttributeType> {
@@ -224,7 +224,7 @@ abstract class AbstractPulledVertexAttribute<
     }
 }
 
-abstract class AbstractFaceAttribute<Vector extends IBaseVector> extends Attribute {
+abstract class AbstractFaceAttribute<Vector extends IVector> extends Attribute {
     public face_values: FaceValues;
     protected Vector: VectorConstructor<Vector>;
     public current: Vector;
@@ -243,8 +243,8 @@ abstract class AbstractFaceAttribute<Vector extends IBaseVector> extends Attribu
 }
 
 abstract class AbstractPulledFaceAttribute<
-    FaceVector extends IBaseVector,
-    VertexVector extends IBaseVector,
+    FaceVector extends IVector,
+    VertexVector extends IVector,
     VertexAttributeType extends AbstractVertexAttribute<VertexVector>
     > extends AbstractFaceAttribute<FaceVector> {
 

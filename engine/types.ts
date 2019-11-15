@@ -81,3 +81,7 @@ export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum |
 export type VertexValues = SharedVertexValues | UnsharedVertexValues;
 export type VertexFacesIndices = IntArrays;
 export type FaceVertexIndices = IntArrays3;
+
+export type AnyFunction<FunctionReturnType = any> = (...input: any[]) => FunctionReturnType;
+export type AnyConstructor<ConstructorInstanceType = object> = new (...input: any[]) => ConstructorInstanceType;
+export type Mixin<T extends AnyFunction> = InstanceType<ReturnType<T>>;
