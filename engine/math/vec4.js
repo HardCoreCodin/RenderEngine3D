@@ -1,45 +1,20 @@
-import { CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE } from "../constants.js";
-import { Direction, Position, Vector } from "./vec.js";
+import { Direction, Position, Color } from "./vec.js";
+import { PRECISION_DIGITS } from "../constants.js";
+import { FloatBuffer } from "../allocators.js";
 let t_x, t_y, t_z, t_w, t_n;
 let X, Y, Z, W, M11, M12, M13, M14, M21, M22, M23, M24, M31, M32, M33, M34, M41, M42, M43, M44;
-export const __setMatrixArrays = (m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) => {
-    M11 = m11;
-    M12 = m12;
-    M13 = m13;
-    M14 = m14;
-    M21 = m21;
-    M22 = m22;
-    M23 = m23;
-    M24 = m24;
-    M31 = m31;
-    M32 = m32;
-    M33 = m33;
-    M34 = m34;
-    M41 = m41;
-    M42 = m42;
-    M43 = m43;
-    M44 = m44;
-};
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
-let id = 0;
-let temp_id = 0;
-export const getNextAvailableID = (temp = false) => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-    return id++;
-};
-export const allocate = (size) => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-    X = new Float32Array(size);
-    Y = new Float32Array(size);
-    Z = new Float32Array(size);
-    W = new Float32Array(size);
-};
+export const update_matrix4x4_arrays = (MATRIX4x4_ARRAYS) => [
+    M11, M12, M13, M14,
+    M21, M22, M23, M24,
+    M31, M32, M33, M34,
+    M41, M42, M43, M44
+] = MATRIX4x4_ARRAYS;
+const VECTOR4D_ARRAYS = [null, null];
+export const vector4Dbuffer = new FloatBuffer(VECTOR4D_ARRAYS, () => [
+    X, Y, Z
+] = VECTOR4D_ARRAYS);
+const get = (a, dim) => VECTOR4D_ARRAYS[dim][a];
+const set = (a, dim, value) => { VECTOR4D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z) => {
     X[a] = x;
     Y[a] = y;
@@ -180,8 +155,9 @@ const multiply_in_place = (a, b) => {
     W[a] = t_x * M14[b] + t_y * M24[b] + t_z * M34[b] + t_w * M44[b];
 };
 const baseFunctions4D = {
-    getNextAvailableID,
-    allocate,
+    buffer: vector4Dbuffer,
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -207,6 +183,18 @@ const vectorFunctions4D = Object.assign(Object.assign({}, baseArithmaticFunction
     normalize_in_place,
     dot,
     lerp });
+export class RGBA extends Color {
+    constructor() {
+        super(...arguments);
+        this._ = vectorFunctions4D;
+    }
+    setTo(r, g, b, a) {
+        this._.set_to(this.id, r, g, b, a);
+        return this;
+    }
+    set a(a) { W[this.id] = a; }
+    get a() { return W[this.id]; }
+}
 export class Direction4D extends Direction {
     constructor() {
         super(...arguments);
@@ -229,7 +217,7 @@ export class Position4D extends Position {
     constructor() {
         super(...arguments);
         this._ = vectorFunctions4D;
-        this._DirectionConstructor = Direction4D;
+        this._dir = dir4D;
         this.isInView = (near = 0, far = 1) => in_view(X[this.id], Y[this.id], Z[this.id], W[this.id], near, far);
         this.isOutOfView = (near = 0, far = 1) => out_of_view(X[this.id], Y[this.id], Z[this.id], W[this.id], near, far);
         this.toNDC = () => this.divideBy(W[this.id]);
@@ -247,45 +235,11 @@ export class Position4D extends Position {
     get z() { return Z[this.id]; }
     get w() { return W[this.id]; }
 }
-export class RGBA extends Vector {
-    constructor() {
-        super(...arguments);
-        this._ = vectorFunctions4D;
-    }
-    setTo(r, g, b, a) {
-        this._.set_to(this.id, r, g, b, a);
-        return this;
-    }
-    set r(r) { X[this.id] = r; }
-    set g(g) { Y[this.id] = g; }
-    set b(b) { Z[this.id] = b; }
-    set a(a) { W[this.id] = a; }
-    get r() { return X[this.id]; }
-    get g() { return Y[this.id]; }
-    get b() { return Z[this.id]; }
-    get a() { return W[this.id]; }
-}
-export function pos4(x_or_temp_or_direction = 0, y = 0, z = 0, w = 0, temp = false) {
-    if (x_or_temp_or_direction === undefined)
-        return new Position4D(getNextAvailableID(true));
-    if (typeof x_or_temp_or_direction === "number")
-        return new Position4D(getNextAvailableID(temp)).setTo(x_or_temp_or_direction, y, z, w);
-    if (typeof x_or_temp_or_direction === "boolean")
-        return new Position4D(getNextAvailableID(x_or_temp_or_direction));
-    return new Position4D(x_or_temp_or_direction.id);
-}
-export function dir4(x_or_temp_or_position = 0, y = 0, z = 0, w = 0, temp = false) {
-    if (x_or_temp_or_position === undefined)
-        return new Direction4D(getNextAvailableID(true));
-    if (typeof x_or_temp_or_position === "number")
-        return new Direction4D(getNextAvailableID(temp)).setTo(x_or_temp_or_position, y, z, w);
-    if (typeof x_or_temp_or_position === "boolean")
-        return new Direction4D(getNextAvailableID(x_or_temp_or_position));
-    return new Direction4D(x_or_temp_or_position.id);
-}
-export function rgba(r_or_temp = 0, g = 0, b = 0, a = 0, temp = false) {
-    if (typeof r_or_temp === "number")
-        return new RGBA(getNextAvailableID(temp)).setTo(r_or_temp, g, b, a);
-    return new RGBA(getNextAvailableID(r_or_temp));
-}
+export const pos4D = (x = 0, y = 0, z = 0, w = 0) => x instanceof Direction4D ?
+    new Position4D(x.buffer_offset, x.array_index) :
+    new Position4D(vector4Dbuffer.tempID).setTo(x, y, z, w);
+export const dir4D = (x = 0, y = 0, z = 0, w = 0) => x instanceof Position4D ?
+    new Direction4D(x.buffer_offset, x.array_index) :
+    new Direction4D(vector4Dbuffer.tempID).setTo(x, y, z, w);
+export const rgba = (r = 0, g = 0, b = 0, a = 0) => new RGBA(vector4Dbuffer.tempID).setTo(r, g, b, a);
 //# sourceMappingURL=vec4.js.map

@@ -3,8 +3,8 @@ import {defaultVector3DAllocator, dir3D, Direction3D, pos3D, Position3D, rgb, RG
 import {IAllocatorSizes, Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Vertices} from "./attribute.js";
-import {IColor, IDirection, IPosition, IUV} from "../math/interfaces.js";
-import {defaultVector2DAllocator, uv, UV} from "../math/vec2.js";
+import {defaultVector2DAllocator, IUV, uv, UV} from "../math/vec2.js";
+import {IColor, IDirection, IPosition} from "../math/vec.js";
 
 export class Vertex<
         Position extends IPosition,

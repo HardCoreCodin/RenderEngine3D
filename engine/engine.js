@@ -19,6 +19,9 @@ export default class Engine3D {
         this.turntable_rotation_speed = 0.05;
         this.triangles_to_raster = [];
         this.draw = (timestamp) => {
+            if (this.screen.width !== this.canvas.width ||
+                this.screen.height !== this.canvas.height)
+                this.screen.updateSize();
             this.delta_time = (timestamp - this.last_timestamp) / this.frame_time;
             this.last_timestamp = timestamp;
             this.update();

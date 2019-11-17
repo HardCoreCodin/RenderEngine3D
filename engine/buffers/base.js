@@ -15,7 +15,7 @@
 //             );
 //     }
 // }
-// export type BufferType = {
+// export type ArrayType = {
 //     new (count: number, stride: number) : BaseBuffer
 // }
 //
@@ -230,8 +230,8 @@
 // //     constructor(
 // //         public readonly count: number,
 // //         public readonly stride: number,
-// //         private readonly BufferType: {new(): B;},
-// //         private readonly buffer: B = new BufferType(count * stride)
+// //         private readonly ArrayType: {new(): B;},
+// //         private readonly buffer: B = new ArrayType(count * stride)
 // //     ) {
 // //
 // //     }

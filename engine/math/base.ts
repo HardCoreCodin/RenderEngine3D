@@ -1,9 +1,51 @@
-import {IBase, IBaseArithmatic, IBaseArithmaticFunctions, IBaseFunctions} from "./interfaces.js";
+import {AbstractBuffer} from "../allocators.js";
 
-export abstract class Base implements IBase {
+export interface IBaseFunctions {
+    buffer: AbstractBuffer,
+
+    get(a: number, dim: number): number;
+    set(a: number, dim: number, value: number): void;
+    set_to(a: number, ...values: number[]): void;
+    set_all_to(a: number, value: number): void;
+    set_from(a: number, o: number): void;
+
+    equals(a: number, b: number): boolean;
+    invert(a: number, b: number): void;
+    invert_in_place(a: number): void;
+}
+
+export interface IBase {
+    _: IBaseFunctions,
+    id: number;
+
+    array_index: number,
+    buffer_offset: number,
+
+    setTo(...values: number[]): this;
+    setAllTo(value: number): this;
+    setFrom(other: this): this;
+
+    is(other: this): boolean;
+    equals(other: this): boolean;
+
+    copy(out?: this): this;
+    invert(): this;
+    inverted(out?: this): this;
+}
+
+export abstract class Base
+    implements IBase
+{
     readonly abstract _: IBaseFunctions;
 
-    constructor(public id: number) {}
+    constructor(
+        public buffer_offset : number,
+        public array_index: number = 0
+    ) {}
+
+    get id(): number {
+        return this.buffer_offset + this.array_index;
+    }
 
     setTo(...values: number[]): this {
         this._.set_to(this.id, ...values);
@@ -29,7 +71,8 @@ export abstract class Base implements IBase {
     copy(out?: this): this {
         if (!out || out.id === this.id) {
             out = Object.create(this);
-            out.id = this._.getNextAvailableID();
+            out.buffer_offset = this._.buffer.tempID;
+            out.array_index = 0;
         }
 
         out.setFrom(this);
@@ -50,7 +93,47 @@ export abstract class Base implements IBase {
     }
 }
 
-export abstract class BaseArithmatic extends Base implements IBaseArithmatic {
+export interface IBaseArithmaticFunctions
+    extends IBaseFunctions
+{
+    add(a: number, b: number, o: number): void;
+    add_in_place(a: number, b: number): void;
+
+    subtract(a: number, b: number, o: number): void;
+    subtract_in_place(a: number, b: number): void;
+
+    divide(a: number, o: number, n: number): void;
+    divide_in_place(a: number, n: number): void;
+
+    scale(a: number, o: number, n: number): void;
+    scale_in_place(a: number, n: number): void;
+
+    multiply(a: number, b: number, o: number): void;
+    multiply_in_place(a: number, b: number): void;
+}
+
+export interface IBaseArithmatic
+    extends IBase
+{
+    _: IBaseArithmaticFunctions,
+
+    add(other: this);
+    subtract(other: this): this;
+
+    divideBy(denominator: number): this;
+    over(denominator: number, out?: this): this;
+
+    scaleBy(factor: number): this;
+    times(factor: number, out?: this): this;
+
+    plus(other: IBaseArithmatic, out?: this): this;
+    minus(other: IBaseArithmatic, out?: this): this;
+}
+
+export abstract class BaseArithmatic
+    extends Base
+    implements IBaseArithmatic
+{
     readonly abstract _: IBaseArithmaticFunctions;
 
     add(other: this) {
@@ -75,7 +158,7 @@ export abstract class BaseArithmatic extends Base implements IBaseArithmatic {
         return this;
     }
 
-    plus(other: BaseArithmatic, out: this = this.copy()): this {
+    plus(other: IBaseArithmatic, out: this = this.copy()): this {
         if (out.is(this))
             this._.add_in_place(this.id, other.id);
         else
@@ -84,7 +167,7 @@ export abstract class BaseArithmatic extends Base implements IBaseArithmatic {
         return out;
     }
 
-    minus(other: BaseArithmatic, out: this = this.copy()): this {
+    minus(other: IBaseArithmatic, out: this = this.copy()): this {
         if (out.is(this))
             this._.set_all_to(this.id, 0);
         else

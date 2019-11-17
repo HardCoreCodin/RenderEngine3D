@@ -1,31 +1,34 @@
+import Mesh from "./mesh.js";
+import {UV} from "../math/vec2.js";
+import {Direction3D, Position3D, RGB, UVW, dir3D, pos3D} from "../math/vec3.js";
+import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
 import {ATTRIBUTE, DIM, FACE_TYPE} from "../constants.js";
+import {num2, num3, num4} from "../factories.js";
 import {
+    AnyConstructor,
     FaceInputNum,
     FaceInputs,
     FaceInputStr,
     FaceValues,
     FaceVertexIndices,
-    IntArray,
-    NumArrays, SharedVertexValues, UnsharedVertexValues,
+    IntArray, IntArrays3,
+    NumArrays, NumArrays3,
+    SharedVertexValues, TriangleInputNum,
+    UnsharedVertexValues,
     VertexFacesIndices,
     VertexInputNum,
     VertexInputs,
     VertexInputStr,
 } from "../types.js";
-import {float3, num2, num3, num4} from "../factories.js";
-import {Direction3D, Position3D, RGB, UVW} from "../math/vec3.js";
 import {
     Allocators, AllocatorSizes,
-    FaceVertexIndexAllocator,
+    FaceVertexIndexAllocator, FloatBuffer, IntBuffer,
     Vector2DAllocator,
     Vector3DAllocator,
     Vector4DAllocator,
     VertexFacesIndicesAllocator
 } from "../allocators.js";
-import {UV} from "../math/vec2.js";
-import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
-import {IVector, IColor, IDirection, IPosition, IUV, IVector, VectorConstructor} from "../math/interfaces.js";
-import Mesh, {MeshOptions} from "./mesh.js";
+import {Vector, Direction, Position, TexCoords, Color} from "../math/vec.js";
 
 export abstract class Attribute {
     public readonly id: ATTRIBUTE;
@@ -120,64 +123,70 @@ export class InputAttribute extends Attribute {
     }
 }
 
-abstract class AbstractVertexAttribute<Vector extends IVector> extends Attribute {
-    public is_shared: boolean;
-    public shared_values: SharedVertexValues;
-    public unshared_values: UnsharedVertexValues = [
-        undefined,
-        undefined,
-        undefined
-    ];
+abstract class AbstractVertexAttribute<VectorType extends Vector> extends Attribute {
+    public is_shared = false;
+    public offsets = [0, 0, 0];
+    public size = 0;
+    public buffer: FloatBuffer;
 
-    protected Vector: VectorConstructor<Vector>;
-    public current: [Vector, Vector, Vector];
+    protected Vector: AnyConstructor<VectorType>;
+    public current: [VectorType, VectorType, VectorType];
 
     setCurrent(
-        id_1: number,
-        id_2: number = id_1,
-        id_3: number = id_1
+        array_index_1: number,
+        array_index_2: number = array_index_1,
+        array_index_3: number = array_index_1
     ) : void {
-        this.current[0].id = id_1;
-        this.current[1].id = id_2;
-        this.current[2].id = id_3;
+        this.current[0].array_index = array_index_1;
+        this.current[1].array_index = array_index_2;
+        this.current[2].array_index = array_index_3;
     }
 
-    init(allocator: Vector2DAllocator | Vector3DAllocator | Vector4DAllocator,
+    init(buffer: FloatBuffer,
          size: number,
          is_shared: boolean | number = this.is_shared) {
 
+        this.size = size;
+        this.buffer = buffer;
+        this.is_shared = !!(is_shared);
         if (is_shared) {
-            this.is_shared = true;
-
-            if (!this.shared_values)
-                this.shared_values = allocator.allocate(size);
-
-            this.current[0] = new this.Vector(this.shared_values);
-            this.current[1] = new this.Vector(this.shared_values);
-            this.current[2] = new this.Vector(this.shared_values);
+            this.offsets[0] = buffer.allocate(size);
+            this.current[0] = new this.Vector(this.offsets[0]);
         } else {
-            this.is_shared = false;
-
-            if (!this.unshared_values[0]) {
-                this.unshared_values[0] = allocator.allocate(size);
-                this.unshared_values[1] = allocator.allocate(size);
-                this.unshared_values[2] = allocator.allocate(size);
-            }
-            this.current[0] = new this.Vector(this.unshared_values[0]);
-            this.current[1] = new this.Vector(this.unshared_values[1]);
-            this.current[2] = new this.Vector(this.unshared_values[2]);
+            this.offsets[0] = buffer.allocate(size);
+            this.offsets[1] = buffer.allocate(size);
+            this.offsets[2] = buffer.allocate(size);
+            this.current[0] = new this.Vector(this.offsets[0]);
+            this.current[1] = new this.Vector(this.offsets[1]);
+            this.current[2] = new this.Vector(this.offsets[2]);
         }
+    }
+
+    protected *_iterUnshared() {
+        for (const offset of this.offsets)
+            this.buffer.slice(this.size, offset);
+    }
+
+    get shared_values() {
+        return this.buffer.slice(this.size, this.offsets[0]);
+    }
+
+    get unshared_values() {
+        return this._iterUnshared();
     }
 }
 
 abstract class AbstractLoadableVertexAttribute<
-    Vector extends IVector,
+    VectorType extends Vector,
     InputAttributeType extends InputAttribute
-    > extends AbstractVertexAttribute<Vector> {
+    > extends AbstractVertexAttribute<VectorType> {
 
     protected _loadShared(input_attribute: InputAttributeType, face_vertices: FaceVertices) : void {
         let input_id, output_id: number;
-        for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
+        for (const [in_component, out_component, offset] of
+            zip(input_attribute.vertices, this.buffer.arrays, this.offsets)) {
+
+        }
             for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
                 for ([output_id, input_id] of zip(output_ids, input_ids))
                     out_component[output_id] = in_component[input_id];
@@ -200,10 +209,10 @@ abstract class AbstractLoadableVertexAttribute<
 }
 
 abstract class AbstractPulledVertexAttribute<
-    Vector extends IVector,
+    VectorType extends Vector,
     InputAttributeType extends InputAttribute,
-    FaceAttributeType extends AbstractFaceAttribute<Vector>
-    > extends AbstractLoadableVertexAttribute<Vector, InputAttributeType> {
+    FaceAttributeType extends AbstractFaceAttribute<VectorType>
+    > extends AbstractLoadableVertexAttribute<VectorType, InputAttributeType> {
 
     pull(face_attribute: FaceAttributeType, vertex_faces: VertexFaces) : void {
         if (this.is_shared) // Average vertex-attribute values from their related face's attribute values:
@@ -224,10 +233,10 @@ abstract class AbstractPulledVertexAttribute<
     }
 }
 
-abstract class AbstractFaceAttribute<Vector extends IVector> extends Attribute {
+abstract class AbstractFaceAttribute<VectorType extends Vector> extends Attribute {
     public face_values: FaceValues;
-    protected Vector: VectorConstructor<Vector>;
-    public current: Vector;
+    protected Vector: AnyConstructor<VectorType>;
+    public current: VectorType;
 
     setCurrent(id: number) : void {
         this.current.id = id;
@@ -243,8 +252,8 @@ abstract class AbstractFaceAttribute<Vector extends IVector> extends Attribute {
 }
 
 abstract class AbstractPulledFaceAttribute<
-    FaceVector extends IVector,
-    VertexVector extends IVector,
+    FaceVector extends Vector,
+    VertexVector extends Vector,
     VertexAttributeType extends AbstractVertexAttribute<VertexVector>
     > extends AbstractFaceAttribute<FaceVector> {
 
@@ -260,8 +269,8 @@ abstract class AbstractPulledFaceAttribute<
     }
 }
 
-class VertexPositions<Position extends IPosition>
-    extends AbstractLoadableVertexAttribute<Position, InputPositions> {
+class VertexPositions<PositionType extends Position = Position>
+    extends AbstractLoadableVertexAttribute<PositionType, InputPositions> {
 
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
 
@@ -272,21 +281,21 @@ class VertexPositions<Position extends IPosition>
 }
 
 class VertexNormals<
-    Direction extends IDirection,
-    Position extends IPosition
+    DirectionType extends Direction = Direction,
+    PositionType extends Position = Position
     > extends AbstractPulledVertexAttribute<
-        Direction,
+        DirectionType,
         InputNormals,
-        FaceNormals<Direction, Position>
+        FaceNormals<DirectionType, PositionType>
     > {
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 }
 
-class VertexColors<Color extends IColor>
+class VertexColors<ColorType extends Color<ColorType>>
     extends AbstractPulledVertexAttribute<
-        Color,
+        ColorType,
         InputColors,
-        FaceColors<Color>
+        FaceColors<ColorType>
         > {
 
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
@@ -300,7 +309,7 @@ class VertexColors<Color extends IColor>
     }
 }
 
-class VertexUVs<UV extends IUV> extends AbstractLoadableVertexAttribute<UV, InputUVs> {
+class VertexUVs<UVType extends TexCoords<UVType>> extends AbstractLoadableVertexAttribute<UVType, InputUVs> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.uv;
 }
 
@@ -309,19 +318,19 @@ export class InputNormals extends InputAttribute {public readonly id = ATTRIBUTE
 export class InputColors extends InputAttribute {public readonly id = ATTRIBUTE.color}
 export class InputUVs extends InputAttribute {public readonly id = ATTRIBUTE.uv; public readonly dim = DIM._2D}
 
-export class FacePositions<Position extends IPosition>
-    extends AbstractPulledFaceAttribute<Position, Position, VertexPositions<Position>> {
+export class FacePositions<PositionType extends Position = Position>
+    extends AbstractPulledFaceAttribute<PositionType, PositionType, VertexPositions<PositionType>> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.position;
 }
 
 export class FaceNormals<
-    Direction extends IDirection,
-    Position extends IPosition
-    > extends AbstractPulledFaceAttribute<Direction, Position, VertexPositions<Position>> {
+    DirectionType extends Direction = Direction,
+    PositionType extends Position = Position
+    > extends AbstractPulledFaceAttribute<DirectionType, PositionType, VertexPositions<PositionType>> {
 
     public readonly id: ATTRIBUTE = ATTRIBUTE.normal;
 
-    pull(attribute: VertexPositions<Position>, face_vertices: FaceVertices) {
+    pull(attribute: VertexPositions<PositionType>, face_vertices: FaceVertices) {
         const [ids_0, ids_1, ids_2] = face_vertices.indices;
 
         face_normal.arrays = [
@@ -371,8 +380,8 @@ export class FaceNormals<
     }
 }
 
-export class FaceColors<Color extends IColor>
-    extends AbstractPulledFaceAttribute<Color, Color, VertexColors<Color>> {
+export class FaceColors<ColorType extends Color<ColorType>>
+    extends AbstractPulledFaceAttribute<ColorType, ColorType, VertexColors<ColorType>> {
     public readonly id: ATTRIBUTE = ATTRIBUTE.color;
 
     generate() {
@@ -409,57 +418,72 @@ class AttributeCollection<
         return false;
     }
 
-    protected _validateParameters = () : void;
+    protected _validateParameters = (): void => {};
 }
 
 export class FaceVertices {
     public indices: FaceVertexIndices;
+    public readonly offsets: TriangleInputNum = [0, 0, 0];
+    public size = 0;
 
-    init(allocator: FaceVertexIndexAllocator, size: number) {
-        if (!(this.indices && this.indices[0].length === size))
-            this.indices = allocator.allocate(size);
+    init(buffer: IntBuffer, size: number) {
+        this.size = size;
+        this.indices = buffer.arrays as FaceVertexIndices;
+        this.offsets[0] = buffer.allocate(size);
+        this.offsets[1] = buffer.allocate(size);
+        this.offsets[2] = buffer.allocate(size);
     }
 
     load(inputs: FaceInputs) {
-        this.indices[0].set(inputs[0]);
-        this.indices[1].set(inputs[1]);
-        this.indices[2].set(inputs[2]);
+        for (const [array, offset, values] of zip(this.indices, this.offsets, inputs))
+            array.set(values, offset);
+    }
+
+    *[Symbol.iterator]() {
+        const size = this.size;
+        for (const [array, offset] of zip(this.indices, this.offsets))
+            yield function* () {
+                for (let i = offset; i < offset + size; i++)
+                    yield array[i];
+            }
     }
 }
 
 export class VertexFaces {
-    private _buffer: IntArray;
-    public indices: VertexFacesIndices = [];
+    public indices: VertexFacesIndices;
+    public readonly offsets: number[] = [0];
+    public readonly sizes: number[] = [0];
 
-    init(allocator: VertexFacesIndicesAllocator, size: number) {
-        if (!(this._buffer && this._buffer.length === size))
-            this._buffer = allocator.allocate(size)[0];
+    init(buffer: IntBuffer, size: number) {
+        this.indices = buffer.arrays;
+        this.offsets[0] = buffer.allocate(size);
     }
 
     load(inputs: NumArrays) {
-        this.indices.length = inputs.length;
+        this.offsets.length = this.sizes.length = inputs.length;
 
-        let offset = 0;
-        for (const [i, array] of inputs.entries()) {
-            this.indices[i] = this._buffer.subarray(offset, array.length);
-            this.indices[i].set(array);
-            offset += array.length;
+        let offset = this.offsets[0];
+        for (const [i, values] of inputs.entries()) {
+            this.indices[0].set(values, offset);
+            this.offsets[i] = offset;
+            this.sizes[i] = values.length;
+            offset += values.length;
         }
     }
 }
 
 export class Faces<
-    Position extends IPosition = Position3D,
-    Direction extends IDirection = Direction3D,
-    Color extends IColor = RGB
+    PositionType extends Position = Position3D,
+    DirectionType extends Direction = Direction3D,
+    ColorType extends Color<ColorType> = RGB
     > extends AttributeCollection<
-    FacePositions<Position>,
-    FaceNormals<Direction, Position>,
-    FaceColors<Color>
+    FacePositions<PositionType>,
+    FaceNormals<DirectionType, PositionType>,
+    FaceColors<ColorType>
     > {
-    public readonly positions = new FacePositions<Position>();
-    public readonly normals = new FaceNormals<Direction, Position>();
-    public readonly colors = new FaceColors<Color>();
+    public readonly positions = new FacePositions<PositionType>();
+    public readonly normals = new FaceNormals<DirectionType, PositionType>();
+    public readonly colors = new FaceColors<ColorType>();
     public readonly vertices = new FaceVertices();
 
     init(allocators: Allocators, count: number, included: number) : void {
@@ -483,19 +507,19 @@ export class Faces3D extends Faces<Position3D, Direction3D, RGB> {}
 export class Faces4D extends Faces<Position4D, Direction4D, RGBA> {}
 
 export class Vertices<
-        Position extends IPosition,
-        Direction extends IDirection,
-        Color extends IColor,
-        Uv extends IUV
+        PositionType extends Position,
+        DirectionType extends Direction,
+        ColorType extends Color<ColorType>,
+        UVType extends TexCoords<UVType>
     > extends AttributeCollection<
-    VertexPositions<Position>,
-    VertexNormals<Direction, Position>,
-    VertexColors<Color>
+    VertexPositions<PositionType>,
+    VertexNormals<DirectionType, PositionType>,
+    VertexColors<ColorType>
     > {
-    public readonly positions = new VertexPositions<Position>();
-    public readonly normals = new VertexNormals<Direction, Position>();
-    public readonly colors = new VertexColors<Color>();
-    public readonly uvs =  new VertexUVs<Uv>();
+    public readonly positions = new VertexPositions<PositionType>();
+    public readonly normals = new VertexNormals<DirectionType, PositionType>();
+    public readonly colors = new VertexColors<ColorType>();
+    public readonly uvs =  new VertexUVs<UVType>();
     public readonly faces = new VertexFaces();
 
     public shared: number;
@@ -550,17 +574,14 @@ const randomize = (values: readonly Float32Array[]): void => {
             array[index] = Math.random();
 };
 
-// Temporary float arrays for computations:
-const temp = float3(3);
+const dir1 = dir3D();
+const dir2 = dir3D();
+const dir3 = dir3D();
 
-const dir1 = new Direction3D(temp, 0);
-const dir2 = new Direction3D(temp, 1);
-const dir3 = new Direction3D(temp, 2);
-
-const pos1 = new Position3D(temp);
-const pos2 = new Position3D(temp);
-const pos3 = new Position3D(temp);
-const face_normal = new Direction3D(temp);
+const pos1 = pos3D();
+const pos2 = pos3D();
+const pos3 = pos3D();
+const face_normal = dir3D();
 
 function *zip (...iterables){
     let iterators = iterables.map(i => i[Symbol.iterator]());

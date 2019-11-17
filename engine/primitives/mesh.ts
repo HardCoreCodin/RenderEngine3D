@@ -11,7 +11,7 @@ export default class Mesh {
     public readonly vertex_count: number;
 
     constructor(
-        private inputs: MeshInputs,
+        public inputs: MeshInputs,
         public options: MeshOptions = new MeshOptions(),
     ) {
         inputs.init();

@@ -1,13 +1,14 @@
 import {vert3, vert4, Vertex, Vertex3D, Vertex3DView, Vertex4D, Vertex4DView, VertexView} from "./vertex.js";
 import Matrix3x3 from "../math/mat3x3.js";
 import Matrix4x4 from "../math/mat4x4.js";
-import {UV} from "../math/vec2.js";
+import {IUV, UV} from "../math/vec2.js";
 import {Position3D, Direction3D, RGB, pos3D, dir3D, rgb, UVW, Base3D} from "../math/vec3.js";
 import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba, Base4D} from "../math/vec4.js";
 import {AllocatorSizes, Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
-import {IBaseRotationMatrix, IColor, IDirection, IPosition, IUV} from "../math/interfaces.js";
+import {IBaseRotationMatrix} from "../math/interfaces.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Faces3D, Faces4D, Vertices3D, Vertices4D} from "./attribute.js";
+import {IColor, IDirection, IPosition} from "../math/vec.js";
 
 export class Triangle<
         Matrix extends IBaseRotationMatrix,

@@ -1,37 +1,19 @@
-import { CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE } from "../constants.js";
-import { Direction, Position, Vector } from "./vec.js";
+import { Color, TexCoords, Direction, Position } from "./vec.js";
+import { PRECISION_DIGITS } from "../constants.js";
+import { FloatBuffer } from "../allocators.js";
 let t_x, t_y, t_z, t_n;
 let X, Y, Z, M11, M12, M13, M21, M22, M23, M31, M32, M33;
-export const __setMatrixArrays = (m11, m12, m13, m21, m22, m23, m31, m32, m33) => {
-    M11 = m11;
-    M12 = m12;
-    M13 = m13;
-    M21 = m21;
-    M22 = m22;
-    M23 = m23;
-    M31 = m31;
-    M32 = m32;
-    M33 = m33;
-};
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
-let id = 0;
-let temp_id = 0;
-export const getNextAvailableID = (temp = false) => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-    return id++;
-};
-export const allocate = (size) => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-    X = new Float32Array(size);
-    Y = new Float32Array(size);
-    Z = new Float32Array(size);
-};
+export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS) => [
+    M11, M12, M13,
+    M21, M22, M23,
+    M31, M32, M33
+] = MATRIX3x3_ARRAYS;
+const VECTOR3D_ARRAYS = [null, null];
+export const vector3Dbuffer = new FloatBuffer(VECTOR3D_ARRAYS, () => [
+    X, Y, Z
+] = VECTOR3D_ARRAYS);
+const get = (a, dim) => VECTOR3D_ARRAYS[dim][a];
+const set = (a, dim, value) => { VECTOR3D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z) => {
     X[a] = x;
     Y[a] = y;
@@ -156,8 +138,9 @@ const multiply_in_place = (a, b) => {
     Z[a] = t_x * M13[b] + t_y * M23[b] + t_z * M33[b];
 };
 const baseFunctions3D = {
-    getNextAvailableID,
-    allocate,
+    buffer: vector3Dbuffer,
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -183,6 +166,28 @@ const vectorFunctions3D = Object.assign(Object.assign({}, baseArithmaticFunction
     normalize_in_place,
     dot,
     lerp });
+export class UVW extends TexCoords {
+    constructor() {
+        super(...arguments);
+        this._ = vectorFunctions3D;
+    }
+    setTo(u, v, w) {
+        this._.set_to(this.id, u, v, w);
+        return this;
+    }
+    set w(w) { Z[this.id] = w; }
+    get w() { return Z[this.id]; }
+}
+export class RGB extends Color {
+    constructor() {
+        super(...arguments);
+        this._ = vectorFunctions3D;
+    }
+    setTo(r, g, b) {
+        this._.set_to(this.id, r, g, b);
+        return this;
+    }
+}
 export class Direction3D extends Direction {
     constructor() {
         super(...arguments);
@@ -214,7 +219,7 @@ export class Position3D extends Position {
     constructor() {
         super(...arguments);
         this._ = vectorFunctions3D;
-        this._DirectionConstructor = Direction3D;
+        this._dir = dir3D;
     }
     setTo(x, y, z) {
         this._.set_to(this.id, x, y, z);
@@ -227,64 +232,12 @@ export class Position3D extends Position {
     get y() { return Y[this.id]; }
     get z() { return Z[this.id]; }
 }
-export class UVW extends Vector {
-    constructor() {
-        super(...arguments);
-        this._ = vectorFunctions3D;
-    }
-    setTo(u, v, w) {
-        this._.set_to(this.id, u, v, w);
-        return this;
-    }
-    set u(u) { X[this.id] = u; }
-    set v(v) { Y[this.id] = v; }
-    set w(w) { Z[this.id] = w; }
-    get u() { return X[this.id]; }
-    get v() { return Y[this.id]; }
-    get w() { return Z[this.id]; }
-}
-export class RGB extends Vector {
-    constructor() {
-        super(...arguments);
-        this._ = vectorFunctions3D;
-    }
-    setTo(r, g, b) {
-        this._.set_to(this.id, r, g, b);
-        return this;
-    }
-    set r(r) { X[this.id] = r; }
-    set g(g) { Y[this.id] = g; }
-    set b(b) { Z[this.id] = b; }
-    get r() { return X[this.id]; }
-    get g() { return Y[this.id]; }
-    get b() { return Z[this.id]; }
-}
-export function pos3(x_or_temp_or_direction = 0, y = 0, z = 0, temp = false) {
-    if (x_or_temp_or_direction === undefined)
-        return new Position3D(getNextAvailableID(true));
-    if (typeof x_or_temp_or_direction === "number")
-        return new Position3D(getNextAvailableID(temp)).setTo(x_or_temp_or_direction, y, z);
-    if (typeof x_or_temp_or_direction === "boolean")
-        return new Position3D(getNextAvailableID(x_or_temp_or_direction));
-    return new Position3D(x_or_temp_or_direction.id);
-}
-export function dir3(x_or_temp_or_position = 0, y = 0, z = 0, temp = false) {
-    if (x_or_temp_or_position === undefined)
-        return new Direction3D(getNextAvailableID(true));
-    if (typeof x_or_temp_or_position === "number")
-        return new Direction3D(getNextAvailableID(temp)).setTo(x_or_temp_or_position, y, z);
-    if (typeof x_or_temp_or_position === "boolean")
-        return new Direction3D(getNextAvailableID(x_or_temp_or_position));
-    return new Direction3D(x_or_temp_or_position.id);
-}
-export function uvw(u_or_temp = 0, v = 0, w = 0, temp = false) {
-    if (typeof u_or_temp === "number")
-        return new UVW(getNextAvailableID(temp)).setTo(u_or_temp, v, w);
-    return new UVW(getNextAvailableID(u_or_temp));
-}
-export function rgb(r_or_temp = 0, g = 0, b = 0, temp = false) {
-    if (typeof r_or_temp === "number")
-        return new RGB(getNextAvailableID(temp)).setTo(r_or_temp, g, b);
-    return new RGB(getNextAvailableID(r_or_temp));
-}
+export const pos3D = (x = 0, y = 0, z = 0) => x instanceof Direction3D ?
+    new Position3D(x.buffer_offset, x.array_index) :
+    new Position3D(vector3Dbuffer.tempID).setTo(x, y, z);
+export const dir3D = (x = 0, y = 0, z = 0) => x instanceof Position3D ?
+    new Direction3D(x.buffer_offset, x.array_index) :
+    new Direction3D(vector3Dbuffer.tempID).setTo(x, y, z);
+export const rgb = (r = 0, g = 0, b = 0) => new RGB(vector3Dbuffer.tempID).setTo(r, g, b);
+export const uvw = (u = 0, v = 0, w = 0) => new UVW(vector3Dbuffer.tempID).setTo(u, v, w);
 //# sourceMappingURL=vec3.js.map

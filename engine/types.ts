@@ -55,7 +55,7 @@ export type FloatArrays16 = readonly [
     FloatArray, FloatArray, FloatArray, FloatArray
 ];
 export type FloatArrays = readonly FloatArray[];
-export type FloatValues = FloatArrays2 | FloatArrays3 | FloatArrays4;
+export type FloatValues = FloatArrays2 | FloatArrays3 | FloatArrays4 | FloatArrays9 | FloatArrays16;
 export type FaceValues = FloatValues;
 export type SharedVertexValues = FloatValues;
 export type UnsharedVertexValues = [FloatValues, FloatValues, FloatValues];
@@ -70,7 +70,6 @@ export type Matrix3x3Values = FloatArrays9;
 export type Matrix4x4Values = FloatArrays16;
 export type MatrixValues = Matrix2x2Values | Matrix3x3Values | Matrix4x4Values;
 
-export type TypedArray = FloatArray | IntArray;
 export type Values = VectorValues | MatrixValues;
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;
@@ -85,3 +84,17 @@ export type FaceVertexIndices = IntArrays3;
 export type AnyFunction<FunctionReturnType = any> = (...input: any[]) => FunctionReturnType;
 export type AnyConstructor<ConstructorInstanceType = object> = new (...input: any[]) => ConstructorInstanceType;
 export type Mixin<T extends AnyFunction> = InstanceType<ReturnType<T>>;
+
+export type TypedArray = ArrayLike<any> & {
+    BYTES_PER_ELEMENT: number;
+    buffer: ArrayBuffer,
+    set(array: ArrayLike<number>, offset?: number): void;
+    slice(start?: number, end?: number): TypedArray;
+};
+export type TypedArrayConstructor<T> = {
+    new (): T;
+    new (length: number): T;
+    new (object: ArrayLike<number>): T;
+    new (buffer: ArrayBuffer, bytesOffset?: number, length?: number): T;
+    BYTES_PER_ELEMENT: number;
+}

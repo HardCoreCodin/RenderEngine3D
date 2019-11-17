@@ -1,12 +1,53 @@
-import {BaseArithmatic} from "./base.js";
-import {
-    IMatrix,
-    IMatrixFunctions,
-    IRotationMatrix,
-    IRotationMatrixFunctions
-} from "./interfaces.js";
+import {BaseArithmatic, IBaseArithmatic, IBaseArithmaticFunctions} from "./base.js";
 
-export default abstract class Matrix extends BaseArithmatic implements IMatrix {
+export interface IMatrixFunctions
+    extends IBaseArithmaticFunctions
+{
+    is_identity(a: number): boolean;
+    set_to_identity(a: number): void;
+
+    transpose(a: number, o: number): void;
+    transpose_in_place(a: number): void;
+}
+
+export interface IMatrix
+    extends IBaseArithmatic
+{
+    _: IMatrixFunctions;
+
+    is_identity: boolean;
+    setToIdentity(): this;
+
+    T: this;
+    transpose(): this;
+    transposed(out?: this): this;
+
+    imul(other: this): this;
+    mul(other: this, out?: this): this;
+}
+
+export interface IRotationMatrixFunctions
+    extends IMatrixFunctions
+{
+    set_rotation_around_x(a: number, cos: number, sin: number): void;
+    set_rotation_around_y(a: number, cos: number, sin: number): void;
+    set_rotation_around_z(a: number, cos: number, sin: number): void;
+}
+
+export interface IRotationMatrix
+    extends IMatrix
+{
+    _: IRotationMatrixFunctions,
+
+    setRotationAroundX(angle: number, reset: boolean): this;
+    setRotationAroundY(angle: number, reset: boolean): this;
+    setRotationAroundZ(angle: number, reset: boolean): this;
+}
+
+export default abstract class Matrix
+    extends BaseArithmatic
+    implements IMatrix
+{
     readonly abstract _: IMatrixFunctions;
 
     get is_identity(): boolean {
@@ -51,7 +92,10 @@ export default abstract class Matrix extends BaseArithmatic implements IMatrix {
     }
 }
 
-export abstract class RotationMatrix extends Matrix implements IRotationMatrix {
+export abstract class RotationMatrix
+    extends Matrix
+    implements IRotationMatrix
+{
     readonly abstract _: IRotationMatrixFunctions;
 
     setRotationAroundX(angle: number, reset: boolean = false): this {

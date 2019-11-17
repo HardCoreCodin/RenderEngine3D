@@ -1,13 +1,9 @@
-import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
-import {
-    IBaseArithmaticFunctions,
-    IBaseFunctions,
-    IMatrix3x3,
-    IMatrixFunctions,
-    IRotationMatrixFunctions
-} from "./interfaces.js";
-import {RotationMatrix} from "./mat.js";
-import {__setMatrixArrays} from "./vec3.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {IMatrixFunctions, IRotationMatrix, IRotationMatrixFunctions, RotationMatrix} from "./mat.js";
+import {update_matrix3x3_arrays} from "./vec3.js";
+import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
+import {FloatArray} from "../types.js";
+import {FloatBuffer} from "../allocators.js";
 
 let t11, t12, t13,
     t21, t22, t23,
@@ -17,44 +13,24 @@ let M11, M12, M13,
     M21, M22, M23,
     M31, M32, M33: Float32Array;
 
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
+const MATRIX3x3_ARRAYS: Array<FloatArray> = [
+    null, null, null,
+    null, null, null,
+    null, null, null
+];
 
-let temp_id = 0;
-let id = 0;
-
-export const getNextAvailableID = (temp: boolean = false): number => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-
-    return id++;
-};
-export const allocate = (size: number): void => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-
-    M11 = new Float32Array(size);
-    M12 = new Float32Array(size);
-    M13 = new Float32Array(size);
-
-    M21 = new Float32Array(size);
-    M22 = new Float32Array(size);
-    M23 = new Float32Array(size);
-
-    M31 = new Float32Array(size);
-    M32 = new Float32Array(size);
-    M33 = new Float32Array(size);
-
-    __setMatrixArrays(
+export const matrix3x3buffer = new FloatBuffer(
+    MATRIX3x3_ARRAYS,
+    () => {[
         M11, M12, M13,
         M21, M22, M23,
-        M31, M32, M33,
-    );
-};
+        M31, M32, M33
+    ] = MATRIX3x3_ARRAYS;
+        update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
+    });
+
+const get = (a: number, dim: 0|1|2|3|4|5|6|7|8): number => MATRIX3x3_ARRAYS[dim][a];
+const set = (a: number, dim: 0|1|2|3|4|5|6|7|8, value: number): void => {MATRIX3x3_ARRAYS[dim][a] = value};
 
 const set_to = (a: number,
                 m11: number, m12: number, m13: number,
@@ -66,7 +42,9 @@ const set_to = (a: number,
 };
 
 const set_all_to = (a: number, value: number): void => {
-    M11[a] = M12[a] = M13[a] = M21[a] = M22[a] = M23[a] = M31[a] = M32[a] = M33[a] = value;
+    M11[a] = M12[a] = M13[a] =
+        M21[a] = M22[a] = M23[a] =
+            M31[a] = M32[a] = M33[a] = value;
 };
 
 const set_from = (a: number, o: number): void => {
@@ -255,9 +233,10 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 
 
 const baseFunctions3x3: IBaseFunctions = {
-    getNextAvailableID,
-    allocate,
+    buffer: matrix3x3buffer,
 
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -305,23 +284,24 @@ const rotationMatrixFunctions3x3: IRotationMatrixFunctions = {
     set_rotation_around_z
 };
 
+export interface IMatrix3x3 extends IRotationMatrix {
+    setTo(
+        m11: number, m12: number, m13: number,
+        m21: number, m22: number, m23: number,
+        m31: number, m32: number, m33: number,
+    ): this;
+}
+
 export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
     readonly _ = rotationMatrixFunctions3x3;
 }
 
-export function mat3(temp: boolean): Matrix3x3;
-export function mat3(
-    m11_or_temp: number|boolean = 0, m12: number = 0, m13: number = 0,
+export const mat3x3 = (
+    m11: number = 0, m12: number = 0, m13: number = 0,
     m21: number = 0, m22: number = 0, m23: number = 0,
     m31: number = 0, m32: number = 0, m33: number = 0,
-    temp: boolean = false
-): Matrix3x3 {
-    if (typeof m11_or_temp === "number")
-        return new Matrix3x3(getNextAvailableID(temp)).setTo(
-            m11_or_temp, m12, m13,
-            m21, m22, m23,
-            m31, m32, m33
-        );
-
-    return new Matrix3x3(getNextAvailableID(m11_or_temp));
-}
+): Matrix3x3 => new Matrix3x3(matrix3x3buffer.tempID).setTo(
+    m11, m12, m13,
+    m21, m22, m23,
+    m31, m32, m33
+);

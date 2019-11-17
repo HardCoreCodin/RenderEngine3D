@@ -1,4 +1,4 @@
-// import Matrix from "../linalng/matrix.js";
+// import MatrixType from "../linalng/matrix.js";
 // import Transform from "./transform.js";
 // import Direction from "../linalng/direction.js";
 // import Position from "../linalng/position.js";
@@ -18,12 +18,12 @@
 //     private readonly target: Position = this.orientation.translation;
 //     private readonly look_direction: Direction = this.orientation.matrix.k;
 //
-//     // Matrix that converts from view space to screen space
-//     public readonly projection: Matrix = new Matrix().setToIdentity();
+//     // MatrixType that converts from view space to screen space
+//     public readonly projection: MatrixType = new MatrixType().setToIdentity();
 //
 //     constructor(public options: CameraOptions = new CameraOptions()) {}
 //
-//     public setOrientation(yaw: number, pitch: number) : Matrix {
+//     public setOrientation(yaw: number, pitch: number) : MatrixType {
 //         this.orientation.rotation.setXY(pitch, yaw);
 //         this.target.setTo(this.position).add(this.look_direction);
 //         this.forward.setTo(this.position.to(this.target).normalize());
@@ -41,7 +41,7 @@
 //         fov: number = this.options.fov,
 //         near: number = this.options.near,
 //         far: number = this.options.far
-//     ) : Matrix {
+//     ) : MatrixType {
 //         this.options.updateIfNeeded(
 //             screen_width,
 //             screen_height,
@@ -128,16 +128,16 @@
 //         this.depth_span = far - near;
 //     }
 // }
-// import Matrix from "../linalng/matrix.js";
+// import MatrixType from "../linalng/matrix.js";
 // import Position from "../linalng/position.js";
 // import Direction from "../linalng/direction.js";
 //
 // export class EulerRotation {
 //     constructor(
-//         public readonly matrix = new Matrix().setToIdentity(), // Overall Rotation Matrix
-//         private readonly rotationMatrixForX = new Matrix().setToIdentity(), // Rotation Matrix for X
-//         private readonly rotationMatrixFroY = new Matrix().setToIdentity(), // Rotation Matrix for Y
-//         private readonly rotationMatrixForZ = new Matrix().setToIdentity(), // Rotation Matrix for Z
+//         public readonly matrix = new MatrixType().setToIdentity(), // Overall Rotation MatrixType
+//         private readonly rotationMatrixForX = new MatrixType().setToIdentity(), // Rotation MatrixType for X
+//         private readonly rotationMatrixFroY = new MatrixType().setToIdentity(), // Rotation MatrixType for Y
+//         private readonly rotationMatrixForZ = new MatrixType().setToIdentity(), // Rotation MatrixType for Z
 //         public readonly angles = new Direction()	// Rotation Angles for X, Y, and Z
 //     ) {}
 //
@@ -225,7 +225,7 @@
 // }
 //
 // export default class Transform {
-//     public readonly matrix: Matrix = new Matrix().setToIdentity();
+//     public readonly matrix: MatrixType = new MatrixType().setToIdentity();
 //     public readonly rotation: EulerRotation = new EulerRotation(this.matrix);
 //     public readonly translation: Position = this.matrix.t;
 // }

@@ -1,5 +1,5 @@
-import { float3, num2, num3, num4 } from "../factories.js";
-import { Direction3D, Position3D } from "../math/vec3.js";
+import { dir3D, pos3D } from "../math/vec3.js";
+import { num2, num3, num4 } from "../factories.js";
 import { AllocatorSizes } from "../allocators.js";
 export class Attribute {
 }
@@ -90,46 +90,51 @@ export class InputAttribute extends Attribute {
 class AbstractVertexAttribute extends Attribute {
     constructor() {
         super(...arguments);
-        this.unshared_values = [
-            undefined,
-            undefined,
-            undefined
-        ];
+        this.is_shared = false;
+        this.offsets = [0, 0, 0];
+        this.size = 0;
     }
-    setCurrent(id_1, id_2 = id_1, id_3 = id_1) {
-        this.current[0].id = id_1;
-        this.current[1].id = id_2;
-        this.current[2].id = id_3;
+    setCurrent(array_index_1, array_index_2 = array_index_1, array_index_3 = array_index_1) {
+        this.current[0].array_index = array_index_1;
+        this.current[1].array_index = array_index_2;
+        this.current[2].array_index = array_index_3;
     }
-    init(allocator, size, is_shared = this.is_shared) {
+    init(buffer, size, is_shared = this.is_shared) {
+        this.size = size;
+        this.buffer = buffer;
+        this.is_shared = !!(is_shared);
         if (is_shared) {
-            this.is_shared = true;
-            if (!this.shared_values)
-                this.shared_values = allocator.allocate(size);
-            this.current[0] = new this.Vector(this.shared_values);
-            this.current[1] = new this.Vector(this.shared_values);
-            this.current[2] = new this.Vector(this.shared_values);
+            this.offsets[0] = buffer.allocate(size);
+            this.current[0] = new this.Vector(this.offsets[0]);
         }
         else {
-            this.is_shared = false;
-            if (!this.unshared_values[0]) {
-                this.unshared_values[0] = allocator.allocate(size);
-                this.unshared_values[1] = allocator.allocate(size);
-                this.unshared_values[2] = allocator.allocate(size);
-            }
-            this.current[0] = new this.Vector(this.unshared_values[0]);
-            this.current[1] = new this.Vector(this.unshared_values[1]);
-            this.current[2] = new this.Vector(this.unshared_values[2]);
+            this.offsets[0] = buffer.allocate(size);
+            this.offsets[1] = buffer.allocate(size);
+            this.offsets[2] = buffer.allocate(size);
+            this.current[0] = new this.Vector(this.offsets[0]);
+            this.current[1] = new this.Vector(this.offsets[1]);
+            this.current[2] = new this.Vector(this.offsets[2]);
         }
+    }
+    *_iterUnshared() {
+        for (const offset of this.offsets)
+            this.buffer.slice(this.size, offset);
+    }
+    get shared_values() {
+        return this.buffer.slice(this.size, this.offsets[0]);
+    }
+    get unshared_values() {
+        return this._iterUnshared();
     }
 }
 class AbstractLoadableVertexAttribute extends AbstractVertexAttribute {
     _loadShared(input_attribute, face_vertices) {
         let input_id, output_id;
-        for (const [out_component, in_component] of zip(this.shared_values, input_attribute.vertices))
-            for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
-                for ([output_id, input_id] of zip(output_ids, input_ids))
-                    out_component[output_id] = in_component[input_id];
+        for (const [in_component, out_component, offset] of zip(input_attribute.vertices, this.buffer.arrays, this.offsets)) {
+        }
+        for (const [output_ids, input_ids] of zip(face_vertices, input_attribute.faces))
+            for ([output_id, input_id] of zip(output_ids, input_ids))
+                out_component[output_id] = in_component[input_id];
     }
     _loadUnShared(input_attribute) {
         let face_index, vertex_index;
@@ -311,7 +316,7 @@ export class FaceColors extends AbstractPulledFaceAttribute {
 class AttributeCollection {
     constructor(mesh) {
         this.mesh = mesh;
-        this._validateParameters = () => ;
+        this._validateParameters = () => { };
         this._validateParameters();
     }
     _validate(value, name, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -334,31 +339,47 @@ class AttributeCollection {
     }
 }
 export class FaceVertices {
-    init(allocator, size) {
-        if (!(this.indices && this.indices[0].length === size))
-            this.indices = allocator.allocate(size);
+    constructor() {
+        this.offsets = [0, 0, 0];
+        this.size = 0;
+    }
+    init(buffer, size) {
+        this.size = size;
+        this.indices = buffer.arrays;
+        this.offsets[0] = buffer.allocate(size);
+        this.offsets[1] = buffer.allocate(size);
+        this.offsets[2] = buffer.allocate(size);
     }
     load(inputs) {
-        this.indices[0].set(inputs[0]);
-        this.indices[1].set(inputs[1]);
-        this.indices[2].set(inputs[2]);
+        for (const [array, offset, values] of zip(this.indices, this.offsets, inputs))
+            array.set(values, offset);
+    }
+    *[Symbol.iterator]() {
+        const size = this.size;
+        for (const [array, offset] of zip(this.indices, this.offsets))
+            yield function* () {
+                for (let i = offset; i < offset + size; i++)
+                    yield array[i];
+            };
     }
 }
 export class VertexFaces {
     constructor() {
-        this.indices = [];
+        this.offsets = [0];
+        this.sizes = [0];
     }
-    init(allocator, size) {
-        if (!(this._buffer && this._buffer.length === size))
-            this._buffer = allocator.allocate(size)[0];
+    init(buffer, size) {
+        this.indices = buffer.arrays;
+        this.offsets[0] = buffer.allocate(size);
     }
     load(inputs) {
-        this.indices.length = inputs.length;
-        let offset = 0;
-        for (const [i, array] of inputs.entries()) {
-            this.indices[i] = this._buffer.subarray(offset, array.length);
-            this.indices[i].set(array);
-            offset += array.length;
+        this.offsets.length = this.sizes.length = inputs.length;
+        let offset = this.offsets[0];
+        for (const [i, values] of inputs.entries()) {
+            this.indices[0].set(values, offset);
+            this.offsets[i] = offset;
+            this.sizes[i] = values.length;
+            offset += values.length;
         }
     }
 }
@@ -447,15 +468,13 @@ const randomize = (values) => {
         for (const index of array.keys())
             array[index] = Math.random();
 };
-// Temporary float arrays for computations:
-const temp = float3(3);
-const dir1 = new Direction3D(temp, 0);
-const dir2 = new Direction3D(temp, 1);
-const dir3 = new Direction3D(temp, 2);
-const pos1 = new Position3D(temp);
-const pos2 = new Position3D(temp);
-const pos3 = new Position3D(temp);
-const face_normal = new Direction3D(temp);
+const dir1 = dir3D();
+const dir2 = dir3D();
+const dir3 = dir3D();
+const pos1 = pos3D();
+const pos2 = pos3D();
+const pos3 = pos3D();
+const face_normal = dir3D();
 function* zip(...iterables) {
     let iterators = iterables.map(i => i[Symbol.iterator]());
     while (true) {

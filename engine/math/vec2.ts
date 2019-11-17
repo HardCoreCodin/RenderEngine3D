@@ -1,46 +1,71 @@
-import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
-import {IVectorFunctions, IBaseFunctions, IBaseArithmaticFunctions, I2D, IUV} from "./interfaces.js";
-import {Direction, Position, Vector} from "./vec.js";
-import Matrix2x2 from "./mat2x2.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {Direction, ITexCoords, ITransformableVector, IVectorFunctions, Position, Vector} from "./vec.js";
+import Matrix2x2, {IMatrix2x2} from "./mat2x2.js";
+import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
+import {FloatBuffer} from "../allocators.js";
+import {FloatArray} from "../types.js";
 
 let t_x,
     t_y,
     t_n: number;
+
 let X, Y,
     M11, M12,
-    M21, M22: Float32Array;
+    M21, M22: FloatArray;
 
-export const __setMatrixArrays = (
-    m11: Float32Array,  m12: Float32Array,
-    m21: Float32Array,  m22: Float32Array
-) => {
-    M11 = m11;  M12 = m12;
-    M21 = m21;  M22 = m22;
-};
+export const update_matrix2x2_arrays = (MATRIX2x2_ARRAYS: Array<FloatArray>) => [
+    M11, M12,
+    M21, M22
+] = MATRIX2x2_ARRAYS;
 
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
+const VECTOR2D_ARRAYS: Array<FloatArray> = [null, null];
+export const vector2Dbuffer = new FloatBuffer(
+    VECTOR2D_ARRAYS,
+    () => [
+        X, Y
+    ] = VECTOR2D_ARRAYS
+);
 
-let id = 0;
-let temp_id = 0;
+//
+// const DIMENTION: DIM = DIM._2D;
+// const TEMPORARY_STORAGE_LENGTH = CACHE_LINE_SIZE * 16;
+// // const VECTOR2D_BUFFERS: [Float32Array, Float32Array] = [null, null];
+// const BUFFERS_BEFORE_INIT: [Float32Array, Float32Array] = [null, null];
+// let BUFFER_LENGTH = 0;
+//
+// let temporary_storage_offset = 0;
+// let current_storage_offset = TEMPORARY_STORAGE_LENGTH;
+// export const allocateTemporaryArray2D = (): number =>
+//     temporary_storage_offset++ % TEMPORARY_STORAGE_LENGTH;
+//
+// let offset_before_allocation: number;
+// export const allocateArray2D = (length: number): number => {
+//     offset_before_allocation = current_storage_offset;
+//     current_storage_offset += length;
+//
+//     if (current_storage_offset > BUFFER_LENGTH)
+//         throw '2D Buffer overflow!';
+//
+//     return offset_before_allocation;
+// };
+//
+// let i: number;
+// export const initBuffer2D = (length: number): void => {
+//     BUFFER_LENGTH = TEMPORARY_STORAGE_LENGTH + length;
+//
+//     for (i= 0; i< DIMENTION; i++)
+//         BUFFERS_BEFORE_INIT[i] = VECTOR2D_BUFFERS[i];
+//
+//     X = VECTOR2D_BUFFERS[0] = new Float32Array(BUFFER_LENGTH);
+//     Y = VECTOR2D_BUFFERS[1] = new Float32Array(BUFFER_LENGTH);
+//
+//     if (BUFFERS_BEFORE_INIT[0] !== null)
+//         for (i = 0; i < DIMENTION; i++)
+//             VECTOR2D_BUFFERS[i].set(BUFFERS_BEFORE_INIT[i]);
+// };
 
-export const getNextAvailableID = (temp: boolean = false): number => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-
-    return id++;
-};
-export const allocate = (size: number): void => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-
-    X = new Float32Array(size);
-    Y = new Float32Array(size);
-};
+const get = (a: number, dim: 0|1): number => VECTOR2D_ARRAYS[dim][a];
+const set = (a: number, dim: 0|1, value: number): void => {VECTOR2D_ARRAYS[dim][a] = value};
 
 const set_to = (a: number, x: number, y: number): void => {
     X[a] = x;
@@ -176,9 +201,10 @@ const multiply_in_place = (a: number, b: number): void => {
 };
 
 const baseFunctions2D: IBaseFunctions = {
-    getNextAvailableID,
-    allocate,
+    buffer: vector2Dbuffer,
 
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -224,40 +250,15 @@ const vectorFunctions2D: IVectorFunctions = {
     lerp
 };
 
-export class Direction2D extends Direction<Matrix2x2> implements I2D {
-    readonly _ = vectorFunctions2D;
-
-    setTo(x: number, y: number): this {
-        this._.set_to(this.id, x, y);
-
-        return this;
-    }
-
-    set x(x: number) {X[this.id] = x}
-    set y(y: number) {Y[this.id] = y}
-
-    get x(): number {return X[this.id]}
-    get y(): number {return Y[this.id]}
+export interface IUV
+    extends ITexCoords
+{
+    setTo(u: number, v: number);
 }
-
-export class Position2D extends Position<Matrix2x2, Direction2D> implements I2D {
-    readonly _ = vectorFunctions2D;
-    protected readonly _DirectionConstructor = Direction2D;
-
-    setTo(x: number, y: number): this {
-        this._.set_to(this.id, x, y);
-
-        return this;
-    }
-
-    set x(x: number) {X[this.id] = x}
-    set y(y: number) {Y[this.id] = y}
-
-    get x(): number {return X[this.id]}
-    get y(): number {return Y[this.id]}
-}
-
-export class UV extends Vector implements IUV {
+export class UV
+    extends Vector
+    implements IUV
+{
     readonly _ = vectorFunctions2D;
 
     setTo(u: number, v: number): this {
@@ -273,62 +274,67 @@ export class UV extends Vector implements IUV {
     get v(): number {return Y[this.id]}
 }
 
-export function pos2(temp: boolean): Position2D;
-export function pos2(direction: Direction2D): Position2D;
-export function pos2(
-    x: number,
-    y: number,
-    temp: boolean
-): Position2D;
-export function pos2(
-    x_or_temp_or_direction: number|boolean|Direction2D = 0,
-    y: number = 0,
-    temp: boolean = false
-): Position2D {
-    if (x_or_temp_or_direction === undefined)
-        return new Position2D(getNextAvailableID(true));
+export interface I2D
+    extends ITransformableVector<IMatrix2x2>
+{
+    setTo(x: number, y: number): this;
 
-    if (typeof x_or_temp_or_direction === "number")
-        return new Position2D(getNextAvailableID(temp)).setTo(x_or_temp_or_direction, y);
+    x: number;
+    y: number;
+}
+export class Direction2D
+    extends Direction<Matrix2x2>
+    implements I2D
+{
+    readonly _ = vectorFunctions2D;
 
-    if (typeof x_or_temp_or_direction === "boolean")
-        return new Position2D(getNextAvailableID(x_or_temp_or_direction));
+    setTo(x: number, y: number): this {
+        this._.set_to(this.id, x, y);
 
-    return new Position2D(x_or_temp_or_direction.id);
+        return this;
+    }
+
+    set x(x: number) {X[this.id] = x}
+    set y(y: number) {Y[this.id] = y}
+
+    get x(): number {return X[this.id]}
+    get y(): number {return Y[this.id]}
+}
+export class Position2D
+    extends Position<Matrix2x2, Direction2D>
+    implements I2D
+{
+    readonly _ = vectorFunctions2D;
+    protected readonly _dir = dir2D;
+
+    setTo(x: number, y: number): this {
+        this._.set_to(this.id, x, y);
+
+        return this;
+    }
+
+    set x(x: number) {X[this.id] = x}
+    set y(y: number) {Y[this.id] = y}
+
+    get x(): number {return X[this.id]}
+    get y(): number {return Y[this.id]}
 }
 
-export function dir2(temp: boolean): Direction2D;
-export function dir2(position: Position2D): Direction2D;
-export function dir2(
-    x: number,
-    y: number,
-    temp: boolean
-): Direction2D;
-export function dir2(
-    x_or_temp_or_position: number|boolean|Position2D  = 0,
-    y: number = 0,
-    temp: boolean = false
-): Direction2D {
-    if (x_or_temp_or_position === undefined)
-        return new Direction2D(getNextAvailableID(true));
+export const pos2D = (
+    x: number|Direction2D = 0,
+    y: number = 0
+): Position2D => x instanceof Direction2D ?
+    new Position2D(x.buffer_offset, x.array_index) :
+    new Position2D(vector2Dbuffer.tempID).setTo(x, y);
 
-    if (typeof x_or_temp_or_position === "number")
-        return new Direction2D(getNextAvailableID(temp)).setTo(x_or_temp_or_position, y);
+export const dir2D = (
+    x: number|Position2D = 0,
+    y: number = 0
+): Direction2D => x instanceof Position2D ?
+    new Direction2D(x.buffer_offset, x.array_index) :
+    new Direction2D(vector2Dbuffer.tempID).setTo(x, y);
 
-    if (typeof x_or_temp_or_position === "boolean")
-        return new Direction2D(getNextAvailableID(x_or_temp_or_position));
-
-    return new Direction2D(x_or_temp_or_position.id);
-}
-
-export function uv(temp: boolean): UV;
-export function uv(
-    u_or_temp: number|boolean = 0,
-    v: number = 0,
-    temp: boolean = false
-): UV {
-    if (typeof u_or_temp === "number")
-        return new UV(getNextAvailableID(temp)).setTo(u_or_temp, v);
-
-    return new UV(getNextAvailableID(u_or_temp));
-}
+export const uv = (
+    u: number = 0,
+    v: number = 0
+): UV => new UV(vector2Dbuffer.tempID).setTo(u, v);

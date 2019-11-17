@@ -1,13 +1,9 @@
-import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
-import {
-    IBaseArithmaticFunctions,
-    IBaseFunctions,
-    IMatrix4x4,
-    IMatrixFunctions,
-    IRotationMatrixFunctions
-} from "./interfaces.js";
-import {RotationMatrix} from "./mat.js";
-import {__setMatrixArrays} from "./vec4.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {IMatrixFunctions, IRotationMatrix, IRotationMatrixFunctions, RotationMatrix} from "./mat.js";
+import {update_matrix4x4_arrays} from "./vec4.js";
+import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
+import {FloatArray} from "../types.js";
+import {FloatBuffer} from "../allocators.js";
 
 
 let t11, t12, t13, t14,
@@ -21,53 +17,25 @@ let M11, M12, M13, M14,
     M41, M42, M43, M44: Float32Array;
 
 
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
+const MATRIX4x4_ARRAYS: Array<FloatArray> = [
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null
+];
 
-let temp_id = 0;
-let id = 0;
+export const matrix4x4buffer = new FloatBuffer(
+    MATRIX4x4_ARRAYS,
+    () => {[
+        M11, M12, M13,
+        M21, M22, M23,
+        M31, M32, M33
+    ] = MATRIX4x4_ARRAYS;
+        update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
+    });
 
-export const getNextAvailableID = (temp: boolean = false): number => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-
-    return id++;
-};
-export const allocate = (size: number): void => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-
-    M11 = new Float32Array(size);
-    M12 = new Float32Array(size);
-    M13 = new Float32Array(size);
-    M14 = new Float32Array(size);
-
-    M21 = new Float32Array(size);
-    M22 = new Float32Array(size);
-    M23 = new Float32Array(size);
-    M24 = new Float32Array(size);
-
-    M31 = new Float32Array(size);
-    M32 = new Float32Array(size);
-    M33 = new Float32Array(size);
-    M34 = new Float32Array(size);
-
-    M41 = new Float32Array(size);
-    M42 = new Float32Array(size);
-    M43 = new Float32Array(size);
-    M44 = new Float32Array(size);
-
-    __setMatrixArrays(
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    );
-};
+const get = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15): number => MATRIX4x4_ARRAYS[dim][a];
+const set = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15, value: number): void => {MATRIX4x4_ARRAYS[dim][a] = value};
 
 const set_to = (a: number,
                 m11: number, m12: number, m13: number, m14: number,
@@ -327,9 +295,10 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 
 
 const baseFunctions4x4: IBaseFunctions = {
-    getNextAvailableID,
-    allocate,
+    buffer: matrix4x4buffer,
 
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -377,23 +346,26 @@ const rotationMatrixFunctions4x4: IRotationMatrixFunctions = {
     set_rotation_around_z
 };
 
+export interface IMatrix4x4 extends IRotationMatrix {
+    setTo(
+        m11: number, m12: number, m13: number, m14: number,
+        m21: number, m22: number, m23: number, m24: number,
+        m31: number, m32: number, m33: number, m34: number,
+        m41: number, m42: number, m43: number, m44: number,
+    ): this;
+}
+
 export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
     readonly _ = rotationMatrixFunctions4x4;
 }
 
-export function mat3(temp: boolean): Matrix4x4;
-export function mat3(
-    m11_or_temp: number|boolean = 0, m12: number = 0, m13: number = 0,
-    m21: number = 0, m22: number = 0, m23: number = 0,
-    m31: number = 0, m32: number = 0, m33: number = 0,
-    temp: boolean = false
-): Matrix4x4 {
-    if (typeof m11_or_temp === "number")
-        return new Matrix4x4(getNextAvailableID(temp)).setTo(
-            m11_or_temp, m12, m13,
-            m21, m22, m23,
-            m31, m32, m33
-        );
-
-    return new Matrix4x4(getNextAvailableID(m11_or_temp));
-}
+export const mat4x4 = (
+    m11: number = 0, m12: number = 0, m13: number = 0, m14: number = 0,
+    m21: number = 0, m22: number = 0, m23: number = 0, m24: number = 0,
+    m31: number = 0, m32: number = 0, m33: number = 0, m34: number = 0,
+    m41: number = 0, m42: number = 0, m43: number = 0, m44: number = 0
+): Matrix4x4 => new Matrix4x4(matrix4x4buffer.tempID).setTo(
+    m11, m12, m13,
+    m21, m22, m23,
+    m31, m32, m33
+);

@@ -1,14 +1,102 @@
 import {
-    FaceVertexIndices,
     FloatArray,
-    FloatArrays, IntArray, IntArrays,
+    FloatArrays,
+
+    IntArray,
+    IntArrays,
+
     Matrix2x2Values,
     Matrix3x3Values,
-    Matrix4x4Values, TypedArray,
-    Vector2DValues, Vector3DValues,
-    Vector4DValues, VertexFacesIndices
+    Matrix4x4Values,
+
+    TypedArray,
+    TypedArrayConstructor,
+
+    Vector2DValues,
+    Vector3DValues,
+    Vector4DValues,
+
+    FaceVertexIndices,
+    VertexFacesIndices
 } from "./types.js";
-import {DIM} from "./constants.js";
+import {CACHE_LINE_SIZE, DIM} from "./constants.js";
+import {iterTypedArray} from "./utils.js";
+
+export abstract class AbstractBuffer<ArrayType extends TypedArray = FloatArray> {
+    protected readonly _typed_array_constructor: TypedArrayConstructor<ArrayType>;
+
+
+    protected _size: number;
+    protected _offset: number;
+    protected _temp_offset: number = 0;
+    protected _array_buffer: ArrayBuffer;
+
+    constructor(
+        readonly arrays: Array<ArrayType>,
+        protected readonly _onBuffersChanged: () => void,
+        protected readonly _temp_size: number = CACHE_LINE_SIZE * 16
+    ) {
+        this._typed_array_constructor = arrays[0].constructor as TypedArrayConstructor<ArrayType>;
+
+        this._offset = this._temp_size;
+        this.setSize(this._temp_size);
+    }
+
+
+
+    *slice(
+        size: number = this._size - this._temp_size,
+        offset: number = this._temp_offset
+    ) {
+        for (const array of this.arrays)
+            yield iterTypedArray(array, size, offset);
+    }
+
+    get tempID(): number {
+        return this._temp_offset++ % this._temp_size;
+    }
+
+    allocate(size: number): number {
+        this._offset += size;
+
+        const overflow = this._offset - this._size;
+        if (overflow > 0) {
+            let num_cache_lines = ~~(overflow / CACHE_LINE_SIZE);
+            if (overflow % CACHE_LINE_SIZE)
+                num_cache_lines++;
+
+            this.setSize(num_cache_lines * CACHE_LINE_SIZE);
+
+            this._onBuffersChanged();
+        }
+
+        return this._offset - size;
+    }
+
+    setSize(size) {
+        size += this._temp_size;
+
+        this._size = size;
+        const num_bytes_per_array = size * this._typed_array_constructor.BYTES_PER_ELEMENT;
+
+        this._array_buffer = new ArrayBuffer(num_bytes_per_array * this.arrays.length);
+
+        for (const [i, array] of this.arrays.entries()) {
+            this.arrays[i] = new this._typed_array_constructor(
+                this._array_buffer,
+                num_bytes_per_array * i,
+                size
+            );
+
+            if (array)
+                this.arrays[i].set(array);
+        }
+    }
+}
+
+export class FloatBuffer extends AbstractBuffer<Float32Array> {}
+export class IntBuffer extends AbstractBuffer<Uint32Array> {}
+
 
 abstract class AbstractArraysAllocator<ArraysType> {
     protected readonly _dim: DIM;

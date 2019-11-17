@@ -1,8 +1,18 @@
-import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
-import Matrix3x3 from "./mat3x3.js";
-import {IBaseFunctions, IBaseArithmaticFunctions, IVectorFunctions, I3D, IUVW, IRGB} from "./interfaces.js";
-
-import {Direction, Position, Vector} from "./vec.js";
+import Matrix3x3, {IMatrix3x3} from "./mat3x3.js";
+import {
+    Color,
+    TexCoords,
+    Direction,
+    Position,
+    ITexCoords,
+    IColor,
+    IVectorFunctions,
+    ITransformableVector
+} from "./vec.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
+import {FloatArray} from "../types.js";
+import {FloatBuffer} from "../allocators.js";
 
 let t_x, 
     t_y, 
@@ -14,40 +24,23 @@ let X, Y, Z,
     M21, M22, M23,
     M31, M32, M33 : Float32Array;
 
-export const __setMatrixArrays = (
-    m11: Float32Array,  m12: Float32Array, m13: Float32Array,
-    m21: Float32Array,  m22: Float32Array, m23: Float32Array,
-    m31: Float32Array,  m32: Float32Array, m33: Float32Array,
-) => {
-    M11 = m11;  M12 = m12;  M13 = m13;
-    M21 = m21;  M22 = m22;  M23 = m23;
-    M31 = m31;  M32 = m32;  M33 = m33;
-};
+export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS: Array<FloatArray>) => [
+    M11, M12, M13,
+    M21, M22, M23,
+    M31, M32, M33
+] = MATRIX3x3_ARRAYS;
 
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
+const VECTOR3D_ARRAYS: Array<FloatArray> = [null, null];
+export const vector3Dbuffer = new FloatBuffer(
+    VECTOR3D_ARRAYS,
+    () => [
+        X, Y, Z
+    ] = VECTOR3D_ARRAYS
+);
 
-let id = 0;
-let temp_id = 0;
 
-export const getNextAvailableID = (temp: boolean = false): number => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-
-    return id++;
-};
-export const allocate = (size: number): void => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-
-    X = new Float32Array(size);
-    Y = new Float32Array(size);
-    Z = new Float32Array(size);
-};
+const get = (a: number, dim: 0|1|2): number => VECTOR3D_ARRAYS[dim][a];
+const set = (a: number, dim: 0|1|2, value: number): void => {VECTOR3D_ARRAYS[dim][a] = value};
 
 const set_to = (a: number, x: number, y: number, z: number): void => {
     X[a] = x;
@@ -228,9 +221,10 @@ const multiply_in_place = (a: number, b: number) : void => {
 
 
 const baseFunctions3D: IBaseFunctions = {
-    getNextAvailableID,
-    allocate,
+    buffer: vector3Dbuffer,
 
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -276,7 +270,62 @@ const vectorFunctions3D: IVectorFunctions = {
     lerp
 };
 
-export class Direction3D extends Direction<Matrix3x3> implements I3D {
+export interface IUVW
+    extends ITexCoords
+{
+    setTo(u: number, v: number, w);
+
+    w: number;
+}
+export class UVW
+    extends TexCoords
+    implements IUVW
+{
+    readonly _ = vectorFunctions3D;
+
+    setTo(u: number, v: number, w: number): this {
+        this._.set_to(this.id, u, v, w);
+
+        return this;
+    }
+
+    set w(w: number) {Z[this.id] = w}
+    get w(): number {return Z[this.id]}
+}
+
+export interface IRGB
+    extends IColor
+{
+    setTo(r: number, g: number, b: number);
+}
+
+export class RGB
+    extends Color
+    implements IRGB
+{
+    readonly _ = vectorFunctions3D;
+
+    setTo(r: number, g: number, b: number): this {
+        this._.set_to(this.id, r, g, b);
+
+        return this;
+    }
+}
+
+
+export interface I3D
+    extends ITransformableVector<IMatrix3x3>
+{
+    setTo(x: number, y: number, z: number): this;
+
+    x: number;
+    y: number;
+    z: number;
+}
+export class Direction3D
+    extends Direction<Matrix3x3>
+    implements I3D
+{
     readonly _ = vectorFunctions3D;
 
     cross(other: this): this {
@@ -309,9 +358,12 @@ export class Direction3D extends Direction<Matrix3x3> implements I3D {
     get z(): number {return Z[this.id]}
 }
 
-export class Position3D extends Position<Matrix3x3, Direction3D> implements I3D {
+export class Position3D
+    extends Position<Matrix3x3, Direction3D>
+    implements I3D
+{
     readonly _ = vectorFunctions3D;
-    protected readonly _DirectionConstructor = Direction3D;
+    readonly _dir = dir3D;
 
     setTo(x: number, y: number, z: number): this {
         this._.set_to(this.id, x, y, z);
@@ -328,116 +380,30 @@ export class Position3D extends Position<Matrix3x3, Direction3D> implements I3D 
     get z(): number {return Z[this.id]}
 }
 
-export class UVW extends Vector implements IUVW {
-    readonly _ = vectorFunctions3D;
-
-    setTo(u: number, v: number, w: number): this {
-        this._.set_to(this.id, u, v, w);
-
-        return this;
-    }
-
-    set u(u: number) {X[this.id] = u}
-    set v(v: number) {Y[this.id] = v}
-    set w(w: number) {Z[this.id] = w}
-
-    get u(): number {return X[this.id]}
-    get v(): number {return Y[this.id]}
-    get w(): number {return Z[this.id]}
-}
-
-export class RGB extends Vector implements IRGB {
-    readonly _ = vectorFunctions3D;
-
-    setTo(r: number, g: number, b: number): this {
-        this._.set_to(this.id, r, g, b);
-
-        return this;
-    }
-
-    set r(r: number) {X[this.id] = r}
-    set g(g: number) {Y[this.id] = g}
-    set b(b: number) {Z[this.id] = b}
-
-    get r(): number {return X[this.id]}
-    get g(): number {return Y[this.id]}
-    get b(): number {return Z[this.id]}
-}
-
-export function pos3(temp: boolean): Position3D;
-export function pos3(direction: Direction3D): Position3D;
-export function pos3(
-    x: number,
-    y: number,
-    z: number,
-    temp: boolean
-): Position3D;
-export function pos3(
-    x_or_temp_or_direction: number|boolean|Direction3D = 0,
+export const pos3D = (
+    x: number|Direction3D = 0,
     y: number = 0,
-    z: number = 0,
-    temp: boolean = false
-): Position3D {
-    if (x_or_temp_or_direction === undefined)
-        return new Position3D(getNextAvailableID(true));
+    z: number = 0
+): Position3D => x instanceof Direction3D ?
+    new Position3D(x.buffer_offset, x.array_index) :
+    new Position3D(vector3Dbuffer.tempID).setTo(x, y, z);
 
-    if (typeof x_or_temp_or_direction === "number")
-        return new Position3D(getNextAvailableID(temp)).setTo(x_or_temp_or_direction, y, z);
-
-    if (typeof x_or_temp_or_direction === "boolean")
-        return new Position3D(getNextAvailableID(x_or_temp_or_direction));
-
-    return new Position3D(x_or_temp_or_direction.id);
-}
-
-export function dir3(temp: boolean): Direction3D;
-export function dir3(position: Position3D): Direction3D;
-export function dir3(
-    x: number,
-    y: number,
-    z: number,
-    temp: boolean
-): Direction3D;
-export function dir3(
-    x_or_temp_or_position: number|boolean|Position3D  = 0,
+export const dir3D = (
+    x: number|Position3D = 0,
     y: number = 0,
-    z: number = 0,
-    temp: boolean = false
-): Direction3D {
-    if (x_or_temp_or_position === undefined)
-        return new Direction3D(getNextAvailableID(true));
+    z: number = 0
+): Direction3D => x instanceof Position3D ?
+    new Direction3D(x.buffer_offset, x.array_index) :
+    new Direction3D(vector3Dbuffer.tempID).setTo(x, y, z);
 
-    if (typeof x_or_temp_or_position === "number")
-        return new Direction3D(getNextAvailableID(temp)).setTo(x_or_temp_or_position, y, z);
-
-    if (typeof x_or_temp_or_position === "boolean")
-        return new Direction3D(getNextAvailableID(x_or_temp_or_position));
-
-    return new Direction3D(x_or_temp_or_position.id);
-}
-
-export function uvw(temp: boolean): UVW;
-export function uvw(
-    u_or_temp: number|boolean = 0,
-    v: number = 0,
-    w: number = 0,
-    temp: boolean = false
-): UVW {
-    if (typeof u_or_temp === "number")
-        return new UVW(getNextAvailableID(temp)).setTo(u_or_temp, v, w);
-
-    return new UVW(getNextAvailableID(u_or_temp));
-}
-
-export function rgb(temp: boolean): RGB;
-export function rgb(
-    r_or_temp: number|boolean = 0,
+export const rgb = (
+    r: number = 0,
     g: number = 0,
-    b: number = 0,
-    temp: boolean = false
-): RGB {
-    if (typeof r_or_temp === "number")
-        return new RGB(getNextAvailableID(temp)).setTo(r_or_temp, g, b);
+    b: number = 0
+): RGB => new RGB(vector3Dbuffer.tempID).setTo(r, g, b);
 
-    return new RGB(getNextAvailableID(r_or_temp));
-}
+export const uvw = (
+    u: number = 0,
+    v: number = 0,
+    w: number = 0
+): UVW => new UVW(vector3Dbuffer.tempID).setTo(u, v, w);

@@ -1,7 +1,9 @@
-import {CACHE_LINE_SIZE, PRECISION_DIGITS, TEMP_STORAGE_SIZE} from "../constants.js";
-import {IBaseArithmaticFunctions, IBaseFunctions, IMatrix2x2, IMatrixFunctions} from "./interfaces.js";
-import Matrix from "./mat.js";
-import {__setMatrixArrays} from "./vec2.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import Matrix, {IMatrix, IMatrixFunctions} from "./mat.js";
+import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
+import {FloatArray} from "../types.js";
+import {FloatBuffer} from "../allocators.js";
+import {update_matrix2x2_arrays} from "./vec2.js";
 
 let t11, t12,
     t21, t22: number;
@@ -9,37 +11,79 @@ let t11, t12,
 let M11, M12,
     M21, M22: Float32Array;
 
-let SIZE = 0;
-let TEMP_SIZE = TEMP_STORAGE_SIZE;
+const MATRIX2x2_ARRAYS: Array<FloatArray> = [
+    null, null,
+    null, null
+];
 
-let temp_id = 0;
-let id = 0;
-
-export const getNextAvailableID = (temp: boolean = false): number => {
-    if (temp)
-        return SIZE + (temp_id++ % TEMP_SIZE);
-
-    if (id === SIZE)
-        throw 'Buffer overflow!';
-
-    return id++;
-};
-export const allocate = (size: number): void => {
-    SIZE = size;
-    TEMP_SIZE += CACHE_LINE_SIZE - (size % CACHE_LINE_SIZE);
-    size += TEMP_SIZE;
-
-    M11 = new Float32Array(size);
-    M12 = new Float32Array(size);
-
-    M21 = new Float32Array(size);
-    M22 = new Float32Array(size);
-
-    __setMatrixArrays(
+export const matrix2x2buffer = new FloatBuffer(
+    MATRIX2x2_ARRAYS,
+    () => {[
         M11, M12,
         M21, M22
-    );
-};
+    ] = MATRIX2x2_ARRAYS;
+    update_matrix2x2_arrays(MATRIX2x2_ARRAYS);
+});
+
+//
+//
+// export const MATRIX2x2_BUFFERS: [
+//     Float32Array, Float32Array,
+//     Float32Array, Float32Array
+//     ] = [
+//     null, null,
+//     null, null
+// ];
+//
+// const BUFFERS_BEFORE_INIT: [
+//     Float32Array, Float32Array,
+//     Float32Array, Float32Array
+//     ] = [
+//     null, null,
+//     null, null
+// ];
+//
+// const DIMENTION: DIM = DIM._4D;
+// const TEMPORARY_STORAGE_LENGTH = CACHE_LINE_SIZE * 16;
+// let BUFFER_LENGTH = 0;
+// let temporary_storage_offset = 0;
+// let current_storage_offset = TEMPORARY_STORAGE_LENGTH;
+// export const allocateTemporaryArray2D = (): number =>
+//     temporary_storage_offset++ % TEMPORARY_STORAGE_LENGTH;
+//
+// let offset_before_allocation: number;
+// export const allocateArray2D = (length: number): number => {
+//     offset_before_allocation = current_storage_offset;
+//     current_storage_offset += length;
+//
+//     if (current_storage_offset > BUFFER_LENGTH)
+//         throw '2D Buffer overflow!';
+//
+//     return offset_before_allocation;
+// };
+//
+// let i: number;
+// export const initBuffer2D = (length: number): void => {
+//     BUFFER_LENGTH = TEMPORARY_STORAGE_LENGTH + length;
+//
+//     for (i= 0; i< DIMENTION; i++)
+//         BUFFERS_BEFORE_INIT[i] = MATRIX2x2_BUFFERS[i];
+//
+//     M11 = MATRIX2x2_BUFFERS[0] = new Float32Array(BUFFER_LENGTH);
+//     M12 = MATRIX2x2_BUFFERS[1] = new Float32Array(BUFFER_LENGTH);
+//
+//     M21 = MATRIX2x2_BUFFERS[2] = new Float32Array(BUFFER_LENGTH);
+//     M22 = MATRIX2x2_BUFFERS[3] = new Float32Array(BUFFER_LENGTH);
+//
+//     if (BUFFERS_BEFORE_INIT[0] !== null)
+//         for (i = 0; i < DIMENTION; i++)
+//             MATRIX2x2_BUFFERS[i].set(BUFFERS_BEFORE_INIT[i]);
+//
+//     update_matrix2x2_arrays();
+// };
+
+const get = (a: number, dim: 0|1|2|3): number => MATRIX2x2_ARRAYS[dim][a];
+const set = (a: number, dim: 0|1|2|3, value: number): void => {MATRIX2x2_ARRAYS[dim][a] = value};
 
 const set_to = (a: number,
                 m11: number, m12: number,
@@ -49,7 +93,8 @@ const set_to = (a: number,
 };
 
 const set_all_to = (a: number, value: number): void => {
-    M11[a] = M12[a] = M21[a] = M22[a] = value;
+    M11[a] = M12[a] =
+        M21[a] = M22[a] = value;
 };
 
 const set_from = (a: number, o: number): void => {
@@ -169,9 +214,10 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 };
 
 const baseFunctions2x2: IBaseFunctions = {
-    getNextAvailableID,
-    allocate,
+    buffer: matrix2x2buffer,
 
+    get,
+    set,
     set_to,
     set_from,
     set_all_to,
@@ -211,7 +257,19 @@ const matrixFunctions2x2: IMatrixFunctions = {
     transpose_in_place,
 };
 
-export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
+export interface IMatrix2x2
+    extends IMatrix
+{
+    setTo(
+        m11: number, m12: number,
+        m21: number, m22: number
+    ): this;
+}
+
+export default class Matrix2x2
+    extends Matrix
+    implements IMatrix2x2
+{
     readonly _ = matrixFunctions2x2;
 
     setRotation(angle: number, reset: boolean = true): this {
@@ -224,14 +282,10 @@ export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
     }
 }
 
-export function mat2(temp: boolean): Matrix2x2;
-export function mat2(
-    m11_or_temp: number|boolean = 0, m12: number = 0,
-    m21: number = 0, m22: number = 0,
-    temp: boolean = false
-): Matrix2x2 {
-    if (typeof m11_or_temp === "number")
-        return new Matrix2x2(getNextAvailableID(temp)).setTo(m11_or_temp, m12, m21, m22);
-
-    return new Matrix2x2(getNextAvailableID(m11_or_temp));
-}
+export const mat2x2 = (
+    m11: number = 0, m12: number = 0,
+    m21: number = 0, m22: number = 0
+): Matrix2x2 => new Matrix2x2(matrix2x2buffer.tempID).setTo(
+    m11, m12,
+    m21, m22
+);

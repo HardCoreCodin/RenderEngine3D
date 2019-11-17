@@ -47,11 +47,11 @@ export default class Engine3D {
     private triangle_count: number;
     private triangles_to_raster: Triangle4D[] = [];
 
-    private readonly world_space_to_clip_space: Matrix4x4;	// Matrix that converts from world space to clip space
-    private readonly world_space_to_camera_space: Matrix4x4;	// Matrix that converts from world space to view space
-    private readonly local_space_to_clip_space: Matrix4x4;	// Matrix that converts from local space to clip space
-    private readonly camera_space_to_clip_space : Matrix4x4;	// Matrix that converts from view space to clip space
-    private readonly ndc_to_screen_space: Matrix4x4;	// Matrix that converts from NDC space to screen space
+    private readonly world_space_to_clip_space: Matrix4x4;	// MatrixType that converts from world space to clip space
+    private readonly world_space_to_camera_space: Matrix4x4;	// MatrixType that converts from world space to view space
+    private readonly local_space_to_clip_space: Matrix4x4;	// MatrixType that converts from local space to clip space
+    private readonly camera_space_to_clip_space : Matrix4x4;	// MatrixType that converts from view space to clip space
+    private readonly ndc_to_screen_space: Matrix4x4;	// MatrixType that converts from NDC space to screen space
 
     constructor(
         private readonly canvas: HTMLCanvasElement,
@@ -92,6 +92,10 @@ export default class Engine3D {
     }
 
     private draw = (timestamp) => {
+        if (this.screen.width !== this.canvas.width ||
+            this.screen.height !== this.canvas.height)
+            this.screen.updateSize();
+
         this.delta_time = (timestamp - this.last_timestamp) / this.frame_time;
         this.last_timestamp = timestamp;
 
