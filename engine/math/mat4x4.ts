@@ -1,10 +1,10 @@
-import {PRECISION_DIGITS} from "../constants.js";
-import {IMatrixFunctions, IRotationMatrix, IRotationMatrixFunctions, RotationMatrix} from "./mat.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
+import {RotationMatrix} from "./mat.js";
+import {FloatArray, Float16, Num16} from "../types.js";
+import {Buffer} from "../allocators.js";
 import {update_matrix4x4_arrays} from "./vec4.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatArray} from "../types.js";
-import {FloatBuffer} from "../allocators.js";
-
+import {IMatrixRotationFunctions} from "./interfaces/functions.js";
+import {IMatrix4x4} from "./interfaces/classes.js";
 
 let t11, t12, t13, t14,
     t21, t22, t23, t24,
@@ -14,25 +14,47 @@ let t11, t12, t13, t14,
 let M11, M12, M13, M14,
     M21, M22, M23, M24,
     M31, M32, M33, M34,
-    M41, M42, M43, M44: Float32Array;
+    M41, M42, M43, M44: FloatArray;
 
 
-const MATRIX4x4_ARRAYS: Array<FloatArray> = [
+const MATRIX4x4_ARRAYS: Float16 = [
     null, null, null, null,
     null, null, null, null,
     null, null, null, null,
     null, null, null, null
 ];
 
-export const matrix4x4buffer = new FloatBuffer(
-    MATRIX4x4_ARRAYS,
-    () => {[
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ] = MATRIX4x4_ARRAYS;
+const __buffer_slice: Float16 = [
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null
+];
+
+const __buffer_entry: Num16 = [
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0
+];
+
+class Buffer4x4 extends Buffer<DIM._16D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged(): void {
+        [
+            M11, M12, M13, M14,
+            M21, M22, M23, M24,
+            M31, M32, M33, M34,
+            M41, M42, M43, M44
+        ] = MATRIX4x4_ARRAYS;
+
         update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
-    });
+    }
+}
+
+export const matrix4x4buffer = new Buffer4x4(MATRIX4x4_ARRAYS);
 
 const get = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15): number => MATRIX4x4_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15, value: number): void => {MATRIX4x4_ARRAYS[dim][a] = value};
@@ -292,11 +314,7 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
     M21[a] = -sin;
 };
 
-
-
-const baseFunctions4x4: IBaseFunctions = {
-    buffer: matrix4x4buffer,
-
+const matrixFunctions: IMatrixRotationFunctions = {
     get,
     set,
     set_to,
@@ -306,11 +324,7 @@ const baseFunctions4x4: IBaseFunctions = {
     equals,
 
     invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions4x4: IBaseArithmaticFunctions = {
-    ...baseFunctions4x4,
+    invert_in_place,
 
     add,
     add_in_place,
@@ -325,38 +339,82 @@ const baseArithmaticFunctions4x4: IBaseArithmaticFunctions = {
     scale_in_place,
 
     multiply,
-    multiply_in_place
-};
-
-const matrixFunctions4x4: IMatrixFunctions = {
-    ...baseArithmaticFunctions4x4,
+    multiply_in_place,
 
     is_identity,
     set_to_identity,
 
     transpose,
     transpose_in_place,
-};
-
-const rotationMatrixFunctions4x4: IRotationMatrixFunctions = {
-    ...matrixFunctions4x4,
 
     set_rotation_around_x,
     set_rotation_around_y,
     set_rotation_around_z
 };
 
-export interface IMatrix4x4 extends IRotationMatrix {
+export default class Matrix4x4
+    extends RotationMatrix
+    implements IMatrix4x4
+{
+    readonly _ = matrixFunctions;
+    readonly _buffer = matrix4x4buffer;
+
+    set m11(m11: number) {M11[this.id] = m11}
+    set m12(m12: number) {M12[this.id] = m12}
+    set m13(m13: number) {M13[this.id] = m13}
+    set m14(m14: number) {M14[this.id] = m14}
+
+    set m21(m21: number) {M21[this.id] = m21}
+    set m22(m22: number) {M22[this.id] = m22}
+    set m23(m23: number) {M23[this.id] = m23}
+    set m24(m24: number) {M24[this.id] = m24}
+
+    set m31(m31: number) {M31[this.id] = m31}
+    set m32(m32: number) {M32[this.id] = m32}
+    set m33(m33: number) {M33[this.id] = m33}
+    set m34(m34: number) {M34[this.id] = m34}
+
+    set m41(m41: number) {M41[this.id] = m41}
+    set m42(m42: number) {M42[this.id] = m42}
+    set m43(m43: number) {M43[this.id] = m43}
+    set m44(m44: number) {M44[this.id] = m44}
+
+    get m11(): number {return M11[this.id]}
+    get m12(): number {return M12[this.id]}
+    get m13(): number {return M13[this.id]}
+    get m14(): number {return M14[this.id]}
+
+    get m21(): number {return M21[this.id]}
+    get m22(): number {return M22[this.id]}
+    get m23(): number {return M23[this.id]}
+    get m24(): number {return M24[this.id]}
+
+    get m31(): number {return M31[this.id]}
+    get m32(): number {return M32[this.id]}
+    get m33(): number {return M33[this.id]}
+    get m34(): number {return M34[this.id]}
+
+    get m41(): number {return M41[this.id]}
+    get m42(): number {return M42[this.id]}
+    get m43(): number {return M43[this.id]}
+    get m44(): number {return M44[this.id]}
+
     setTo(
         m11: number, m12: number, m13: number, m14: number,
         m21: number, m22: number, m23: number, m24: number,
         m31: number, m32: number, m33: number, m34: number,
-        m41: number, m42: number, m43: number, m44: number,
-    ): this;
-}
+        m41: number, m42: number, m43: number, m44: number
+    ): this {
+        set_to(
+            this.id,
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44
+        );
 
-export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
-    readonly _ = rotationMatrixFunctions4x4;
+        return this;
+    }
 }
 
 export const mat4x4 = (
@@ -365,7 +423,8 @@ export const mat4x4 = (
     m31: number = 0, m32: number = 0, m33: number = 0, m34: number = 0,
     m41: number = 0, m42: number = 0, m43: number = 0, m44: number = 0
 ): Matrix4x4 => new Matrix4x4(matrix4x4buffer.tempID).setTo(
-    m11, m12, m13,
-    m21, m22, m23,
-    m31, m32, m33
+    m11, m12, m13, m14,
+    m21, m22, m23, m24,
+    m31, m32, m33, m34,
+    m41, m42, m43, m44
 );

@@ -1,6 +1,5 @@
-import {Mesh, MeshInputs, MeshOptions} from "./mesh.js";
+import {InputPositions, Mesh, MeshInputs, MeshOptions} from "./mesh.js";
 import {ATTRIBUTE, COLOR_SOURCING, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
-import {InputPositions} from "./attribute.js";
 
 // Cube inputs in quads:
 // =====================
@@ -27,7 +26,7 @@ const mesh_inputs  = new MeshInputs(
             ],
         ],
 
-        // Quad face vertex-indices:
+        // Quad face vertex-index_arrays:
         [
             [0, 1, 5, 4, 0, 3], // Vertex 1 of each quad
             [1, 5, 4, 0, 1, 2], // Vertex 2 of each quad

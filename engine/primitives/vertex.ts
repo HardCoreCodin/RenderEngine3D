@@ -4,7 +4,7 @@ import {IAllocatorSizes, Vector2DAllocator, Vector3DAllocator, Vector4DAllocator
 import {ATTRIBUTE} from "../constants.js";
 import {Vertices} from "./attribute.js";
 import {defaultVector2DAllocator, IUV, uv, UV} from "../math/vec2.js";
-import {IColor, IDirection, IPosition} from "../math/vec.js";
+import {IDirection, IPosition, IColor} from "../math/interfaces/classes.js";
 
 export class Vertex<
         Position extends IPosition,

@@ -314,7 +314,7 @@
 // //     //    the film back (it's width and height).
 // //     //    In the virtual world, the projection plane is the near clipping plane,
 // //     //    and
-// //     //    it is the ratio between the size of the
+// //     //    it is the ratio between the length of the
 // //     //    film back (which sits on the focal plane). distance of the lens of the camera to the dimensions of the film back
 // //     //
 // //     //    In the virtual space, it is the ratio between the distance of the projection plane to it's dimensions.

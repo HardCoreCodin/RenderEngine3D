@@ -1,12 +1,13 @@
-import { Faces3D, Vertices3D, InputColors, InputNormals, InputPositions, InputUVs } from "./attribute.js";
+import { Faces3D, Vertices3D } from "./attribute.js";
 import { AllocatorSizes } from "../allocators.js";
+import { num2, num3, num4 } from "../factories.js";
 export default class Mesh {
     constructor(inputs, options = new MeshOptions()) {
         this.inputs = inputs;
         this.options = options;
         inputs.init();
         options.sanitize(this.inputs);
-        this.face_count = inputs.position.faces[0].length;
+        this.face_count = inputs.position.faces_vertices[0].length;
         this.vertex_count = inputs.position.vertices[0].length;
         this.face = new Faces3D(this);
         this.vertex = new Vertices3D(this);
@@ -44,7 +45,7 @@ export default class Mesh {
         this.vertex.faces.init(allocators.vertex_faces, this.inputs.vertex_faces.size);
         this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
         this.face.init(allocators, this.face_count, this.options.face_attributes);
-        this.face.vertices.load(positions.faces);
+        this.face.vertices.load(positions.faces_vertices);
         // Load:
         this.vertex.positions.load(positions, this.face.vertices);
         if (this.options.include_uvs)
@@ -155,6 +156,115 @@ export class MeshOptions {
             this.include_uvs = false;
     }
 }
+export class InputAttribute {
+    constructor(face_type = 3 /* TRIANGLE */, vertices, faces_vertices) {
+        this.face_type = face_type;
+        this.vertices = vertices;
+        this.faces_vertices = faces_vertices;
+        this.dim = 3 /* _3D */;
+        if (!faces_vertices)
+            switch (face_type) {
+                case 3 /* TRIANGLE */:
+                    this.faces_vertices = num3();
+                    break;
+                case 4 /* QUAD */:
+                    this.faces_vertices = num4();
+                    break;
+                default:
+                    throw `Invalid face type ${face_type}! Only supports triangles and quads.`;
+            }
+        if (!vertices)
+            this.vertices = Array(this.dim);
+        switch (this.dim) {
+            case 2 /* _2D */:
+                this.vertices = num2();
+                break;
+            case 3 /* _3D */:
+                this.vertices = num3();
+                break;
+            default:
+                throw `Invalid vertex dimension ${this.dim}! Only supports 2D or 3D.`;
+        }
+    }
+    triangulate() {
+        if (this.face_type === 4 /* QUAD */) {
+            const v4 = this.faces_vertices.pop();
+            const quad_count = v4.length;
+            const [v1, v2, v3] = this.faces_vertices;
+            v1.length *= 2;
+            v2.length *= 2;
+            v3.length *= 2;
+            for (let quad_id = 0; quad_id < quad_count; quad_id++) {
+                v1[quad_id + quad_count] = v1[quad_id];
+                v2[quad_id + quad_count] = v3[quad_id];
+                v3[quad_id + quad_count] = v4[quad_id];
+            }
+            this.face_type = 3 /* TRIANGLE */;
+        }
+    }
+    getValue(value, is_index) {
+        let error;
+        if (typeof value === "number") {
+            if (Number.isFinite(value)) {
+                if (is_index) {
+                    if (Number.isInteger(value))
+                        return value;
+                    else
+                        error = `${value} is not an integer`;
+                }
+                else
+                    return value;
+            }
+            else
+                error = `${value} is not a finite number`;
+        }
+        else if (typeof value === "string")
+            return this.getValue(+value, is_index);
+        else
+            error = `Got ${typeof value} ${value} instead or a number or a string`;
+        throw `Invalid ${this} ${is_index ? 'index' : 'value'}! ${error}`;
+    }
+    checkInputSize(input_size, is_index) {
+        const required_size = is_index ? this.face_type : this.dim;
+        if (input_size !== required_size)
+            throw `Invalid ${this} ${is_index ? 'index_arrays' : 'values'} input! Got ${input_size} ${is_index ? 'vertices per face' : 'dimensions'} instead of ${required_size}`;
+    }
+    pushVertex(vertex) {
+        this.checkInputSize(vertex.length, false);
+        for (const [component_num, component_value] of vertex.entries())
+            this.vertices[component_num].push(this.getValue(component_value, false));
+    }
+    pushFace(face) {
+        this.checkInputSize(face.length, true);
+        for (const [vertex_num, vertex_index] of face.entries())
+            this.faces_vertices[vertex_num].push(this.getValue(vertex_index, true));
+    }
+}
+export class InputPositions extends InputAttribute {
+    constructor() {
+        super(...arguments);
+        this.id = 1 /* position */;
+    }
+}
+export class InputNormals extends InputAttribute {
+    constructor() {
+        super(...arguments);
+        this.id = 2 /* normal */;
+    }
+}
+export class InputColors extends InputAttribute {
+    constructor() {
+        super(...arguments);
+        this.id = 4 /* color */;
+    }
+}
+export class InputUVs extends InputAttribute {
+    constructor() {
+        super(...arguments);
+        this.id = 8 /* uv */;
+        this.dim = 2 /* _2D */;
+    }
+}
 export class MeshInputs {
     constructor(face_type = 3 /* TRIANGLE */, included = 1 /* position */, position = new InputPositions(face_type), normal = new InputNormals(face_type), color = new InputColors(face_type), uv = new InputUVs(face_type)) {
         this.face_type = face_type;
@@ -189,7 +299,7 @@ class InputVertexFaces {
             this.number_arrays[i] = [];
         this.size = 0;
         let vertex_id, face_id;
-        for (const face_vertex_ids of inputs.faces) {
+        for (const face_vertex_ids of inputs.faces_vertices) {
             for ([face_id, vertex_id] of face_vertex_ids.entries()) {
                 this.number_arrays[vertex_id].push(face_id);
                 this.size++;

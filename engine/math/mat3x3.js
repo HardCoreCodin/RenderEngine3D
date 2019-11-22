@@ -1,7 +1,7 @@
-import { PRECISION_DIGITS } from "../constants.js";
+import { Buffer } from "../allocators.js";
 import { RotationMatrix } from "./mat.js";
+import { PRECISION_DIGITS } from "../constants.js";
 import { update_matrix3x3_arrays } from "./vec3.js";
-import { FloatBuffer } from "../allocators.js";
 let t11, t12, t13, t21, t22, t23, t31, t32, t33;
 let M11, M12, M13, M21, M22, M23, M31, M32, M33;
 const MATRIX3x3_ARRAYS = [
@@ -9,14 +9,32 @@ const MATRIX3x3_ARRAYS = [
     null, null, null,
     null, null, null
 ];
-export const matrix3x3buffer = new FloatBuffer(MATRIX3x3_ARRAYS, () => {
-    [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ] = MATRIX3x3_ARRAYS;
-    update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
-});
+const __buffer_slice = [
+    null, null, null,
+    null, null, null,
+    null, null, null
+];
+const __buffer_entry = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+];
+class Buffer3x3 extends Buffer {
+    constructor() {
+        super(...arguments);
+        this._entry = __buffer_entry;
+        this._slice = __buffer_slice;
+    }
+    _onBuffersChanged() {
+        [
+            M11, M12, M13,
+            M21, M22, M23,
+            M31, M32, M33
+        ] = MATRIX3x3_ARRAYS;
+        update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
+    }
+}
+export const matrix3x3buffer = new Buffer3x3(MATRIX3x3_ARRAYS);
 const get = (a, dim) => MATRIX3x3_ARRAYS[dim][a];
 const set = (a, dim, value) => { MATRIX3x3_ARRAYS[dim][a] = value; };
 const set_to = (a, m11, m12, m13, m21, m22, m23, m31, m32, m33) => {
@@ -251,8 +269,7 @@ const set_rotation_around_z = (a, cos, sin) => {
     M12[a] = sin;
     M21[a] = -sin;
 };
-const baseFunctions3x3 = {
-    buffer: matrix3x3buffer,
+const matrixFunctions = {
     get,
     set,
     set_to,
@@ -260,9 +277,8 @@ const baseFunctions3x3 = {
     set_all_to,
     equals,
     invert,
-    invert_in_place
-};
-const baseArithmaticFunctions3x3 = Object.assign(Object.assign({}, baseFunctions3x3), { add,
+    invert_in_place,
+    add,
     add_in_place,
     subtract,
     subtract_in_place,
@@ -271,18 +287,42 @@ const baseArithmaticFunctions3x3 = Object.assign(Object.assign({}, baseFunctions
     scale,
     scale_in_place,
     multiply,
-    multiply_in_place });
-const matrixFunctions3x3 = Object.assign(Object.assign({}, baseArithmaticFunctions3x3), { is_identity,
+    multiply_in_place,
+    is_identity,
     set_to_identity,
     transpose,
-    transpose_in_place });
-const rotationMatrixFunctions3x3 = Object.assign(Object.assign({}, matrixFunctions3x3), { set_rotation_around_x,
+    transpose_in_place,
+    set_rotation_around_x,
     set_rotation_around_y,
-    set_rotation_around_z });
+    set_rotation_around_z
+};
 export default class Matrix3x3 extends RotationMatrix {
     constructor() {
         super(...arguments);
-        this._ = rotationMatrixFunctions3x3;
+        this._ = matrixFunctions;
+        this._buffer = matrix3x3buffer;
+    }
+    set m11(m11) { M11[this.id] = m11; }
+    set m12(m12) { M12[this.id] = m12; }
+    set m13(m13) { M13[this.id] = m13; }
+    set m21(m21) { M21[this.id] = m21; }
+    set m22(m22) { M22[this.id] = m22; }
+    set m23(m23) { M23[this.id] = m23; }
+    set m31(m31) { M31[this.id] = m31; }
+    set m32(m32) { M32[this.id] = m32; }
+    set m33(m33) { M33[this.id] = m33; }
+    get m11() { return M11[this.id]; }
+    get m12() { return M12[this.id]; }
+    get m13() { return M13[this.id]; }
+    get m21() { return M21[this.id]; }
+    get m22() { return M22[this.id]; }
+    get m23() { return M23[this.id]; }
+    get m31() { return M31[this.id]; }
+    get m32() { return M32[this.id]; }
+    get m33() { return M33[this.id]; }
+    setTo(m11, m12, m13, m21, m22, m23, m31, m32, m33) {
+        set_to(this.id, m11, m12, m13, m21, m22, m23, m31, m32, m33);
+        return this;
     }
 }
 export const mat3x3 = (m11 = 0, m12 = 0, m13 = 0, m21 = 0, m22 = 0, m23 = 0, m31 = 0, m32 = 0, m33 = 0) => new Matrix3x3(matrix3x3buffer.tempID).setTo(m11, m12, m13, m21, m22, m23, m31, m32, m33);

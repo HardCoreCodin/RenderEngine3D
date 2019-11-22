@@ -1,6 +1,6 @@
-import { Color, TexCoords, Direction, Position } from "./vec.js";
+import { Position, Interpolatable, CrossedDirection } from "./vec.js";
 import { PRECISION_DIGITS } from "../constants.js";
-import { FloatBuffer } from "../allocators.js";
+import { Buffer } from "../allocators.js";
 let t_x, t_y, t_z, t_n;
 let X, Y, Z, M11, M12, M13, M21, M22, M23, M31, M32, M33;
 export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS) => [
@@ -8,10 +8,18 @@ export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS) => [
     M21, M22, M23,
     M31, M32, M33
 ] = MATRIX3x3_ARRAYS;
-const VECTOR3D_ARRAYS = [null, null];
-export const vector3Dbuffer = new FloatBuffer(VECTOR3D_ARRAYS, () => [
-    X, Y, Z
-] = VECTOR3D_ARRAYS);
+const __buffer_entry = [0, 0, 0];
+const __buffer_slice = [null, null, null];
+const VECTOR3D_ARRAYS = [null, null, null];
+class Buffer3D extends Buffer {
+    constructor() {
+        super(...arguments);
+        this._entry = __buffer_entry;
+        this._slice = __buffer_slice;
+        this._onBuffersChanged = () => [X, Y, Z] = VECTOR3D_ARRAYS;
+    }
+}
+export const vector3Dbuffer = new Buffer3D(VECTOR3D_ARRAYS);
 const get = (a, dim) => VECTOR3D_ARRAYS[dim][a];
 const set = (a, dim, value) => { VECTOR3D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z) => {
@@ -137,18 +145,14 @@ const multiply_in_place = (a, b) => {
     Y[a] = t_x * M12[b] + t_y * M22[b] + t_z * M32[b];
     Z[a] = t_x * M13[b] + t_y * M23[b] + t_z * M33[b];
 };
-const baseFunctions3D = {
-    buffer: vector3Dbuffer,
+const baseFunctions = {
     get,
     set,
     set_to,
     set_from,
     set_all_to,
     equals,
-    invert,
-    invert_in_place
-};
-const baseArithmaticFunctions3D = Object.assign(Object.assign({}, baseFunctions3D), { add,
+    add,
     add_in_place,
     subtract,
     subtract_in_place,
@@ -156,53 +160,60 @@ const baseArithmaticFunctions3D = Object.assign(Object.assign({}, baseFunctions3
     divide_in_place,
     scale,
     scale_in_place,
-    multiply,
+    invert,
+    invert_in_place,
+    lerp
+};
+const vectorFunctions = Object.assign(Object.assign({}, baseFunctions), { multiply,
     multiply_in_place });
-const vectorFunctions3D = Object.assign(Object.assign({}, baseArithmaticFunctions3D), { distance,
-    distance_squared,
-    length,
+const positionFunctions = Object.assign(Object.assign({}, vectorFunctions), { distance,
+    distance_squared });
+const directionFunctions = Object.assign(Object.assign({}, vectorFunctions), { length,
     length_squared,
     normalize,
     normalize_in_place,
     dot,
-    lerp });
-export class UVW extends TexCoords {
+    cross,
+    cross_in_place });
+export class UV3D extends Interpolatable {
     constructor() {
         super(...arguments);
-        this._ = vectorFunctions3D;
+        this._ = baseFunctions;
+        this._buffer = vector3Dbuffer;
     }
     setTo(u, v, w) {
-        this._.set_to(this.id, u, v, w);
+        set_to(this.id, u, v, w);
         return this;
     }
+    set u(u) { X[this.id] = u; }
+    set v(v) { Y[this.id] = v; }
     set w(w) { Z[this.id] = w; }
+    get u() { return X[this.id]; }
+    get v() { return Y[this.id]; }
     get w() { return Z[this.id]; }
 }
-export class RGB extends Color {
+export class Color3D extends Interpolatable {
     constructor() {
         super(...arguments);
-        this._ = vectorFunctions3D;
+        this._ = baseFunctions;
+        this._buffer = vector3Dbuffer;
     }
     setTo(r, g, b) {
-        this._.set_to(this.id, r, g, b);
+        set_to(this.id, r, g, b);
         return this;
     }
+    set r(r) { X[this.id] = r; }
+    set g(g) { Y[this.id] = g; }
+    set b(b) { Z[this.id] = b; }
+    get r() { return X[this.id]; }
+    get g() { return Y[this.id]; }
+    get b() { return Z[this.id]; }
 }
-export class Direction3D extends Direction {
+export class Direction3D extends CrossedDirection {
     constructor() {
         super(...arguments);
-        this._ = vectorFunctions3D;
-    }
-    cross(other) {
-        cross_in_place(this.id, other.id);
-        return this;
-    }
-    ;
-    crossedWith(other, out) {
-        if (out.is(this))
-            return out.cross(other);
-        cross(this.id, other.id, out.id);
-        return out;
+        this._ = directionFunctions;
+        this._buffer = vector3Dbuffer;
     }
     setTo(x, y, z) {
         this._.set_to(this.id, x, y, z);
@@ -210,7 +221,7 @@ export class Direction3D extends Direction {
     }
     set x(x) { X[this.id] = x; }
     set y(y) { Y[this.id] = y; }
-    set z(z) { Y[this.id] = z; }
+    set z(z) { Z[this.id] = z; }
     get x() { return X[this.id]; }
     get y() { return Y[this.id]; }
     get z() { return Z[this.id]; }
@@ -218,7 +229,8 @@ export class Direction3D extends Direction {
 export class Position3D extends Position {
     constructor() {
         super(...arguments);
-        this._ = vectorFunctions3D;
+        this._ = positionFunctions;
+        this._buffer = vector3Dbuffer;
         this._dir = dir3D;
     }
     setTo(x, y, z) {
@@ -238,6 +250,6 @@ export const pos3D = (x = 0, y = 0, z = 0) => x instanceof Direction3D ?
 export const dir3D = (x = 0, y = 0, z = 0) => x instanceof Position3D ?
     new Direction3D(x.buffer_offset, x.array_index) :
     new Direction3D(vector3Dbuffer.tempID).setTo(x, y, z);
-export const rgb = (r = 0, g = 0, b = 0) => new RGB(vector3Dbuffer.tempID).setTo(r, g, b);
-export const uvw = (u = 0, v = 0, w = 0) => new UVW(vector3Dbuffer.tempID).setTo(u, v, w);
+export const rgb = (r = 0, g = 0, b = 0) => new Color3D(vector3Dbuffer.tempID).setTo(r, g, b);
+export const uvw = (u = 0, v = 0, w = 0) => new UV3D(vector3Dbuffer.tempID).setTo(u, v, w);
 //# sourceMappingURL=vec3.js.map

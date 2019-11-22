@@ -1,43 +1,39 @@
-import Matrix3x3, {IMatrix3x3} from "./mat3x3.js";
-import {
-    Color,
-    TexCoords,
-    Direction,
-    Position,
-    ITexCoords,
-    IColor,
-    IVectorFunctions,
-    ITransformableVector
-} from "./vec.js";
-import {PRECISION_DIGITS} from "../constants.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatArray} from "../types.js";
-import {FloatBuffer} from "../allocators.js";
+import Matrix3x3 from "./mat3x3.js";
+import {Position, Interpolatable, CrossedDirection} from "./vec.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
+import {FloatArray, Float9, Float3, Num3} from "../types.js";
+import {Buffer} from "../allocators.js";
+import {ICrossFunctions, IInterpolateFunctions, IPositionFunctions, IVectorFunctions} from "./interfaces/functions.js";
+import {IColor3D, IDirection3D, IPosition3D, IUV3D} from "./interfaces/classes.js";
 
-let t_x, 
-    t_y, 
-    t_z, 
+let t_x,
+    t_y,
+    t_z,
     t_n: number;
 
 let X, Y, Z,
     M11, M12, M13,
     M21, M22, M23,
-    M31, M32, M33 : Float32Array;
+    M31, M32, M33 : FloatArray;
 
-export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS: Array<FloatArray>) => [
+export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS: Float9) => [
     M11, M12, M13,
     M21, M22, M23,
     M31, M32, M33
 ] = MATRIX3x3_ARRAYS;
 
-const VECTOR3D_ARRAYS: Array<FloatArray> = [null, null];
-export const vector3Dbuffer = new FloatBuffer(
-    VECTOR3D_ARRAYS,
-    () => [
-        X, Y, Z
-    ] = VECTOR3D_ARRAYS
-);
+const __buffer_entry: Num3 = [0, 0, 0];
+const __buffer_slice: Float3 = [null, null, null];
+const VECTOR3D_ARRAYS: Float3 = [null, null, null];
 
+class Buffer3D extends Buffer<DIM._3D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged = () => [X, Y, Z] = VECTOR3D_ARRAYS;
+}
+
+export const vector3Dbuffer = new Buffer3D(VECTOR3D_ARRAYS);
 
 const get = (a: number, dim: 0|1|2): number => VECTOR3D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2, value: number): void => {VECTOR3D_ARRAYS[dim][a] = value};
@@ -220,23 +216,15 @@ const multiply_in_place = (a: number, b: number) : void => {
 };
 
 
-const baseFunctions3D: IBaseFunctions = {
-    buffer: vector3Dbuffer,
-
+const baseFunctions: IInterpolateFunctions = {
     get,
     set,
+
     set_to,
     set_from,
     set_all_to,
 
     equals,
-
-    invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions3D: IBaseArithmaticFunctions = {
-    ...baseFunctions3D,
 
     add,
     add_in_place,
@@ -250,15 +238,28 @@ const baseArithmaticFunctions3D: IBaseArithmaticFunctions = {
     scale,
     scale_in_place,
 
-    multiply,
-    multiply_in_place
+    invert,
+    invert_in_place,
+
+    lerp
 };
 
-const vectorFunctions3D: IVectorFunctions = {
-    ...baseArithmaticFunctions3D,
+const vectorFunctions: IVectorFunctions = {
+    ...baseFunctions,
+
+    multiply,
+    multiply_in_place,
+};
+
+const positionFunctions: IPositionFunctions = {
+    ...vectorFunctions,
 
     distance,
-    distance_squared,
+    distance_squared
+};
+
+const directionFunctions: ICrossFunctions = {
+    ...vectorFunctions,
 
     length,
     length_squared,
@@ -267,83 +268,56 @@ const vectorFunctions3D: IVectorFunctions = {
     normalize_in_place,
 
     dot,
-    lerp
+    cross,
+    cross_in_place
 };
 
-export interface IUVW
-    extends ITexCoords
+export class UV3D extends Interpolatable implements IUV3D
 {
-    setTo(u: number, v: number, w);
-
-    w: number;
-}
-export class UVW
-    extends TexCoords
-    implements IUVW
-{
-    readonly _ = vectorFunctions3D;
+    readonly _ = baseFunctions;
+    readonly _buffer = vector3Dbuffer;
 
     setTo(u: number, v: number, w: number): this {
-        this._.set_to(this.id, u, v, w);
+        set_to(this.id, u, v, w);
 
         return this;
     }
 
+    set u(u: number) {X[this.id] = u}
+    set v(v: number) {Y[this.id] = v}
     set w(w: number) {Z[this.id] = w}
+
+    get u(): number {return X[this.id]}
+    get v(): number {return Y[this.id]}
     get w(): number {return Z[this.id]}
 }
 
-export interface IRGB
-    extends IColor
+export class Color3D extends Interpolatable implements IColor3D
 {
-    setTo(r: number, g: number, b: number);
-}
-
-export class RGB
-    extends Color
-    implements IRGB
-{
-    readonly _ = vectorFunctions3D;
+    readonly _ = baseFunctions;
+    readonly _buffer = vector3Dbuffer;
 
     setTo(r: number, g: number, b: number): this {
-        this._.set_to(this.id, r, g, b);
+        set_to(this.id, r, g, b);
 
         return this;
     }
+
+    set r(r: number) {X[this.id] = r}
+    set g(g: number) {Y[this.id] = g}
+    set b(b: number) {Z[this.id] = b}
+
+    get r(): number {return X[this.id]}
+    get g(): number {return Y[this.id]}
+    get b(): number {return Z[this.id]}
 }
 
-
-export interface I3D
-    extends ITransformableVector<IMatrix3x3>
+export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirection3D
 {
-    setTo(x: number, y: number, z: number): this;
+    readonly _ = directionFunctions;
+    readonly _buffer = vector3Dbuffer;
 
-    x: number;
-    y: number;
-    z: number;
-}
-export class Direction3D
-    extends Direction<Matrix3x3>
-    implements I3D
-{
-    readonly _ = vectorFunctions3D;
-
-    cross(other: this): this {
-        cross_in_place(this.id, other.id);
-
-        return this;
-    };
-
-    crossedWith(other: this, out: this): this {
-        if (out.is(this))
-            return out.cross(other);
-
-        cross(this.id, other.id, out.id);
-
-        return out;
-    }
-
-    setTo(x: number, y: number, z: number): this {
+    setTo(x: number, y: number, z:number): this {
         this._.set_to(this.id, x, y, z);
 
         return this;
@@ -351,19 +325,19 @@ export class Direction3D
 
     set x(x: number) {X[this.id] = x}
     set y(y: number) {Y[this.id] = y}
-    set z(z: number) {Y[this.id] = z}
+    set z(z: number) {Z[this.id] = z}
 
     get x(): number {return X[this.id]}
     get y(): number {return Y[this.id]}
     get z(): number {return Z[this.id]}
 }
 
-export class Position3D
-    extends Position<Matrix3x3, Direction3D>
-    implements I3D
+export class Position3D extends Position<Matrix3x3, Direction3D> implements IPosition3D
 {
-    readonly _ = vectorFunctions3D;
-    readonly _dir = dir3D;
+    readonly _ = positionFunctions;
+    readonly _buffer = vector3Dbuffer;
+
+    protected readonly _dir = dir3D;
 
     setTo(x: number, y: number, z: number): this {
         this._.set_to(this.id, x, y, z);
@@ -400,10 +374,10 @@ export const rgb = (
     r: number = 0,
     g: number = 0,
     b: number = 0
-): RGB => new RGB(vector3Dbuffer.tempID).setTo(r, g, b);
+): Color3D => new Color3D(vector3Dbuffer.tempID).setTo(r, g, b);
 
 export const uvw = (
     u: number = 0,
     v: number = 0,
     w: number = 0
-): UVW => new UVW(vector3Dbuffer.tempID).setTo(u, v, w);
+): UV3D => new UV3D(vector3Dbuffer.tempID).setTo(u, v, w);

@@ -1,9 +1,19 @@
-import {PRECISION_DIGITS} from "../constants.js";
-import {Direction, ITexCoords, ITransformableVector, IVectorFunctions, Position, Vector} from "./vec.js";
-import Matrix2x2, {IMatrix2x2} from "./mat2x2.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatBuffer} from "../allocators.js";
-import {FloatArray} from "../types.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
+import {Direction, Interpolatable, Position} from "./vec.js";
+import Matrix2x2 from "./mat2x2.js";
+import {Buffer} from "../allocators.js";
+import {Float2, Float4, FloatArray, Num2} from "../types.js";
+import {
+    IDirectionFunctions,
+    IInterpolateFunctions,
+    IPositionFunctions,
+    IVectorFunctions
+} from "./interfaces/functions.js";
+import {
+    IDirection2D,
+    IPosition2D,
+    IUV2D,
+} from "./interfaces/classes.js";
 
 let t_x,
     t_y,
@@ -13,56 +23,23 @@ let X, Y,
     M11, M12,
     M21, M22: FloatArray;
 
-export const update_matrix2x2_arrays = (MATRIX2x2_ARRAYS: Array<FloatArray>) => [
+export const update_matrix2x2_arrays = (MATRIX2x2_ARRAYS: Float4) => [
     M11, M12,
     M21, M22
 ] = MATRIX2x2_ARRAYS;
 
-const VECTOR2D_ARRAYS: Array<FloatArray> = [null, null];
-export const vector2Dbuffer = new FloatBuffer(
-    VECTOR2D_ARRAYS,
-    () => [
-        X, Y
-    ] = VECTOR2D_ARRAYS
-);
+const __buffer_entry: Num2 = [0, 0];
+const __buffer_slice: Float2 = [null, null];
+const VECTOR2D_ARRAYS: Float2 = [null, null];
 
-//
-// const DIMENTION: DIM = DIM._2D;
-// const TEMPORARY_STORAGE_LENGTH = CACHE_LINE_SIZE * 16;
-// // const VECTOR2D_BUFFERS: [Float32Array, Float32Array] = [null, null];
-// const BUFFERS_BEFORE_INIT: [Float32Array, Float32Array] = [null, null];
-// let BUFFER_LENGTH = 0;
-//
-// let temporary_storage_offset = 0;
-// let current_storage_offset = TEMPORARY_STORAGE_LENGTH;
-// export const allocateTemporaryArray2D = (): number =>
-//     temporary_storage_offset++ % TEMPORARY_STORAGE_LENGTH;
-//
-// let offset_before_allocation: number;
-// export const allocateArray2D = (length: number): number => {
-//     offset_before_allocation = current_storage_offset;
-//     current_storage_offset += length;
-//
-//     if (current_storage_offset > BUFFER_LENGTH)
-//         throw '2D Buffer overflow!';
-//
-//     return offset_before_allocation;
-// };
-//
-// let i: number;
-// export const initBuffer2D = (length: number): void => {
-//     BUFFER_LENGTH = TEMPORARY_STORAGE_LENGTH + length;
-//
-//     for (i= 0; i< DIMENTION; i++)
-//         BUFFERS_BEFORE_INIT[i] = VECTOR2D_BUFFERS[i];
-//
-//     X = VECTOR2D_BUFFERS[0] = new Float32Array(BUFFER_LENGTH);
-//     Y = VECTOR2D_BUFFERS[1] = new Float32Array(BUFFER_LENGTH);
-//
-//     if (BUFFERS_BEFORE_INIT[0] !== null)
-//         for (i = 0; i < DIMENTION; i++)
-//             VECTOR2D_BUFFERS[i].set(BUFFERS_BEFORE_INIT[i]);
-// };
+class Buffer2D extends Buffer<DIM._2D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged = () => [X, Y] = VECTOR2D_ARRAYS;
+}
+
+export const vector2Dbuffer = new Buffer2D(VECTOR2D_ARRAYS);
 
 const get = (a: number, dim: 0|1): number => VECTOR2D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1, value: number): void => {VECTOR2D_ARRAYS[dim][a] = value};
@@ -200,23 +177,15 @@ const multiply_in_place = (a: number, b: number): void => {
     Y[a] = t_x*M12[b] + t_y*M22[b];
 };
 
-const baseFunctions2D: IBaseFunctions = {
-    buffer: vector2Dbuffer,
-
+const baseFunctions: IInterpolateFunctions = {
     get,
     set,
+
     set_to,
     set_from,
     set_all_to,
 
     equals,
-
-    invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions2D: IBaseArithmaticFunctions = {
-    ...baseFunctions2D,
 
     add,
     add_in_place,
@@ -230,15 +199,28 @@ const baseArithmaticFunctions2D: IBaseArithmaticFunctions = {
     scale,
     scale_in_place,
 
-    multiply,
-    multiply_in_place
+    invert,
+    invert_in_place,
+
+    lerp
 };
 
-const vectorFunctions2D: IVectorFunctions = {
-    ...baseArithmaticFunctions2D,
+const vectorFunctions: IVectorFunctions = {
+    ...baseFunctions,
+
+    multiply,
+    multiply_in_place,
+};
+
+const positionFunctions: IPositionFunctions = {
+    ...vectorFunctions,
 
     distance,
-    distance_squared,
+    distance_squared
+};
+
+const directionFunctions: IDirectionFunctions = {
+    ...vectorFunctions,
 
     length,
     length_squared,
@@ -246,23 +228,16 @@ const vectorFunctions2D: IVectorFunctions = {
     normalize,
     normalize_in_place,
 
-    dot,
-    lerp
+    dot
 };
 
-export interface IUV
-    extends ITexCoords
+export class UV2D extends Interpolatable implements IUV2D
 {
-    setTo(u: number, v: number);
-}
-export class UV
-    extends Vector
-    implements IUV
-{
-    readonly _ = vectorFunctions2D;
+    readonly _ = baseFunctions;
+    readonly _buffer = vector2Dbuffer;
 
     setTo(u: number, v: number): this {
-        this._.set_to(this.id, u, v);
+        set_to(this.id, u, v);
 
         return this;
     }
@@ -274,19 +249,10 @@ export class UV
     get v(): number {return Y[this.id]}
 }
 
-export interface I2D
-    extends ITransformableVector<IMatrix2x2>
+export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
 {
-    setTo(x: number, y: number): this;
-
-    x: number;
-    y: number;
-}
-export class Direction2D
-    extends Direction<Matrix2x2>
-    implements I2D
-{
-    readonly _ = vectorFunctions2D;
+    readonly _ = directionFunctions;
+    readonly _buffer = vector2Dbuffer;
 
     setTo(x: number, y: number): this {
         this._.set_to(this.id, x, y);
@@ -300,11 +266,12 @@ export class Direction2D
     get x(): number {return X[this.id]}
     get y(): number {return Y[this.id]}
 }
-export class Position2D
-    extends Position<Matrix2x2, Direction2D>
-    implements I2D
+
+export class Position2D extends Position<Matrix2x2, Direction2D> implements IPosition2D
 {
-    readonly _ = vectorFunctions2D;
+    readonly _ = positionFunctions;
+    readonly _buffer = vector2Dbuffer;
+
     protected readonly _dir = dir2D;
 
     setTo(x: number, y: number): this {
@@ -320,12 +287,12 @@ export class Position2D
     get y(): number {return Y[this.id]}
 }
 
-export const pos2D = (
-    x: number|Direction2D = 0,
-    y: number = 0
-): Position2D => x instanceof Direction2D ?
-    new Position2D(x.buffer_offset, x.array_index) :
-    new Position2D(vector2Dbuffer.tempID).setTo(x, y);
+// export const pos2D = (
+//     x: number|Direction2D = 0,
+//     y: number = 0
+// ): Position2D => x instanceof Direction2D ?
+//     new Position2D(x.buffer_offset, x.array_index) :
+//     new Position2D(vector2Dbuffer.tempID).setTo(x, y);
 
 export const dir2D = (
     x: number|Position2D = 0,
@@ -337,4 +304,4 @@ export const dir2D = (
 export const uv = (
     u: number = 0,
     v: number = 0
-): UV => new UV(vector2Dbuffer.tempID).setTo(u, v);
+): UV2D => new UV2D(vector2Dbuffer.tempID).setTo(u, v);

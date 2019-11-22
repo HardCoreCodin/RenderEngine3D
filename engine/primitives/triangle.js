@@ -181,9 +181,9 @@ export class Triangle3DView extends Triangle3D {
         this.face = face;
     }
     at(face_id) {
-        const shared_v1_id = this.face.vertices.indices[0][face_id];
-        const shared_v2_id = this.face.vertices.indices[1][face_id];
-        const shared_v3_id = this.face.vertices.indices[2][face_id];
+        const shared_v1_id = this.face.vertices.index_arrays[0][face_id];
+        const shared_v2_id = this.face.vertices.index_arrays[1][face_id];
+        const shared_v3_id = this.face.vertices.index_arrays[2][face_id];
         if (this.vertex.positions.is_shared)
             this.vertex.positions.setCurrent(shared_v1_id, shared_v2_id, shared_v3_id);
         else
@@ -207,11 +207,11 @@ export class Triangle3DView extends Triangle3D {
                 this.vertex.uvs.setCurrent(face_id);
         }
         if (this.normal)
-            this.normal.id = face_id;
+            this.normal.attribute_type = face_id;
         if (this.color)
-            this.color.id = face_id;
+            this.color.attribute_type = face_id;
         if (this.position)
-            this.position.id = face_id;
+            this.position.attribute_type = face_id;
         return this;
     }
 }
@@ -222,9 +222,9 @@ export class Triangle4DView extends Triangle4D {
         this.face = face;
     }
     at(face_id) {
-        const shared_v1_id = this.face.vertices.indices[0][face_id];
-        const shared_v2_id = this.face.vertices.indices[1][face_id];
-        const shared_v3_id = this.face.vertices.indices[2][face_id];
+        const shared_v1_id = this.face.vertices.index_arrays[0][face_id];
+        const shared_v2_id = this.face.vertices.index_arrays[1][face_id];
+        const shared_v3_id = this.face.vertices.index_arrays[2][face_id];
         if (this.vertex.positions.is_shared)
             this.vertex.positions.setCurrent(shared_v1_id, shared_v2_id, shared_v3_id);
         else
@@ -248,11 +248,11 @@ export class Triangle4DView extends Triangle4D {
                 this.vertex.uvs.setCurrent(face_id);
         }
         if (this.normal)
-            this.normal.id = face_id;
+            this.normal.attribute_type = face_id;
         if (this.color)
-            this.color.id = face_id;
+            this.color.attribute_type = face_id;
         if (this.position)
-            this.position.id = face_id;
+            this.position.attribute_type = face_id;
         return this;
     }
 }

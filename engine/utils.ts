@@ -1,4 +1,4 @@
-import {FloatArray, TypedArray} from "./types.js";
+import {FloatArray, IntArray, TypedArray} from "./types.js";
 
 export const zip = (a: any[], b: any[]) : [any, any][] => {
     const result = Array(a.length);
@@ -7,13 +7,13 @@ export const zip = (a: any[], b: any[]) : [any, any][] => {
     return result;
 };
 
-export function* iterTypedArray<ArrayType extends TypedArray = FloatArray>(
+export function* iterTypedArray<ArrayType extends TypedArray = FloatArray|IntArray>(
     array: ArrayType,
-    size: number = array.length,
-    offset: number = 0,
+    begin: number,
+    end: number
 ): Generator<number> {
-    for (let i = 0; i < size; i++)
-        yield array[i + offset];
+    for (let i = begin; i < end; i++)
+        yield array[i];
 }
 
 const memcpy = (

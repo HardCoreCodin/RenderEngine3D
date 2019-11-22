@@ -1,29 +1,47 @@
-import {PRECISION_DIGITS} from "../constants.js";
-import Matrix, {IMatrix, IMatrixFunctions} from "./mat.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatArray} from "../types.js";
-import {FloatBuffer} from "../allocators.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
+import Matrix from "./mat.js";
+import {FloatArray, Float4, Num4} from "../types.js";
+import {Buffer} from "../allocators.js";
 import {update_matrix2x2_arrays} from "./vec2.js";
+import {IMatrixFunctions} from "./interfaces/functions.js";
+import {IMatrix, IMatrix2x2} from "./interfaces/classes.js";
 
 let t11, t12,
     t21, t22: number;
 
 let M11, M12,
-    M21, M22: Float32Array;
+    M21, M22: FloatArray;
 
-const MATRIX2x2_ARRAYS: Array<FloatArray> = [
+const __buffer_entry: Num4 = [
+    0, 0,
+    0, 0
+];
+
+const __buffer_slice: Float4 = [
     null, null,
     null, null
 ];
 
-export const matrix2x2buffer = new FloatBuffer(
-    MATRIX2x2_ARRAYS,
-    () => {[
-        M11, M12,
-        M21, M22
-    ] = MATRIX2x2_ARRAYS;
-    update_matrix2x2_arrays(MATRIX2x2_ARRAYS);
-});
+const MATRIX2x2_ARRAYS: Float4 = [
+    null, null,
+    null, null
+];
+
+class Buffer2x2 extends Buffer<DIM._4D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged(): void {
+        [
+            M11, M12,
+            M21, M22
+        ] = MATRIX2x2_ARRAYS;
+
+        update_matrix2x2_arrays(MATRIX2x2_ARRAYS);
+    }
+}
+
+export const matrix2x2buffer = new Buffer2x2(MATRIX2x2_ARRAYS);
 
 //
 //
@@ -213,9 +231,7 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
     M21[a] = -sin;
 };
 
-const baseFunctions2x2: IBaseFunctions = {
-    buffer: matrix2x2buffer,
-
+const matrixFunctions: IMatrixFunctions = {
     get,
     set,
     set_to,
@@ -225,11 +241,7 @@ const baseFunctions2x2: IBaseFunctions = {
     equals,
 
     invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions2x2: IBaseArithmaticFunctions = {
-    ...baseFunctions2x2,
+    invert_in_place,
 
     add,
     add_in_place,
@@ -244,11 +256,7 @@ const baseArithmaticFunctions2x2: IBaseArithmaticFunctions = {
     scale_in_place,
 
     multiply,
-    multiply_in_place
-};
-
-const matrixFunctions2x2: IMatrixFunctions = {
-    ...baseArithmaticFunctions2x2,
+    multiply_in_place,
 
     is_identity,
     set_to_identity,
@@ -257,20 +265,35 @@ const matrixFunctions2x2: IMatrixFunctions = {
     transpose_in_place,
 };
 
-export interface IMatrix2x2
-    extends IMatrix
-{
-    setTo(
-        m11: number, m12: number,
-        m21: number, m22: number
-    ): this;
-}
-
 export default class Matrix2x2
     extends Matrix
     implements IMatrix2x2
 {
-    readonly _ = matrixFunctions2x2;
+    readonly _ = matrixFunctions;
+    readonly _buffer = matrix2x2buffer;
+
+    set m11(m11: number) {M11[this.id] = m11}
+    set m12(m12: number) {M12[this.id] = m12}
+    set m21(m21: number) {M21[this.id] = m21}
+    set m22(m22: number) {M22[this.id] = m22}
+
+    get m11(): number {return M11[this.id]}
+    get m12(): number {return M12[this.id]}
+    get m21(): number {return M21[this.id]}
+    get m22(): number {return M22[this.id]}
+
+    setTo(
+        m11: number, m12: number,
+        m21: number, m22: number
+    ): this {
+        set_to(
+            this.id,
+            m11, m12,
+            m21, m22
+        );
+
+        return this;
+    }
 
     setRotation(angle: number, reset: boolean = true): this {
         if (reset)

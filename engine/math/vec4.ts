@@ -1,9 +1,10 @@
 import Matrix4x4 from "./mat4x4.js";
-import {Direction, Position, IColor, IVectorFunctions, Color} from "./vec.js";
-import {PRECISION_DIGITS} from "../constants.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatArray} from "../types.js";
-import {FloatBuffer} from "../allocators.js";
+import {Position, CrossedDirection, Interpolatable} from "./vec.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
+import {FloatArray, Float16, Float4, Num4} from "../types.js";
+import {Buffer} from "../allocators.js";
+import {ICrossFunctions, IInterpolateFunctions, IPositionFunctions, IVectorFunctions} from "./interfaces/functions.js";
+import {IColor4D, IDirection4D, IPosition4D} from "./interfaces/classes.js";
 
 let t_x,
     t_y,
@@ -15,31 +16,36 @@ let X, Y, Z, W,
     M11, M12, M13, M14,
     M21, M22, M23, M24,
     M31, M32, M33, M34,
-    M41, M42, M43, M44: Float32Array;
+    M41, M42, M43, M44: FloatArray;
 
-export const update_matrix4x4_arrays = (MATRIX4x4_ARRAYS: Array<FloatArray>) => [
+export const update_matrix4x4_arrays = (MATRIX4x4_ARRAYS: Float16) => [
     M11, M12, M13, M14,
     M21, M22, M23, M24,
     M31, M32, M33, M34,
     M41, M42, M43, M44
 ] = MATRIX4x4_ARRAYS;
 
-const VECTOR4D_ARRAYS: Array<FloatArray> = [null, null];
-export const vector4Dbuffer = new FloatBuffer(
-    VECTOR4D_ARRAYS,
-    () => [
-        X, Y, Z
-    ] = VECTOR4D_ARRAYS
-);
+const __buffer_entry: Num4 = [0, 0, 0, 0];
+const __buffer_slice: Float4 = [null, null, null, null];
+const VECTOR4D_ARRAYS: Float4 = [null, null, null, null];
+
+class Buffer4D extends Buffer<DIM._4D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged = () => [X, Y, Z, W] = VECTOR4D_ARRAYS;
+}
+
+export const vector4Dbuffer = new Buffer4D(VECTOR4D_ARRAYS);
 
 const get = (a: number, dim: 0|1|2|3): number => VECTOR4D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3, value: number): void => {VECTOR4D_ARRAYS[dim][a] = value};
 
-const set_to = (a: number, x: number, y: number, z: number): void => {
+const set_to = (a: number, x: number, y: number, z: number, w: number): void => {
     X[a] = x;
     Y[a] = y;
     Z[a] = z;
-    W[a] = z;
+    W[a] = w;
 };
 
 const set_all_to = (a: number, value: number): void => {
@@ -204,6 +210,22 @@ const dot = (a: number, b: number) : number =>
     Z[a] * Z[b] +
     W[a] * W[b];
 
+const cross = (a: number, b: number, o: number) : void => {
+    X[o] = Y[a]*Z[b] - Z[a]*Y[b];
+    Y[o] = Z[a]*X[b] - X[a]*Z[b];
+    Z[o] = X[a]*Y[b] - Y[a]*X[b];
+};
+
+const cross_in_place = (a: number, b: number) : void => {
+    t_x = X[a];
+    t_y = Y[a];
+    t_z = Z[a];
+
+    X[a] = t_y*Z[b] - t_z*Y[b];
+    Y[a] = t_z*X[b] - t_x*Z[b];
+    Z[a] = t_x*Y[b] - t_y*X[b];
+};
+
 const in_view = (x: number, y: number, z: number, w: number, n: number, f: number) : boolean =>
     n <= z && z <= f &&
     -w <= y && y <= w &&
@@ -233,24 +255,15 @@ const multiply_in_place = (a: number, b: number) : void => {
     W[a] = t_x*M14[b] + t_y*M24[b] + t_z*M34[b] + t_w*M44[b];
 };
 
-
-const baseFunctions4D: IBaseFunctions = {
-    buffer: vector4Dbuffer,
-
+const baseFunctions: IInterpolateFunctions = {
     get,
     set,
+
     set_to,
     set_from,
     set_all_to,
 
     equals,
-
-    invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions4D: IBaseArithmaticFunctions = {
-    ...baseFunctions4D,
 
     add,
     add_in_place,
@@ -264,15 +277,28 @@ const baseArithmaticFunctions4D: IBaseArithmaticFunctions = {
     scale,
     scale_in_place,
 
-    multiply,
-    multiply_in_place
+    invert,
+    invert_in_place,
+
+    lerp
 };
 
-const vectorFunctions4D: IVectorFunctions = {
-    ...baseArithmaticFunctions4D,
+const vectorFunctions: IVectorFunctions = {
+    ...baseFunctions,
+
+    multiply,
+    multiply_in_place,
+};
+
+const positionFunctions: IPositionFunctions = {
+    ...vectorFunctions,
 
     distance,
-    distance_squared,
+    distance_squared
+};
+
+const directionFunctions: ICrossFunctions = {
+    ...vectorFunctions,
 
     length,
     length_squared,
@@ -281,46 +307,36 @@ const vectorFunctions4D: IVectorFunctions = {
     normalize_in_place,
 
     dot,
-    lerp
+    cross,
+    cross_in_place
 };
 
-export interface IRGBA
-    extends IColor
-{
-    setTo(r: number, g: number, b: number, a: number);
 
-    a: number;
-}
-export class RGBA
-    extends Color
-    implements IRGBA
+export class Color4D extends Interpolatable implements IColor4D
 {
-    readonly _ = vectorFunctions4D;
+    readonly _ = baseFunctions;
+    readonly _buffer = vector4Dbuffer;
 
     setTo(r: number, g: number, b: number, a: number): this {
-        this._.set_to(this.id, r, g, b, a);
+        set_to(this.id, r, g, b, a);
 
         return this;
     }
 
+    set r(r: number) {X[this.id] = r}
+    set g(g: number) {Y[this.id] = g}
+    set b(b: number) {Z[this.id] = b}
     set a(a: number) {W[this.id] = a}
+
+    get r(): number {return X[this.id]}
+    get g(): number {return Y[this.id]}
+    get b(): number {return Z[this.id]}
     get a(): number {return W[this.id]}
 }
-
-export interface I4D {
-    setTo(x: number, y: number, z: number, w: number): this;
-
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-}
-
-export class Direction4D
-    extends Direction<Matrix4x4>
-    implements I4D
+export class Direction4D extends CrossedDirection<Matrix4x4> implements IDirection4D
 {
-    readonly _ = vectorFunctions4D;
+    readonly _ = directionFunctions;
+    readonly _buffer = vector4Dbuffer;
 
     setTo(x: number, y: number, z: number, w: number): this {
         this._.set_to(this.id, x, y, z, w);
@@ -339,12 +355,12 @@ export class Direction4D
     get w(): number {return W[this.id]}
 }
 
-export class Position4D
-    extends Position<Matrix4x4, Direction4D>
-    implements I4D
+export class Position4D extends Position<Matrix4x4, Direction4D> implements IPosition4D
 {
-    readonly _ = vectorFunctions4D;
-    readonly _dir = dir4D;
+    readonly _ = positionFunctions;
+    readonly _buffer = vector4Dbuffer;
+
+    protected readonly _dir = dir4D;
 
     readonly isInView = (near: number = 0, far: number = 1) : boolean => in_view(
         X[this.id],
@@ -406,4 +422,4 @@ export const rgba = (
     g: number = 0,
     b: number = 0,
     a: number = 0
-): RGBA => new RGBA(vector4Dbuffer.tempID).setTo(r, g, b, a);
+): Color4D => new Color4D(vector4Dbuffer.tempID).setTo(r, g, b, a);

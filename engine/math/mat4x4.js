@@ -1,7 +1,7 @@
 import { PRECISION_DIGITS } from "../constants.js";
 import { RotationMatrix } from "./mat.js";
+import { Buffer } from "../allocators.js";
 import { update_matrix4x4_arrays } from "./vec4.js";
-import { FloatBuffer } from "../allocators.js";
 let t11, t12, t13, t14, t21, t22, t23, t24, t31, t32, t33, t34, t41, t42, t43, t44;
 let M11, M12, M13, M14, M21, M22, M23, M24, M31, M32, M33, M34, M41, M42, M43, M44;
 const MATRIX4x4_ARRAYS = [
@@ -10,14 +10,35 @@ const MATRIX4x4_ARRAYS = [
     null, null, null, null,
     null, null, null, null
 ];
-export const matrix4x4buffer = new FloatBuffer(MATRIX4x4_ARRAYS, () => {
-    [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ] = MATRIX4x4_ARRAYS;
-    update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
-});
+const __buffer_slice = [
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null
+];
+const __buffer_entry = [
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0
+];
+class Buffer4x4 extends Buffer {
+    constructor() {
+        super(...arguments);
+        this._entry = __buffer_entry;
+        this._slice = __buffer_slice;
+    }
+    _onBuffersChanged() {
+        [
+            M11, M12, M13, M14,
+            M21, M22, M23, M24,
+            M31, M32, M33, M34,
+            M41, M42, M43, M44
+        ] = MATRIX4x4_ARRAYS;
+        update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
+    }
+}
+export const matrix4x4buffer = new Buffer4x4(MATRIX4x4_ARRAYS);
 const get = (a, dim) => MATRIX4x4_ARRAYS[dim][a];
 const set = (a, dim, value) => { MATRIX4x4_ARRAYS[dim][a] = value; };
 const set_to = (a, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) => {
@@ -386,8 +407,7 @@ const set_rotation_around_z = (a, cos, sin) => {
     M12[a] = sin;
     M21[a] = -sin;
 };
-const baseFunctions4x4 = {
-    buffer: matrix4x4buffer,
+const matrixFunctions = {
     get,
     set,
     set_to,
@@ -395,9 +415,8 @@ const baseFunctions4x4 = {
     set_all_to,
     equals,
     invert,
-    invert_in_place
-};
-const baseArithmaticFunctions4x4 = Object.assign(Object.assign({}, baseFunctions4x4), { add,
+    invert_in_place,
+    add,
     add_in_place,
     subtract,
     subtract_in_place,
@@ -406,19 +425,57 @@ const baseArithmaticFunctions4x4 = Object.assign(Object.assign({}, baseFunctions
     scale,
     scale_in_place,
     multiply,
-    multiply_in_place });
-const matrixFunctions4x4 = Object.assign(Object.assign({}, baseArithmaticFunctions4x4), { is_identity,
+    multiply_in_place,
+    is_identity,
     set_to_identity,
     transpose,
-    transpose_in_place });
-const rotationMatrixFunctions4x4 = Object.assign(Object.assign({}, matrixFunctions4x4), { set_rotation_around_x,
+    transpose_in_place,
+    set_rotation_around_x,
     set_rotation_around_y,
-    set_rotation_around_z });
+    set_rotation_around_z
+};
 export default class Matrix4x4 extends RotationMatrix {
     constructor() {
         super(...arguments);
-        this._ = rotationMatrixFunctions4x4;
+        this._ = matrixFunctions;
+        this._buffer = matrix4x4buffer;
+    }
+    set m11(m11) { M11[this.id] = m11; }
+    set m12(m12) { M12[this.id] = m12; }
+    set m13(m13) { M13[this.id] = m13; }
+    set m14(m14) { M14[this.id] = m14; }
+    set m21(m21) { M21[this.id] = m21; }
+    set m22(m22) { M22[this.id] = m22; }
+    set m23(m23) { M23[this.id] = m23; }
+    set m24(m24) { M24[this.id] = m24; }
+    set m31(m31) { M31[this.id] = m31; }
+    set m32(m32) { M32[this.id] = m32; }
+    set m33(m33) { M33[this.id] = m33; }
+    set m34(m34) { M34[this.id] = m34; }
+    set m41(m41) { M41[this.id] = m41; }
+    set m42(m42) { M42[this.id] = m42; }
+    set m43(m43) { M43[this.id] = m43; }
+    set m44(m44) { M44[this.id] = m44; }
+    get m11() { return M11[this.id]; }
+    get m12() { return M12[this.id]; }
+    get m13() { return M13[this.id]; }
+    get m14() { return M14[this.id]; }
+    get m21() { return M21[this.id]; }
+    get m22() { return M22[this.id]; }
+    get m23() { return M23[this.id]; }
+    get m24() { return M24[this.id]; }
+    get m31() { return M31[this.id]; }
+    get m32() { return M32[this.id]; }
+    get m33() { return M33[this.id]; }
+    get m34() { return M34[this.id]; }
+    get m41() { return M41[this.id]; }
+    get m42() { return M42[this.id]; }
+    get m43() { return M43[this.id]; }
+    get m44() { return M44[this.id]; }
+    setTo(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
+        set_to(this.id, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44);
+        return this;
     }
 }
-export const mat4x4 = (m11 = 0, m12 = 0, m13 = 0, m14 = 0, m21 = 0, m22 = 0, m23 = 0, m24 = 0, m31 = 0, m32 = 0, m33 = 0, m34 = 0, m41 = 0, m42 = 0, m43 = 0, m44 = 0) => new Matrix4x4(matrix4x4buffer.tempID).setTo(m11, m12, m13, m21, m22, m23, m31, m32, m33);
+export const mat4x4 = (m11 = 0, m12 = 0, m13 = 0, m14 = 0, m21 = 0, m22 = 0, m23 = 0, m24 = 0, m31 = 0, m32 = 0, m33 = 0, m34 = 0, m41 = 0, m42 = 0, m43 = 0, m44 = 0) => new Matrix4x4(matrix4x4buffer.tempID).setTo(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44);
 //# sourceMappingURL=mat4x4.js.map

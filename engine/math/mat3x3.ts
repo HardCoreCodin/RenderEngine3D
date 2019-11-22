@@ -1,9 +1,10 @@
-import {PRECISION_DIGITS} from "../constants.js";
-import {IMatrixFunctions, IRotationMatrix, IRotationMatrixFunctions, RotationMatrix} from "./mat.js";
+import {Buffer} from "../allocators.js";
+import {RotationMatrix} from "./mat.js";
+import {DIM, PRECISION_DIGITS} from "../constants.js";
 import {update_matrix3x3_arrays} from "./vec3.js";
-import {IBaseArithmaticFunctions, IBaseFunctions} from "./base.js";
-import {FloatArray} from "../types.js";
-import {FloatBuffer} from "../allocators.js";
+import {FloatArray, Float9, Num9} from "../types.js";
+import {IMatrixRotationFunctions} from "./interfaces/functions.js";
+import {IMatrix3x3} from "./interfaces/classes.js";
 
 let t11, t12, t13,
     t21, t22, t23,
@@ -11,23 +12,41 @@ let t11, t12, t13,
 
 let M11, M12, M13,
     M21, M22, M23,
-    M31, M32, M33: Float32Array;
+    M31, M32, M33: FloatArray;
 
-const MATRIX3x3_ARRAYS: Array<FloatArray> = [
+const MATRIX3x3_ARRAYS: Float9 = [
+    null, null, null,
+    null, null, null,
+    null, null, null
+];
+const __buffer_slice: Float9 = [
     null, null, null,
     null, null, null,
     null, null, null
 ];
 
-export const matrix3x3buffer = new FloatBuffer(
-    MATRIX3x3_ARRAYS,
-    () => {[
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ] = MATRIX3x3_ARRAYS;
+const __buffer_entry: Num9 = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+];
+
+class Buffer3x3 extends Buffer<DIM._9D, FloatArray> {
+    protected readonly _entry = __buffer_entry;
+    protected readonly _slice =__buffer_slice;
+
+    _onBuffersChanged(): void {
+        [
+            M11, M12, M13,
+            M21, M22, M23,
+            M31, M32, M33
+        ] = MATRIX3x3_ARRAYS;
+
         update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
-    });
+    }
+}
+
+export const matrix3x3buffer = new Buffer3x3(MATRIX3x3_ARRAYS);
 
 const get = (a: number, dim: 0|1|2|3|4|5|6|7|8): number => MATRIX3x3_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3|4|5|6|7|8, value: number): void => {MATRIX3x3_ARRAYS[dim][a] = value};
@@ -231,10 +250,7 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
     M21[a] = -sin;
 };
 
-
-const baseFunctions3x3: IBaseFunctions = {
-    buffer: matrix3x3buffer,
-
+const matrixFunctions: IMatrixRotationFunctions = {
     get,
     set,
     set_to,
@@ -244,11 +260,7 @@ const baseFunctions3x3: IBaseFunctions = {
     equals,
 
     invert,
-    invert_in_place
-};
-
-const baseArithmaticFunctions3x3: IBaseArithmaticFunctions = {
-    ...baseFunctions3x3,
+    invert_in_place,
 
     add,
     add_in_place,
@@ -263,37 +275,64 @@ const baseArithmaticFunctions3x3: IBaseArithmaticFunctions = {
     scale_in_place,
 
     multiply,
-    multiply_in_place
-};
-
-const matrixFunctions3x3: IMatrixFunctions = {
-    ...baseArithmaticFunctions3x3,
+    multiply_in_place,
 
     is_identity,
     set_to_identity,
 
     transpose,
     transpose_in_place,
-};
-
-const rotationMatrixFunctions3x3: IRotationMatrixFunctions = {
-    ...matrixFunctions3x3,
 
     set_rotation_around_x,
     set_rotation_around_y,
     set_rotation_around_z
 };
 
-export interface IMatrix3x3 extends IRotationMatrix {
+export default class Matrix3x3
+    extends RotationMatrix
+    implements IMatrix3x3
+{
+    readonly _ = matrixFunctions;
+    readonly _buffer = matrix3x3buffer;
+
+    set m11(m11: number) {M11[this.id] = m11}
+    set m12(m12: number) {M12[this.id] = m12}
+    set m13(m13: number) {M13[this.id] = m13}
+
+    set m21(m21: number) {M21[this.id] = m21}
+    set m22(m22: number) {M22[this.id] = m22}
+    set m23(m23: number) {M23[this.id] = m23}
+
+    set m31(m31: number) {M31[this.id] = m31}
+    set m32(m32: number) {M32[this.id] = m32}
+    set m33(m33: number) {M33[this.id] = m33}
+
+    get m11(): number {return M11[this.id]}
+    get m12(): number {return M12[this.id]}
+    get m13(): number {return M13[this.id]}
+
+    get m21(): number {return M21[this.id]}
+    get m22(): number {return M22[this.id]}
+    get m23(): number {return M23[this.id]}
+
+    get m31(): number {return M31[this.id]}
+    get m32(): number {return M32[this.id]}
+    get m33(): number {return M33[this.id]}
+
     setTo(
         m11: number, m12: number, m13: number,
         m21: number, m22: number, m23: number,
-        m31: number, m32: number, m33: number,
-    ): this;
-}
+        m31: number, m32: number, m33: number
+    ): this {
+        set_to(
+            this.id,
+            m11, m12, m13,
+            m21, m22, m23,
+            m31, m32, m33
+        );
 
-export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
-    readonly _ = rotationMatrixFunctions3x3;
+        return this;
+    }
 }
 
 export const mat3x3 = (

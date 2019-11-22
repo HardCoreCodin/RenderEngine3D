@@ -1,6 +1,5 @@
 import {ATTRIBUTE, FACE_TYPE} from "../constants.js";
-import {Mesh, MeshInputs, MeshOptions} from "../primitives/mesh.js";
-import {InputAttribute} from "../primitives/attribute.js";
+import {InputAttribute, Mesh, MeshInputs, MeshOptions} from "../primitives/mesh.js";
 
 const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()): Mesh => {
     if (!has_positions.test(obj))

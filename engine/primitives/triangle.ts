@@ -8,7 +8,7 @@ import {AllocatorSizes, Vector2DAllocator, Vector3DAllocator, Vector4DAllocator}
 import {IBaseRotationMatrix} from "../math/interfaces.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Faces3D, Faces4D, Vertices3D, Vertices4D} from "./attribute.js";
-import {IColor, IDirection, IPosition} from "../math/vec.js";
+import {IDirection, IPosition, IColor} from "../math/interfaces/classes.js";
 
 export class Triangle<
         Matrix extends IBaseRotationMatrix,
@@ -271,9 +271,9 @@ export class Triangle3DView extends Triangle3D<Vertex3DView> {
     }
 
     at(face_id: number) : this {
-        const shared_v1_id = this.face.vertices.indices[0][face_id];
-        const shared_v2_id = this.face.vertices.indices[1][face_id];
-        const shared_v3_id = this.face.vertices.indices[2][face_id];
+        const shared_v1_id = this.face.vertices.index_arrays[0][face_id];
+        const shared_v2_id = this.face.vertices.index_arrays[1][face_id];
+        const shared_v3_id = this.face.vertices.index_arrays[2][face_id];
 
         if (this.vertex.positions.is_shared)
             this.vertex.positions.setCurrent(shared_v1_id, shared_v2_id, shared_v3_id);
@@ -302,13 +302,13 @@ export class Triangle3DView extends Triangle3D<Vertex3DView> {
         }
 
         if (this.normal)
-            this.normal.id = face_id;
+            this.normal.attribute_type = face_id;
 
         if (this.color)
-            this.color.id = face_id;
+            this.color.attribute_type = face_id;
 
         if (this.position)
-            this.position.id = face_id;
+            this.position.attribute_type = face_id;
 
         return this;
     }
@@ -331,9 +331,9 @@ export class Triangle4DView extends Triangle4D<Vertex4DView> {
     }
 
     at(face_id: number) : this {
-        const shared_v1_id = this.face.vertices.indices[0][face_id];
-        const shared_v2_id = this.face.vertices.indices[1][face_id];
-        const shared_v3_id = this.face.vertices.indices[2][face_id];
+        const shared_v1_id = this.face.vertices.index_arrays[0][face_id];
+        const shared_v2_id = this.face.vertices.index_arrays[1][face_id];
+        const shared_v3_id = this.face.vertices.index_arrays[2][face_id];
 
         if (this.vertex.positions.is_shared)
             this.vertex.positions.setCurrent(shared_v1_id, shared_v2_id, shared_v3_id);
@@ -362,13 +362,13 @@ export class Triangle4DView extends Triangle4D<Vertex4DView> {
         }
 
         if (this.normal)
-            this.normal.id = face_id;
+            this.normal.attribute_type = face_id;
 
         if (this.color)
-            this.color.id = face_id;
+            this.color.attribute_type = face_id;
 
         if (this.position)
-            this.position.id = face_id;
+            this.position.attribute_type = face_id;
 
         return this;
     }

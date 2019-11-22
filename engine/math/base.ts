@@ -1,42 +1,11 @@
-import {AbstractBuffer} from "../allocators.js";
+import {IArithmaticFunctions, IBaseFunctions} from "./interfaces/functions.js";
+import {IBase, IBaseArithmatic} from "./interfaces/classes.js";
+import {IBuffer} from "../allocators.js";
 
-export interface IBaseFunctions {
-    buffer: AbstractBuffer,
-
-    get(a: number, dim: number): number;
-    set(a: number, dim: number, value: number): void;
-    set_to(a: number, ...values: number[]): void;
-    set_all_to(a: number, value: number): void;
-    set_from(a: number, o: number): void;
-
-    equals(a: number, b: number): boolean;
-    invert(a: number, b: number): void;
-    invert_in_place(a: number): void;
-}
-
-export interface IBase {
-    _: IBaseFunctions,
-    id: number;
-
-    array_index: number,
-    buffer_offset: number,
-
-    setTo(...values: number[]): this;
-    setAllTo(value: number): this;
-    setFrom(other: this): this;
-
-    is(other: this): boolean;
-    equals(other: this): boolean;
-
-    copy(out?: this): this;
-    invert(): this;
-    inverted(out?: this): this;
-}
-
-export abstract class Base
-    implements IBase
+export abstract class Base implements IBase
 {
     readonly abstract _: IBaseFunctions;
+    readonly abstract _buffer: IBuffer;
 
     constructor(
         public buffer_offset : number,
@@ -69,72 +38,21 @@ export abstract class Base
     readonly equals = (other: this): boolean => other.is(this) || this._.equals(other.id, this.id);
 
     copy(out?: this): this {
-        if (!out || out.id === this.id) {
+        if (!out) {
             out = Object.create(this);
-            out.buffer_offset = this._.buffer.tempID;
-            out.array_index = 0;
+            out.array_index = this._buffer.tempID;
         }
 
-        out.setFrom(this);
+        this._.set_from(out.id, this.id);
 
         return out;
     }
-
-    invert(): this {
-        this._.invert_in_place(this.id);
-
-        return this;
-    }
-
-    inverted(out: this = this.copy()): this {
-        this._.invert(this.id, out.id);
-
-        return out;
-    }
-}
-
-export interface IBaseArithmaticFunctions
-    extends IBaseFunctions
-{
-    add(a: number, b: number, o: number): void;
-    add_in_place(a: number, b: number): void;
-
-    subtract(a: number, b: number, o: number): void;
-    subtract_in_place(a: number, b: number): void;
-
-    divide(a: number, o: number, n: number): void;
-    divide_in_place(a: number, n: number): void;
-
-    scale(a: number, o: number, n: number): void;
-    scale_in_place(a: number, n: number): void;
-
-    multiply(a: number, b: number, o: number): void;
-    multiply_in_place(a: number, b: number): void;
-}
-
-export interface IBaseArithmatic
-    extends IBase
-{
-    _: IBaseArithmaticFunctions,
-
-    add(other: this);
-    subtract(other: this): this;
-
-    divideBy(denominator: number): this;
-    over(denominator: number, out?: this): this;
-
-    scaleBy(factor: number): this;
-    times(factor: number, out?: this): this;
-
-    plus(other: IBaseArithmatic, out?: this): this;
-    minus(other: IBaseArithmatic, out?: this): this;
 }
 
 export abstract class BaseArithmatic
-    extends Base
-    implements IBaseArithmatic
+    extends Base implements IBaseArithmatic
 {
-    readonly abstract _: IBaseArithmaticFunctions;
+    readonly abstract _: IArithmaticFunctions;
 
     add(other: this) {
         this._.add_in_place(this.id, other.id);
@@ -158,7 +76,7 @@ export abstract class BaseArithmatic
         return this;
     }
 
-    plus(other: IBaseArithmatic, out: this = this.copy()): this {
+    plus(other: BaseArithmatic, out: this = this.copy()): this {
         if (out.is(this))
             this._.add_in_place(this.id, other.id);
         else
@@ -167,7 +85,7 @@ export abstract class BaseArithmatic
         return out;
     }
 
-    minus(other: IBaseArithmatic, out: this = this.copy()): this {
+    minus(other: BaseArithmatic, out: this = this.copy()): this {
         if (out.is(this))
             this._.set_all_to(this.id, 0);
         else
@@ -193,4 +111,18 @@ export abstract class BaseArithmatic
 
         return out;
     }
+
+
+    invert(): this {
+        this._.invert_in_place(this.id);
+
+        return this;
+    }
+
+    inverted(out: this = this.copy()): this {
+        this._.invert(this.id, out.id);
+
+        return out;
+    }
 }
+

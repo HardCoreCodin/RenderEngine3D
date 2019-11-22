@@ -1,13 +1,78 @@
-export type Str2 = [string, string];
-export type Str3 = [string, string, string];
-export type Str4 = [string, string, string, string];
-export type Num2 = [number, number];
-export type Num3 = [number, number, number];
-export type Num4 = [number, number, number, number];
-export type NumArrays2 = [number[], number[]];
-export type NumArrays3 = [number[], number[], number[]];
-export type NumArrays4 = [number[], number[], number[], number[]];
-export type NumArrays = number[][]
+export const IntArray = Uint32Array;
+export type IntArray = Uint32Array;
+
+export const FloatArray = Float32Array;
+export type FloatArray = Float32Array;
+
+export type TypedArray = ArrayLike<number> & {
+    BYTES_PER_ELEMENT: number;
+    buffer: ArrayBuffer,
+    set(array: ArrayLike<number>, offset?: number): void;
+    subarray(begin: number, end?: number): TypedArray;
+};
+
+export type TypedArrayConstructor<T> = {
+    new (): T;
+    new (length: number): T;
+    new (object: ArrayLike<number>): T;
+    new (buffer: ArrayBuffer, bytesOffset?: number, length?: number): T;
+    BYTES_PER_ELEMENT: number;
+}
+
+// import {DIM} from "./constants.js";
+
+// export interface Tuple<T extends any, L extends DIM> extends Array<T> {0: T, length: L}
+
+
+export type T2<T> = [ T, T ];
+export type T3<T> = [ T, T, T ];
+export type T4<T> = [ T, T, T, T ];
+export type T9<T> = [ T, T, T, T, T, T, T, T, T ];
+export type T16<T> = [ T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T ];
+export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType[number];
+// export type TArray = FloatArray | IntArray;
+
+// export type RawArray<ArrayType extends TypedArray = FloatArray> = [ArrayType, number, number];
+// export type RawArrays<ArrayType extends TypedArray = FloatArray> = [ArrayType[], number, number];
+//
+// export type RawFloatArray = RawArray<FloatArray>;
+// export type RawFloatArrays = RawArrays<FloatArray>;
+
+// export type TypedTuple<T extends TypedArray, L extends DIM> = Tuple<T, L>;
+// export type Float<L extends DIM> = TypedTuple<FloatArray, L>;
+// export type Floats<L extends DIM> = Tuple<FloatArray[], L>;
+//
+// export type Int<L extends DIM> = TypedTuple<IntArray, L>;
+// export type Ints<L extends DIM> = Tuple<IntArray[], L>;
+//
+// export type Str<L extends DIM> = Tuple<string, L>;
+// export type Strs<L extends DIM> = Tuple<string[], L>;
+//
+// export type Num<L extends DIM> = Tuple<number, L>;
+// export type Nums<L extends DIM> = Tuple<number[], L>;
+
+export type Str2 = T2<string>;
+export type Str3 = T3<string>;
+export type Str4 = T4<string>;
+
+export type Num2 = T2<number>;
+export type Num3 = T3<number>;
+export type Num4 = T4<number>;
+export type Num9 = T9<number>;
+export type Num16 = T16<number>;
+
+export type NumArrays2 = T2<number[]>;
+export type NumArrays3 = T3<number[]>;
+export type NumArrays4 = T4<number[]>;
+
+export type Ints3 = T3<IntArray[]>;
+export type Int3 = T3<IntArray>;
+
+export type Float2 = T2<FloatArray>;
+export type Float3 = T3<FloatArray>;
+export type Float4 = T4<FloatArray>;
+export type Float9 = T9<FloatArray>;
+export type Float16 = T16<FloatArray>;
 
 export type PositionInputs = NumArrays3
 export type NormalInputs = NumArrays3;
@@ -33,68 +98,42 @@ export type UVInputNum = Num2;
 export type QuadInputNum = Num4;
 export type TriangleInputNum = Num3;
 
-export const IntArray = Uint32Array;
-export type IntArray = Uint32Array;
-export type IntArrays = Uint32Array[];
-export type IntArrays3 = [Uint32Array, Uint32Array, Uint32Array];
+export type VectorValues = Float2 | Float3 | Float4;
 
-export const FloatArray = Float32Array;
-export type FloatArray = Float32Array;
-export type FloatArrays2 = readonly [FloatArray, FloatArray];
-export type FloatArrays3 = readonly [FloatArray, FloatArray, FloatArray];
-export type FloatArrays4 = readonly [FloatArray, FloatArray, FloatArray, FloatArray];
-export type FloatArrays9 = readonly [
-    FloatArray, FloatArray, FloatArray,
-    FloatArray, FloatArray, FloatArray,
-    FloatArray, FloatArray, FloatArray
-];
-export type FloatArrays16 = readonly [
-    FloatArray, FloatArray, FloatArray, FloatArray,
-    FloatArray, FloatArray, FloatArray, FloatArray,
-    FloatArray, FloatArray, FloatArray, FloatArray,
-    FloatArray, FloatArray, FloatArray, FloatArray
-];
-export type FloatArrays = readonly FloatArray[];
-export type FloatValues = FloatArrays2 | FloatArrays3 | FloatArrays4 | FloatArrays9 | FloatArrays16;
-export type FaceValues = FloatValues;
-export type SharedVertexValues = FloatValues;
-export type UnsharedVertexValues = [FloatValues, FloatValues, FloatValues];
+export type UnsharedValues = [
+    VectorValues,
+    VectorValues,
+    VectorValues
+    ];
+// export type UnsharedRawIterators = [
+//     Generator<RawFloatArrays>,
+//     Generator<RawFloatArrays>,
+//     Generator<RawFloatArrays>
+//     ];
 
-export type Vector2DValues = FloatArrays2;
-export type Vector3DValues = FloatArrays3;
-export type Vector4DValues = FloatArrays4;
-export type VectorValues = Vector2DValues | Vector3DValues | Vector4DValues;
+// export type UnsharedRawComponents = [
+//     RawFloatArray,
+//     RawFloatArray,
+//     RawFloatArray
+//     ][];
+// export type UnsharedRawArrays = [
+//     RawFloatArrays,
+//     RawFloatArrays,
+//     RawFloatArrays
+//     ];
 
-export type Matrix2x2Values = FloatArrays4;
-export type Matrix3x3Values = FloatArrays9;
-export type Matrix4x4Values = FloatArrays16;
-export type MatrixValues = Matrix2x2Values | Matrix3x3Values | Matrix4x4Values;
-
-export type Values = VectorValues | MatrixValues;
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;
 export type FaceInputNum = QuadInputNum | TriangleInputNum;
 export type VertexInputs = PositionInputs | NormalInputs | UVInputs | ColorInputs;
 export type VertexInputStr = PositionInputStr | ColorInputStr | NormalInputStr | UVInputStr;
 export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum | UVInputNum;
-export type VertexValues = SharedVertexValues | UnsharedVertexValues;
-export type VertexFacesIndices = IntArrays;
-export type FaceVertexIndices = IntArrays3;
+export type VertexFacesIndices = IntArray[];
+// export type FaceVertexIndices = Ints3;
 
-export type AnyFunction<FunctionReturnType = any> = (...input: any[]) => FunctionReturnType;
+// export type AnyFunction<FunctionReturnType = any> = (...input: any[]) => FunctionReturnType;
 export type AnyConstructor<ConstructorInstanceType = object> = new (...input: any[]) => ConstructorInstanceType;
-export type Mixin<T extends AnyFunction> = InstanceType<ReturnType<T>>;
+// export type Mixin<T extends AnyFunction> = InstanceType<ReturnType<T>>;
 
-export type TypedArray = ArrayLike<any> & {
-    BYTES_PER_ELEMENT: number;
-    buffer: ArrayBuffer,
-    set(array: ArrayLike<number>, offset?: number): void;
-    slice(start?: number, end?: number): TypedArray;
-};
-export type TypedArrayConstructor<T> = {
-    new (): T;
-    new (length: number): T;
-    new (object: ArrayLike<number>): T;
-    new (buffer: ArrayBuffer, bytesOffset?: number, length?: number): T;
-    BYTES_PER_ELEMENT: number;
-}
+
+// export type FaceVertexIndexEntries = Generator<[number, [number, number, number]]>;

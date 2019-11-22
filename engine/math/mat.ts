@@ -1,48 +1,6 @@
-import {BaseArithmatic, IBaseArithmatic, IBaseArithmaticFunctions} from "./base.js";
-
-export interface IMatrixFunctions
-    extends IBaseArithmaticFunctions
-{
-    is_identity(a: number): boolean;
-    set_to_identity(a: number): void;
-
-    transpose(a: number, o: number): void;
-    transpose_in_place(a: number): void;
-}
-
-export interface IMatrix
-    extends IBaseArithmatic
-{
-    _: IMatrixFunctions;
-
-    is_identity: boolean;
-    setToIdentity(): this;
-
-    T: this;
-    transpose(): this;
-    transposed(out?: this): this;
-
-    imul(other: this): this;
-    mul(other: this, out?: this): this;
-}
-
-export interface IRotationMatrixFunctions
-    extends IMatrixFunctions
-{
-    set_rotation_around_x(a: number, cos: number, sin: number): void;
-    set_rotation_around_y(a: number, cos: number, sin: number): void;
-    set_rotation_around_z(a: number, cos: number, sin: number): void;
-}
-
-export interface IRotationMatrix
-    extends IMatrix
-{
-    _: IRotationMatrixFunctions,
-
-    setRotationAroundX(angle: number, reset: boolean): this;
-    setRotationAroundY(angle: number, reset: boolean): this;
-    setRotationAroundZ(angle: number, reset: boolean): this;
-}
+import {IMatrixFunctions, IMatrixRotationFunctions} from "./interfaces/functions.js";
+import {IMatrix, IRotationMatrix} from "./interfaces/classes.js";
+import {BaseArithmatic} from "./base.js";
 
 export default abstract class Matrix
     extends BaseArithmatic
@@ -76,27 +34,25 @@ export default abstract class Matrix
         return out;
     }
 
-    imul(other: this): this {
-        this._.multiply_in_place(this.id, other.id);
+    imul(matrix: this): this {
+        this._.multiply_in_place(this.id, matrix.id);
 
         return this;
     }
 
-    mul(other: this, out: this = this.copy()): this {
+    mul(matrix: this, out: this = this.copy()): this {
         if (out.is(this))
-            this._.multiply_in_place(this.id, other.id);
+            this._.multiply_in_place(this.id, matrix.id);
         else
-            this._.multiply(this.id, out.id, other.id);
+            this._.multiply(this.id, out.id, matrix.id);
 
         return out;
     }
 }
 
-export abstract class RotationMatrix
-    extends Matrix
-    implements IRotationMatrix
+export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 {
-    readonly abstract _: IRotationMatrixFunctions;
+    readonly abstract _: IMatrixRotationFunctions;
 
     setRotationAroundX(angle: number, reset: boolean = false): this {
         if (reset)
