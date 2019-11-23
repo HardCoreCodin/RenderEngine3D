@@ -45,7 +45,7 @@ export default class Mesh {
         this.vertex.faces.init(allocators.vertex_faces, this.inputs.vertex_faces.size);
         this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
         this.face.init(allocators, this.face_count, this.options.face_attributes);
-        this.face.vertices.load(positions.faces_vertices);
+        this.face.vertices.load(positions.faces_vertices[0], positions.faces_vertices[1], positions.faces_vertices[2]);
         // Load:
         this.vertex.positions.load(positions, this.face.vertices);
         if (this.options.include_uvs)

@@ -1,71 +1,35 @@
-import { dir3D, pos3D } from "../math/vec3.js";
+import { dir3D, Direction3D, pos3D, Position3D } from "../math/vec3.js";
 import { FaceVertices } from "./index.js";
-// import {iterTypedArray} from "../utils.js";
 export class Data {
-    constructor(_buffer, arrays = _buffer.arrays, dim = arrays.length) {
-        this._buffer = _buffer;
-        this.arrays = arrays;
-        this.dim = dim;
+    constructor() {
+        this._slices = Array(this.arrays.length);
+        this._values = Array(this.arrays.length);
     }
-    // protected _raw_arrays: RawArray<ArrayType>[];
     init(length) {
         this.length = length;
-        this.end = this._buffer.allocate(length);
-        this.begin = this.end - length;
-        // this.arrays = this._buffer.arrays;
-        //
-        // if (!this._raw_arrays) {
-        //     this._raw_arrays = Array(this.dim);
-        //     for (const [i, array] of this._buffer.arrays.entries())
-        //         this._raw_arrays[i] = [array, 0 ,0];
-        // }
+        this.begin = this._allocate(length);
+        this.end = this.begin + length;
     }
-    // *rawArrayIterator(
-    //     begin: number = this.begin,
-    //     end: number = this.end,
-    //     out: RawArray<ArrayType>[] = this._raw_arrays
-    // ): Generator<RawArray<ArrayType>> {
-    //     for (const [i, array] of this._buffer.arrays.entries()) {
-    //         out[i][0] = array;
-    //         out[i][1] = begin;
-    //         out[i][2] = end;
-    //
-    //         yield out[i];
-    //     }
-    // }
-    //
     get slices() {
-        return this._buffer.slice(this.begin, this.end);
+        for (const [i, array] of this.arrays.entries())
+            this._slices[i] = array.subarray(this.begin, this.end);
+        return this._slices;
     }
-    // get raw_arrays(): RawArray<ArrayType>[] {
-    //     for (const [raw_array, array] of zip(this._raw_arrays, this._buffer.arrays)) {
-    //         raw_array[0] = array;
-    //         raw_array[1] = this.begin;
-    //         raw_array[2] = this.end;
-    //     }
-    //
-    //     return this._raw_arrays;
-    // }
-    entries(begin = this.begin, end = this.end) {
-        return this._buffer.entries(begin, end);
+    *values(begin = this.begin, end = this.end) {
+        for (let i = begin; i < end; i++)
+            for (const [i, array] of this.arrays.entries())
+                this._values[i] = array[i];
+        yield this._values;
     }
 }
-export class FloatData extends Data {
-}
-export class IntData extends Data {
-}
-export class DataAttribute extends FloatData {
+export class DataAttribute extends Data {
     init(length) {
         super.init(length);
         this.current = new this.Vector(this.begin);
     }
-    setCurrent(array_index) {
-        this.current.array_index = array_index;
-        this.current.buffer_offset = this.begin;
-    }
     *[Symbol.iterator]() {
-        for (let i = 0; i < this.length; i++) {
-            this.setCurrent(i);
+        for (let id = this.begin; id < this.end; id++) {
+            this.current.id = id;
             yield this.current;
         }
     }
@@ -75,19 +39,6 @@ export class VertexAttribute extends DataAttribute {
         super(...arguments);
         this.begins = [0, 0, 0];
         this.ends = [0, 0, 0];
-        this._unshared_arrays = [null, null, null];
-    }
-    // private _unshared_iterators: UnsharedRawIterators = [null, null, null];
-    // private _unshared_raw_arrays: UnsharedRawArrays = [
-    //     [null, 0, 0],
-    //     [null, 0, 0],
-    //     [null, 0, 0]
-    // ];
-    // private _unshared_raw_components: UnsharedRawComponents;
-    setCurrent(array_index_1, array_index_2 = array_index_1, array_index_3 = array_index_2) {
-        this.currents[0].array_index = array_index_1;
-        this.currents[1].array_index = array_index_2;
-        this.currents[2].array_index = array_index_3;
     }
     init(length, is_shared = this.is_shared) {
         this.length = length;
@@ -98,100 +49,30 @@ export class VertexAttribute extends DataAttribute {
             this.ends[0] = this.ends[1] = this.ends[2] = this.end;
             return;
         }
-        this.ends[0] = this._buffer.allocate(length);
-        this.ends[1] = this._buffer.allocate(length);
-        this.ends[2] = this._buffer.allocate(length);
-        this.begins[0] = this.ends[0] - length;
-        this.begins[1] = this.ends[1] - length;
-        this.begins[2] = this.ends[2] - length;
-        // this.ends[0] = this._unshared_raw_arrays[0][2] = this._buffer.allocate(length);
-        // this.ends[1] = this._unshared_raw_arrays[1][2] = this._buffer.allocate(length);
-        // this.ends[2] = this._unshared_raw_arrays[2][2] = this._buffer.allocate(length);
-        //
-        // this.begins[0] = this._unshared_raw_arrays[0][1] = this.ends[0] - length;
-        // this.begins[1] = this._unshared_raw_arrays[1][1] = this.ends[1] - length;
-        // this.begins[2] = this._unshared_raw_arrays[2][1] = this.ends[2] - length;
-        if (this._unshared_arrays[0] === null) {
-            this._unshared_arrays[0] = [...this._buffer.arrays];
-            this._unshared_arrays[1] = [...this._buffer.arrays];
-            this._unshared_arrays[2] = [...this._buffer.arrays];
-        }
-        // if (this._unshared_iterators[0] === null) {
-        //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends)) {
-        //         this._unshared_iterators[vertex_num] = Array(this.dim);
-        //         for
-        //         this.unsharedRawArraysIterator(begin, end, this._unshared_iterators[vertex_num]);
-        //     }
-        //
-        //     this._raw_arrays = Array(this.dim);
-        //     for (const [i, array] of this._buffer.arrays.entries())
-        //         this._raw_arrays[i] = [array, 0 ,0];
-        // }
+        this.begins[0] = this._allocate(length);
+        this.begins[1] = this._allocate(length);
+        this.begins[2] = this._allocate(length);
+        this.ends[0] = this.begins[0] + length;
+        this.ends[1] = this.begins[1] + length;
+        this.ends[2] = this.begins[2] + length;
         this.currents[0] = new this.Vector(this.begins[0]);
         this.currents[1] = new this.Vector(this.begins[1]);
         this.currents[2] = new this.Vector(this.begins[2]);
     }
-    // *unsharedRawArraysIterator(
-    //     begin: number = this.begin,
-    //     end: number = this.end,
-    //     out: RawFloatArrays
-    // ): Generator<RawFloatArrays> {
-    //     for (const [i, array] of this._buffer.arrays.entries()) {
-    //         out[i][0] = array;
-    //         out[i][1] = begin;
-    //         out[i][2] = end;
-    //
-    //         yield out[i];
-    //     }
-    // }
-    // get unshared_raw_components(): UnsharedRawComponents {
-    //     if (!this._unshared_raw_components) {
-    //         this._unshared_raw_components = Array(this.dim);
-    //         for (const [i, array] of this._buffer.arrays.entries()) {
-    //             this._unshared_raw_components[i] = [
-    //                 [array, this.begins[0], this.ends[0]],
-    //                 [array, this.begins[1], this.ends[1]],
-    //                 [array, this.begins[2], this.ends[2]]
-    //             ];
-    //         }
-    //     } else
-    //         for (const [i, array] of this._buffer.arrays.entries())
-    //             this._unshared_raw_components[i][0][0] =
-    //                 this._unshared_raw_components[i][1][0] =
-    //                     this._unshared_raw_components[i][2][0] = array;
-    //
-    //     return this._unshared_raw_components;
-    // }
-    //
-    // get unshared_raw_arrays(): UnsharedRawArrays {
-    //     this._unshared_raw_arrays[0][0] =
-    //         this._unshared_raw_arrays[1][0] =
-    //             this._unshared_raw_arrays[2][0] = this._buffer.arrays;
-    //
-    //     return this._unshared_raw_arrays;
-    // }
-    // get unshared_iterators(): UnsharedRawIterators {
-    //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends))
-    //         this._unshared_iterators[vertex_num] = iterTypedArray();
-    //
-    //     return this._unshared_iterators
-    // }
-    // get unshared_arrays(): UnsharedValues {
-    //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends))
-    //         this._buffer.slice(begin, end, this._unshared_arrays[vertex_num]);
-    //
-    //     return this._unshared_arrays;
-    // }
     *iterFaceVertexValues(face_vertices) {
         if (this.is_shared) {
-            for (const [face_index, [index_1, index_2, index3]] of face_vertices.entries()) {
-                this.setCurrent(index_1, index_2, index3);
+            for (const [index_1, index_2, index_3] of face_vertices.values()) {
+                this.currents[0].id = this.begin + index_1;
+                this.currents[1].id = this.begin + index_2;
+                this.currents[2].id = this.begin + index_3;
                 yield this.currents;
             }
         }
         else {
             for (let face_index = 0; face_index < this.length; face_index++) {
-                this.setCurrent(face_index);
+                this.currents[0].id = this.begins[0] + face_index;
+                this.currents[1].id = this.begins[1] + face_index;
+                this.currents[2].id = this.begins[2] + face_index;
                 yield this.currents;
             }
         }
@@ -248,11 +129,16 @@ export class PulledVertexAttribute extends LoadableVertexAttribute {
 export class PulledFaceAttribute extends DataAttribute {
     pull(input, face_vertices) {
         if (input.is_shared) {
-            for (const [face_component, vertex_component] of zip(this.arrays, input.arrays))
-                for (const [face_index, [vi_1, vi_2, vi_3]] of face_vertices.entries())
-                    face_component[input.begin + face_index] = (vertex_component[input.begin + vi_1] +
-                        vertex_component[input.begin + vi_2] +
-                        vertex_component[input.begin + vi_3]) / 3;
+            let face_index;
+            for (const [face_component, vertex_component] of zip(this.arrays, input.arrays)) {
+                face_index = 0;
+                for (const [vertex_index_1, vertex_index_2, vertex_index_3] of face_vertices.values()) {
+                    face_component[input.begin + face_index] = (vertex_component[input.begin + vertex_index_1] +
+                        vertex_component[input.begin + vertex_index_2] +
+                        vertex_component[input.begin + vertex_index_3]) / 3;
+                    face_index++;
+                }
+            }
         }
         else {
             let face_index;
@@ -274,19 +160,11 @@ export class VertexPositions extends LoadableVertexAttribute {
             outputs.set(inputs);
     }
 }
-export class VertexPositions3D extends VertexPositions {
-}
-export class VertexPositions4D extends VertexPositions {
-}
 export class VertexNormals extends PulledVertexAttribute {
     constructor() {
         super(...arguments);
         this.attribute_type = 2 /* normal */;
     }
-}
-export class VertexNormals3D extends VertexNormals {
-}
-export class VertexNormals4D extends VertexNormals {
 }
 export class VertexColors extends PulledVertexAttribute {
     constructor() {
@@ -294,23 +172,15 @@ export class VertexColors extends PulledVertexAttribute {
         this.attribute_type = 4 /* color */;
     }
     generate() {
-        for (const array of this._buffer.arrays)
+        for (const array of this.arrays)
             randomize(array, this.begins[0], this.ends[2]);
     }
-}
-export class VertexRGB extends VertexColors {
-}
-export class VertexRGBA extends VertexColors {
 }
 export class VertexUVs extends LoadableVertexAttribute {
     constructor() {
         super(...arguments);
         this.attribute_type = 8 /* uv */;
     }
-}
-export class VertexUV extends VertexUVs {
-}
-export class VertexUVW extends VertexUVs {
 }
 export class FacePositions extends PulledFaceAttribute {
     constructor() {
@@ -325,27 +195,28 @@ export class FaceNormals extends PulledFaceAttribute {
     }
     pull(vertex_positions, face_vertices) {
         for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
-            if (p1.dim === 3) {
-                pos1.setFrom(p1);
-                pos2.setFrom(p2);
-                pos3.setFrom(p3);
+            if (p1 instanceof Position3D &&
+                p2 instanceof Position3D &&
+                p3 instanceof Position3D) {
+                p1.to(p2, dir1);
+                p1.to(p3, dir2);
             }
             else {
                 pos1.setTo(p1.x, p1.y, p1.z);
                 pos2.setTo(p2.x, p2.y, p2.z);
                 pos3.setTo(p3.x, p3.y, p3.z);
+                pos1.to(pos2, dir1);
+                pos1.to(pos3, dir2);
             }
-            p1.to(p2);
-            p1.to(p3);
-            p1.to(p2).cross(dir2).normalize();
-            if (face_normal.dim === 3)
-                face_normal.setFrom(dir1);
-            else
-                face_normal.setTo(dir1.x, dir1.y, dir1.z);
+            if (face_normal instanceof Direction3D) {
+                dir1.cross(dir2).normalized(face_normal);
+            }
+            else {
+                dir1.cross(dir2).normalize();
+                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
+            }
         }
     }
-}
-export class FaceNormals3D extends FaceNormals {
 }
 export class FaceColors extends PulledFaceAttribute {
     constructor() {
@@ -353,7 +224,7 @@ export class FaceColors extends PulledFaceAttribute {
         this.attribute_type = 4 /* color */;
     }
     generate() {
-        for (const array of this._buffer.arrays)
+        for (const array of this.arrays)
             randomize(array, this.begin, this.end);
     }
 }

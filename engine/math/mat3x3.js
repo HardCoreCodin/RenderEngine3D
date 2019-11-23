@@ -1,7 +1,7 @@
-import { Buffer } from "../allocators.js";
 import { RotationMatrix } from "./mat.js";
 import { PRECISION_DIGITS } from "../constants.js";
-import { update_matrix3x3_arrays } from "./vec3.js";
+import { FloatBuffer } from "../buffer.js";
+import { update_vector3D_M11, update_vector3D_M12, update_vector3D_M13, update_vector3D_M21, update_vector3D_M22, update_vector3D_M23, update_vector3D_M31, update_vector3D_M32, update_vector3D_M33 } from "./vec3.js";
 let t11, t12, t13, t21, t22, t23, t31, t32, t33;
 let M11, M12, M13, M21, M22, M23, M31, M32, M33;
 const MATRIX3x3_ARRAYS = [
@@ -9,32 +9,37 @@ const MATRIX3x3_ARRAYS = [
     null, null, null,
     null, null, null
 ];
-const __buffer_slice = [
-    null, null, null,
-    null, null, null,
-    null, null, null
-];
-const __buffer_entry = [
-    0, 0, 0,
-    0, 0, 0,
-    0, 0, 0
-];
-class Buffer3x3 extends Buffer {
-    constructor() {
-        super(...arguments);
-        this._entry = __buffer_entry;
-        this._slice = __buffer_slice;
-    }
-    _onBuffersChanged() {
-        [
-            M11, M12, M13,
-            M21, M22, M23,
-            M31, M32, M33
-        ] = MATRIX3x3_ARRAYS;
-        update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
-    }
-}
-export const matrix3x3buffer = new Buffer3x3(MATRIX3x3_ARRAYS);
+const update_M11 = (m11) => { M11 = MATRIX3x3_ARRAYS[0] = m11; update_vector3D_M11(m11); };
+const update_M12 = (m12) => { M12 = MATRIX3x3_ARRAYS[1] = m12; update_vector3D_M12(m12); };
+const update_M13 = (m13) => { M12 = MATRIX3x3_ARRAYS[2] = m13; update_vector3D_M13(m13); };
+const update_M21 = (m21) => { M21 = MATRIX3x3_ARRAYS[3] = m21; update_vector3D_M21(m21); };
+const update_M22 = (m22) => { M22 = MATRIX3x3_ARRAYS[4] = m22; update_vector3D_M22(m22); };
+const update_M23 = (m23) => { M23 = MATRIX3x3_ARRAYS[5] = m23; update_vector3D_M23(m23); };
+const update_M31 = (m31) => { M31 = MATRIX3x3_ARRAYS[6] = m31; update_vector3D_M31(m31); };
+const update_M32 = (m32) => { M32 = MATRIX3x3_ARRAYS[7] = m32; update_vector3D_M32(m32); };
+const update_M33 = (m33) => { M32 = MATRIX3x3_ARRAYS[8] = m33; update_vector3D_M33(m33); };
+const M11_BUFFER = new FloatBuffer(update_M11);
+const M12_BUFFER = new FloatBuffer(update_M12);
+const M13_BUFFER = new FloatBuffer(update_M13);
+const M21_BUFFER = new FloatBuffer(update_M21);
+const M22_BUFFER = new FloatBuffer(update_M22);
+const M23_BUFFER = new FloatBuffer(update_M23);
+const M31_BUFFER = new FloatBuffer(update_M31);
+const M32_BUFFER = new FloatBuffer(update_M32);
+const M33_BUFFER = new FloatBuffer(update_M33);
+let _temp_id;
+const getTempID = () => {
+    _temp_id = M11_BUFFER.allocateTemp();
+    M12_BUFFER.allocateTemp();
+    M13_BUFFER.allocateTemp();
+    M21_BUFFER.allocateTemp();
+    M22_BUFFER.allocateTemp();
+    M23_BUFFER.allocateTemp();
+    M31_BUFFER.allocateTemp();
+    M32_BUFFER.allocateTemp();
+    M33_BUFFER.allocateTemp();
+    return _temp_id;
+};
 const get = (a, dim) => MATRIX3x3_ARRAYS[dim][a];
 const set = (a, dim, value) => { MATRIX3x3_ARRAYS[dim][a] = value; };
 const set_to = (a, m11, m12, m13, m21, m22, m23, m31, m32, m33) => {
@@ -270,6 +275,7 @@ const set_rotation_around_z = (a, cos, sin) => {
     M21[a] = -sin;
 };
 const matrixFunctions = {
+    getTempID,
     get,
     set,
     set_to,
@@ -300,7 +306,6 @@ export default class Matrix3x3 extends RotationMatrix {
     constructor() {
         super(...arguments);
         this._ = matrixFunctions;
-        this._buffer = matrix3x3buffer;
     }
     set m11(m11) { M11[this.id] = m11; }
     set m12(m12) { M12[this.id] = m12; }
@@ -325,5 +330,5 @@ export default class Matrix3x3 extends RotationMatrix {
         return this;
     }
 }
-export const mat3x3 = (m11 = 0, m12 = 0, m13 = 0, m21 = 0, m22 = 0, m23 = 0, m31 = 0, m32 = 0, m33 = 0) => new Matrix3x3(matrix3x3buffer.tempID).setTo(m11, m12, m13, m21, m22, m23, m31, m32, m33);
+export const mat3x3 = (m11 = 0, m12 = 0, m13 = 0, m21 = 0, m22 = 0, m23 = 0, m31 = 0, m32 = 0, m33 = 0) => new Matrix3x3(getTempID()).setTo(m11, m12, m13, m21, m22, m23, m31, m32, m33);
 //# sourceMappingURL=mat3x3.js.map

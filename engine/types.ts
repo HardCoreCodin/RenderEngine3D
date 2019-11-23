@@ -1,3 +1,5 @@
+import {DIM} from "./constants.js";
+
 export const IntArray = Uint32Array;
 export type IntArray = Uint32Array;
 
@@ -19,37 +21,24 @@ export type TypedArrayConstructor<T> = {
     BYTES_PER_ELEMENT: number;
 }
 
-// import {DIM} from "./constants.js";
+export type AnyConstructor<ConstructorInstanceType = object> = new (...input: any[]) => ConstructorInstanceType;
 
+// export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType[number];
 // export interface Tuple<T extends any, L extends DIM> extends Array<T> {0: T, length: L}
-
 
 export type T2<T> = [ T, T ];
 export type T3<T> = [ T, T, T ];
 export type T4<T> = [ T, T, T, T ];
 export type T9<T> = [ T, T, T, T, T, T, T, T, T ];
 export type T16<T> = [ T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T ];
-export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType[number];
-// export type TArray = FloatArray | IntArray;
 
-// export type RawArray<ArrayType extends TypedArray = FloatArray> = [ArrayType, number, number];
-// export type RawArrays<ArrayType extends TypedArray = FloatArray> = [ArrayType[], number, number];
-//
-// export type RawFloatArray = RawArray<FloatArray>;
-// export type RawFloatArrays = RawArrays<FloatArray>;
-
-// export type TypedTuple<T extends TypedArray, L extends DIM> = Tuple<T, L>;
-// export type Float<L extends DIM> = TypedTuple<FloatArray, L>;
-// export type Floats<L extends DIM> = Tuple<FloatArray[], L>;
-//
-// export type Int<L extends DIM> = TypedTuple<IntArray, L>;
-// export type Ints<L extends DIM> = Tuple<IntArray[], L>;
-//
-// export type Str<L extends DIM> = Tuple<string, L>;
-// export type Strs<L extends DIM> = Tuple<string[], L>;
-//
-// export type Num<L extends DIM> = Tuple<number, L>;
-// export type Nums<L extends DIM> = Tuple<number[], L>;
+export type Tuple<T, L extends number> =
+    L extends 1 ? [T] :
+    L extends 2 ? [ T, T ] :
+    L extends 3 ? [ T, T, T ] :
+    L extends 4 ? [ T, T, T, T ] :
+    L extends 9 ? [ T, T, T, T, T, T, T, T, T ] :
+    L extends 16 ? [ T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T ] : never;
 
 export type Str2 = T2<string>;
 export type Str3 = T3<string>;
@@ -105,22 +94,6 @@ export type UnsharedValues = [
     VectorValues,
     VectorValues
     ];
-// export type UnsharedRawIterators = [
-//     Generator<RawFloatArrays>,
-//     Generator<RawFloatArrays>,
-//     Generator<RawFloatArrays>
-//     ];
-
-// export type UnsharedRawComponents = [
-//     RawFloatArray,
-//     RawFloatArray,
-//     RawFloatArray
-//     ][];
-// export type UnsharedRawArrays = [
-//     RawFloatArrays,
-//     RawFloatArrays,
-//     RawFloatArrays
-//     ];
 
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;
@@ -129,11 +102,3 @@ export type VertexInputs = PositionInputs | NormalInputs | UVInputs | ColorInput
 export type VertexInputStr = PositionInputStr | ColorInputStr | NormalInputStr | UVInputStr;
 export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum | UVInputNum;
 export type VertexFacesIndices = IntArray[];
-// export type FaceVertexIndices = Ints3;
-
-// export type AnyFunction<FunctionReturnType = any> = (...input: any[]) => FunctionReturnType;
-export type AnyConstructor<ConstructorInstanceType = object> = new (...input: any[]) => ConstructorInstanceType;
-// export type Mixin<T extends AnyFunction> = InstanceType<ReturnType<T>>;
-
-
-// export type FaceVertexIndexEntries = Generator<[number, [number, number, number]]>;

@@ -7,17 +7,12 @@ import {
     IMultiplyFunctions,
     IPositionFunctions,
 } from "./functions.js";
-import {IBuffer} from "../../allocators.js";
 
 export interface IBase
 {
     _: IBaseFunctions,
-    _buffer: IBuffer;
 
     id: number;
-
-    array_index: number,
-    buffer_offset: number,
 
     setTo(...values: number[]): this;
     setAllTo(value: number): this;
@@ -25,6 +20,7 @@ export interface IBase
 
     is(other: this): boolean;
     equals(other: this): boolean;
+    copy(out?: this): this;
 }
 
 export interface IBaseArithmatic extends IBase

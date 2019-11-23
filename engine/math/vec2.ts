@@ -1,8 +1,7 @@
-import {DIM, PRECISION_DIGITS} from "../constants.js";
-import {Direction, Interpolatable, Position} from "./vec.js";
 import Matrix2x2 from "./mat2x2.js";
-import {Buffer} from "../allocators.js";
-import {Float2, Float4, FloatArray, Num2} from "../types.js";
+import {FloatBuffer} from "../buffer.js";
+import {Direction, Interpolatable, Position} from "./vec.js";
+import {PRECISION_DIGITS} from "../constants.js";
 import {
     IDirectionFunctions,
     IInterpolateFunctions,
@@ -21,25 +20,30 @@ let t_x,
 
 let X, Y,
     M11, M12,
-    M21, M22: FloatArray;
+    M21, M22: Float32Array;
 
-export const update_matrix2x2_arrays = (MATRIX2x2_ARRAYS: Float4) => [
-    M11, M12,
-    M21, M22
-] = MATRIX2x2_ARRAYS;
+const VECTOR2D_ARRAYS = [null, null];
 
-const __buffer_entry: Num2 = [0, 0];
-const __buffer_slice: Float2 = [null, null];
-const VECTOR2D_ARRAYS: Float2 = [null, null];
+const update_X = (x) => X = VECTOR2D_ARRAYS[0] = x;
+const update_Y = (y) => Y = VECTOR2D_ARRAYS[1] = y;
 
-class Buffer2D extends Buffer<DIM._2D, FloatArray> {
-    protected readonly _entry = __buffer_entry;
-    protected readonly _slice =__buffer_slice;
+export const update_vector2D_M11 = (m11) => M11 = m11;
+export const update_vector2D_M12 = (m12) => M12 = m12;
 
-    _onBuffersChanged = () => [X, Y] = VECTOR2D_ARRAYS;
-}
+export const update_vector2D_M21 = (m21) => M21 = m21;
+export const update_vector2D_M22 = (m22) => M22 = m22;
 
-export const vector2Dbuffer = new Buffer2D(VECTOR2D_ARRAYS);
+const X_BUFFER = new FloatBuffer(update_X);
+const Y_BUFFER = new FloatBuffer(update_Y);
+
+let _temp_id: number;
+const getTempID = (): number => {
+    _temp_id = X_BUFFER.allocateTemp();
+    Y_BUFFER.allocateTemp();
+
+    return _temp_id;
+};
+
 
 const get = (a: number, dim: 0|1): number => VECTOR2D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1, value: number): void => {VECTOR2D_ARRAYS[dim][a] = value};
@@ -178,6 +182,8 @@ const multiply_in_place = (a: number, b: number): void => {
 };
 
 const baseFunctions: IInterpolateFunctions = {
+    getTempID,
+
     get,
     set,
 
@@ -234,7 +240,6 @@ const directionFunctions: IDirectionFunctions = {
 export class UV2D extends Interpolatable implements IUV2D
 {
     readonly _ = baseFunctions;
-    readonly _buffer = vector2Dbuffer;
 
     setTo(u: number, v: number): this {
         set_to(this.id, u, v);
@@ -252,7 +257,6 @@ export class UV2D extends Interpolatable implements IUV2D
 export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
 {
     readonly _ = directionFunctions;
-    readonly _buffer = vector2Dbuffer;
 
     setTo(x: number, y: number): this {
         this._.set_to(this.id, x, y);
@@ -270,7 +274,6 @@ export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
 export class Position2D extends Position<Matrix2x2, Direction2D> implements IPosition2D
 {
     readonly _ = positionFunctions;
-    readonly _buffer = vector2Dbuffer;
 
     protected readonly _dir = dir2D;
 
@@ -291,17 +294,17 @@ export class Position2D extends Position<Matrix2x2, Direction2D> implements IPos
 //     x: number|Direction2D = 0,
 //     y: number = 0
 // ): Position2D => x instanceof Direction2D ?
-//     new Position2D(x.buffer_offset, x.array_index) :
-//     new Position2D(vector2Dbuffer.tempID).setTo(x, y);
+//     new Position2D(x.id) :
+//     new Position2D(getTempID()).setTo(x, y);
 
 export const dir2D = (
     x: number|Position2D = 0,
     y: number = 0
 ): Direction2D => x instanceof Position2D ?
-    new Direction2D(x.buffer_offset, x.array_index) :
-    new Direction2D(vector2Dbuffer.tempID).setTo(x, y);
+    new Direction2D(x.id) :
+    new Direction2D(getTempID()).setTo(x, y);
 
 export const uv = (
     u: number = 0,
     v: number = 0
-): UV2D => new UV2D(vector2Dbuffer.tempID).setTo(u, v);
+): UV2D => new UV2D(getTempID()).setTo(u, v);

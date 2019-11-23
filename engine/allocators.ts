@@ -60,7 +60,7 @@ export abstract class Buffer<
             Dim extends DIM._16D ? T16<ArrayType> :
                 never
     ){
-        this._typed_array = arrays[0].constructor as TypedArrayConstructor<ArrayType>;
+        this._constructor = arrays[0].constructor as TypedArrayConstructor<ArrayType>;
         this._cache_line_length = CACHE_LINE_BYTES / this._typed_array.BYTES_PER_ELEMENT;
         this._temp_length = this._cache_line_length * this._temp_cache_lines;
 
@@ -135,7 +135,7 @@ export abstract class Buffer<
 
     set length(length: number) {
         const array_size = (this._temp_length + length) * this._typed_array.BYTES_PER_ELEMENT;
-        this._array_buffer = new ArrayBuffer(array_size * this.arrays.length);
+        this.array = new ArrayBuffer(array_size * this.arrays.length);
 
         for (const [i, array] of this.arrays.entries()) {
             this.arrays[i] = new this._typed_array(

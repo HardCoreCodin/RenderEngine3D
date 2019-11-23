@@ -1,110 +1,79 @@
 import Mesh, {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./mesh.js";
-import {UV} from "../math/vec2.js";
-import {dir3D, Direction3D, pos3D, Position3D, RGB, UVW} from "../math/vec3.js";
-import {Direction4D, Position4D, RGBA} from "../math/vec4.js";
-import {ATTRIBUTE, DIM} from "../constants.js";
+import {dir3D, Direction3D, pos3D, Position3D, Color3D, UV3D} from "../math/vec3.js";
+import {Direction4D, Position4D, Color4D} from "../math/vec4.js";
+import {ATTRIBUTE} from "../constants.js";
 import {
     AnyConstructor,
     FloatArray,
-    IntArray, Num16, Num2, Num3, Num4, Num9, T16, T2, T3, T4, T9, TypedArray,
-    // Num,
-    // TArray, Tuple, TypedArray, TypedTuple,
-    UnsharedValues,
-    VectorValues,
+    IntArray,
+    Tuple,
+    TypedArray,
 } from "../types.js";
-import {Buffer} from "../allocators.js";
-import {Color, Direction, Position, TextureCoords, Vector} from "../math/vec.js";
+import {Direction, Position} from "../math/vec.js";
 import {FaceVertices, VertexFaces} from "./index.js";
-// import {iterTypedArray} from "../utils.js";
+import {UV2D} from "../math/vec2.js";
 
-export class Data<
-    Dim extends DIM,
+type PositionTypes = Position3D | Position4D;
+type DirectionTypes = Direction3D | Direction4D;
+type ColorTypes = Color3D | Color4D;
+type UVTypes = UV2D | UV3D;
+type DataTypes = PositionTypes | DirectionTypes | ColorTypes | UVTypes;
+
+export abstract class Data<
+    Dim extends number,
     ArrayType extends TypedArray = FloatArray>
 {
     public length: number;
     public begin: number;
     public end: number;
 
-    constructor(
-        protected readonly _buffer: Buffer<Dim, ArrayType>,
-        public arrays = _buffer.arrays,
-        public dim = arrays.length
-    ) {}
+    protected _slices: Tuple<ArrayType, Dim>;
+    protected _values: Tuple<number, Dim>;
 
-    // protected _raw_arrays: RawArray<ArrayType>[];
+    public arrays: Tuple<ArrayType, Dim>;
+
+    constructor() {
+        this._slices = Array<ArrayType>(this.arrays.length) as Tuple<ArrayType, Dim>;
+        this._values = Array<number>(this.arrays.length) as Tuple<number, Dim>;
+    }
 
     init(length: number) {
         this.length = length;
-        this.end = this._buffer.allocate(length);
-        this.begin = this.end - length;
-        // this.arrays = this._buffer.arrays;
-        //
-        // if (!this._raw_arrays) {
-        //     this._raw_arrays = Array(this.dim);
-        //     for (const [i, array] of this._buffer.arrays.entries())
-        //         this._raw_arrays[i] = [array, 0 ,0];
-        // }
+        this.begin = this._allocate(length);
+        this.end = this.begin + length;
     }
 
-    // *rawArrayIterator(
-    //     begin: number = this.begin,
-    //     end: number = this.end,
-    //     out: RawArray<ArrayType>[] = this._raw_arrays
-    // ): Generator<RawArray<ArrayType>> {
-    //     for (const [i, array] of this._buffer.arrays.entries()) {
-    //         out[i][0] = array;
-    //         out[i][1] = begin;
-    //         out[i][2] = end;
-    //
-    //         yield out[i];
-    //     }
-    // }
-    //
-    get slices(): Dim extends DIM._1D ? [ArrayType] :
-    Dim extends DIM._2D ? T2<ArrayType> :
-        Dim extends DIM._3D ? T3<ArrayType> :
-            Dim extends DIM._4D ? T4<ArrayType> :
-                Dim extends DIM._9D ? T9<ArrayType> :
-                    Dim extends DIM._16D ? T16<ArrayType> : never {
-        return this._buffer.slice(this.begin, this.end);
+    get slices(): Tuple<ArrayType, Dim>
+    {
+        for (const [i, array] of this.arrays.entries())
+            this._slices[i] = array.subarray(this.begin, this.end) as ArrayType;
+
+        return this._slices;
     }
 
-    // get raw_arrays(): RawArray<ArrayType>[] {
-    //     for (const [raw_array, array] of zip(this._raw_arrays, this._buffer.arrays)) {
-    //         raw_array[0] = array;
-    //         raw_array[1] = this.begin;
-    //         raw_array[2] = this.end;
-    //     }
-    //
-    //     return this._raw_arrays;
-    // }
-
-    entries(
+    *values(
         begin: number = this.begin,
         end: number = this.end
-    ): Generator<[number, Dim extends DIM._1D ? [number] :
-    Dim extends DIM._2D ? Num2 :
-        Dim extends DIM._3D ? Num3 :
-            Dim extends DIM._4D ? Num4 :
-                Dim extends DIM._9D ? Num9 :
-                    Dim extends DIM._16D ? Num16 :
-                        never]> {
-        return this._buffer.entries(begin, end);
+    ): Generator<Tuple<number, Dim>> {
+        for (let i = begin; i < end; i++)
+            for (const [i, array] of this.arrays.entries())
+                this._values[i] = array[i];
+
+            yield this._values;
     }
+
+    protected abstract _allocate(length: number): number;
 }
 
-export class FloatData<Dim extends DIM> extends Data<Dim , FloatArray> {}
-export class IntData<Dim extends DIM> extends Data<Dim , IntArray> {}
-
-export class DataAttribute<
-    Dim extends DIM._2D | DIM._3D | DIM._4D,
-    VectorType extends Vector<Dim>>
-    extends FloatData<Dim>
+export abstract class DataAttribute<
+    Dim extends 2|3|4,
+    DataType extends DataTypes>
+    extends Data<Dim, FloatArray>
 {
     public readonly attribute_type: ATTRIBUTE;
 
-    protected Vector: AnyConstructor<VectorType>;
-    public current: VectorType;
+    protected Vector: AnyConstructor<DataType>;
+    public current: DataType;
 
     init(length: number): void {
         super.init(length);
@@ -112,47 +81,23 @@ export class DataAttribute<
         this.current = new this.Vector(this.begin);
     }
 
-    setCurrent(array_index): void {
-        this.current.array_index = array_index;
-        this.current.buffer_offset = this.begin;
-    }
-
-    *[Symbol.iterator](): Generator<VectorType> {
-        for (let i = 0; i < this.length; i++) {
-            this.setCurrent(i);
+    *[Symbol.iterator](): Generator<DataType> {
+        for (let id = this.begin; id < this.end; id++) {
+            this.current.id = id;
             yield this.current;
         }
     }
 }
 
-export class VertexAttribute<
-    Dim extends DIM._2D | DIM._3D | DIM._4D,
-    VectorType extends Vector<Dim>>
-    extends DataAttribute<Dim, VectorType>
+export abstract class VertexAttribute<
+    Dim extends 2|3|4,
+    DataType extends DataTypes>
+    extends DataAttribute<Dim, DataType>
 {
-    public readonly currents: T3<VectorType>;
-    public readonly begins: T3<number> = [0, 0, 0];
-    public readonly ends: T3<number> = [0, 0, 0];
+    public readonly currents: [DataType, DataType, DataType];
+    public readonly begins: [number, number, number] = [0, 0, 0];
+    public readonly ends: [number, number, number]  = [0, 0, 0];
     public is_shared: boolean;
-
-    private _unshared_arrays: UnsharedValues = [null, null, null];
-    // private _unshared_iterators: UnsharedRawIterators = [null, null, null];
-    // private _unshared_raw_arrays: UnsharedRawArrays = [
-    //     [null, 0, 0],
-    //     [null, 0, 0],
-    //     [null, 0, 0]
-    // ];
-    // private _unshared_raw_components: UnsharedRawComponents;
-
-    setCurrent(
-        array_index_1: number,
-        array_index_2: number = array_index_1,
-        array_index_3: number = array_index_2
-    ): void {
-        this.currents[0].array_index = array_index_1;
-        this.currents[1].array_index = array_index_2;
-        this.currents[2].array_index = array_index_3;
-    }
 
     init(length: number, is_shared: boolean|number = this.is_shared): void {
         this.length = length;
@@ -166,123 +111,48 @@ export class VertexAttribute<
             return;
         }
 
-        this.ends[0] = this._buffer.allocate(length);
-        this.ends[1] = this._buffer.allocate(length);
-        this.ends[2] = this._buffer.allocate(length);
+        this.begins[0] = this._allocate(length);
+        this.begins[1] = this._allocate(length);
+        this.begins[2] = this._allocate(length);
 
-        this.begins[0] = this.ends[0] - length;
-        this.begins[1] = this.ends[1] - length;
-        this.begins[2] = this.ends[2] - length;
-
-        // this.ends[0] = this._unshared_raw_arrays[0][2] = this._buffer.allocate(length);
-        // this.ends[1] = this._unshared_raw_arrays[1][2] = this._buffer.allocate(length);
-        // this.ends[2] = this._unshared_raw_arrays[2][2] = this._buffer.allocate(length);
-        //
-        // this.begins[0] = this._unshared_raw_arrays[0][1] = this.ends[0] - length;
-        // this.begins[1] = this._unshared_raw_arrays[1][1] = this.ends[1] - length;
-        // this.begins[2] = this._unshared_raw_arrays[2][1] = this.ends[2] - length;
-
-        if (this._unshared_arrays[0] === null) {
-            this._unshared_arrays[0] = [...this._buffer.arrays] as VectorValues;
-            this._unshared_arrays[1] = [...this._buffer.arrays] as VectorValues;
-            this._unshared_arrays[2] = [...this._buffer.arrays] as VectorValues;
-        }
-
-        // if (this._unshared_iterators[0] === null) {
-        //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends)) {
-        //         this._unshared_iterators[vertex_num] = Array(this.dim);
-        //         for
-        //         this.unsharedRawArraysIterator(begin, end, this._unshared_iterators[vertex_num]);
-        //     }
-        //
-        //     this._raw_arrays = Array(this.dim);
-        //     for (const [i, array] of this._buffer.arrays.entries())
-        //         this._raw_arrays[i] = [array, 0 ,0];
-        // }
+        this.ends[0] = this.begins[0] + length;
+        this.ends[1] = this.begins[1] + length;
+        this.ends[2] = this.begins[2] + length;
 
         this.currents[0] = new this.Vector(this.begins[0]);
         this.currents[1] = new this.Vector(this.begins[1]);
         this.currents[2] = new this.Vector(this.begins[2]);
     }
 
-    // *unsharedRawArraysIterator(
-    //     begin: number = this.begin,
-    //     end: number = this.end,
-    //     out: RawFloatArrays
-    // ): Generator<RawFloatArrays> {
-    //     for (const [i, array] of this._buffer.arrays.entries()) {
-    //         out[i][0] = array;
-    //         out[i][1] = begin;
-    //         out[i][2] = end;
-    //
-    //         yield out[i];
-    //     }
-    // }
-
-    // get unshared_raw_components(): UnsharedRawComponents {
-    //     if (!this._unshared_raw_components) {
-    //         this._unshared_raw_components = Array(this.dim);
-    //         for (const [i, array] of this._buffer.arrays.entries()) {
-    //             this._unshared_raw_components[i] = [
-    //                 [array, this.begins[0], this.ends[0]],
-    //                 [array, this.begins[1], this.ends[1]],
-    //                 [array, this.begins[2], this.ends[2]]
-    //             ];
-    //         }
-    //     } else
-    //         for (const [i, array] of this._buffer.arrays.entries())
-    //             this._unshared_raw_components[i][0][0] =
-    //                 this._unshared_raw_components[i][1][0] =
-    //                     this._unshared_raw_components[i][2][0] = array;
-    //
-    //     return this._unshared_raw_components;
-    // }
-    //
-    // get unshared_raw_arrays(): UnsharedRawArrays {
-    //     this._unshared_raw_arrays[0][0] =
-    //         this._unshared_raw_arrays[1][0] =
-    //             this._unshared_raw_arrays[2][0] = this._buffer.arrays;
-    //
-    //     return this._unshared_raw_arrays;
-    // }
-
-    // get unshared_iterators(): UnsharedRawIterators {
-    //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends))
-    //         this._unshared_iterators[vertex_num] = iterTypedArray();
-    //
-    //     return this._unshared_iterators
-    // }
-
-    // get unshared_arrays(): UnsharedValues {
-    //     for (const [begin, end, vertex_num] of zip(this.begins, this.ends))
-    //         this._buffer.slice(begin, end, this._unshared_arrays[vertex_num]);
-    //
-    //     return this._unshared_arrays;
-    // }
-
     *iterFaceVertexValues(
         face_vertices?: FaceVertices
-    ): Generator<T3<VectorType>> {
+    ): Generator<[DataType, DataType, DataType]> {
         if (this.is_shared) {
-            for (const [face_index, [index_1, index_2, index3]] of face_vertices.entries()) {
-                this.setCurrent(index_1, index_2, index3);
+            for (const [index_1, index_2, index_3] of face_vertices.values()) {
+                this.currents[0].id = this.begin + index_1;
+                this.currents[1].id = this.begin + index_2;
+                this.currents[2].id = this.begin + index_3;
+
                 yield this.currents;
             }
         } else {
             for (let face_index = 0; face_index < this.length; face_index++) {
-                this.setCurrent(face_index);
+                this.currents[0].id = this.begins[0] + face_index;
+                this.currents[1].id = this.begins[1] + face_index;
+                this.currents[2].id = this.begins[2] + face_index;
+
                 yield this.currents;
             }
         }
     }
 }
 
-export class LoadableVertexAttribute<
-    Dim extends DIM._2D | DIM._3D | DIM._4D,
-    VectorType extends Vector<Dim>,
+export abstract class LoadableVertexAttribute<
+    Dim extends 2|3|4,
+    DataType extends DataTypes,
     InputAttributeType extends InputAttribute
     >
-    extends VertexAttribute<Dim, VectorType>
+    extends VertexAttribute<Dim, DataType>
 {
     protected _loadShared(input: InputAttributeType, face_vertices: FaceVertices): void {
         let in_index, out_index: number;
@@ -309,14 +179,14 @@ export class LoadableVertexAttribute<
     }
 }
 
-export class PulledVertexAttribute<
-    Dim extends DIM._3D | DIM._4D,
-    VectorType extends Vector<Dim>,
+export abstract class PulledVertexAttribute<
+    Dim extends 3|4,
+    DataType extends DataTypes,
     InputAttributeType extends InputAttribute,
-    FaceAttributeType extends DataAttribute<Dim, VectorType>>
+    FaceAttributeType extends DataAttribute<Dim, DataType>>
     extends LoadableVertexAttribute<
         Dim,
-        VectorType,
+        DataType,
         InputAttributeType>
 {
     pull(input: FaceAttributeType, vertex_faces: VertexFaces): void {
@@ -345,22 +215,29 @@ export class PulledVertexAttribute<
     }
 }
 
-export class PulledFaceAttribute<
-    Dim extends DIM._3D | DIM._4D,
-    FaceVector extends Vector<Dim>,
-    VertexVector extends Vector<Dim>,
-    VertexAttributeType extends VertexAttribute<Dim, VertexVector>>
-    extends DataAttribute<Dim, FaceVector>
+export abstract class PulledFaceAttribute<
+    Dim extends 3|4,
+    DataType extends DataTypes,
+    VertexDataType extends DataTypes,
+    VertexAttributeType extends VertexAttribute<Dim, VertexDataType>>
+    extends DataAttribute<Dim, DataType>
 {
     pull(input: VertexAttributeType, face_vertices: FaceVertices): void {
         if (input.is_shared) {
-            for (const [face_component, vertex_component] of zip(this.arrays, input.arrays))
-                for (const [face_index, [vi_1, vi_2, vi_3]] of face_vertices.entries())
+            let face_index: number;
+            for (const [face_component, vertex_component] of zip(this.arrays, input.arrays)) {
+                face_index = 0;
+
+                for (const [vertex_index_1, vertex_index_2, vertex_index_3] of face_vertices.values()) {
                     face_component[input.begin + face_index] = (
-                        vertex_component[input.begin + vi_1] +
-                        vertex_component[input.begin + vi_2] +
-                        vertex_component[input.begin + vi_3]
+                        vertex_component[input.begin + vertex_index_1] +
+                        vertex_component[input.begin + vertex_index_2] +
+                        vertex_component[input.begin + vertex_index_3]
                     ) / 3;
+
+                    face_index++;
+                }
+            }
         } else {
             let face_index: number;
             for (const [vertex_component, face_component] of zip(input.arrays, this.arrays))
@@ -374,9 +251,9 @@ export class PulledFaceAttribute<
     }
 }
 
-export class VertexPositions<
-    Dim extends DIM._3D | DIM._4D,
-    PositionType extends Position<Dim>>
+export abstract class VertexPositions<
+    Dim extends 3|4,
+    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
     extends LoadableVertexAttribute<
         Dim,
         PositionType,
@@ -390,13 +267,10 @@ export class VertexPositions<
     }
 }
 
-export class VertexPositions3D extends VertexPositions<DIM._3D, Position3D> {}
-export class VertexPositions4D extends VertexPositions<DIM._4D, Position4D> {}
-
-export class VertexNormals<
-    Dim extends DIM._3D | DIM._4D,
-    DirectionType extends Direction<Dim>,
-    PositionType extends Position<Dim>>
+export abstract class VertexNormals<
+    Dim extends 3|4,
+    DirectionType extends DirectionTypes = Dim extends 3 ? Direction3D : Direction4D,
+    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
     extends PulledVertexAttribute<
         Dim,
         DirectionType,
@@ -409,12 +283,9 @@ export class VertexNormals<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
 }
 
-export class VertexNormals3D extends VertexNormals<DIM._3D, Direction3D, Position3D> {}
-export class VertexNormals4D extends VertexNormals<DIM._4D, Direction4D, Position4D> {}
-
-export class VertexColors<
-    Dim extends DIM._3D | DIM._4D,
-    ColorType extends Color<Dim>>
+export abstract class VertexColors<
+    Dim extends 3|4,
+    ColorType extends ColorTypes = Dim extends 3 ? Color3D : Color4D>
     extends PulledVertexAttribute<
         Dim,
         ColorType,
@@ -424,17 +295,14 @@ export class VertexColors<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
 
     generate(): void {
-        for (const array of this._buffer.arrays)
+        for (const array of this.arrays)
             randomize(array, this.begins[0], this.ends[2]);
     }
 }
 
-export class VertexRGB extends VertexColors<DIM._3D, RGB> {}
-export class VertexRGBA extends VertexColors<DIM._4D, RGBA> {}
-
-export class VertexUVs<
-    Dim extends DIM._3D | DIM._2D,
-    UVType extends TextureCoords<Dim>>
+export abstract class VertexUVs<
+    Dim extends 2|3,
+    UVType extends UVTypes = Dim extends 3 ? UV3D : UV2D>
     extends LoadableVertexAttribute<
         Dim,
         UVType,
@@ -443,12 +311,9 @@ export class VertexUVs<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.uv;
 }
 
-export class VertexUV extends VertexUVs<DIM._2D, TextureCoords> {}
-export class VertexUVW extends VertexUVs<DIM._3D, UVW> {}
-
-export class FacePositions<
-    Dim extends DIM._3D | DIM._4D,
-    PositionType extends Position<Dim> = Dim extends DIM._3D ? Position3D : Position4D>
+export abstract class FacePositions<
+    Dim extends 3|4,
+    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
     extends PulledFaceAttribute<
         Dim,
         PositionType,
@@ -458,10 +323,10 @@ export class FacePositions<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
 }
 
-export class FaceNormals<
-    Dim extends DIM._3D | DIM._4D,
-    DirectionType extends Direction<Dim>,
-    PositionType extends Position<Dim>,
+export abstract class FaceNormals<
+    Dim extends 3|4,
+    DirectionType extends DirectionTypes = Dim extends 3 ? Direction3D : Direction4D,
+    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D,
     VertexPositionArribute extends VertexPositions<Dim, PositionType> = VertexPositions<Dim, PositionType>>
     extends PulledFaceAttribute<
         Dim,
@@ -473,33 +338,34 @@ export class FaceNormals<
 
     pull(vertex_positions: VertexPositionArribute, face_vertices: FaceVertices) {
         for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
-            if (p1.dim === 3) {
-                pos1.setFrom(p1);
-                pos2.setFrom(p2);
-                pos3.setFrom(p3);
+            if (p1 instanceof Position3D &&
+                p2 instanceof Position3D &&
+                p3 instanceof Position3D) {
+
+                p1.to(p2, dir1);
+                p1.to(p3, dir2);
             } else {
                 pos1.setTo(p1.x, p1.y, p1.z);
                 pos2.setTo(p2.x, p2.y, p2.z);
                 pos3.setTo(p3.x, p3.y, p3.z);
+
+                pos1.to(pos2, dir1);
+                pos1.to(pos3, dir2);
             }
 
-            (p1 as Position3D).to(p2 as Position3D);
-            p1.to(p3);
-            p1.to(p2).cross(dir2).normalize();
-
-            if (face_normal.dim === 3)
-                face_normal.setFrom(dir1);
-            else
-                face_normal.setTo(dir1.x, dir1.y, dir1.z);
+            if (face_normal instanceof Direction3D) {
+                dir1.cross(dir2).normalized(face_normal);
+            } else {
+                dir1.cross(dir2).normalize();
+                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
+            }
         }
     }
 }
 
-export class FaceNormals3D extends FaceNormals<DIM._3D, Direction3D, Position3D> {}
-
-export class FaceColors<
-    Dim extends DIM._3D | DIM._4D,
-    ColorType extends Color<Dim>>
+export abstract class FaceColors<
+    Dim extends 3|4,
+    ColorType extends ColorTypes = Dim extends 3 ? Color3D : Color4D>
     extends PulledFaceAttribute<
         Dim,
         ColorType,
@@ -511,7 +377,7 @@ export class FaceColors<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
 
     generate() {
-        for (const array of this._buffer.arrays)
+        for (const array of this.arrays)
             randomize(array, this.begin, this.end);
     }
 }

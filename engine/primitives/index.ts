@@ -1,68 +1,72 @@
-import {Buffer} from "../allocators.js";
-import {Num3, Int3, IntArray, VertexFacesIndices, TriangleInputs} from "../types.js";
-import {iterTypedArray} from "../utils.js";
-import {IntData, zip} from "./attribute.js";
-import {DIM} from "../constants.js";
+import {VertexFacesIndices, TriangleInputs} from "../types.js";
+import {Data, zip} from "./attribute.js";
+import {IntBuffer} from "../buffer.js";
 
-const __face_vertices_buffer_entry: Num3 = [0, 0, 0];
-const __face_vertices_buffer_slice: Int3 = [null, null, null];
-const FACE_VERTICES_ARRAYS: Int3 = [null, null, null];
 
-class FaceVerticesBuffer extends Buffer<DIM._3D, IntArray> {
-    protected readonly _entry = __face_vertices_buffer_entry;
-    protected readonly _slice = __face_vertices_buffer_slice;
-}
-export const faceVerticesBuffer = new FaceVerticesBuffer(FACE_VERTICES_ARRAYS);
+let INDEX_ARRAY_1, INDEX_ARRAY_2, INDEX_ARRAY_3: Uint32Array;
+const INDEX_ARRAYS: [Uint32Array, Uint32Array, Uint32Array] = [null, null, null];
 
-export class FaceVertices extends IntData<DIM._3D>
+const updateIndexArray1 = (index_Array_1) => INDEX_ARRAY_1 = INDEX_ARRAYS[0] = index_Array_1;
+const updateIndexArray2 = (index_Array_2) => INDEX_ARRAY_2 = INDEX_ARRAYS[1] = index_Array_2;
+const updateIndexArray3 = (index_Array_3) => INDEX_ARRAY_3 = INDEX_ARRAYS[2] = index_Array_3;
+
+const INDEX_BUFFER_1 = new IntBuffer(updateIndexArray1, 0);
+const INDEX_BUFFER_2 = new IntBuffer(updateIndexArray2, 0);
+const INDEX_BUFFER_3 = new IntBuffer(updateIndexArray3, 0);
+
+export class FaceVertices extends Data<3, Uint32Array>
 {
-    protected readonly _buffer = faceVerticesBuffer;
+    arrays = INDEX_ARRAYS;
 
-    load(input_indices: TriangleInputs): void {
-        this._buffer.arrays[0].set(input_indices[0], this.begin);
-        this._buffer.arrays[1].set(input_indices[1], this.begin);
-        this._buffer.arrays[2].set(input_indices[2], this.begin);
+    load(
+        index_Array_1: number[],
+        index_array_2: number[],
+        index_Array_3: number[]
+    ): void {
+        INDEX_ARRAY_1.set(index_Array_1, this.begin);
+        INDEX_ARRAY_2.set(index_array_2, this.begin);
+        INDEX_ARRAY_3.set(index_Array_3, this.begin);
+    }
+
+    protected _allocate(length: number): number {
+        const index = INDEX_BUFFER_1.allocate(length);
+        INDEX_BUFFER_2.allocate(length);
+        INDEX_BUFFER_3.allocate(length);
+
+        return index;
     }
 }
 
-const __vertex_faces_buffer_entry: [number] = [0];
-const __vertex_faces_buffer_slice: [IntArray] = [null];
-const VERTEX_FACES_ARRAYS: [IntArray] = [null];
 
-class VertexFacesBuffer extends Buffer<DIM._1D, IntArray> {
-    protected readonly _entry = __vertex_faces_buffer_entry;
-    protected readonly _slice = __vertex_faces_buffer_slice;
-}
-export const vertexFacesBuffer = new VertexFacesBuffer(VERTEX_FACES_ARRAYS);
+let VERTEX_FACES: Uint32Array;
+const VERTEX_FACES_ARRAYS: [Uint32Array] = [null];
 
-export class VertexFaces extends IntData<DIM._1D> {
-    protected readonly _buffer = vertexFacesBuffer;
+const updateVertexFaces = (vertex_faces) => VERTEX_FACES = VERTEX_FACES_ARRAYS[0] = vertex_faces;
+const VERTEX_FACES_BUFFER = new IntBuffer(updateVertexFaces, 0);
+
+export class VertexFaces extends Data<1, Uint32Array>
+{
+    arrays = VERTEX_FACES_ARRAYS;
 
     public readonly begins: number[] = [0];
     public readonly ends: number[] = [0];
 
-    protected readonly _array: IntArray;
-    protected readonly _sub_arrays: Array<IntArray> = [];
+    protected readonly _sub_arrays: Array<Uint32Array> = [];
 
-    constructor() {
-        super();
-        this._array = this._buffer.arrays[0] as IntArray;
-    }
+    // protected* _iterArrayValues(): Generator<[number, Generator<number>]> {
+    //     for (const [begin, end, vertex_index] of zip(this.begins, this.ends))
+    //         yield [vertex_index, iterTypedArray(VERTEX_FACES, begin, end)];
+    // }
 
-    protected* _iterArrayValues(): Generator<[number, Generator<number>]> {
-        for (const [begin, end, vertex_index] of zip(this.begins, this.ends))
-            yield [vertex_index, iterTypedArray(this._array, begin, end)];
-    }
-
-    get iter_indices(): Generator<[number, Generator<number>]> {
-        return this._iterArrayValues();
-    }
+    // get iter_indices(): Generator<[number, Generator<number>]> {
+    //     return this._iterArrayValues();
+    // }
 
     get indices(): VertexFacesIndices {
         this._sub_arrays.length = this.begins.length;
 
         for (const [begin, end, i] of zip(this.begins, this.ends))
-            this._sub_arrays[i] = this._array.subarray(begin, end);
+            this._sub_arrays[i] = VERTEX_FACES.subarray(begin, end);
 
         return this._sub_arrays;
     }
@@ -72,10 +76,14 @@ export class VertexFaces extends IntData<DIM._1D> {
 
         let offset = this.begin;
         for (const [i, array] of input_indices.entries()) {
-            this._array.set(array, offset);
+            VERTEX_FACES.set(array, offset);
             this.begins[i] = offset;
             offset += array.length;
             this.ends[i] = offset;
         }
+    }
+
+    protected _allocate(length: number): number {
+        return VERTEX_FACES_BUFFER.allocate(length);
     }
 }

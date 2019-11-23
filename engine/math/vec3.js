@@ -1,25 +1,31 @@
 import { Position, Interpolatable, CrossedDirection } from "./vec.js";
 import { PRECISION_DIGITS } from "../constants.js";
-import { Buffer } from "../allocators.js";
+import { FloatBuffer } from "../buffer.js";
 let t_x, t_y, t_z, t_n;
 let X, Y, Z, M11, M12, M13, M21, M22, M23, M31, M32, M33;
-export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS) => [
-    M11, M12, M13,
-    M21, M22, M23,
-    M31, M32, M33
-] = MATRIX3x3_ARRAYS;
-const __buffer_entry = [0, 0, 0];
-const __buffer_slice = [null, null, null];
 const VECTOR3D_ARRAYS = [null, null, null];
-class Buffer3D extends Buffer {
-    constructor() {
-        super(...arguments);
-        this._entry = __buffer_entry;
-        this._slice = __buffer_slice;
-        this._onBuffersChanged = () => [X, Y, Z] = VECTOR3D_ARRAYS;
-    }
-}
-export const vector3Dbuffer = new Buffer3D(VECTOR3D_ARRAYS);
+const update_X = (x) => X = VECTOR3D_ARRAYS[0] = x;
+const update_Y = (y) => Y = VECTOR3D_ARRAYS[1] = y;
+const update_Z = (z) => Z = VECTOR3D_ARRAYS[2] = z;
+export const update_vector3D_M11 = (m11) => M11 = m11;
+export const update_vector3D_M12 = (m12) => M12 = m12;
+export const update_vector3D_M13 = (m13) => M13 = m13;
+export const update_vector3D_M21 = (m21) => M21 = m21;
+export const update_vector3D_M22 = (m22) => M22 = m22;
+export const update_vector3D_M23 = (m23) => M23 = m23;
+export const update_vector3D_M31 = (m31) => M31 = m31;
+export const update_vector3D_M32 = (m32) => M32 = m32;
+export const update_vector3D_M33 = (m33) => M33 = m33;
+const X_BUFFER = new FloatBuffer(update_X);
+const Y_BUFFER = new FloatBuffer(update_Y);
+const Z_BUFFER = new FloatBuffer(update_Z);
+let _temp_id;
+const getTempID = () => {
+    _temp_id = X_BUFFER.allocateTemp();
+    Y_BUFFER.allocateTemp();
+    Z_BUFFER.allocateTemp();
+    return _temp_id;
+};
 const get = (a, dim) => VECTOR3D_ARRAYS[dim][a];
 const set = (a, dim, value) => { VECTOR3D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z) => {
@@ -146,6 +152,7 @@ const multiply_in_place = (a, b) => {
     Z[a] = t_x * M13[b] + t_y * M23[b] + t_z * M33[b];
 };
 const baseFunctions = {
+    getTempID,
     get,
     set,
     set_to,
@@ -179,7 +186,6 @@ export class UV3D extends Interpolatable {
     constructor() {
         super(...arguments);
         this._ = baseFunctions;
-        this._buffer = vector3Dbuffer;
     }
     setTo(u, v, w) {
         set_to(this.id, u, v, w);
@@ -196,7 +202,6 @@ export class Color3D extends Interpolatable {
     constructor() {
         super(...arguments);
         this._ = baseFunctions;
-        this._buffer = vector3Dbuffer;
     }
     setTo(r, g, b) {
         set_to(this.id, r, g, b);
@@ -213,7 +218,6 @@ export class Direction3D extends CrossedDirection {
     constructor() {
         super(...arguments);
         this._ = directionFunctions;
-        this._buffer = vector3Dbuffer;
     }
     setTo(x, y, z) {
         this._.set_to(this.id, x, y, z);
@@ -230,7 +234,6 @@ export class Position3D extends Position {
     constructor() {
         super(...arguments);
         this._ = positionFunctions;
-        this._buffer = vector3Dbuffer;
         this._dir = dir3D;
     }
     setTo(x, y, z) {
@@ -245,11 +248,11 @@ export class Position3D extends Position {
     get z() { return Z[this.id]; }
 }
 export const pos3D = (x = 0, y = 0, z = 0) => x instanceof Direction3D ?
-    new Position3D(x.buffer_offset, x.array_index) :
-    new Position3D(vector3Dbuffer.tempID).setTo(x, y, z);
+    new Position3D(x.id) :
+    new Position3D(getTempID()).setTo(x, y, z);
 export const dir3D = (x = 0, y = 0, z = 0) => x instanceof Position3D ?
-    new Direction3D(x.buffer_offset, x.array_index) :
-    new Direction3D(vector3Dbuffer.tempID).setTo(x, y, z);
-export const rgb = (r = 0, g = 0, b = 0) => new Color3D(vector3Dbuffer.tempID).setTo(r, g, b);
-export const uvw = (u = 0, v = 0, w = 0) => new UV3D(vector3Dbuffer.tempID).setTo(u, v, w);
+    new Direction3D(x.id) :
+    new Direction3D(getTempID()).setTo(x, y, z);
+export const rgb = (r = 0, g = 0, b = 0) => new Color3D(getTempID()).setTo(r, g, b);
+export const uvw = (u = 0, v = 0, w = 0) => new UV3D(getTempID()).setTo(u, v, w);
 //# sourceMappingURL=vec3.js.map

@@ -1,10 +1,9 @@
 import Matrix3x3 from "./mat3x3.js";
 import {Position, Interpolatable, CrossedDirection} from "./vec.js";
-import {DIM, PRECISION_DIGITS} from "../constants.js";
-import {FloatArray, Float9, Float3, Num3} from "../types.js";
-import {Buffer} from "../allocators.js";
+import {PRECISION_DIGITS} from "../constants.js";
 import {ICrossFunctions, IInterpolateFunctions, IPositionFunctions, IVectorFunctions} from "./interfaces/functions.js";
 import {IColor3D, IDirection3D, IPosition3D, IUV3D} from "./interfaces/classes.js";
+import {FloatBuffer} from "../buffer.js";
 
 let t_x,
     t_y,
@@ -14,26 +13,38 @@ let t_x,
 let X, Y, Z,
     M11, M12, M13,
     M21, M22, M23,
-    M31, M32, M33 : FloatArray;
+    M31, M32, M33 : Float32Array;
 
-export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS: Float9) => [
-    M11, M12, M13,
-    M21, M22, M23,
-    M31, M32, M33
-] = MATRIX3x3_ARRAYS;
+const VECTOR3D_ARRAYS = [null, null, null];
 
-const __buffer_entry: Num3 = [0, 0, 0];
-const __buffer_slice: Float3 = [null, null, null];
-const VECTOR3D_ARRAYS: Float3 = [null, null, null];
+const update_X = (x) => X = VECTOR3D_ARRAYS[0] = x;
+const update_Y = (y) => Y = VECTOR3D_ARRAYS[1] = y;
+const update_Z = (z) => Z = VECTOR3D_ARRAYS[2] = z;
 
-class Buffer3D extends Buffer<DIM._3D, FloatArray> {
-    protected readonly _entry = __buffer_entry;
-    protected readonly _slice =__buffer_slice;
+export const update_vector3D_M11 = (m11) => M11 = m11;
+export const update_vector3D_M12 = (m12) => M12 = m12;
+export const update_vector3D_M13 = (m13) => M13 = m13;
 
-    _onBuffersChanged = () => [X, Y, Z] = VECTOR3D_ARRAYS;
-}
+export const update_vector3D_M21 = (m21) => M21 = m21;
+export const update_vector3D_M22 = (m22) => M22 = m22;
+export const update_vector3D_M23 = (m23) => M23 = m23;
 
-export const vector3Dbuffer = new Buffer3D(VECTOR3D_ARRAYS);
+export const update_vector3D_M31 = (m31) => M31 = m31;
+export const update_vector3D_M32 = (m32) => M32 = m32;
+export const update_vector3D_M33 = (m33) => M33 = m33;
+
+const X_BUFFER = new FloatBuffer(update_X);
+const Y_BUFFER = new FloatBuffer(update_Y);
+const Z_BUFFER = new FloatBuffer(update_Z);
+
+let _temp_id: number;
+const getTempID = (): number => {
+    _temp_id = X_BUFFER.allocateTemp();
+    Y_BUFFER.allocateTemp();
+    Z_BUFFER.allocateTemp();
+
+    return _temp_id;
+};
 
 const get = (a: number, dim: 0|1|2): number => VECTOR3D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2, value: number): void => {VECTOR3D_ARRAYS[dim][a] = value};
@@ -64,6 +75,7 @@ const equals = (a: number, b: number) : boolean =>
     Z[a].toFixed(PRECISION_DIGITS) ===
     Z[b].toFixed(PRECISION_DIGITS);
 
+type F = Float32Array;
 const invert = (a: number, o: number): void => {
     X[o] = -X[a];
     Y[o] = -Y[a];
@@ -217,6 +229,8 @@ const multiply_in_place = (a: number, b: number) : void => {
 
 
 const baseFunctions: IInterpolateFunctions = {
+    getTempID,
+
     get,
     set,
 
@@ -275,7 +289,6 @@ const directionFunctions: ICrossFunctions = {
 export class UV3D extends Interpolatable implements IUV3D
 {
     readonly _ = baseFunctions;
-    readonly _buffer = vector3Dbuffer;
 
     setTo(u: number, v: number, w: number): this {
         set_to(this.id, u, v, w);
@@ -295,7 +308,6 @@ export class UV3D extends Interpolatable implements IUV3D
 export class Color3D extends Interpolatable implements IColor3D
 {
     readonly _ = baseFunctions;
-    readonly _buffer = vector3Dbuffer;
 
     setTo(r: number, g: number, b: number): this {
         set_to(this.id, r, g, b);
@@ -315,7 +327,6 @@ export class Color3D extends Interpolatable implements IColor3D
 export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirection3D
 {
     readonly _ = directionFunctions;
-    readonly _buffer = vector3Dbuffer;
 
     setTo(x: number, y: number, z:number): this {
         this._.set_to(this.id, x, y, z);
@@ -335,7 +346,6 @@ export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirecti
 export class Position3D extends Position<Matrix3x3, Direction3D> implements IPosition3D
 {
     readonly _ = positionFunctions;
-    readonly _buffer = vector3Dbuffer;
 
     protected readonly _dir = dir3D;
 
@@ -359,25 +369,25 @@ export const pos3D = (
     y: number = 0,
     z: number = 0
 ): Position3D => x instanceof Direction3D ?
-    new Position3D(x.buffer_offset, x.array_index) :
-    new Position3D(vector3Dbuffer.tempID).setTo(x, y, z);
+    new Position3D(x.id) :
+    new Position3D(getTempID()).setTo(x, y, z);
 
 export const dir3D = (
     x: number|Position3D = 0,
     y: number = 0,
     z: number = 0
 ): Direction3D => x instanceof Position3D ?
-    new Direction3D(x.buffer_offset, x.array_index) :
-    new Direction3D(vector3Dbuffer.tempID).setTo(x, y, z);
+    new Direction3D(x.id) :
+    new Direction3D(getTempID()).setTo(x, y, z);
 
 export const rgb = (
     r: number = 0,
     g: number = 0,
     b: number = 0
-): Color3D => new Color3D(vector3Dbuffer.tempID).setTo(r, g, b);
+): Color3D => new Color3D(getTempID()).setTo(r, g, b);
 
 export const uvw = (
     u: number = 0,
     v: number = 0,
     w: number = 0
-): UV3D => new UV3D(vector3Dbuffer.tempID).setTo(u, v, w);
+): UV3D => new UV3D(getTempID()).setTo(u, v, w);

@@ -1,4 +1,6 @@
 export interface IBaseFunctions {
+    getTempID(): number;
+
     get(a: number, i: number): number;
     set(a: number, i: number, value: number): void;
 

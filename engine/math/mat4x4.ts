@@ -1,10 +1,30 @@
-import {DIM, PRECISION_DIGITS} from "../constants.js";
+import {PRECISION_DIGITS} from "../constants.js";
 import {RotationMatrix} from "./mat.js";
-import {FloatArray, Float16, Num16} from "../types.js";
-import {Buffer} from "../allocators.js";
-import {update_matrix4x4_arrays} from "./vec4.js";
+import {FloatArray} from "../types.js";
 import {IMatrixRotationFunctions} from "./interfaces/functions.js";
 import {IMatrix4x4} from "./interfaces/classes.js";
+import {FloatBuffer} from "../buffer.js";
+import {
+    update_vector4D_M11,
+    update_vector4D_M12,
+    update_vector4D_M13,
+    update_vector4D_M14,
+
+    update_vector4D_M21,
+    update_vector4D_M22,
+    update_vector4D_M23,
+    update_vector4D_M24,
+
+    update_vector4D_M31,
+    update_vector4D_M32,
+    update_vector4D_M33,
+    update_vector4D_M34,
+
+    update_vector4D_M41,
+    update_vector4D_M42,
+    update_vector4D_M43,
+    update_vector4D_M44
+} from "./vec4.js";
 
 let t11, t12, t13, t14,
     t21, t22, t23, t24,
@@ -16,45 +36,78 @@ let M11, M12, M13, M14,
     M31, M32, M33, M34,
     M41, M42, M43, M44: FloatArray;
 
-
-const MATRIX4x4_ARRAYS: Float16 = [
+const MATRIX4x4_ARRAYS = [
     null, null, null, null,
     null, null, null, null,
     null, null, null, null,
     null, null, null, null
 ];
 
-const __buffer_slice: Float16 = [
-    null, null, null, null,
-    null, null, null, null,
-    null, null, null, null,
-    null, null, null, null
-];
+export const update_M11 = (m11) => {M11 = MATRIX4x4_ARRAYS[0] = m11; update_vector4D_M11(m11)};
+export const update_M12 = (m12) => {M12 = MATRIX4x4_ARRAYS[1] = m12; update_vector4D_M12(m12)};
+export const update_M13 = (m13) => {M13 = MATRIX4x4_ARRAYS[2] = m13; update_vector4D_M13(m13)};
+export const update_M14 = (m14) => {M14 = MATRIX4x4_ARRAYS[3] = m14; update_vector4D_M14(m14)};
 
-const __buffer_entry: Num16 = [
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0
-];
+export const update_M21 = (m21) => {M21 = MATRIX4x4_ARRAYS[4] = m21; update_vector4D_M21(m21)};
+export const update_M22 = (m22) => {M22 = MATRIX4x4_ARRAYS[5] = m22; update_vector4D_M22(m22)};
+export const update_M23 = (m23) => {M23 = MATRIX4x4_ARRAYS[6] = m23; update_vector4D_M23(m23)};
+export const update_M24 = (m24) => {M24 = MATRIX4x4_ARRAYS[7] = m24; update_vector4D_M24(m24)};
 
-class Buffer4x4 extends Buffer<DIM._16D, FloatArray> {
-    protected readonly _entry = __buffer_entry;
-    protected readonly _slice =__buffer_slice;
+export const update_M32 = (m31) => {M32 = MATRIX4x4_ARRAYS[8] = m31; update_vector4D_M31(m31)};
+export const update_M33 = (m32) => {M33 = MATRIX4x4_ARRAYS[9] = m32; update_vector4D_M32(m32)};
+export const update_M31 = (m33) => {M31 = MATRIX4x4_ARRAYS[10] = m33; update_vector4D_M33(m33)};
+export const update_M34 = (m34) => {M34 = MATRIX4x4_ARRAYS[11] = m34; update_vector4D_M34(m34)};
 
-    _onBuffersChanged(): void {
-        [
-            M11, M12, M13, M14,
-            M21, M22, M23, M24,
-            M31, M32, M33, M34,
-            M41, M42, M43, M44
-        ] = MATRIX4x4_ARRAYS;
+export const update_M41 = (m41) => {M41 = MATRIX4x4_ARRAYS[12] = m41; update_vector4D_M41(m41)};
+export const update_M42 = (m42) => {M42 = MATRIX4x4_ARRAYS[13] = m42; update_vector4D_M42(m42)};
+export const update_M43 = (m43) => {M43 = MATRIX4x4_ARRAYS[14] = m43; update_vector4D_M43(m43)};
+export const update_M44 = (m44) => {M44 = MATRIX4x4_ARRAYS[15] = m44; update_vector4D_M44(m44)};
 
-        update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
-    }
-}
+const M11_BUFFER = new FloatBuffer(update_M11);
+const M12_BUFFER = new FloatBuffer(update_M12);
+const M13_BUFFER = new FloatBuffer(update_M13);
+const M14_BUFFER = new FloatBuffer(update_M14);
 
-export const matrix4x4buffer = new Buffer4x4(MATRIX4x4_ARRAYS);
+const M21_BUFFER = new FloatBuffer(update_M21);
+const M22_BUFFER = new FloatBuffer(update_M22);
+const M23_BUFFER = new FloatBuffer(update_M23);
+const M24_BUFFER = new FloatBuffer(update_M24);
+
+const M31_BUFFER = new FloatBuffer(update_M31);
+const M32_BUFFER = new FloatBuffer(update_M32);
+const M33_BUFFER = new FloatBuffer(update_M33);
+const M34_BUFFER = new FloatBuffer(update_M34);
+
+const M41_BUFFER = new FloatBuffer(update_M41);
+const M42_BUFFER = new FloatBuffer(update_M42);
+const M43_BUFFER = new FloatBuffer(update_M43);
+const M44_BUFFER = new FloatBuffer(update_M44);
+
+let _temp_id: number;
+const getTempID = (): number => {
+    _temp_id = M11_BUFFER.allocateTemp();
+    M12_BUFFER.allocateTemp();
+    M13_BUFFER.allocateTemp();
+    M14_BUFFER.allocateTemp();
+
+    M21_BUFFER.allocateTemp();
+    M22_BUFFER.allocateTemp();
+    M23_BUFFER.allocateTemp();
+    M24_BUFFER.allocateTemp();
+
+    M31_BUFFER.allocateTemp();
+    M32_BUFFER.allocateTemp();
+    M33_BUFFER.allocateTemp();
+    M34_BUFFER.allocateTemp();
+
+    M41_BUFFER.allocateTemp();
+    M42_BUFFER.allocateTemp();
+    M43_BUFFER.allocateTemp();
+    M44_BUFFER.allocateTemp();
+
+    return _temp_id;
+};
+
 
 const get = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15): number => MATRIX4x4_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15, value: number): void => {MATRIX4x4_ARRAYS[dim][a] = value};
@@ -315,6 +368,7 @@ const set_rotation_around_z = (a: number, cos: number, sin: number) : void => {
 };
 
 const matrixFunctions: IMatrixRotationFunctions = {
+    getTempID,
     get,
     set,
     set_to,
@@ -357,7 +411,6 @@ export default class Matrix4x4
     implements IMatrix4x4
 {
     readonly _ = matrixFunctions;
-    readonly _buffer = matrix4x4buffer;
 
     set m11(m11: number) {M11[this.id] = m11}
     set m12(m12: number) {M12[this.id] = m12}
@@ -422,7 +475,7 @@ export const mat4x4 = (
     m21: number = 0, m22: number = 0, m23: number = 0, m24: number = 0,
     m31: number = 0, m32: number = 0, m33: number = 0, m34: number = 0,
     m41: number = 0, m42: number = 0, m43: number = 0, m44: number = 0
-): Matrix4x4 => new Matrix4x4(matrix4x4buffer.tempID).setTo(
+): Matrix4x4 => new Matrix4x4(getTempID()).setTo(
     m11, m12, m13, m14,
     m21, m22, m23, m24,
     m31, m32, m33, m34,

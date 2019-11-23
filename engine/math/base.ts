@@ -1,20 +1,12 @@
 import {IArithmaticFunctions, IBaseFunctions} from "./interfaces/functions.js";
 import {IBase, IBaseArithmatic} from "./interfaces/classes.js";
-import {IBuffer} from "../allocators.js";
+import {AnyConstructor} from "../types.js";
 
 export abstract class Base implements IBase
 {
     readonly abstract _: IBaseFunctions;
-    readonly abstract _buffer: IBuffer;
 
-    constructor(
-        public buffer_offset : number,
-        public array_index: number = 0
-    ) {}
-
-    get id(): number {
-        return this.buffer_offset + this.array_index;
-    }
+    constructor(public id: number) {}
 
     setTo(...values: number[]): this {
         this._.set_to(this.id, ...values);
@@ -38,10 +30,8 @@ export abstract class Base implements IBase
     readonly equals = (other: this): boolean => other.is(this) || this._.equals(other.id, this.id);
 
     copy(out?: this): this {
-        if (!out) {
-            out = Object.create(this);
-            out.array_index = this._buffer.tempID;
-        }
+        if (!out)
+            out = new (this.constructor as AnyConstructor<this>)(this._.getTempID());
 
         this._.set_from(out.id, this.id);
 

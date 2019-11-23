@@ -1,104 +1,43 @@
-import {DIM, PRECISION_DIGITS} from "../constants.js";
 import Matrix from "./mat.js";
-import {FloatArray, Float4, Num4} from "../types.js";
-import {Buffer} from "../allocators.js";
-import {update_matrix2x2_arrays} from "./vec2.js";
+import {FloatBuffer} from "../buffer.js";
+import {PRECISION_DIGITS} from "../constants.js";
 import {IMatrixFunctions} from "./interfaces/functions.js";
-import {IMatrix, IMatrix2x2} from "./interfaces/classes.js";
+import {IMatrix2x2} from "./interfaces/classes.js";
+import {update_vector2D_M11, update_vector2D_M12, update_vector2D_M21, update_vector2D_M22} from "./vec2.js";
 
 let t11, t12,
     t21, t22: number;
 
 let M11, M12,
-    M21, M22: FloatArray;
+    M21, M22: Float32Array;
 
-const __buffer_entry: Num4 = [
-    0, 0,
-    0, 0
-];
-
-const __buffer_slice: Float4 = [
+const MATRIX2x2_ARRAYS = [
     null, null,
-    null, null
-];
-
-const MATRIX2x2_ARRAYS: Float4 = [
     null, null,
-    null, null
 ];
 
-class Buffer2x2 extends Buffer<DIM._4D, FloatArray> {
-    protected readonly _entry = __buffer_entry;
-    protected readonly _slice =__buffer_slice;
+const update_M11 = (m11) => {M11 = MATRIX2x2_ARRAYS[0] = m11; update_vector2D_M11(m11)};
+const update_M12 = (m12) => {M12 = MATRIX2x2_ARRAYS[1] = m12; update_vector2D_M12(m12)};
 
-    _onBuffersChanged(): void {
-        [
-            M11, M12,
-            M21, M22
-        ] = MATRIX2x2_ARRAYS;
+const update_M21 = (m21) => {M21 = MATRIX2x2_ARRAYS[2] = m21; update_vector2D_M21(m21)};
+const update_M22 = (m22) => {M22 = MATRIX2x2_ARRAYS[3] = m22; update_vector2D_M22(m22)};
 
-        update_matrix2x2_arrays(MATRIX2x2_ARRAYS);
-    }
-}
+const M11_BUFFER = new FloatBuffer(update_M11);
+const M12_BUFFER = new FloatBuffer(update_M12);
 
-export const matrix2x2buffer = new Buffer2x2(MATRIX2x2_ARRAYS);
+const M21_BUFFER = new FloatBuffer(update_M21);
+const M22_BUFFER = new FloatBuffer(update_M22);
 
-//
-//
-// export const MATRIX2x2_BUFFERS: [
-//     Float32Array, Float32Array,
-//     Float32Array, Float32Array
-//     ] = [
-//     null, null,
-//     null, null
-// ];
-//
-// const BUFFERS_BEFORE_INIT: [
-//     Float32Array, Float32Array,
-//     Float32Array, Float32Array
-//     ] = [
-//     null, null,
-//     null, null
-// ];
-//
-// const DIMENTION: DIM = DIM._4D;
-// const TEMPORARY_STORAGE_LENGTH = CACHE_LINE_SIZE * 16;
-// let BUFFER_LENGTH = 0;
-// let temporary_storage_offset = 0;
-// let current_storage_offset = TEMPORARY_STORAGE_LENGTH;
-// export const allocateTemporaryArray2D = (): number =>
-//     temporary_storage_offset++ % TEMPORARY_STORAGE_LENGTH;
-//
-// let offset_before_allocation: number;
-// export const allocateArray2D = (length: number): number => {
-//     offset_before_allocation = current_storage_offset;
-//     current_storage_offset += length;
-//
-//     if (current_storage_offset > BUFFER_LENGTH)
-//         throw '2D Buffer overflow!';
-//
-//     return offset_before_allocation;
-// };
-//
-// let i: number;
-// export const initBuffer2D = (length: number): void => {
-//     BUFFER_LENGTH = TEMPORARY_STORAGE_LENGTH + length;
-//
-//     for (i= 0; i< DIMENTION; i++)
-//         BUFFERS_BEFORE_INIT[i] = MATRIX2x2_BUFFERS[i];
-//
-//     M11 = MATRIX2x2_BUFFERS[0] = new Float32Array(BUFFER_LENGTH);
-//     M12 = MATRIX2x2_BUFFERS[1] = new Float32Array(BUFFER_LENGTH);
-//
-//     M21 = MATRIX2x2_BUFFERS[2] = new Float32Array(BUFFER_LENGTH);
-//     M22 = MATRIX2x2_BUFFERS[3] = new Float32Array(BUFFER_LENGTH);
-//
-//     if (BUFFERS_BEFORE_INIT[0] !== null)
-//         for (i = 0; i < DIMENTION; i++)
-//             MATRIX2x2_BUFFERS[i].set(BUFFERS_BEFORE_INIT[i]);
-//
-//     update_matrix2x2_arrays();
-// };
+
+let _temp_id: number;
+const getTempID = (): number => {
+    _temp_id = M11_BUFFER.allocateTemp();
+    M12_BUFFER.allocateTemp();
+    M21_BUFFER.allocateTemp();
+    M22_BUFFER.allocateTemp();
+
+    return _temp_id;
+};
 
 const get = (a: number, dim: 0|1|2|3): number => MATRIX2x2_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3, value: number): void => {MATRIX2x2_ARRAYS[dim][a] = value};
@@ -232,6 +171,8 @@ const set_rotation = (a: number, cos: number, sin: number) : void => {
 };
 
 const matrixFunctions: IMatrixFunctions = {
+    getTempID,
+
     get,
     set,
     set_to,
@@ -270,7 +211,6 @@ export default class Matrix2x2
     implements IMatrix2x2
 {
     readonly _ = matrixFunctions;
-    readonly _buffer = matrix2x2buffer;
 
     set m11(m11: number) {M11[this.id] = m11}
     set m12(m12: number) {M12[this.id] = m12}
@@ -305,10 +245,10 @@ export default class Matrix2x2
     }
 }
 
-export const mat2x2 = (
-    m11: number = 0, m12: number = 0,
-    m21: number = 0, m22: number = 0
-): Matrix2x2 => new Matrix2x2(matrix2x2buffer.tempID).setTo(
-    m11, m12,
-    m21, m22
-);
+// export const mat2x2 = (
+//     m11: number = 0, m12: number = 0,
+//     m21: number = 0, m22: number = 0
+// ): Matrix2x2 => new Matrix2x2(getTempID()).setTo(
+//     m11, m12,
+//     m21, m22
+// );
