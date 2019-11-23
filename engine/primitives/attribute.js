@@ -2,8 +2,9 @@ import { dir3D, Direction3D, pos3D, Position3D } from "../math/vec3.js";
 import { FaceVertices } from "./index.js";
 export class Data {
     constructor() {
-        this._slices = Array(this.arrays.length);
-        this._values = Array(this.arrays.length);
+        this._slices = [];
+        this._values = [];
+        this._slices.length = this._values.length = this.arrays.length;
     }
     init(length) {
         this.length = length;

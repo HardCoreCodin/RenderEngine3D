@@ -19,22 +19,19 @@ type ColorTypes = Color3D | Color4D;
 type UVTypes = UV2D | UV3D;
 type DataTypes = PositionTypes | DirectionTypes | ColorTypes | UVTypes;
 
-export abstract class Data<
-    Dim extends number,
-    ArrayType extends TypedArray = FloatArray>
+export abstract class Data<ArrayType extends TypedArray = FloatArray>
 {
     public length: number;
     public begin: number;
     public end: number;
 
-    protected _slices: Tuple<ArrayType, Dim>;
-    protected _values: Tuple<number, Dim>;
+    protected _slices: ArrayType[] = [];
+    protected _values: number[] = [];
 
-    public arrays: Tuple<ArrayType, Dim>;
+    public arrays: ArrayType[];
 
     constructor() {
-        this._slices = Array<ArrayType>(this.arrays.length) as Tuple<ArrayType, Dim>;
-        this._values = Array<number>(this.arrays.length) as Tuple<number, Dim>;
+        this._slices.length = this._values.length = this.arrays.length;
     }
 
     init(length: number) {
@@ -43,7 +40,7 @@ export abstract class Data<
         this.end = this.begin + length;
     }
 
-    get slices(): Tuple<ArrayType, Dim>
+    get slices(): ArrayType[]
     {
         for (const [i, array] of this.arrays.entries())
             this._slices[i] = array.subarray(this.begin, this.end) as ArrayType;
@@ -54,7 +51,7 @@ export abstract class Data<
     *values(
         begin: number = this.begin,
         end: number = this.end
-    ): Generator<Tuple<number, Dim>> {
+    ): Generator<number[]> {
         for (let i = begin; i < end; i++)
             for (const [i, array] of this.arrays.entries())
                 this._values[i] = array[i];
@@ -66,9 +63,8 @@ export abstract class Data<
 }
 
 export abstract class DataAttribute<
-    Dim extends 2|3|4,
     DataType extends DataTypes>
-    extends Data<Dim, FloatArray>
+    extends Data<FloatArray>
 {
     public readonly attribute_type: ATTRIBUTE;
 
@@ -90,9 +86,8 @@ export abstract class DataAttribute<
 }
 
 export abstract class VertexAttribute<
-    Dim extends 2|3|4,
     DataType extends DataTypes>
-    extends DataAttribute<Dim, DataType>
+    extends DataAttribute<DataType>
 {
     public readonly currents: [DataType, DataType, DataType];
     public readonly begins: [number, number, number] = [0, 0, 0];
@@ -148,11 +143,10 @@ export abstract class VertexAttribute<
 }
 
 export abstract class LoadableVertexAttribute<
-    Dim extends 2|3|4,
     DataType extends DataTypes,
     InputAttributeType extends InputAttribute
     >
-    extends VertexAttribute<Dim, DataType>
+    extends VertexAttribute<DataType>
 {
     protected _loadShared(input: InputAttributeType, face_vertices: FaceVertices): void {
         let in_index, out_index: number;
@@ -180,12 +174,10 @@ export abstract class LoadableVertexAttribute<
 }
 
 export abstract class PulledVertexAttribute<
-    Dim extends 3|4,
     DataType extends DataTypes,
     InputAttributeType extends InputAttribute,
-    FaceAttributeType extends DataAttribute<Dim, DataType>>
+    FaceAttributeType extends DataAttribute<DataType>>
     extends LoadableVertexAttribute<
-        Dim,
         DataType,
         InputAttributeType>
 {
@@ -216,11 +208,10 @@ export abstract class PulledVertexAttribute<
 }
 
 export abstract class PulledFaceAttribute<
-    Dim extends 3|4,
     DataType extends DataTypes,
     VertexDataType extends DataTypes,
-    VertexAttributeType extends VertexAttribute<Dim, VertexDataType>>
-    extends DataAttribute<Dim, DataType>
+    VertexAttributeType extends VertexAttribute<VertexDataType>>
+    extends DataAttribute<DataType>
 {
     pull(input: VertexAttributeType, face_vertices: FaceVertices): void {
         if (input.is_shared) {
@@ -251,13 +242,8 @@ export abstract class PulledFaceAttribute<
     }
 }
 
-export abstract class VertexPositions<
-    Dim extends 3|4,
-    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
-    extends LoadableVertexAttribute<
-        Dim,
-        PositionType,
-        InputPositions>
+export abstract class VertexPositions<PositionType extends PositionTypes>
+    extends LoadableVertexAttribute<PositionType,InputPositions>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
 
@@ -268,15 +254,12 @@ export abstract class VertexPositions<
 }
 
 export abstract class VertexNormals<
-    Dim extends 3|4,
-    DirectionType extends DirectionTypes = Dim extends 3 ? Direction3D : Direction4D,
-    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
+    DirectionType extends DirectionTypes,
+    PositionType extends PositionTypes>
     extends PulledVertexAttribute<
-        Dim,
         DirectionType,
         InputNormals,
         FaceNormals<
-            Dim,
             DirectionType,
             PositionType>>
 {
@@ -284,13 +267,11 @@ export abstract class VertexNormals<
 }
 
 export abstract class VertexColors<
-    Dim extends 3|4,
-    ColorType extends ColorTypes = Dim extends 3 ? Color3D : Color4D>
+    ColorType extends ColorTypes>
     extends PulledVertexAttribute<
-        Dim,
         ColorType,
         InputColors,
-        FaceColors<Dim, ColorType>>
+        FaceColors<ColorType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
 
@@ -301,10 +282,8 @@ export abstract class VertexColors<
 }
 
 export abstract class VertexUVs<
-    Dim extends 2|3,
-    UVType extends UVTypes = Dim extends 3 ? UV3D : UV2D>
+    UVType extends UVTypes>
     extends LoadableVertexAttribute<
-        Dim,
         UVType,
         InputUVs>
 {
@@ -312,24 +291,20 @@ export abstract class VertexUVs<
 }
 
 export abstract class FacePositions<
-    Dim extends 3|4,
-    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D>
+    PositionType extends PositionTypes>
     extends PulledFaceAttribute<
-        Dim,
         PositionType,
         PositionType,
-        VertexPositions<Dim, PositionType>>
+        VertexPositions<PositionType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
 }
 
 export abstract class FaceNormals<
-    Dim extends 3|4,
-    DirectionType extends DirectionTypes = Dim extends 3 ? Direction3D : Direction4D,
-    PositionType extends PositionTypes = Dim extends 3 ? Position3D : Position4D,
-    VertexPositionArribute extends VertexPositions<Dim, PositionType> = VertexPositions<Dim, PositionType>>
+    DirectionType extends DirectionTypes,
+    PositionType extends PositionTypes,
+    VertexPositionArribute extends VertexPositions<PositionType> = VertexPositions<PositionType>>
     extends PulledFaceAttribute<
-        Dim,
         DirectionType,
         PositionType,
         VertexPositionArribute>
@@ -364,14 +339,11 @@ export abstract class FaceNormals<
 }
 
 export abstract class FaceColors<
-    Dim extends 3|4,
-    ColorType extends ColorTypes = Dim extends 3 ? Color3D : Color4D>
+    ColorType extends ColorTypes>
     extends PulledFaceAttribute<
-        Dim,
         ColorType,
         ColorType,
         VertexColors<
-            Dim,
             ColorType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;

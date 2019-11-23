@@ -14,7 +14,7 @@ const INDEX_BUFFER_1 = new IntBuffer(updateIndexArray1, 0);
 const INDEX_BUFFER_2 = new IntBuffer(updateIndexArray2, 0);
 const INDEX_BUFFER_3 = new IntBuffer(updateIndexArray3, 0);
 
-export class FaceVertices extends Data<3, Uint32Array>
+export class FaceVertices extends Data<Uint32Array>
 {
     arrays = INDEX_ARRAYS;
 
@@ -44,7 +44,7 @@ const VERTEX_FACES_ARRAYS: [Uint32Array] = [null];
 const updateVertexFaces = (vertex_faces) => VERTEX_FACES = VERTEX_FACES_ARRAYS[0] = vertex_faces;
 const VERTEX_FACES_BUFFER = new IntBuffer(updateVertexFaces, 0);
 
-export class VertexFaces extends Data<1, Uint32Array>
+export class VertexFaces extends Data<Uint32Array>
 {
     arrays = VERTEX_FACES_ARRAYS;
 
