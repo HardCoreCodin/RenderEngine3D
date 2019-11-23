@@ -1,12 +1,13 @@
 import {Position3D} from "../math/vec3.js";
 import {pos4D, Position4D} from "../math/vec4.js";
 import Matrix4x4, {mat4x4} from "../math/mat4x4.js";
-import {Allocators, AllocatorSizes} from "../allocators.js";
+import {Allocators} from "../allocators.js";
 import Object3D from "./object.js";
 import Transform, {trans} from "./transform.js";
+import {BufferSizes} from "../buffer.js";
 
 export default class Camera extends Object3D {
-    static readonly SIZE= new AllocatorSizes(Object3D.SIZE).addedWith({
+    static readonly SIZE= new BufferSizes(Object3D.SIZE).addedWith({
         mat4x4: 1,
         vec4D: 1
     });

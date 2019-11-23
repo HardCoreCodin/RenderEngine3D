@@ -6,9 +6,10 @@ import FPSController, {fps} from "./input.js";
 import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
 import {dir4D, Direction4D} from "./math/vec4.js";
 import {rgb, RGB} from "./math/vec3.js";
-import {Allocators, AllocatorSizes} from "./allocators.js";
+import {Allocators} from "./allocators.js";
 import Transform, {trans} from "./objects/transform.js";
 import MeshRenderer, {rend} from "./objects/renderable.js";
+import {BufferSizes} from "./buffer.js";
 
 export default class Engine3D {
     static SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
@@ -23,7 +24,7 @@ export default class Engine3D {
     private readonly mesh_renderers: MeshRenderer[] = [];
 
     private readonly allocators: Allocators;
-    private readonly allocator_sizes: AllocatorSizes;
+    private readonly allocator_sizes: BufferSizes;
 
     private depth_buffer: Float32Array;
     private frame_time = 1000 / 60;
@@ -62,7 +63,7 @@ export default class Engine3D {
         // Compute allocator sizes:
         this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
         for (const mesh of meshes)
-            this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
+            this.allocator_sizes.add(mesh.sizes).add(Transform.SIZE);
 
         // Allocate memory:
         this.allocators = this.allocator_sizes.allocate();

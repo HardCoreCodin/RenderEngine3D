@@ -1,10 +1,11 @@
 import {defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba} from "../math/vec4.js";
 import {defaultVector3DAllocator, dir3D, Direction3D, pos3D, Position3D, rgb, RGB, uvw, UVW} from "../math/vec3.js";
-import {IAllocatorSizes, Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Vertices} from "./attribute.js";
 import {defaultVector2DAllocator, IUV, uv, UV} from "../math/vec2.js";
 import {IDirection, IPosition, IColor} from "../math/interfaces/classes.js";
+import {IBufferSizes} from "../buffer.js";
 
 export class Vertex<
         Position extends IPosition,
@@ -69,7 +70,7 @@ export class Vertex<
 }
 
 export class Vertex3D extends Vertex<Position3D, Direction3D, RGB, UV> {
-    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({
+    static SIZE = (include: ATTRIBUTE) : IBufferSizes => ({
         vec3D: 1 + (
             include & ATTRIBUTE.normal ? 1 : 0
         ) + (
@@ -87,7 +88,7 @@ export class Vertex3D extends Vertex<Position3D, Direction3D, RGB, UV> {
 }
 
 export class Vertex4D extends Vertex<Position4D, Direction4D, RGBA, UVW> {
-    static SIZE = (include: ATTRIBUTE) : IAllocatorSizes => ({
+    static SIZE = (include: ATTRIBUTE) : IBufferSizes => ({
         vec4D: 1 + (
             include & ATTRIBUTE.normal ? 1 : 0
         ) + (

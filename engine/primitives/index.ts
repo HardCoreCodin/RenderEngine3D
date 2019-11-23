@@ -14,10 +14,17 @@ const INDEX_BUFFER_1 = new IntBuffer(updateIndexArray1, 0);
 const INDEX_BUFFER_2 = new IntBuffer(updateIndexArray2, 0);
 const INDEX_BUFFER_3 = new IntBuffer(updateIndexArray3, 0);
 
+let _index: number;
+const _allocateFaceVertices = (length: number): number => {
+    _index = INDEX_BUFFER_1.allocate(length);
+    INDEX_BUFFER_2.allocate(length);
+    INDEX_BUFFER_3.allocate(length);
+
+    return _index;
+};
+
 export class FaceVertices extends Data<Uint32Array>
 {
-    arrays = INDEX_ARRAYS;
-
     load(
         index_Array_1: number[],
         index_array_2: number[],
@@ -27,16 +34,9 @@ export class FaceVertices extends Data<Uint32Array>
         INDEX_ARRAY_2.set(index_array_2, this.begin);
         INDEX_ARRAY_3.set(index_Array_3, this.begin);
     }
-
-    protected _allocate(length: number): number {
-        const index = INDEX_BUFFER_1.allocate(length);
-        INDEX_BUFFER_2.allocate(length);
-        INDEX_BUFFER_3.allocate(length);
-
-        return index;
-    }
 }
 
+export const createFaceVertices = (): FaceVertices => new FaceVertices(INDEX_ARRAYS, _allocateFaceVertices);
 
 let VERTEX_FACES: Uint32Array;
 const VERTEX_FACES_ARRAYS: [Uint32Array] = [null];

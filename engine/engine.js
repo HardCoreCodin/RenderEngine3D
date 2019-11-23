@@ -37,7 +37,7 @@ export default class Engine3D {
         // Compute allocator sizes:
         this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
         for (const mesh of meshes)
-            this.allocator_sizes.add(mesh.allocator_sizes).add(Transform.SIZE);
+            this.allocator_sizes.add(mesh.sizes).add(Transform.SIZE);
         // Allocate memory:
         this.allocators = this.allocator_sizes.allocate();
         // Load...

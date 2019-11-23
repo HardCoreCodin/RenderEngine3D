@@ -1,7 +1,7 @@
 import { vert3, vert4, Vertex3DView, Vertex4D, Vertex4DView } from "./vertex.js";
 import { pos3D, dir3D, rgb } from "../math/vec3.js";
 import { pos4D, dir4D, rgba } from "../math/vec4.js";
-import { AllocatorSizes } from "../allocators.js";
+import { BufferSizes } from "../buffer.js";
 export class Triangle {
     constructor(v1, v2, v3, normal, color, position, vertices = [v1, v2, v3]) {
         this.v1 = v1;
@@ -146,7 +146,7 @@ export class Triangle {
 }
 export class Triangle3D extends Triangle {
 }
-Triangle3D.SIZE = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new AllocatorSizes(Vertex4D.SIZE(include_vertex_attributes)).times(3).add({
+Triangle3D.SIZE = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new BufferSizes(Vertex4D.SIZE(include_vertex_attributes)).times(3).add({
     vec3D: (include_face_attributes & 1 /* position */ ? 1 : 0) + (include_face_attributes & 2 /* normal */ ? 1 : 0) + (include_face_attributes & 4 /* color */ ? 1 : 0)
 });
 export default class Triangle4D extends Triangle {
@@ -171,7 +171,7 @@ export default class Triangle4D extends Triangle {
             this.v3.position.isOutOfView(near, far));
     }
 }
-Triangle4D.SIZE = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new AllocatorSizes(Vertex4D.SIZE(include_vertex_attributes)).times(3).add({
+Triangle4D.SIZE = (include_vertex_attributes = 1 /* position */, include_face_attributes = 2 /* normal */) => new BufferSizes(Vertex4D.SIZE(include_vertex_attributes)).times(3).add({
     vec4D: (include_face_attributes & 1 /* position */ ? 1 : 0) + (include_face_attributes & 2 /* normal */ ? 1 : 0) + (include_face_attributes & 4 /* color */ ? 1 : 0)
 });
 export class Triangle3DView extends Triangle3D {

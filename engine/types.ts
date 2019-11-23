@@ -1,5 +1,3 @@
-import {DIM} from "./constants.js";
-
 export const IntArray = Uint32Array;
 export type IntArray = Uint32Array;
 
@@ -11,6 +9,7 @@ export type TypedArray = ArrayLike<number> & {
     buffer: ArrayBuffer,
     set(array: ArrayLike<number>, offset?: number): void;
     subarray(begin: number, end?: number): TypedArray;
+    copyWithin(target: number, begin: number, end?: number): void;
 };
 
 export type TypedArrayConstructor<T> = {
@@ -86,14 +85,6 @@ export type UVInputNum = Num2;
 
 export type QuadInputNum = Num4;
 export type TriangleInputNum = Num3;
-
-export type VectorValues = Float2 | Float3 | Float4;
-
-export type UnsharedValues = [
-    VectorValues,
-    VectorValues,
-    VectorValues
-    ];
 
 export type FaceInputs = QuadInputs | TriangleInputs;
 export type FaceInputStr = QuadInputStr | TriangleInputStr;

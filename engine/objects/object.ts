@@ -1,10 +1,11 @@
 import Transform, {trans} from "./transform.js";
-import {IAllocatorSizes, Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
+import {Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
 import {defaultMatrix4x4Allocator} from "../math/mat4x4.js";
 import {defaultMatrix3x3Allocator} from "../math/mat3x3.js";
+import {IBufferSizes} from "../buffer.js";
 
 export default class Object3D {
-    static readonly SIZE: IAllocatorSizes = Transform.SIZE;
+    static readonly SIZE: IBufferSizes = Transform.SIZE;
 
     constructor(
         public readonly transform: Transform

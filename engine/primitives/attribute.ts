@@ -1,17 +1,12 @@
-import Mesh, {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./mesh.js";
-import {dir3D, Direction3D, pos3D, Position3D, Color3D, UV3D} from "../math/vec3.js";
-import {Direction4D, Position4D, Color4D} from "../math/vec4.js";
-import {ATTRIBUTE} from "../constants.js";
-import {
-    AnyConstructor,
-    FloatArray,
-    IntArray,
-    Tuple,
-    TypedArray,
-} from "../types.js";
-import {Direction, Position} from "../math/vec.js";
-import {FaceVertices, VertexFaces} from "./index.js";
 import {UV2D} from "../math/vec2.js";
+import {ATTRIBUTE} from "../constants.js";
+import {FaceVertices, VertexFaces} from "./index.js";
+import {Direction3D, Position3D, Color3D, UV3D, dir3D, pos3D} from "../math/vec3.js";
+import {Direction4D, Position4D, Color4D} from "../math/vec4.js";
+import Mesh, {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./mesh.js";
+import {AnyConstructor, FloatArray, IntArray, TypedArray} from "../types.js";
+import {BufferSizes, TypedArraysBuffer} from "../buffer.js";
+
 
 type PositionTypes = Position3D | Position4D;
 type DirectionTypes = Direction3D | Direction4D;
@@ -19,25 +14,36 @@ type ColorTypes = Color3D | Color4D;
 type UVTypes = UV2D | UV3D;
 type DataTypes = PositionTypes | DirectionTypes | ColorTypes | UVTypes;
 
-export abstract class Data<ArrayType extends TypedArray = FloatArray>
+export class Data<ArrayType extends TypedArray = FloatArray>
 {
     public length: number;
     public begin: number;
     public end: number;
+    readonly dim: number;
 
     protected _slices: ArrayType[] = [];
     protected _values: number[] = [];
 
-    public arrays: ArrayType[];
+    protected readonly _buffer: TypedArraysBuffer<ArrayType>;
+    public readonly arrays: ArrayType[];
 
     constructor() {
-        this._slices.length = this._values.length = this.arrays.length;
+        this.arrays = this._buffer.arrays;
+        this._slices.length = this._values.length = this.dim = this.arrays.length;
     }
 
     init(length: number) {
+        if (this.length)
+            this.free();
+
         this.length = length;
-        this.begin = this._allocate(length);
+        this.begin = this._buffer.allocate(length);
         this.end = this.begin + length;
+    }
+
+    free() {
+        this._buffer.deallocate(this.begin, this.end);
+        this.length = this.begin = this.end = 0;
     }
 
     get slices(): ArrayType[]
@@ -58,13 +64,9 @@ export abstract class Data<ArrayType extends TypedArray = FloatArray>
 
             yield this._values;
     }
-
-    protected abstract _allocate(length: number): number;
 }
 
-export abstract class DataAttribute<
-    DataType extends DataTypes>
-    extends Data<FloatArray>
+export class DataAttribute<DataType extends DataTypes> extends Data<FloatArray>
 {
     public readonly attribute_type: ATTRIBUTE;
 
@@ -77,6 +79,12 @@ export abstract class DataAttribute<
         this.current = new this.Vector(this.begin);
     }
 
+    free() {
+        super.free();
+
+        this.current = null;
+    }
+
     *[Symbol.iterator](): Generator<DataType> {
         for (let id = this.begin; id < this.end; id++) {
             this.current.id = id;
@@ -85,9 +93,7 @@ export abstract class DataAttribute<
     }
 }
 
-export abstract class VertexAttribute<
-    DataType extends DataTypes>
-    extends DataAttribute<DataType>
+export class VertexAttribute<DataType extends DataTypes> extends DataAttribute<DataType>
 {
     public readonly currents: [DataType, DataType, DataType];
     public readonly begins: [number, number, number] = [0, 0, 0];
@@ -95,20 +101,20 @@ export abstract class VertexAttribute<
     public is_shared: boolean;
 
     init(length: number, is_shared: boolean|number = this.is_shared): void {
-        this.length = length;
-        this.is_shared = !!is_shared;
-
         if (is_shared) {
             super.init(length);
             this.begins[0] = this.begins[1] = this.begins[2] = this.begin;
             this.ends[0] = this.ends[1] = this.ends[2] = this.end;
 
             return;
-        }
+        } else if (this.length) this.free();
 
-        this.begins[0] = this._allocate(length);
-        this.begins[1] = this._allocate(length);
-        this.begins[2] = this._allocate(length);
+        this.length = length;
+        this.is_shared = !!is_shared;
+
+        this.begins[0] = this._buffer.allocate(length);
+        this.begins[1] = this._buffer.allocate(length);
+        this.begins[2] = this._buffer.allocate(length);
 
         this.ends[0] = this.begins[0] + length;
         this.ends[1] = this.begins[1] + length;
@@ -117,6 +123,16 @@ export abstract class VertexAttribute<
         this.currents[0] = new this.Vector(this.begins[0]);
         this.currents[1] = new this.Vector(this.begins[1]);
         this.currents[2] = new this.Vector(this.begins[2]);
+    }
+
+    free() {
+        if (this.is_shared)
+            super.free();
+        else
+            this._buffer.deallocate(this.begins[0], this.ends[2]);
+
+        this.begins[0] = this.begins[1] = this.begins[2] = this.ends[0] = this.ends[1] = this.ends[2] = 0;
+        this.current = this.currents[0] = this.currents[1] = this.currents[2] = null;
     }
 
     *iterFaceVertexValues(
@@ -142,10 +158,9 @@ export abstract class VertexAttribute<
     }
 }
 
-export abstract class LoadableVertexAttribute<
+export class LoadableVertexAttribute<
     DataType extends DataTypes,
-    InputAttributeType extends InputAttribute
-    >
+    InputAttributeType extends InputAttribute>
     extends VertexAttribute<DataType>
 {
     protected _loadShared(input: InputAttributeType, face_vertices: FaceVertices): void {
@@ -173,13 +188,11 @@ export abstract class LoadableVertexAttribute<
     }
 }
 
-export abstract class PulledVertexAttribute<
+export class PulledVertexAttribute<
     DataType extends DataTypes,
     InputAttributeType extends InputAttribute,
     FaceAttributeType extends DataAttribute<DataType>>
-    extends LoadableVertexAttribute<
-        DataType,
-        InputAttributeType>
+    extends LoadableVertexAttribute<DataType, InputAttributeType>
 {
     pull(input: FaceAttributeType, vertex_faces: VertexFaces): void {
         if (this.is_shared) {
@@ -207,9 +220,7 @@ export abstract class PulledVertexAttribute<
     }
 }
 
-export abstract class PulledFaceAttribute<
-    DataType extends DataTypes,
-    VertexDataType extends DataTypes,
+export class PulledFaceAttribute<DataType extends DataTypes, VertexDataType extends DataTypes,
     VertexAttributeType extends VertexAttribute<VertexDataType>>
     extends DataAttribute<DataType>
 {
@@ -242,8 +253,8 @@ export abstract class PulledFaceAttribute<
     }
 }
 
-export abstract class VertexPositions<PositionType extends PositionTypes>
-    extends LoadableVertexAttribute<PositionType,InputPositions>
+export class VertexPositions<PositionType extends PositionTypes>
+    extends LoadableVertexAttribute<PositionType, InputPositions>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
 
@@ -253,25 +264,14 @@ export abstract class VertexPositions<PositionType extends PositionTypes>
     }
 }
 
-export abstract class VertexNormals<
-    DirectionType extends DirectionTypes,
-    PositionType extends PositionTypes>
-    extends PulledVertexAttribute<
-        DirectionType,
-        InputNormals,
-        FaceNormals<
-            DirectionType,
-            PositionType>>
+export class VertexNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes>
+    extends PulledVertexAttribute<DirectionType, InputNormals, FaceNormals<DirectionType, PositionType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
 }
 
-export abstract class VertexColors<
-    ColorType extends ColorTypes>
-    extends PulledVertexAttribute<
-        ColorType,
-        InputColors,
-        FaceColors<ColorType>>
+export class VertexColors<ColorType extends ColorTypes>
+    extends PulledVertexAttribute<ColorType, InputColors, FaceColors<ColorType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
 
@@ -281,16 +281,12 @@ export abstract class VertexColors<
     }
 }
 
-export abstract class VertexUVs<
-    UVType extends UVTypes>
-    extends LoadableVertexAttribute<
-        UVType,
-        InputUVs>
+export class VertexUVs<UVType extends UVTypes> extends LoadableVertexAttribute<UVType, InputUVs>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.uv;
 }
 
-export abstract class FacePositions<
+export class FacePositions<
     PositionType extends PositionTypes>
     extends PulledFaceAttribute<
         PositionType,
@@ -300,14 +296,9 @@ export abstract class FacePositions<
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
 }
 
-export abstract class FaceNormals<
-    DirectionType extends DirectionTypes,
-    PositionType extends PositionTypes,
+export class FaceNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes,
     VertexPositionArribute extends VertexPositions<PositionType> = VertexPositions<PositionType>>
-    extends PulledFaceAttribute<
-        DirectionType,
-        PositionType,
-        VertexPositionArribute>
+    extends PulledFaceAttribute<DirectionType, PositionType, VertexPositionArribute>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
 
@@ -338,13 +329,8 @@ export abstract class FaceNormals<
     }
 }
 
-export abstract class FaceColors<
-    ColorType extends ColorTypes>
-    extends PulledFaceAttribute<
-        ColorType,
-        ColorType,
-        VertexColors<
-            ColorType>>
+export class FaceColors<ColorType extends ColorTypes>
+    extends PulledFaceAttribute<ColorType, ColorType, VertexColors<ColorType>>
 {
     public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
 
@@ -384,33 +370,51 @@ class AttributeCollection {
 }
 
 export class Faces<
-    PositionType extends Position,
-    NormalType extends Direction,
-    ColorType extends Color,
+    PositionType extends PositionTypes,
+    NormalType extends DirectionTypes,
+    ColorType extends ColorTypes,
 
     PositionAttributeType extends FacePositions<PositionType>,
     NormalAttributeType extends FaceNormals<NormalType, PositionType>,
     ColorAttributeType extends FaceColors<ColorType>,
     > extends AttributeCollection
 {
-    public readonly vertices = new FaceVertices();
-
     constructor(
         public readonly mesh: Mesh,
 
         public readonly positions: PositionAttributeType,
         public readonly normals: NormalAttributeType,
-        public readonly colors: ColorAttributeType
+        public readonly colors: ColorAttributeType,
+
+        public readonly vertices: FaceVertices
     ) {
         super(mesh);
     }
 
-    init(allocators: Allocators, count: number, included: number) : void {
-        this.vertices.init(allocators.face_vertices, count);
+    get sizes() : BufferSizes {
+        const sizes = new BufferSizes({
+            face_vertices: this.mesh.vertex_count
+        });
 
-        if (included & ATTRIBUTE.position) this.positions.init(allocators.vec3D, count);
-        if (included & ATTRIBUTE.normal) this.normals.init(allocators.vec3D, count);
-        if (included & ATTRIBUTE.color) this.colors.init(allocators.vec3D, count);
+        const count = this.mesh.face_count;
+        const attrs: ATTRIBUTE = this.mesh.options.face_attributes;
+
+        if (attrs & ATTRIBUTE.position) sizes.incrementVec(this.positions.dim, count);
+        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
+
+        return sizes;
+    }
+
+    init() : void {
+        const count = this.mesh.face_count;
+        const included = this.mesh.options.face_attributes;
+
+        this.vertices.init(count);
+
+        if (included & ATTRIBUTE.position) this.positions.init(count);
+        if (included & ATTRIBUTE.normal) this.normals.init(count);
+        if (included & ATTRIBUTE.color) this.colors.init(count);
     }
 
     protected _validateParameters = () : void => {
@@ -422,49 +426,60 @@ export class Faces<
     };
 }
 
-export class Faces3D extends Faces<Position3D, Direction3D, RGB> {}
-export class Faces4D extends Faces<Position4D, Direction4D, RGBA> {}
+export class Vertices<
+    PositionType extends PositionTypes,
+    NormalType extends DirectionTypes,
+    ColorType extends ColorTypes,
+    UVsType extends UVTypes,
 
-export class Vertices extends AttributeCollection {
+    PositionAttributeType extends VertexPositions<PositionType>,
+    NormalAttributeType extends VertexNormals<NormalType, PositionType>,
+    ColorAttributeType extends VertexColors<ColorType>,
+    UVsAttributeType extends VertexUVs<UVsType>
+    > extends AttributeCollection
+{
     constructor(
-        public readonly positions: VertexPositions,
-        public readonly normals: VertexNormals,
-        public readonly colors: VertexColors,
-        public readonly uvs: VertexUVs,
+        public readonly mesh: Mesh,
+
+        public readonly positions: PositionAttributeType,
+        public readonly normals: NormalAttributeType,
+        public readonly colors: ColorAttributeType,
+        public readonly uvs: UVsAttributeType,
         public readonly faces: VertexFaces
     ) {
-        super();
+        super(mesh);
     }
 
     public shared: number;
 
-    get allocator_sizes() : AllocatorSizes {
-        const result = new AllocatorSizes({
-            face_vertices: this.mesh.vertex_count,
+    get sizes() : BufferSizes {
+        const sizes = new BufferSizes({
             vertex_faces: this.mesh.inputs.vertex_faces.size
         });
 
-        const vertex_attributes: ATTRIBUTE = this.mesh.options.vertex_attributes;
-        const face_attributes: ATTRIBUTE = this.mesh.options.face_attributes;
+        const attrs: ATTRIBUTE = this.mesh.options.vertex_attributes;
+        const count = this.mesh.vertex_count;
 
-        const vertex_size = this.mesh.vertex_count * 4;
-        result.vec3D += vertex_size;
-        if (vertex_attributes & ATTRIBUTE.normal) result.vec3D += vertex_size;
-        if (vertex_attributes & ATTRIBUTE.color) result.vec3D += vertex_size;
-        if (vertex_attributes & ATTRIBUTE.uv) result.vec2D += vertex_size;
+        sizes.incrementVec(this.positions.dim, count);
 
-        if (face_attributes & ATTRIBUTE.position) result.vec3D += this.mesh.face_count;
-        if (face_attributes & ATTRIBUTE.normal) result.vec3D += this.mesh.face_count;
-        if (face_attributes & ATTRIBUTE.color) result.vec3D += this.mesh.face_count;
+        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
+        if (attrs & ATTRIBUTE.uv) sizes.incrementVec(this.uvs.dim, count);
 
-        return result;
+        return sizes;
     }
 
-    init(allocators: Allocators, count: number, included: number, shared: number) : void {
-        this.positions.init(allocators.vec3D, count, shared & ATTRIBUTE.position);
-        if (included & ATTRIBUTE.normal) this.normals.init(allocators.vec3D, count, shared & ATTRIBUTE.normal);
-        if (included & ATTRIBUTE.color) this.colors.init(allocators.vec3D, count, shared & ATTRIBUTE.color);
-        if (included & ATTRIBUTE.uv) this.uvs.init(allocators.vec2D, count, shared & ATTRIBUTE.uv);
+    init() : void {
+        const count = this.mesh.vertex_count;
+        const included = this.mesh.options.vertex_attributes;
+        const shared = this.mesh.options.share
+
+        this.faces.init(this.mesh.inputs.vertex_faces.size);
+        this.positions.init(count, shared & ATTRIBUTE.position);
+
+        if (included & ATTRIBUTE.normal) this.normals.init(count, shared & ATTRIBUTE.normal);
+        if (included & ATTRIBUTE.color) this.colors.init(count, shared & ATTRIBUTE.color);
+        if (included & ATTRIBUTE.uv) this.uvs.init(count, shared & ATTRIBUTE.uv);
     }
 
     protected _validateParameters = () : void => {
@@ -476,9 +491,6 @@ export class Vertices extends AttributeCollection {
             throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
     };
 }
-
-export class Vertices3D extends Vertices<Position3D, Direction3D, RGB, TextureCoords> {}
-export class Vertices4D extends Vertices<Position4D, Direction4D, RGBA, UVW> {}
 
 const randomize = (array: FloatArray, begin: number, end: number): void => {
     for (let i = begin; i < end; i++)
@@ -492,16 +504,6 @@ const pos1 = pos3D();
 const pos2 = pos3D();
 const pos3 = pos3D();
 
-
-export function *zip<A, B>(
-    a: Iterable<A>,
-    b: Iterable<B>
-): Generator<[A, B, number]>;
-export function *zip<A, B, C>(
-    a: Iterable<A>,
-    b: Iterable<B>,
-    c?: Iterable<C>
-): Generator<[A, B, C, number]>
 export function *zip<A, B, C>(
     a: Iterable<A>,
     b: Iterable<B>,
@@ -543,35 +545,5 @@ export function *zip<A, B, C>(
         yield result;
 
         i++;
-    }
-}
-
-const avg = (values: number[]) : number => {
-    let sum = 0;
-    for (const value of values) sum += value;
-    return sum / values.length;
-};
-
-function* iter2<
-    T, U,
-    A extends Array<T>,
-    B extends Array<U>
-    >(a: A, b: B, r: [number, T, U] = [0, a[0], b[0]]) : Generator<typeof r> {
-    for (let i = 0; i < a.length; i++) {
-        r[0] = i;
-        r[1] = a[i];
-        r[2] = b[i];
-        yield r;
-    }
-}
-
-function* iter3<T, U, V, A extends Array<T>, B extends Array<U>, C extends Array<V>>(a: A, b: B, c: C) {
-    const result: [number, T, U, V] = [0, a[0], b[0], c[0]];
-    for (let i = 0; i < a.length; i++) {
-        result[0] = i;
-        result[1] = a[i];
-        result[2] = b[i];
-        result[3] = c[i];
-        yield result;
     }
 }

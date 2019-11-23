@@ -1,6 +1,7 @@
 import Camera from "./objects/camera.js";
-import {IAllocatorSizes, Vector3DAllocator} from "./allocators.js";
+import {Vector3DAllocator} from "./allocators.js";
 import {dir3D, Direction3D} from "./math/vec3.js";
+import {IBufferSizes} from "./buffer.js";
 
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
@@ -35,7 +36,7 @@ const pressed = {
 };
 
 export default class FPSController {
-    static readonly SIZE: IAllocatorSizes = {
+    static readonly SIZE: IBufferSizes = {
         vec3D: 3
     };
 

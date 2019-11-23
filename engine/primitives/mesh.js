@@ -1,5 +1,4 @@
 import { Faces3D, Vertices3D } from "./attribute.js";
-import { AllocatorSizes } from "../allocators.js";
 import { num2, num3, num4 } from "../factories.js";
 export default class Mesh {
     constructor(inputs, options = new MeshOptions()) {
@@ -12,11 +11,8 @@ export default class Mesh {
         this.face = new Faces3D(this);
         this.vertex = new Vertices3D(this);
     }
-    get allocator_sizes() {
-        const result = new AllocatorSizes({
-            face_vertices: this.face_count,
-            vertex_faces: this.inputs.vertex_faces.size
-        });
+    get sizes() {
+        const result = this.vertex.sizes;
         const vertex_attributes = this.options.vertex_attributes;
         const face_attributes = this.options.face_attributes;
         const vertex_size = this.vertex_count * 4;
@@ -41,11 +37,10 @@ export default class Mesh {
         const colors = this.inputs.color;
         const uvs = this.inputs.uv;
         // Init::
-        this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
-        this.vertex.faces.init(allocators.vertex_faces, this.inputs.vertex_faces.size);
+        this.vertex.init(this.vertex_count, this.options.vertex_attributes, this.options.share);
+        this.face.init(this.face_count, this.options.face_attributes);
         this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
-        this.face.init(allocators, this.face_count, this.options.face_attributes);
-        this.face.vertices.load(positions.faces_vertices[0], positions.faces_vertices[1], positions.faces_vertices[2]);
+        this.face.vertices.load(positions.faces_vertices);
         // Load:
         this.vertex.positions.load(positions, this.face.vertices);
         if (this.options.include_uvs)
@@ -290,9 +285,6 @@ export class MeshInputs {
     }
 }
 class InputVertexFaces {
-    constructor() {
-        this.number_arrays = [];
-    }
     init(inputs) {
         this.number_arrays.length = inputs.vertices[0].length;
         for (let i = 0; i < inputs.vertices[0].length; i++)

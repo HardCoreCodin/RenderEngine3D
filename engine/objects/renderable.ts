@@ -1,11 +1,12 @@
 import Object3D from "./object.js";
-import {Allocators, AllocatorSizes} from "../allocators.js";
+import {Allocators} from "../allocators.js";
 import Transform, {trans} from "./transform.js";
 import Mesh from "../primitives/mesh.js";
 import {Triangle3DView, Triangle4DView} from "../primitives/triangle.js";
 import {Vertices4D} from "../primitives/attribute.js";
+import {BufferSizes} from "../buffer.js";
 export default class MeshRenderer extends Object3D {
-    public readonly allocator_sizes: AllocatorSizes;
+    public readonly allocator_sizes: BufferSizes;
     public readonly mesh_triangle_view: Triangle3DView;
     public readonly render_triangle_view: Triangle4DView;
 
@@ -17,7 +18,7 @@ export default class MeshRenderer extends Object3D {
         super(transform);
 
         this.mesh_triangle_view = new Triangle3DView(mesh.vertex, mesh.face);
-        this.allocator_sizes = new AllocatorSizes(mesh.allocator_sizes);
+        this.allocator_sizes = new BufferSizes(mesh.sizes);
 
         this.allocator_sizes.mat4x4 = this.allocator_sizes.mat3x3;
         this.allocator_sizes.mat3x3 = 0;

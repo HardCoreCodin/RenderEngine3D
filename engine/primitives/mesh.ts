@@ -1,15 +1,15 @@
 import {ATTRIBUTE, COLOR_SOURCING, DIM, FACE_TYPE, NORMAL_SOURCING} from "../constants.js";
 import {Faces3D, Vertices3D} from "./attribute.js";
-import {Allocators, AllocatorSizes} from "../allocators.js";
+import {Allocators} from "../allocators.js";
 import {
     FaceInputNum,
     FaceInputs,
     FaceInputStr,
     VertexInputNum,
-    VertexInputs,
     VertexInputStr
 } from "../types.js";
 import {num2, num3, num4} from "../factories.js";
+import {BufferSizes} from "../buffer.js";
 
 export default class Mesh {
     public readonly face: Faces3D;
@@ -32,11 +32,8 @@ export default class Mesh {
         this.vertex = new Vertices3D(this);
     }
 
-    get allocator_sizes() : AllocatorSizes {
-        const result = new AllocatorSizes({
-            face_vertices: this.face_count,
-            vertex_faces: this.inputs.vertex_faces.size
-        });
+    get sizes() : BufferSizes {
+        const result = this.vertex.sizes;
 
         const vertex_attributes: ATTRIBUTE = this.options.vertex_attributes;
         const face_attributes: ATTRIBUTE = this.options.face_attributes;
@@ -61,12 +58,12 @@ export default class Mesh {
         const uvs = this.inputs.uv;
 
         // Init::
-        this.vertex.init(allocators, this.vertex_count, this.options.vertex_attributes, this.options.share);
-        this.vertex.faces.init(allocators.vertex_faces, this.inputs.vertex_faces.size);
-        this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
+        this.vertex.init(this.vertex_count, this.options.vertex_attributes, this.options.share);
+        this.face.init(this.face_count, this.options.face_attributes);
 
-        this.face.init(allocators, this.face_count, this.options.face_attributes);
-        this.face.vertices.load(positions.faces_vertices[0], positions.faces_vertices[1], positions.faces_vertices[2]);
+
+        this.vertex.faces.load(this.inputs.vertex_faces.number_arrays);
+        this.face.vertices.load(positions.faces_vertices);
 
         // Load:
         this.vertex.positions.load(positions, this.face.vertices);
@@ -198,7 +195,7 @@ export class InputAttribute {
 
     constructor(
         public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
-        public vertices?: VertexInputs,
+        public vertices?: number[][],
         public faces_vertices?: FaceInputs,
     ) {
         if (!faces_vertices) switch (face_type) {
@@ -213,7 +210,7 @@ export class InputAttribute {
         }
 
         if (!vertices)
-            this.vertices = Array(this.dim);
+            this.vertices = Array<number[]>(this.dim);
 
         switch (this.dim) {
             case DIM._2D:
@@ -335,7 +332,7 @@ export class MeshInputs {
 }
 
 class InputVertexFaces {
-    public readonly number_arrays: number[] = [];
+    public readonly number_arrays: number[][];
     public size: number;
 
     init(inputs: InputPositions) {

@@ -1,15 +1,22 @@
-import { dir3D, Direction3D, pos3D, Position3D } from "../math/vec3.js";
-import { FaceVertices } from "./index.js";
+import { Direction3D, Position3D, dir3D, pos3D } from "../math/vec3.js";
+import { BufferSizes } from "../buffer.js";
 export class Data {
     constructor() {
         this._slices = [];
         this._values = [];
-        this._slices.length = this._values.length = this.arrays.length;
+        this.arrays = this._buffer.arrays;
+        this._slices.length = this._values.length = this.dim = this.arrays.length;
     }
     init(length) {
+        if (this.length)
+            this.free();
         this.length = length;
-        this.begin = this._allocate(length);
+        this.begin = this._buffer.allocate(length);
         this.end = this.begin + length;
+    }
+    free() {
+        this._buffer.deallocate(this.begin, this.end);
+        this.length = this.begin = this.end = 0;
     }
     get slices() {
         for (const [i, array] of this.arrays.entries())
@@ -28,6 +35,10 @@ export class DataAttribute extends Data {
         super.init(length);
         this.current = new this.Vector(this.begin);
     }
+    free() {
+        super.free();
+        this.current = null;
+    }
     *[Symbol.iterator]() {
         for (let id = this.begin; id < this.end; id++) {
             this.current.id = id;
@@ -42,23 +53,33 @@ export class VertexAttribute extends DataAttribute {
         this.ends = [0, 0, 0];
     }
     init(length, is_shared = this.is_shared) {
-        this.length = length;
-        this.is_shared = !!is_shared;
         if (is_shared) {
             super.init(length);
             this.begins[0] = this.begins[1] = this.begins[2] = this.begin;
             this.ends[0] = this.ends[1] = this.ends[2] = this.end;
             return;
         }
-        this.begins[0] = this._allocate(length);
-        this.begins[1] = this._allocate(length);
-        this.begins[2] = this._allocate(length);
+        else if (this.length)
+            this.free();
+        this.length = length;
+        this.is_shared = !!is_shared;
+        this.begins[0] = this._buffer.allocate(length);
+        this.begins[1] = this._buffer.allocate(length);
+        this.begins[2] = this._buffer.allocate(length);
         this.ends[0] = this.begins[0] + length;
         this.ends[1] = this.begins[1] + length;
         this.ends[2] = this.begins[2] + length;
         this.currents[0] = new this.Vector(this.begins[0]);
         this.currents[1] = new this.Vector(this.begins[1]);
         this.currents[2] = new this.Vector(this.begins[2]);
+    }
+    free() {
+        if (this.is_shared)
+            super.free();
+        else
+            this._buffer.deallocate(this.begins[0], this.ends[2]);
+        this.begins[0] = this.begins[1] = this.begins[2] = this.ends[0] = this.ends[1] = this.ends[2] = 0;
+        this.current = this.currents[0] = this.currents[1] = this.currents[2] = null;
     }
     *iterFaceVertexValues(face_vertices) {
         if (this.is_shared) {
@@ -254,36 +275,49 @@ class AttributeCollection {
     }
 }
 export class Faces extends AttributeCollection {
-    constructor(mesh, positions, normals, colors) {
+    constructor(mesh, positions, normals, colors, vertices) {
         super(mesh);
         this.mesh = mesh;
         this.positions = positions;
         this.normals = normals;
         this.colors = colors;
-        this.vertices = new FaceVertices();
+        this.vertices = vertices;
         this._validateParameters = () => {
             if (!(this._validate(this.mesh.face_count, 'Count') &&
                 this._validate(this.mesh.options.face_attributes, 'included', 0b0001, 0b1111)))
                 throw `Invalid parameters! count: ${this.mesh.face_count} included: ${this.mesh.options.face_attributes}`;
         };
     }
-    init(allocators, count, included) {
-        this.vertices.init(allocators.face_vertices, count);
+    get sizes() {
+        const sizes = new BufferSizes({
+            face_vertices: this.mesh.vertex_count
+        });
+        const count = this.mesh.face_count;
+        const attrs = this.mesh.options.face_attributes;
+        if (attrs & 1 /* position */)
+            sizes.incrementVec(this.positions.dim, count);
+        if (attrs & 2 /* normal */)
+            sizes.incrementVec(this.normals.dim, count);
+        if (attrs & 4 /* color */)
+            sizes.incrementVec(this.colors.dim, count);
+        return sizes;
+    }
+    init() {
+        const count = this.mesh.face_count;
+        const included = this.mesh.options.face_attributes;
+        this.vertices.init(count);
         if (included & 1 /* position */)
-            this.positions.init(allocators.vec3D, count);
+            this.positions.init(count);
         if (included & 2 /* normal */)
-            this.normals.init(allocators.vec3D, count);
+            this.normals.init(count);
         if (included & 4 /* color */)
-            this.colors.init(allocators.vec3D, count);
+            this.colors.init(count);
     }
 }
-export class Faces3D extends Faces {
-}
-export class Faces4D extends Faces {
-}
 export class Vertices extends AttributeCollection {
-    constructor(positions, normals, colors, uvs, faces) {
-        super();
+    constructor(mesh, positions, normals, colors, uvs, faces) {
+        super(mesh);
+        this.mesh = mesh;
         this.positions = positions;
         this.normals = normals;
         this.colors = colors;
@@ -296,42 +330,34 @@ export class Vertices extends AttributeCollection {
                 throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
         };
     }
-    get allocator_sizes() {
-        const result = new AllocatorSizes({
-            face_vertices: this.mesh.vertex_count,
+    get sizes() {
+        const sizes = new BufferSizes({
             vertex_faces: this.mesh.inputs.vertex_faces.size
         });
-        const vertex_attributes = this.mesh.options.vertex_attributes;
-        const face_attributes = this.mesh.options.face_attributes;
-        const vertex_size = this.mesh.vertex_count * 4;
-        result.vec3D += vertex_size;
-        if (vertex_attributes & 2 /* normal */)
-            result.vec3D += vertex_size;
-        if (vertex_attributes & 4 /* color */)
-            result.vec3D += vertex_size;
-        if (vertex_attributes & 8 /* uv */)
-            result.vec2D += vertex_size;
-        if (face_attributes & 1 /* position */)
-            result.vec3D += this.mesh.face_count;
-        if (face_attributes & 2 /* normal */)
-            result.vec3D += this.mesh.face_count;
-        if (face_attributes & 4 /* color */)
-            result.vec3D += this.mesh.face_count;
-        return result;
+        const attrs = this.mesh.options.vertex_attributes;
+        const count = this.mesh.vertex_count;
+        sizes.incrementVec(this.positions.dim, count);
+        if (attrs & 2 /* normal */)
+            sizes.incrementVec(this.normals.dim, count);
+        if (attrs & 4 /* color */)
+            sizes.incrementVec(this.colors.dim, count);
+        if (attrs & 8 /* uv */)
+            sizes.incrementVec(this.uvs.dim, count);
+        return sizes;
     }
-    init(allocators, count, included, shared) {
-        this.positions.init(allocators.vec3D, count, shared & 1 /* position */);
+    init() {
+        const count = this.mesh.vertex_count;
+        const included = this.mesh.options.vertex_attributes;
+        const shared = this.mesh.options.share;
+        this.faces.init(this.mesh.inputs.vertex_faces.size);
+        this.positions.init(count, shared & 1 /* position */);
         if (included & 2 /* normal */)
-            this.normals.init(allocators.vec3D, count, shared & 2 /* normal */);
+            this.normals.init(count, shared & 2 /* normal */);
         if (included & 4 /* color */)
-            this.colors.init(allocators.vec3D, count, shared & 4 /* color */);
+            this.colors.init(count, shared & 4 /* color */);
         if (included & 8 /* uv */)
-            this.uvs.init(allocators.vec2D, count, shared & 8 /* uv */);
+            this.uvs.init(count, shared & 8 /* uv */);
     }
-}
-export class Vertices3D extends Vertices {
-}
-export class Vertices4D extends Vertices {
 }
 const randomize = (array, begin, end) => {
     for (let i = begin; i < end; i++)
@@ -373,30 +399,6 @@ export function* zip(a, b, c) {
         }
         yield result;
         i++;
-    }
-}
-const avg = (values) => {
-    let sum = 0;
-    for (const value of values)
-        sum += value;
-    return sum / values.length;
-};
-function* iter2(a, b, r = [0, a[0], b[0]]) {
-    for (let i = 0; i < a.length; i++) {
-        r[0] = i;
-        r[1] = a[i];
-        r[2] = b[i];
-        yield r;
-    }
-}
-function* iter3(a, b, c) {
-    const result = [0, a[0], b[0], c[0]];
-    for (let i = 0; i < a.length; i++) {
-        result[0] = i;
-        result[1] = a[i];
-        result[2] = b[i];
-        result[3] = c[i];
-        yield result;
     }
 }
 //# sourceMappingURL=attribute.js.map
