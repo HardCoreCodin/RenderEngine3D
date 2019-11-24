@@ -1,41 +1,18 @@
-import { Position, CrossedDirection, Interpolatable } from "./vec.js";
+import { TypedArraysBuffer } from "../buffer.js";
+import { Interpolatable, Position, CrossedDirection } from "./vec.js";
 import { PRECISION_DIGITS } from "../constants.js";
-import { FloatBuffer } from "../buffer.js";
 let t_x, t_y, t_z, t_w, t_n;
 let X, Y, Z, W, M11, M12, M13, M14, M21, M22, M23, M24, M31, M32, M33, M34, M41, M42, M43, M44;
+export const update_matrix4x4_arrays = (MATRIX4x4_ARRAYS) => [
+    M11, M12, M13, M14,
+    M21, M22, M23, M24,
+    M31, M32, M33, M34,
+    M41, M42, M43, M44
+] = MATRIX4x4_ARRAYS;
 const VECTOR4D_ARRAYS = [null, null, null, null];
-const update_X = (x) => X = VECTOR4D_ARRAYS[0] = x;
-const update_Y = (y) => Y = VECTOR4D_ARRAYS[1] = y;
-const update_Z = (z) => Z = VECTOR4D_ARRAYS[2] = z;
-const update_W = (w) => W = VECTOR4D_ARRAYS[3] = w;
-export const update_vector4D_M11 = (m11) => M11 = m11;
-export const update_vector4D_M12 = (m12) => M12 = m12;
-export const update_vector4D_M13 = (m13) => M13 = m13;
-export const update_vector4D_M14 = (m14) => M14 = m14;
-export const update_vector4D_M21 = (m21) => M21 = m21;
-export const update_vector4D_M22 = (m22) => M22 = m22;
-export const update_vector4D_M23 = (m23) => M23 = m23;
-export const update_vector4D_M24 = (m24) => M24 = m24;
-export const update_vector4D_M31 = (m31) => M31 = m31;
-export const update_vector4D_M32 = (m32) => M32 = m32;
-export const update_vector4D_M33 = (m33) => M33 = m33;
-export const update_vector4D_M34 = (m34) => M34 = m34;
-export const update_vector4D_M41 = (m41) => M41 = m41;
-export const update_vector4D_M42 = (m42) => M42 = m42;
-export const update_vector4D_M43 = (m43) => M43 = m43;
-export const update_vector4D_M44 = (m44) => M44 = m44;
-const X_BUFFER = new FloatBuffer(update_X);
-const Y_BUFFER = new FloatBuffer(update_Y);
-const Z_BUFFER = new FloatBuffer(update_Z);
-const W_BUFFER = new FloatBuffer(update_W);
-let _temp_id;
-const getTempID = () => {
-    _temp_id = X_BUFFER.allocateTemp();
-    Y_BUFFER.allocateTemp();
-    Z_BUFFER.allocateTemp();
-    W_BUFFER.allocateTemp();
-    return _temp_id;
-};
+const update_arrays = () => [X, Y, Z, W] = VECTOR4D_ARRAYS;
+export const vector4Dbuffer = new TypedArraysBuffer(4, Float32Array, update_arrays, VECTOR4D_ARRAYS);
+const getTempID = () => vector4Dbuffer.allocateTemp();
 const get = (a, dim) => VECTOR4D_ARRAYS[dim][a];
 const set = (a, dim, value) => { VECTOR4D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z, w) => {

@@ -1,31 +1,17 @@
-import { Position, Interpolatable, CrossedDirection } from "./vec.js";
+import { TypedArraysBuffer } from "../buffer.js";
+import { Interpolatable, Position, CrossedDirection } from "./vec.js";
 import { PRECISION_DIGITS } from "../constants.js";
-import { FloatBuffer } from "../buffer.js";
 let t_x, t_y, t_z, t_n;
 let X, Y, Z, M11, M12, M13, M21, M22, M23, M31, M32, M33;
+export const update_matrix3x3_arrays = (MATRIX3x3_ARRAYS) => [
+    M11, M12, M13,
+    M21, M22, M23,
+    M31, M32, M33
+] = MATRIX3x3_ARRAYS;
 const VECTOR3D_ARRAYS = [null, null, null];
-const update_X = (x) => X = VECTOR3D_ARRAYS[0] = x;
-const update_Y = (y) => Y = VECTOR3D_ARRAYS[1] = y;
-const update_Z = (z) => Z = VECTOR3D_ARRAYS[2] = z;
-export const update_vector3D_M11 = (m11) => M11 = m11;
-export const update_vector3D_M12 = (m12) => M12 = m12;
-export const update_vector3D_M13 = (m13) => M13 = m13;
-export const update_vector3D_M21 = (m21) => M21 = m21;
-export const update_vector3D_M22 = (m22) => M22 = m22;
-export const update_vector3D_M23 = (m23) => M23 = m23;
-export const update_vector3D_M31 = (m31) => M31 = m31;
-export const update_vector3D_M32 = (m32) => M32 = m32;
-export const update_vector3D_M33 = (m33) => M33 = m33;
-const X_BUFFER = new FloatBuffer(update_X);
-const Y_BUFFER = new FloatBuffer(update_Y);
-const Z_BUFFER = new FloatBuffer(update_Z);
-let _temp_id;
-const getTempID = () => {
-    _temp_id = X_BUFFER.allocateTemp();
-    Y_BUFFER.allocateTemp();
-    Z_BUFFER.allocateTemp();
-    return _temp_id;
-};
+const update_arrays = () => [X, Y, Z] = VECTOR3D_ARRAYS;
+export const vector3Dbuffer = new TypedArraysBuffer(3, Float32Array, update_arrays, VECTOR3D_ARRAYS);
+const getTempID = () => vector3Dbuffer.allocateTemp();
 const get = (a, dim) => VECTOR3D_ARRAYS[dim][a];
 const set = (a, dim, value) => { VECTOR3D_ARRAYS[dim][a] = value; };
 const set_to = (a, x, y, z) => {

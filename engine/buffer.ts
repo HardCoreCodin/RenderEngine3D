@@ -1,77 +1,87 @@
 import {CACHE_LINE_BYTES} from "./constants.js";
 import {AnyConstructor, TypedArray, TypedArrayConstructor} from "./types.js";
 
-abstract class TypedBuffer<ArrayType extends Float32Array|Uint32Array>
+
+export class TypedArraysBuffer2<ArrayType extends TypedArray = Float32Array|Uint32Array>
 {
-    protected _cursor: number;
-    protected _temp_cursor: number = 0;
+    protected _cursor: number = 0;
 
-    public array: ArrayType;
-
-    protected readonly _constructor: AnyConstructor<ArrayType>;
-    protected readonly _bytes_per_element: number = 4;
-
-    protected readonly _temp_length: number;
-    protected readonly _cache_line_length: number;
-    protected readonly _entry: [number, number] = [0, 0];
+    protected _sub_arrays: ArrayType[][] = [];
+    protected _array: ArrayType;
+    protected _array_buffer: ArrayBuffer;
 
     constructor(
-        protected _onBuffersChanged: (array: ArrayType) => void,
-        protected readonly _temp_cache_lines: number = 16
+        public vector_dimension: number,
+        protected readonly _constructor: AnyConstructor<ArrayType>,
+        protected readonly _bytes_per_component = (_constructor as TypedArrayConstructor<ArrayType>).BYTES_PER_ELEMENT,
+        protected readonly _bytes_per_vector = _bytes_per_component * vector_dimension,
+        protected readonly _cache_line_length = CACHE_LINE_BYTES / _bytes_per_component
     ) {
-        this._cache_line_length = CACHE_LINE_BYTES / this._bytes_per_element;
-        this._temp_length = this._cache_line_length * this._temp_cache_lines;
-        this._cursor = this._temp_length;
-        this.array = new this._constructor(this._temp_length);
-    }
-
-    allocateTemp(): number {
-        return this._temp_cursor++ % this._temp_length;
+        if (vector_dimension < 1)
+            throw `Vectors must have a dimention of at least 1!`;
     }
 
     get length(): number {
-        return this.array.length - this._temp_length;
+        return this._array_buffer.byteLength / this._bytes_per_vector;
     }
 
-    set length(length: number) {
-        length += this._temp_length;
-        const new_array = new this._constructor(length);
-        new_array.set(this.array);
-        this.array = new_array;
-    }
-
-    *entries(begin: number = 0, end: number): Generator<[number, number]> {
-        for (this._entry[0] = begin; this._entry[0] < end; this._entry[0]++) {
-            this._entry[1] = this.array[this._entry[0]];
-            yield this._entry;
-        }
-    }
-
-    allocate(length: number): number {
-        const index = this._cursor;
+    allocate(length: number): ArrayType[] {
+        const new_arrays: ArrayType[] = Array<ArrayType>(this.vector_dimension);
 
         this._cursor += length;
         if (this._cursor > this.length) {
-            this.length = this._cache_line_length * Math.ceil(this._cursor / this._cache_line_length);
-            this._onBuffersChanged(this.array);
+            const num_cache_lines = this._cursor / this._cache_line_length;
+            const new_length = this._cache_line_length * Math.ceil(num_cache_lines);
+            const new_size = this._bytes_per_vector * new_length;
+            this._array_buffer = new ArrayBuffer(new_size);
+
+            for (const [dimension, sub_arrays] of this._sub_arrays.entries()) {
+
+                this.arrays[i] = new this._typed_array(
+                    this._array_buffer,
+                    array_size * i,
+                    array_size
+                );
+
+                if (array)
+                    this.arrays[i].set(array);
+            }
+
         }
 
-        return index;
+        return new_arrays;
     }
 
-    deallocate(start: number, end: number) {
-        // TODO: Implement
+    setLength(length: number) {
+        const byte_length = length * this._bytes_per_vector;
+        const array_size = length * this._bytes_per_component;
+        this._array_buffer = new ArrayBuffer(array_size * this.arrays.length);
+
+        for (const [i, array] of this.arrays.entries()) {
+            this.arrays[i] = new this._typed_array(
+                this._array_buffer,
+                array_size * i,
+                array_size
+            );
+
+            if (array)
+                this.arrays[i].set(array);
+        }
     }
-}
 
-export class FloatBuffer extends TypedBuffer<Float32Array> {
-    protected readonly _constructor = Float32Array;
-    protected readonly _bytes_per_element = Float32Array.BYTES_PER_ELEMENT;
-}
 
-export class IntBuffer extends TypedBuffer<Uint32Array> {
-    protected readonly _constructor = Uint32Array;
-    protected readonly _bytes_per_element = Uint32Array.BYTES_PER_ELEMENT;
+    deallocate(arrays: ArrayType[]) {
+        const new_length = this.arrays[0].length - (end - begin);
+        let a: number;
+        for ([a, this._array] of this.arrays.entries()) {
+            this.arrays[0].copyWithin(begin, end);
+            this._array = new this._constructor(new_length);
+            this._array.set(this.arrays[0].subarray(0, new_length - 1));
+            this.arrays[a] = this._array;
+        }
+
+        this._postUpdate();
+    }
 }
 
 export class TypedArraysBuffer<ArrayType extends TypedArray = Float32Array|Uint32Array>
@@ -82,14 +92,16 @@ export class TypedArraysBuffer<ArrayType extends TypedArray = Float32Array|Uint3
     protected readonly _temp_length: number;
     protected readonly _cache_line_length: number;
 
+    private _sub_arrays: ArrayType[][];
+
     private _array: ArrayType;
 
     constructor(
         public dim: number,
         protected readonly _constructor: AnyConstructor<ArrayType>,
         protected readonly _postUpdate: () => void = () => {},
-        protected readonly _temp_cache_lines: number = 16,
         public arrays: ArrayType[] = Array<ArrayType>(dim),
+        protected readonly _temp_cache_lines: number = 16,
         protected readonly _entry: number[] = Array<number>(dim)
     ) {
         if (dim < 1)
@@ -189,9 +201,9 @@ export class BufferSizes implements IBufferSizes {
 
     incrementVec(dim: number, increment: number): void {
         switch (dim) {
-            case 2: this.vec2D += increment;
-            case 3: this.vec3D += increment;
-            case 4: this.vec4D += increment;
+            case 2: this.vec2D += increment; break;
+            case 3: this.vec3D += increment; break;
+            case 4: this.vec4D += increment; break;
         }
     }
 

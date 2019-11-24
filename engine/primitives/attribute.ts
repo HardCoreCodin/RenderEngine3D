@@ -264,82 +264,7 @@ export class VertexPositions<PositionType extends PositionTypes>
     }
 }
 
-export class VertexNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes>
-    extends PulledVertexAttribute<DirectionType, InputNormals, FaceNormals<DirectionType, PositionType>>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
-}
-
-export class VertexColors<ColorType extends ColorTypes>
-    extends PulledVertexAttribute<ColorType, InputColors, FaceColors<ColorType>>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
-
-    generate(): void {
-        for (const array of this.arrays)
-            randomize(array, this.begins[0], this.ends[2]);
-    }
-}
-
-export class VertexUVs<UVType extends UVTypes> extends LoadableVertexAttribute<UVType, InputUVs>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.uv;
-}
-
-export class FacePositions<
-    PositionType extends PositionTypes>
-    extends PulledFaceAttribute<
-        PositionType,
-        PositionType,
-        VertexPositions<PositionType>>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
-}
-
-export class FaceNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes,
-    VertexPositionArribute extends VertexPositions<PositionType> = VertexPositions<PositionType>>
-    extends PulledFaceAttribute<DirectionType, PositionType, VertexPositionArribute>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
-
-    pull(vertex_positions: VertexPositionArribute, face_vertices: FaceVertices) {
-        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
-            if (p1 instanceof Position3D &&
-                p2 instanceof Position3D &&
-                p3 instanceof Position3D) {
-
-                p1.to(p2, dir1);
-                p1.to(p3, dir2);
-            } else {
-                pos1.setTo(p1.x, p1.y, p1.z);
-                pos2.setTo(p2.x, p2.y, p2.z);
-                pos3.setTo(p3.x, p3.y, p3.z);
-
-                pos1.to(pos2, dir1);
-                pos1.to(pos3, dir2);
-            }
-
-            if (face_normal instanceof Direction3D) {
-                dir1.cross(dir2).normalized(face_normal);
-            } else {
-                dir1.cross(dir2).normalize();
-                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
-            }
-        }
-    }
-}
-
-export class FaceColors<ColorType extends ColorTypes>
-    extends PulledFaceAttribute<ColorType, ColorType, VertexColors<ColorType>>
-{
-    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
-
-    generate() {
-        for (const array of this.arrays)
-            randomize(array, this.begin, this.end);
-    }
-}
-
+export class VertexNormals
 class AttributeCollection {
     constructor(
         public readonly mesh: Mesh
@@ -399,9 +324,9 @@ export class Faces<
         const count = this.mesh.face_count;
         const attrs: ATTRIBUTE = this.mesh.options.face_attributes;
 
-        if (attrs & ATTRIBUTE.position) sizes.incrementVec(this.positions.dim, count);
-        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
-        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
+        if (attrs & ATTRIBUTE.position) sizes.incrementVec(this.positions.vector_dimension, count);
+        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.vector_dimension, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.vector_dimension, count);
 
         return sizes;
     }
@@ -463,8 +388,8 @@ export class Vertices<
         sizes.incrementVec(this.positions.dim, count);
 
         if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
-        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
-        if (attrs & ATTRIBUTE.uv) sizes.incrementVec(this.uvs.dim, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.vector_dimension, count);
+        if (attrs & ATTRIBUTE.uv) sizes.incrementVec(this.uvs.vector_dimension, count);
 
         return sizes;
     }

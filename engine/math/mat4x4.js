@@ -1,7 +1,7 @@
-import { PRECISION_DIGITS } from "../constants.js";
 import { RotationMatrix } from "./mat.js";
-import { FloatBuffer } from "../buffer.js";
-import { update_vector4D_M11, update_vector4D_M12, update_vector4D_M13, update_vector4D_M14, update_vector4D_M21, update_vector4D_M22, update_vector4D_M23, update_vector4D_M24, update_vector4D_M31, update_vector4D_M32, update_vector4D_M33, update_vector4D_M34, update_vector4D_M41, update_vector4D_M42, update_vector4D_M43, update_vector4D_M44 } from "./vec4.js";
+import { TypedArraysBuffer } from "../buffer.js";
+import { PRECISION_DIGITS } from "../constants.js";
+import { update_matrix4x4_arrays } from "./vec4.js";
 let t11, t12, t13, t14, t21, t22, t23, t24, t31, t32, t33, t34, t41, t42, t43, t44;
 let M11, M12, M13, M14, M21, M22, M23, M24, M31, M32, M33, M34, M41, M42, M43, M44;
 const MATRIX4x4_ARRAYS = [
@@ -10,58 +10,14 @@ const MATRIX4x4_ARRAYS = [
     null, null, null, null,
     null, null, null, null
 ];
-export const update_M11 = (m11) => { M11 = MATRIX4x4_ARRAYS[0] = m11; update_vector4D_M11(m11); };
-export const update_M12 = (m12) => { M12 = MATRIX4x4_ARRAYS[1] = m12; update_vector4D_M12(m12); };
-export const update_M13 = (m13) => { M13 = MATRIX4x4_ARRAYS[2] = m13; update_vector4D_M13(m13); };
-export const update_M14 = (m14) => { M14 = MATRIX4x4_ARRAYS[3] = m14; update_vector4D_M14(m14); };
-export const update_M21 = (m21) => { M21 = MATRIX4x4_ARRAYS[4] = m21; update_vector4D_M21(m21); };
-export const update_M22 = (m22) => { M22 = MATRIX4x4_ARRAYS[5] = m22; update_vector4D_M22(m22); };
-export const update_M23 = (m23) => { M23 = MATRIX4x4_ARRAYS[6] = m23; update_vector4D_M23(m23); };
-export const update_M24 = (m24) => { M24 = MATRIX4x4_ARRAYS[7] = m24; update_vector4D_M24(m24); };
-export const update_M32 = (m31) => { M32 = MATRIX4x4_ARRAYS[8] = m31; update_vector4D_M31(m31); };
-export const update_M33 = (m32) => { M33 = MATRIX4x4_ARRAYS[9] = m32; update_vector4D_M32(m32); };
-export const update_M31 = (m33) => { M31 = MATRIX4x4_ARRAYS[10] = m33; update_vector4D_M33(m33); };
-export const update_M34 = (m34) => { M34 = MATRIX4x4_ARRAYS[11] = m34; update_vector4D_M34(m34); };
-export const update_M41 = (m41) => { M41 = MATRIX4x4_ARRAYS[12] = m41; update_vector4D_M41(m41); };
-export const update_M42 = (m42) => { M42 = MATRIX4x4_ARRAYS[13] = m42; update_vector4D_M42(m42); };
-export const update_M43 = (m43) => { M43 = MATRIX4x4_ARRAYS[14] = m43; update_vector4D_M43(m43); };
-export const update_M44 = (m44) => { M44 = MATRIX4x4_ARRAYS[15] = m44; update_vector4D_M44(m44); };
-const M11_BUFFER = new FloatBuffer(update_M11);
-const M12_BUFFER = new FloatBuffer(update_M12);
-const M13_BUFFER = new FloatBuffer(update_M13);
-const M14_BUFFER = new FloatBuffer(update_M14);
-const M21_BUFFER = new FloatBuffer(update_M21);
-const M22_BUFFER = new FloatBuffer(update_M22);
-const M23_BUFFER = new FloatBuffer(update_M23);
-const M24_BUFFER = new FloatBuffer(update_M24);
-const M31_BUFFER = new FloatBuffer(update_M31);
-const M32_BUFFER = new FloatBuffer(update_M32);
-const M33_BUFFER = new FloatBuffer(update_M33);
-const M34_BUFFER = new FloatBuffer(update_M34);
-const M41_BUFFER = new FloatBuffer(update_M41);
-const M42_BUFFER = new FloatBuffer(update_M42);
-const M43_BUFFER = new FloatBuffer(update_M43);
-const M44_BUFFER = new FloatBuffer(update_M44);
-let _temp_id;
-const getTempID = () => {
-    _temp_id = M11_BUFFER.allocateTemp();
-    M12_BUFFER.allocateTemp();
-    M13_BUFFER.allocateTemp();
-    M14_BUFFER.allocateTemp();
-    M21_BUFFER.allocateTemp();
-    M22_BUFFER.allocateTemp();
-    M23_BUFFER.allocateTemp();
-    M24_BUFFER.allocateTemp();
-    M31_BUFFER.allocateTemp();
-    M32_BUFFER.allocateTemp();
-    M33_BUFFER.allocateTemp();
-    M34_BUFFER.allocateTemp();
-    M41_BUFFER.allocateTemp();
-    M42_BUFFER.allocateTemp();
-    M43_BUFFER.allocateTemp();
-    M44_BUFFER.allocateTemp();
-    return _temp_id;
-};
+export const update_arrays = () => [
+    M11, M12, M13, M14,
+    M21, M22, M23, M24,
+    M31, M32, M33, M34,
+    M41, M42, M43, M44
+] = update_matrix4x4_arrays(MATRIX4x4_ARRAYS);
+export const matrix4x4Buffer = new TypedArraysBuffer(4 * 4, Float32Array, update_arrays, MATRIX4x4_ARRAYS);
+const getTempID = () => matrix4x4Buffer.allocateTemp();
 const get = (a, dim) => MATRIX4x4_ARRAYS[dim][a];
 const set = (a, dim, value) => { MATRIX4x4_ARRAYS[dim][a] = value; };
 const set_to = (a, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) => {

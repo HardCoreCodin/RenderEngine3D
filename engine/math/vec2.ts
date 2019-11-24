@@ -1,18 +1,10 @@
 import Matrix2x2 from "./mat2x2.js";
-import {FloatBuffer} from "../buffer.js";
-import {Direction, Interpolatable, Position} from "./vec.js";
+import {TypedArraysBuffer} from "../buffer.js";
+import {Interpolatable, Position, Direction} from "./vec.js";
 import {PRECISION_DIGITS} from "../constants.js";
-import {
-    IDirectionFunctions,
-    IInterpolateFunctions,
-    IPositionFunctions,
-    IVectorFunctions
-} from "./interfaces/functions.js";
-import {
-    IDirection2D,
-    IPosition2D,
-    IUV2D,
-} from "./interfaces/classes.js";
+import {Float2, Float4} from "../types.js";
+import {IPosition2D, IDirection2D, IUV2D} from "./interfaces/classes.js";
+import {IPositionFunctions, IDirectionFunctions, IInterpolateFunctions, IVectorFunctions} from "./interfaces/functions.js";
 
 let t_x,
     t_y,
@@ -22,28 +14,16 @@ let X, Y,
     M11, M12,
     M21, M22: Float32Array;
 
-const VECTOR2D_ARRAYS = [null, null];
+export const update_matrix2x2_arrays = (MATRIX2x2_ARRAYS: Float4): Float4 => [
+    M11, M12,
+    M21, M22
+] = MATRIX2x2_ARRAYS;
 
-const update_X = (x) => X = VECTOR2D_ARRAYS[0] = x;
-const update_Y = (y) => Y = VECTOR2D_ARRAYS[1] = y;
+const VECTOR2D_ARRAYS: Float2 = [null, null];
+const update_arrays = () => [X, Y] = VECTOR2D_ARRAYS;
 
-export const update_vector2D_M11 = (m11) => M11 = m11;
-export const update_vector2D_M12 = (m12) => M12 = m12;
-
-export const update_vector2D_M21 = (m21) => M21 = m21;
-export const update_vector2D_M22 = (m22) => M22 = m22;
-
-const X_BUFFER = new FloatBuffer(update_X);
-const Y_BUFFER = new FloatBuffer(update_Y);
-
-let _temp_id: number;
-const getTempID = (): number => {
-    _temp_id = X_BUFFER.allocateTemp();
-    Y_BUFFER.allocateTemp();
-
-    return _temp_id;
-};
-
+export const vector2Dbuffer = new TypedArraysBuffer(2, Float32Array, update_arrays, VECTOR2D_ARRAYS);
+const getTempID = (): number => vector2Dbuffer.allocateTemp();
 
 const get = (a: number, dim: 0|1): number => VECTOR2D_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1, value: number): void => {VECTOR2D_ARRAYS[dim][a] = value};

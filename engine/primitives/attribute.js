@@ -1,4 +1,4 @@
-import { Direction3D, Position3D, dir3D, pos3D } from "../math/vec3.js";
+import { dir3D, pos3D } from "../math/vec3.js";
 import { BufferSizes } from "../buffer.js";
 export class Data {
     constructor() {
@@ -182,73 +182,7 @@ export class VertexPositions extends LoadableVertexAttribute {
             outputs.set(inputs);
     }
 }
-export class VertexNormals extends PulledVertexAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 2 /* normal */;
-    }
-}
-export class VertexColors extends PulledVertexAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 4 /* color */;
-    }
-    generate() {
-        for (const array of this.arrays)
-            randomize(array, this.begins[0], this.ends[2]);
-    }
-}
-export class VertexUVs extends LoadableVertexAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 8 /* uv */;
-    }
-}
-export class FacePositions extends PulledFaceAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 1 /* position */;
-    }
-}
-export class FaceNormals extends PulledFaceAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 2 /* normal */;
-    }
-    pull(vertex_positions, face_vertices) {
-        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
-            if (p1 instanceof Position3D &&
-                p2 instanceof Position3D &&
-                p3 instanceof Position3D) {
-                p1.to(p2, dir1);
-                p1.to(p3, dir2);
-            }
-            else {
-                pos1.setTo(p1.x, p1.y, p1.z);
-                pos2.setTo(p2.x, p2.y, p2.z);
-                pos3.setTo(p3.x, p3.y, p3.z);
-                pos1.to(pos2, dir1);
-                pos1.to(pos3, dir2);
-            }
-            if (face_normal instanceof Direction3D) {
-                dir1.cross(dir2).normalized(face_normal);
-            }
-            else {
-                dir1.cross(dir2).normalize();
-                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
-            }
-        }
-    }
-}
-export class FaceColors extends PulledFaceAttribute {
-    constructor() {
-        super(...arguments);
-        this.attribute_type = 4 /* color */;
-    }
-    generate() {
-        for (const array of this.arrays)
-            randomize(array, this.begin, this.end);
-    }
+export class VertexNormals {
 }
 class AttributeCollection {
     constructor(mesh) {
@@ -295,11 +229,11 @@ export class Faces extends AttributeCollection {
         const count = this.mesh.face_count;
         const attrs = this.mesh.options.face_attributes;
         if (attrs & 1 /* position */)
-            sizes.incrementVec(this.positions.dim, count);
+            sizes.incrementVec(this.positions.vector_dimension, count);
         if (attrs & 2 /* normal */)
-            sizes.incrementVec(this.normals.dim, count);
+            sizes.incrementVec(this.normals.vector_dimension, count);
         if (attrs & 4 /* color */)
-            sizes.incrementVec(this.colors.dim, count);
+            sizes.incrementVec(this.colors.vector_dimension, count);
         return sizes;
     }
     init() {
@@ -340,9 +274,9 @@ export class Vertices extends AttributeCollection {
         if (attrs & 2 /* normal */)
             sizes.incrementVec(this.normals.dim, count);
         if (attrs & 4 /* color */)
-            sizes.incrementVec(this.colors.dim, count);
+            sizes.incrementVec(this.colors.vector_dimension, count);
         if (attrs & 8 /* uv */)
-            sizes.incrementVec(this.uvs.dim, count);
+            sizes.incrementVec(this.uvs.vector_dimension, count);
         return sizes;
     }
     init() {

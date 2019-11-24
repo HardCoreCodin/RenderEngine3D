@@ -1,19 +1,10 @@
 import {RotationMatrix} from "./mat.js";
-import {PRECISION_DIGITS} from "../constants.js";
+import {TypedArraysBuffer} from "../buffer.js";
+import {Float9} from "../types.js";
 import {IMatrixRotationFunctions} from "./interfaces/functions.js";
 import {IMatrix3x3} from "./interfaces/classes.js";
-import {FloatBuffer} from "../buffer.js";
-import {
-    update_vector3D_M11,
-    update_vector3D_M12,
-    update_vector3D_M13,
-    update_vector3D_M21,
-    update_vector3D_M22,
-    update_vector3D_M23,
-    update_vector3D_M31,
-    update_vector3D_M32,
-    update_vector3D_M33
-} from "./vec3.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {update_matrix3x3_arrays} from "./vec3.js";
 
 let t11, t12, t13,
     t21, t22, t23,
@@ -23,52 +14,20 @@ let M11, M12, M13,
     M21, M22, M23,
     M31, M32, M33: Float32Array;
 
-const MATRIX3x3_ARRAYS = [
+const MATRIX3x3_ARRAYS: Float9 = [
     null, null, null,
     null, null, null,
     null, null, null
 ];
 
-const update_M11 = (m11) => {M11 = MATRIX3x3_ARRAYS[0] = m11; update_vector3D_M11(m11)};
-const update_M12 = (m12) => {M12 = MATRIX3x3_ARRAYS[1] = m12; update_vector3D_M12(m12)};
-const update_M13 = (m13) => {M12 = MATRIX3x3_ARRAYS[2] = m13; update_vector3D_M13(m13)};
+export const update_arrays = () => [
+    M11, M12, M13,
+    M21, M22, M23,
+    M31, M32, M33
+] = update_matrix3x3_arrays(MATRIX3x3_ARRAYS);
 
-const update_M21 = (m21) => {M21 = MATRIX3x3_ARRAYS[3] = m21; update_vector3D_M21(m21)};
-const update_M22 = (m22) => {M22 = MATRIX3x3_ARRAYS[4] = m22; update_vector3D_M22(m22)};
-const update_M23 = (m23) => {M23 = MATRIX3x3_ARRAYS[5] = m23; update_vector3D_M23(m23)};
-
-const update_M31 = (m31) => {M31 = MATRIX3x3_ARRAYS[6] = m31; update_vector3D_M31(m31)};
-const update_M32 = (m32) => {M32 = MATRIX3x3_ARRAYS[7] = m32; update_vector3D_M32(m32)};
-const update_M33 = (m33) => {M32 = MATRIX3x3_ARRAYS[8] = m33; update_vector3D_M33(m33)};
-
-const M11_BUFFER = new FloatBuffer(update_M11);
-const M12_BUFFER = new FloatBuffer(update_M12);
-const M13_BUFFER = new FloatBuffer(update_M13);
-
-const M21_BUFFER = new FloatBuffer(update_M21);
-const M22_BUFFER = new FloatBuffer(update_M22);
-const M23_BUFFER = new FloatBuffer(update_M23);
-
-const M31_BUFFER = new FloatBuffer(update_M31);
-const M32_BUFFER = new FloatBuffer(update_M32);
-const M33_BUFFER = new FloatBuffer(update_M33);
-
-let _temp_id: number;
-const getTempID = (): number => {
-    _temp_id = M11_BUFFER.allocateTemp();
-    M12_BUFFER.allocateTemp();
-    M13_BUFFER.allocateTemp();
-
-    M21_BUFFER.allocateTemp();
-    M22_BUFFER.allocateTemp();
-    M23_BUFFER.allocateTemp();
-
-    M31_BUFFER.allocateTemp();
-    M32_BUFFER.allocateTemp();
-    M33_BUFFER.allocateTemp();
-
-    return _temp_id;
-};
+export const matrix3x3Buffer = new TypedArraysBuffer(3*3, Float32Array, update_arrays, MATRIX3x3_ARRAYS);
+const getTempID = (): number => matrix3x3Buffer.allocateTemp();
 
 const get = (a: number, dim: 0|1|2|3|4|5|6|7|8): number => MATRIX3x3_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3|4|5|6|7|8, value: number): void => {MATRIX3x3_ARRAYS[dim][a] = value};

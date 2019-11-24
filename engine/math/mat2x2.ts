@@ -1,9 +1,10 @@
 import Matrix from "./mat.js";
-import {FloatBuffer} from "../buffer.js";
-import {PRECISION_DIGITS} from "../constants.js";
-import {IMatrixFunctions} from "./interfaces/functions.js";
+import {TypedArraysBuffer} from "../buffer.js";
+import {Float4} from "../types.js";
 import {IMatrix2x2} from "./interfaces/classes.js";
-import {update_vector2D_M11, update_vector2D_M12, update_vector2D_M21, update_vector2D_M22} from "./vec2.js";
+import {IMatrixFunctions} from "./interfaces/functions.js";
+import {PRECISION_DIGITS} from "../constants.js";
+import {update_matrix2x2_arrays} from "./vec2.js";
 
 let t11, t12,
     t21, t22: number;
@@ -11,33 +12,18 @@ let t11, t12,
 let M11, M12,
     M21, M22: Float32Array;
 
-const MATRIX2x2_ARRAYS = [
+const MATRIX2x2_ARRAYS: Float4 = [
     null, null,
     null, null,
 ];
 
-const update_M11 = (m11) => {M11 = MATRIX2x2_ARRAYS[0] = m11; update_vector2D_M11(m11)};
-const update_M12 = (m12) => {M12 = MATRIX2x2_ARRAYS[1] = m12; update_vector2D_M12(m12)};
+export const update_arrays = () => [
+    M11, M12,
+    M21, M22
+] = update_matrix2x2_arrays(MATRIX2x2_ARRAYS);
 
-const update_M21 = (m21) => {M21 = MATRIX2x2_ARRAYS[2] = m21; update_vector2D_M21(m21)};
-const update_M22 = (m22) => {M22 = MATRIX2x2_ARRAYS[3] = m22; update_vector2D_M22(m22)};
-
-const M11_BUFFER = new FloatBuffer(update_M11);
-const M12_BUFFER = new FloatBuffer(update_M12);
-
-const M21_BUFFER = new FloatBuffer(update_M21);
-const M22_BUFFER = new FloatBuffer(update_M22);
-
-
-let _temp_id: number;
-const getTempID = (): number => {
-    _temp_id = M11_BUFFER.allocateTemp();
-    M12_BUFFER.allocateTemp();
-    M21_BUFFER.allocateTemp();
-    M22_BUFFER.allocateTemp();
-
-    return _temp_id;
-};
+export const matrix2x2Buffer = new TypedArraysBuffer(2*2, Float32Array, update_arrays, MATRIX2x2_ARRAYS);
+const getTempID = (): number => matrix2x2Buffer.allocateTemp();
 
 const get = (a: number, dim: 0|1|2|3): number => MATRIX2x2_ARRAYS[dim][a];
 const set = (a: number, dim: 0|1|2|3, value: number): void => {MATRIX2x2_ARRAYS[dim][a] = value};
