@@ -44,7 +44,7 @@ export abstract class Vector<MatrixType extends Matrix>
         if (out.is(this))
             this._.multiply_in_place(this.id, matrix.id);
         else
-            this._.multiply(this.id, out.id, matrix.id);
+            this._.multiply(this.id, matrix.id, out.id);
 
         return out;
     }
@@ -98,8 +98,8 @@ export abstract class CrossedDirection<MatrixType extends Matrix>
 {
     readonly abstract _: ICrossFunctions;
 
-    set z(z: number) {this._.set(this.id, 1, z)}
-    get z(): number {return this._.get(this.id, 0)}
+    get z(): number {return this._.get(this.id, 2)}
+    set z(z: number) {this._.set(this.id, 2, z)}
 
     cross(other: this): this {
         this._.cross_in_place(this.id, other.id);

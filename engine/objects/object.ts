@@ -1,5 +1,5 @@
 import Transform, {trans} from "./transform.js";
-import {Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
+import {Matrix3x3Allocator, Matrix4x4Allocator} from "../lib/allocators/float.js";
 import {defaultMatrix4x4Allocator} from "../math/mat4x4.js";
 import {defaultMatrix3x3Allocator} from "../math/mat3x3.js";
 import {IBufferSizes} from "../buffer.js";

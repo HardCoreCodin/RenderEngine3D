@@ -270,12 +270,12 @@ export class Position2D extends Position<Matrix2x2, Direction2D> implements IPos
     get y(): number {return Y[this.id]}
 }
 
-// export const pos2D = (
-//     x: number|Direction2D = 0,
-//     y: number = 0
-// ): Position2D => x instanceof Direction2D ?
-//     new Position2D(x.id) :
-//     new Position2D(getTempID()).setTo(x, y);
+export const pos2D = (
+    x: number|Direction2D = 0,
+    y: number = 0
+): Position2D => x instanceof Direction2D ?
+    new Position2D(x.id) :
+    new Position2D(getTempID()).setTo(x, y);
 
 export const dir2D = (
     x: number|Position2D = 0,

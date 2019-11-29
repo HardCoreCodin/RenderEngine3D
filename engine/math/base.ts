@@ -51,7 +51,9 @@ export abstract class BaseArithmatic
     }
 
     subtract(other: this): this {
-        return undefined;
+        this._.subtract_in_place(this.id, other.id);
+
+        return this;
     }
 
     scaleBy(factor: number): this {
@@ -97,7 +99,7 @@ export abstract class BaseArithmatic
         if (out.is(this))
             this._.divide_in_place(this.id, denominator);
         else
-            this._.divide(this.id, denominator, out.id);
+            this._.divide(this.id, out.id, denominator);
 
         return out;
     }

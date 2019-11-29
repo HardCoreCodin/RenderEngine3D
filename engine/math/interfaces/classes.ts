@@ -50,7 +50,7 @@ export interface IInterpolatable extends IBaseArithmatic
     lerp(to: this, by: number, out?: this): this;
 }
 
-export interface IVector<MatrixInterface extends IMatrix>
+export interface IVector<MatrixInterface extends IMatrix = IMatrix>
     extends IInterpolatable
 {
     _: IInterpolateFunctions & IMultiplyFunctions
@@ -59,7 +59,7 @@ export interface IVector<MatrixInterface extends IMatrix>
     transformedBy(matrix: MatrixInterface, out?: this): this;
 }
 
-export interface IDirection<MatrixInterface extends IMatrix>
+export interface IDirection<MatrixInterface extends IMatrix = IMatrix>
     extends IVector<MatrixInterface>
 {
     _: IDirectionFunctions;
@@ -73,7 +73,7 @@ export interface IDirection<MatrixInterface extends IMatrix>
     normalized(out?: this): this;
 }
 
-export interface ICrossedDirection<MatrixInterface extends IMatrix>
+export interface ICrossedDirection<MatrixInterface extends IMatrix = IMatrix>
     extends IDirection<MatrixInterface>
 {
     _: ICrossFunctions;
@@ -82,7 +82,10 @@ export interface ICrossedDirection<MatrixInterface extends IMatrix>
     crossedWith(other: this, out: this): this;
 }
 
-export interface IPosition<MatrixInterface extends IMatrix, Other extends IDirection<MatrixInterface>>
+export interface IPosition<
+    MatrixInterface extends IMatrix = IMatrix,
+    Other extends IDirection<MatrixInterface> = IDirection<MatrixInterface>
+    >
     extends IVector<MatrixInterface>
 {
     _: IPositionFunctions

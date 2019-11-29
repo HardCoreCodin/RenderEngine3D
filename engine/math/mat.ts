@@ -34,17 +34,17 @@ export default abstract class Matrix
         return out;
     }
 
-    imul(matrix: this): this {
-        this._.multiply_in_place(this.id, matrix.id);
+    imul(other: this): this {
+        this._.multiply_in_place(this.id, other.id);
 
         return this;
     }
 
-    mul(matrix: this, out: this = this.copy()): this {
+    mul(other: this, out: this = this.copy()): this {
         if (out.is(this))
-            this._.multiply_in_place(this.id, matrix.id);
+            this._.multiply_in_place(this.id, other.id);
         else
-            this._.multiply(this.id, out.id, matrix.id);
+            this._.multiply(this.id, other.id, out.id);
 
         return out;
     }

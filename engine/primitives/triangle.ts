@@ -4,7 +4,7 @@ import Matrix4x4 from "../math/mat4x4.js";
 import {IUV, UV} from "../math/vec2.js";
 import {Position3D, Direction3D, RGB, pos3D, dir3D, rgb, UVW, Base3D} from "../math/vec3.js";
 import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba, Base4D} from "../math/vec4.js";
-import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../lib/allocators/float.js";
 import {IBaseRotationMatrix} from "../math/interfaces.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Faces3D, Faces4D, Vertices3D, Vertices4D} from "./attribute.js";

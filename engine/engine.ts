@@ -6,7 +6,7 @@ import FPSController, {fps} from "./input.js";
 import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
 import {dir4D, Direction4D} from "./math/vec4.js";
 import {rgb, RGB} from "./math/vec3.js";
-import {Allocators} from "./allocators.js";
+import {Allocators} from "./lib/allocators/float.js";
 import Transform, {trans} from "./objects/transform.js";
 import MeshRenderer, {rend} from "./objects/renderable.js";
 import {BufferSizes} from "./buffer.js";

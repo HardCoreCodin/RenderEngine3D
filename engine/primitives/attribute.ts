@@ -1,11 +1,12 @@
 import {UV2D} from "../math/vec2.js";
 import {ATTRIBUTE} from "../constants.js";
 import {FaceVertices, VertexFaces} from "./index.js";
-import {Direction3D, Position3D, Color3D, UV3D, dir3D, pos3D} from "../math/vec3.js";
-import {Direction4D, Position4D, Color4D} from "../math/vec4.js";
+import {Color3D, dir3D, Direction3D, pos3D, Position3D, UV3D} from "../math/vec3.js";
+import {Color4D, Direction4D, Position4D} from "../math/vec4.js";
 import Mesh, {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./mesh.js";
-import {AnyConstructor, FloatArray, IntArray, TypedArray} from "../types.js";
+import {AnyConstructor, FloatArray, IntArray, NormalInputs, TypedArray} from "../types.js";
 import {BufferSizes, TypedArraysBuffer} from "../buffer.js";
+import {zip} from "../utils.js";
 
 
 type PositionTypes = Position3D | Position4D;
@@ -208,7 +209,7 @@ export class PulledVertexAttribute<
                     for (face_id of face_ids)
                         accumulator += f_component[input.begin + face_id];
 
-                    v_component[this.begin + vertex_id] += accumulator / face_ids.length;
+                    v_component[this.begin + vertex_id] = accumulator / face_ids.length;
                 }
         } else {
             // Copy over face-attribute values to their respective vertex-attribute values:
@@ -264,8 +265,83 @@ export class VertexPositions<PositionType extends PositionTypes>
     }
 }
 
-export class VertexNormals
-class AttributeCollection {
+export class VertexNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes>
+    extends PulledVertexAttribute<DirectionType, InputNormals, FaceNormals<DirectionType, PositionType>>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
+}
+
+export class VertexColors<ColorType extends ColorTypes>
+    extends PulledVertexAttribute<ColorType, InputColors, FaceColors<ColorType>>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
+
+    generate(): void {
+        for (const array of this.arrays)
+            randomize(array, this.begins[0], this.ends[2]);
+    }
+}
+
+export class VertexUVs<UVType extends UVTypes> extends LoadableVertexAttribute<UVType, InputUVs>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.uv;
+}
+
+export class FacePositions<
+    PositionType extends PositionTypes>
+    extends PulledFaceAttribute<
+        PositionType,
+        PositionType,
+        VertexPositions<PositionType>>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.position;
+}
+
+export class FaceNormals<DirectionType extends DirectionTypes, PositionType extends PositionTypes,
+    VertexPositionArribute extends VertexPositions<PositionType> = VertexPositions<PositionType>>
+    extends PulledFaceAttribute<DirectionType, PositionType, VertexPositionArribute>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.normal;
+
+    pull(vertex_positions: VertexPositionArribute, face_vertices: FaceVertices) {
+        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
+            if (p1 instanceof Position3D &&
+                p2 instanceof Position3D &&
+                p3 instanceof Position3D) {
+
+                p1.to(p2, dir1);
+                p1.to(p3, dir2);
+            } else {
+                pos1.setTo(p1.x, p1.y, p1.z);
+                pos2.setTo(p2.x, p2.y, p2.z);
+                pos3.setTo(p3.x, p3.y, p3.z);
+
+                pos1.to(pos2, dir1);
+                pos1.to(pos3, dir2);
+            }
+
+            if (face_normal instanceof Direction3D) {
+                dir1.cross(dir2).normalized(face_normal);
+            } else {
+                dir1.cross(dir2).normalize();
+                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
+            }
+        }
+    }
+}
+
+export class FaceColors<ColorType extends ColorTypes>
+    extends PulledFaceAttribute<ColorType, ColorType, VertexColors<ColorType>>
+{
+    public readonly attribute_type: ATTRIBUTE = ATTRIBUTE.color;
+
+    generate() {
+        for (const array of this.arrays)
+            randomize(array, this.begin, this.end);
+    }
+}
+
+abstract class AttributeCollection {
     constructor(
         public readonly mesh: Mesh
     ) {
@@ -291,7 +367,7 @@ class AttributeCollection {
         return false;
     }
 
-    protected _validateParameters: () => void;
+    protected abstract _validateParameters(): void;
 }
 
 export class Faces<
@@ -324,9 +400,9 @@ export class Faces<
         const count = this.mesh.face_count;
         const attrs: ATTRIBUTE = this.mesh.options.face_attributes;
 
-        if (attrs & ATTRIBUTE.position) sizes.incrementVec(this.positions.vector_dimension, count);
-        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.vector_dimension, count);
-        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.vector_dimension, count);
+        if (attrs & ATTRIBUTE.position) sizes.incrementVec(this.positions.dim, count);
+        if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
 
         return sizes;
     }
@@ -388,8 +464,8 @@ export class Vertices<
         sizes.incrementVec(this.positions.dim, count);
 
         if (attrs & ATTRIBUTE.normal) sizes.incrementVec(this.normals.dim, count);
-        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.vector_dimension, count);
-        if (attrs & ATTRIBUTE.uv) sizes.incrementVec(this.uvs.vector_dimension, count);
+        if (attrs & ATTRIBUTE.color) sizes.incrementVec(this.colors.dim, count);
+        if (attrs & ATTRIBUTE.uv) sizes.incrementVec(this.uvs.dim, count);
 
         return sizes;
     }
@@ -397,7 +473,7 @@ export class Vertices<
     init() : void {
         const count = this.mesh.vertex_count;
         const included = this.mesh.options.vertex_attributes;
-        const shared = this.mesh.options.share
+        const shared = this.mesh.options.share;
 
         this.faces.init(this.mesh.inputs.vertex_faces.size);
         this.positions.init(count, shared & ATTRIBUTE.position);
@@ -411,7 +487,7 @@ export class Vertices<
         if (!(
             this._validate(this.mesh.vertex_count, 'Count') &&
             this._validate(this.mesh.options.vertex_attributes, 'included', 0b0001, 0b1111) &&
-            this._validate(this.shared, 'shared', 0b0000, 0b1111)
+            this._validate(this.mesh.options.share, 'shared', 0b0000, 0b1111)
         ))
             throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
     };
@@ -429,46 +505,3 @@ const pos1 = pos3D();
 const pos2 = pos3D();
 const pos3 = pos3D();
 
-export function *zip<A, B, C>(
-    a: Iterable<A>,
-    b: Iterable<B>,
-    c?: Iterable<C>
-): Generator<[A, B, C, number] | [A, B, number]> {
-    const a_iterator = a[Symbol.iterator]();
-    const b_iterator = b[Symbol.iterator]();
-    const c_iterator = c![Symbol.iterator]();
-
-    let result: [A, B, number] | [A, B, C, number];
-    if (c)
-        result = [null, null, null, 0];
-    else
-        result = [null, null, 0];
-
-    let i = 0;
-    while (true) {
-        let a_result = a_iterator.next();
-        let b_result = b_iterator.next();
-
-        if (c) {
-            let c_result = c_iterator.next();
-            if (a_result.done || b_result.done || c_result.done)
-                return;
-
-            result[0] = a_result.value;
-            result[1] = b_result.value;
-            result[2] = c_result.value;
-            result[3] = i;
-        } else {
-            if (a_result.done || b_result.done)
-                return;
-
-            result[0] = a_result.value;
-            result[1] = b_result.value;
-            result[2] = i;
-        }
-
-        yield result;
-
-        i++;
-    }
-}

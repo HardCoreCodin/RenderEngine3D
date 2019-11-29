@@ -227,8 +227,8 @@ export class Direction4D extends CrossedDirection {
     }
     set x(x) { X[this.id] = x; }
     set y(y) { Y[this.id] = y; }
-    set z(z) { Y[this.id] = z; }
-    set w(w) { Y[this.id] = w; }
+    set z(z) { Z[this.id] = z; }
+    set w(w) { W[this.id] = w; }
     get x() { return X[this.id]; }
     get y() { return Y[this.id]; }
     get z() { return Z[this.id]; }
@@ -249,8 +249,8 @@ export class Position4D extends Position {
     }
     set x(x) { X[this.id] = x; }
     set y(y) { Y[this.id] = y; }
-    set z(z) { Y[this.id] = z; }
-    set w(w) { Y[this.id] = w; }
+    set z(z) { Z[this.id] = z; }
+    set w(w) { W[this.id] = w; }
     get x() { return X[this.id]; }
     get y() { return Y[this.id]; }
     get z() { return Z[this.id]; }

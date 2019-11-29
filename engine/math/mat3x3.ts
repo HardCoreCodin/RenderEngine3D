@@ -55,7 +55,7 @@ const set_from = (a: number, o: number): void => {
 
 const set_to_identity = (a: number) : void => {
     M11[a] = M22[a] = M33[a] = 1;
-    M12[a] = M13[a] = M22[a] = M23[a] = M31[a] = M32[a] = 0;
+    M12[a] = M13[a] = M21[a] = M23[a] = M31[a] = M32[a] = 0;
 };
 
 const invert = (a: number, o: number) : void => {

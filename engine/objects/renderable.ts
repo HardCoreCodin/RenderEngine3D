@@ -1,5 +1,5 @@
 import Object3D from "./object.js";
-import {Allocators} from "../allocators.js";
+import {Allocators} from "../lib/allocators/float.js";
 import Transform, {trans} from "./transform.js";
 import Mesh from "../primitives/mesh.js";
 import {Triangle3DView, Triangle4DView} from "../primitives/triangle.js";

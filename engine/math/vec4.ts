@@ -338,8 +338,8 @@ export class Direction4D extends CrossedDirection<Matrix4x4> implements IDirecti
 
     set x(x: number) {X[this.id] = x}
     set y(y: number) {Y[this.id] = y}
-    set z(z: number) {Y[this.id] = z}
-    set w(w: number) {Y[this.id] = w}
+    set z(z: number) {Z[this.id] = z}
+    set w(w: number) {W[this.id] = w}
 
     get x(): number {return X[this.id]}
     get y(): number {return Y[this.id]}
@@ -381,8 +381,8 @@ export class Position4D extends Position<Matrix4x4, Direction4D> implements IPos
 
     set x(x: number) {X[this.id] = x}
     set y(y: number) {Y[this.id] = y}
-    set z(z: number) {Y[this.id] = z}
-    set w(w: number) {Y[this.id] = w}
+    set z(z: number) {Z[this.id] = z}
+    set w(w: number) {W[this.id] = w}
 
     get x(): number {return X[this.id]}
     get y(): number {return Y[this.id]}

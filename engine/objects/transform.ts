@@ -2,7 +2,7 @@ import {IVector3D, IVector4D} from "../math/interfaces.js";
 import Matrix3x3, {defaultMatrix3x3Allocator, mat3x3} from "../math/mat3x3.js";
 import Matrix4x4, {defaultMatrix4x4Allocator, mat4x4} from "../math/mat4x4.js";
 import {Position4D} from "../math/vec4.js";
-import {Matrix3x3Allocator, Matrix4x4Allocator} from "../allocators.js";
+import {Matrix3x3Allocator, Matrix4x4Allocator} from "../lib/allocators/float.js";
 import {IBufferSizes} from "../buffer.js";
 
 export class EulerRotation {

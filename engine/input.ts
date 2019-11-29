@@ -1,5 +1,5 @@
 import Camera from "./objects/camera.js";
-import {Vector3DAllocator} from "./allocators.js";
+import {Vector3DAllocator} from "./lib/allocators/float.js";
 import {dir3D, Direction3D} from "./math/vec3.js";
 import {IBufferSizes} from "./buffer.js";
 

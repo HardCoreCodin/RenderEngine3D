@@ -1,5 +1,6 @@
-import { dir3D, pos3D } from "../math/vec3.js";
+import { dir3D, Direction3D, pos3D, Position3D } from "../math/vec3.js";
 import { BufferSizes } from "../buffer.js";
+import { zip } from "../utils.js";
 export class Data {
     constructor() {
         this._slices = [];
@@ -136,7 +137,7 @@ export class PulledVertexAttribute extends LoadableVertexAttribute {
                     let accumulator = 0;
                     for (face_id of face_ids)
                         accumulator += f_component[input.begin + face_id];
-                    v_component[this.begin + vertex_id] += accumulator / face_ids.length;
+                    v_component[this.begin + vertex_id] = accumulator / face_ids.length;
                 }
         }
         else {
@@ -182,7 +183,73 @@ export class VertexPositions extends LoadableVertexAttribute {
             outputs.set(inputs);
     }
 }
-export class VertexNormals {
+export class VertexNormals extends PulledVertexAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 2 /* normal */;
+    }
+}
+export class VertexColors extends PulledVertexAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 4 /* color */;
+    }
+    generate() {
+        for (const array of this.arrays)
+            randomize(array, this.begins[0], this.ends[2]);
+    }
+}
+export class VertexUVs extends LoadableVertexAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 8 /* uv */;
+    }
+}
+export class FacePositions extends PulledFaceAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 1 /* position */;
+    }
+}
+export class FaceNormals extends PulledFaceAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 2 /* normal */;
+    }
+    pull(vertex_positions, face_vertices) {
+        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.iterFaceVertexValues(face_vertices))) {
+            if (p1 instanceof Position3D &&
+                p2 instanceof Position3D &&
+                p3 instanceof Position3D) {
+                p1.to(p2, dir1);
+                p1.to(p3, dir2);
+            }
+            else {
+                pos1.setTo(p1.x, p1.y, p1.z);
+                pos2.setTo(p2.x, p2.y, p2.z);
+                pos3.setTo(p3.x, p3.y, p3.z);
+                pos1.to(pos2, dir1);
+                pos1.to(pos3, dir2);
+            }
+            if (face_normal instanceof Direction3D) {
+                dir1.cross(dir2).normalized(face_normal);
+            }
+            else {
+                dir1.cross(dir2).normalize();
+                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
+            }
+        }
+    }
+}
+export class FaceColors extends PulledFaceAttribute {
+    constructor() {
+        super(...arguments);
+        this.attribute_type = 4 /* color */;
+    }
+    generate() {
+        for (const array of this.arrays)
+            randomize(array, this.begin, this.end);
+    }
 }
 class AttributeCollection {
     constructor(mesh) {
@@ -229,11 +296,11 @@ export class Faces extends AttributeCollection {
         const count = this.mesh.face_count;
         const attrs = this.mesh.options.face_attributes;
         if (attrs & 1 /* position */)
-            sizes.incrementVec(this.positions.vector_dimension, count);
+            sizes.incrementVec(this.positions.dim, count);
         if (attrs & 2 /* normal */)
-            sizes.incrementVec(this.normals.vector_dimension, count);
+            sizes.incrementVec(this.normals.dim, count);
         if (attrs & 4 /* color */)
-            sizes.incrementVec(this.colors.vector_dimension, count);
+            sizes.incrementVec(this.colors.dim, count);
         return sizes;
     }
     init() {
@@ -260,7 +327,7 @@ export class Vertices extends AttributeCollection {
         this._validateParameters = () => {
             if (!(this._validate(this.mesh.vertex_count, 'Count') &&
                 this._validate(this.mesh.options.vertex_attributes, 'included', 0b0001, 0b1111) &&
-                this._validate(this.shared, 'shared', 0b0000, 0b1111)))
+                this._validate(this.mesh.options.share, 'shared', 0b0000, 0b1111)))
                 throw `Invalid parameters! count: ${this.mesh.vertex_count} included: ${this.mesh.options.vertex_attributes}`;
         };
     }
@@ -274,9 +341,9 @@ export class Vertices extends AttributeCollection {
         if (attrs & 2 /* normal */)
             sizes.incrementVec(this.normals.dim, count);
         if (attrs & 4 /* color */)
-            sizes.incrementVec(this.colors.vector_dimension, count);
+            sizes.incrementVec(this.colors.dim, count);
         if (attrs & 8 /* uv */)
-            sizes.incrementVec(this.uvs.vector_dimension, count);
+            sizes.incrementVec(this.uvs.dim, count);
         return sizes;
     }
     init() {
@@ -302,37 +369,4 @@ const dir2 = dir3D();
 const pos1 = pos3D();
 const pos2 = pos3D();
 const pos3 = pos3D();
-export function* zip(a, b, c) {
-    const a_iterator = a[Symbol.iterator]();
-    const b_iterator = b[Symbol.iterator]();
-    const c_iterator = c[Symbol.iterator]();
-    let result;
-    if (c)
-        result = [null, null, null, 0];
-    else
-        result = [null, null, 0];
-    let i = 0;
-    while (true) {
-        let a_result = a_iterator.next();
-        let b_result = b_iterator.next();
-        if (c) {
-            let c_result = c_iterator.next();
-            if (a_result.done || b_result.done || c_result.done)
-                return;
-            result[0] = a_result.value;
-            result[1] = b_result.value;
-            result[2] = c_result.value;
-            result[3] = i;
-        }
-        else {
-            if (a_result.done || b_result.done)
-                return;
-            result[0] = a_result.value;
-            result[1] = b_result.value;
-            result[2] = i;
-        }
-        yield result;
-        i++;
-    }
-}
 //# sourceMappingURL=attribute.js.map

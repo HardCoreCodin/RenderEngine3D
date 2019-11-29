@@ -1,6 +1,6 @@
 import {defaultVector4DAllocator, dir4D, Direction4D, pos4D, Position4D, RGBA, rgba} from "../math/vec4.js";
 import {defaultVector3DAllocator, dir3D, Direction3D, pos3D, Position3D, rgb, RGB, uvw, UVW} from "../math/vec3.js";
-import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../allocators.js";
+import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../lib/allocators/float.js";
 import {ATTRIBUTE} from "../constants.js";
 import {Vertices} from "./attribute.js";
 import {defaultVector2DAllocator, IUV, uv, UV} from "../math/vec2.js";

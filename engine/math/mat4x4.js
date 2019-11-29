@@ -65,7 +65,7 @@ const set_from = (a, o) => {
 const set_to_identity = (a) => {
     M11[a] = M22[a] = M33[a] = M44[a] = 1;
     M12[a] = M13[a] = M14[a] =
-        M22[a] = M23[a] = M24[a] =
+        M21[a] = M23[a] = M24[a] =
             M31[a] = M32[a] = M34[a] =
                 M41[a] = M42[a] = M43[a] = 0;
 };

@@ -49,20 +49,20 @@ export default class Screen {
         this.context.beginPath();
 
         this.context.moveTo(
-            triangle.vertices[0].position.buffer[0],
-            triangle.vertices[0].position.buffer[1]
+            triangle.vertices[0].position._base[0],
+            triangle.vertices[0].position._base[1]
         );
         this.context.lineTo(
-            triangle.vertices[1].position.buffer[0],
-            triangle.vertices[1].position.buffer[1]
+            triangle.vertices[1].position._base[0],
+            triangle.vertices[1].position._base[1]
         );
         this.context.lineTo(
-            triangle.vertices[2].position.buffer[0],
-            triangle.vertices[2].position.buffer[1]
+            triangle.vertices[2].position._base[0],
+            triangle.vertices[2].position._base[1]
         );
         this.context.lineTo(
-            triangle.vertices[0].position.buffer[0],
-            triangle.vertices[0].position.buffer[1]
+            triangle.vertices[0].position._base[0],
+            triangle.vertices[0].position._base[1]
         );
 
         this.context.closePath();
@@ -75,16 +75,16 @@ export default class Screen {
         this.context.beginPath();
 
         this.context.moveTo(
-            triangle.vertices[0].position.buffer[0],
-            triangle.vertices[0].position.buffer[1]
+            triangle.vertices[0].position._base[0],
+            triangle.vertices[0].position._base[1]
         );
         this.context.lineTo(
-            triangle.vertices[1].position.buffer[0],
-            triangle.vertices[1].position.buffer[1]
+            triangle.vertices[1].position._base[0],
+            triangle.vertices[1].position._base[1]
         );
         this.context.lineTo(
-            triangle.vertices[2].position.buffer[0],
-            triangle.vertices[2].position.buffer[1]
+            triangle.vertices[2].position._base[0],
+            triangle.vertices[2].position._base[1]
         );
 
         this.context.closePath();

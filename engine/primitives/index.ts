@@ -1,6 +1,7 @@
 import {VertexFacesIndices, TriangleInputs} from "../types.js";
-import {Data, zip} from "./attribute.js";
+import {Data} from "./attribute.js";
 import {IntBuffer} from "../buffer.js";
+import {zip} from "../utils.js";
 
 
 let INDEX_ARRAY_1, INDEX_ARRAY_2, INDEX_ARRAY_3: Uint32Array;

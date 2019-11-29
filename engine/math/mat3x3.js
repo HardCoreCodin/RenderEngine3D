@@ -47,7 +47,7 @@ const set_from = (a, o) => {
 };
 const set_to_identity = (a) => {
     M11[a] = M22[a] = M33[a] = 1;
-    M12[a] = M13[a] = M22[a] = M23[a] = M31[a] = M32[a] = 0;
+    M12[a] = M13[a] = M21[a] = M23[a] = M31[a] = M32[a] = 0;
 };
 const invert = (a, o) => {
     M13[o] = M13[a];
