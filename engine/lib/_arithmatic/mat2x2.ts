@@ -1,7 +1,7 @@
 import {Float4} from "../../types.js";
 import {PRECISION_DIGITS} from "../../constants.js";
-import {IMatrix2x2Functions} from "../_interfaces/math_function_sets.js";
 import {MATRIX_2X2_ALLOCATOR} from "../allocators/float.js";
+import {IMatrix2x2FunctionSet} from "../_interfaces/function_sets.js";
 
 let t11, t12,
     t21, t22: number;
@@ -333,7 +333,7 @@ const set_rotation = (
     M21a[a] = -sin;
 };
 
-export const matrix2x2Functions: IMatrix2x2Functions = {
+export const matrix2x2Functions: IMatrix2x2FunctionSet = {
     allocator: MATRIX_2X2_ALLOCATOR,
 
     set_to,

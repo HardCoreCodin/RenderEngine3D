@@ -25,4 +25,10 @@ export class FacePositions4D
     readonly dim = DIM._4D;
     readonly Vector = Position4D;
     readonly allocator = VECTOR_4D_ALLOCATOR;
+
+    pull(input: VertexPositions4D): void {
+        super.pull(input);
+
+        this.arrays[3].fill(1);
+    }
 }

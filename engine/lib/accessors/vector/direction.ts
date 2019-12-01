@@ -7,17 +7,18 @@ import {
     IDirection3D,
     IDirection4D
 } from "../../_interfaces/accessors/vector/direction.js";
-import {ICrossFunctionSet, IDirectionFunctionSet} from "../../_interfaces/function_sets.js";
+import {ICrossDirectionFunctionSet, IDirectionFunctionSet} from "../../_interfaces/function_sets.js";
 import {DIM, PRECISION_DIGITS} from "../../../constants.js";
 import {direction2DFunctions} from "../../_arithmatic/vec2.js";
 import {direction4DFunctions} from "../../_arithmatic/vec4.js";
 import {direction3DFunctions} from "../../_arithmatic/vec3.js";
-import {IVector} from "../../_interfaces/accessors/vector/_base.js";
 
 export abstract class Direction<Dim extends DIM, MatrixType extends Matrix>
     extends TransformableVector<MatrixType>
-    implements IDirection<Dim ,MatrixType> {
+    implements IDirection<Dim ,MatrixType>
+{
     _: IDirectionFunctionSet;
+    _newOut(): this {return this._new()}
 
     readonly dot = (other: this): number =>
         this._.dot(
@@ -66,10 +67,13 @@ export abstract class Direction<Dim extends DIM, MatrixType extends Matrix>
     }
 }
 
-export abstract class CrossedDirection<Dim extends DIM, MatrixType extends Matrix>
+export abstract class CrossedDirection<
+    Dim extends DIM,
+    MatrixType extends Matrix>
     extends Direction<Dim, MatrixType>
-    implements ICrossedDirection<Dim, MatrixType> {
-    readonly abstract _: ICrossFunctionSet;
+    implements ICrossedDirection<Dim, MatrixType>
+{
+    readonly abstract _: ICrossDirectionFunctionSet;
 
     get z(): number {
         return this.arrays[2][this.id]
@@ -79,7 +83,7 @@ export abstract class CrossedDirection<Dim extends DIM, MatrixType extends Matri
         this.arrays[2][this.id] = z
     }
 
-    cross(other: IDirection<Dim>): this {
+    cross(other: ICrossedDirection<Dim, MatrixType>): this {
         this._.cross_in_place(
             this.id, this.arrays,
             other.id, other.arrays
@@ -88,7 +92,7 @@ export abstract class CrossedDirection<Dim extends DIM, MatrixType extends Matri
         return this;
     };
 
-    crossedWith(other: IDirection<Dim>, out: this): this {
+    crossedWith(other: ICrossedDirection<Dim, MatrixType>, out: this): this {
         if (out.is(this))
             return out.cross(other);
 
@@ -102,7 +106,10 @@ export abstract class CrossedDirection<Dim extends DIM, MatrixType extends Matri
     }
 }
 
-export class Direction2D extends Direction<DIM._2D, Matrix2x2> implements IDirection2D {
+export class Direction2D
+    extends Direction<DIM._2D, Matrix2x2>
+    implements IDirection2D
+{
     readonly _ = direction2DFunctions;
 
     setTo(x: number, y: number): this {
@@ -120,9 +127,19 @@ export class Direction2D extends Direction<DIM._2D, Matrix2x2> implements IDirec
 
     get x(): number {return this.arrays[0][this.id]}
     get y(): number {return this.arrays[1][this.id]}
+
+
+    get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
+    get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
+
+    get yx(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[0]])}
+    get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
 }
 
-export class Direction3D extends CrossedDirection<DIM._3D, Matrix3x3> implements IDirection3D {
+export class Direction3D
+    extends CrossedDirection<DIM._3D, Matrix3x3>
+    implements IDirection3D
+{
     readonly _ = direction3DFunctions;
 
     setTo(x: number, y: number, z: number): this {
@@ -142,9 +159,68 @@ export class Direction3D extends CrossedDirection<DIM._3D, Matrix3x3> implements
     get x(): number {return this.arrays[0][this.id]}
     get y(): number {return this.arrays[1][this.id]}
     get z(): number {return this.arrays[2][this.id]}
+
+    get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
+    get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
+    get xz(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[2]])}
+
+    get yx(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[0]])}
+    get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
+    get yz(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[2]])}
+
+    get zx(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[0]])}
+    get zy(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[1]])}
+    get zz(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[2]])}
+
+    get xxx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[0]])}
+    get xxy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[1]])}
+    get xxz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[2]])}
+    get xyx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[0]])}
+    get xyy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[1]])}
+    get xyz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]])}
+    get xzx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[0]])}
+    get xzy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[1]])}
+    get xzz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[2]])}
+
+    get yxx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[0]])}
+    get yxy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[1]])}
+    get yxz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[2]])}
+    get yyx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[0]])}
+    get yyy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[1]])}
+    get yyz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[2]])}
+    get yzx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[0]])}
+    get yzy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[1]])}
+    get yzz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[2]])}
+
+    get zxx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[0]])}
+    get zxy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[1]])}
+    get zxz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[2]])}
+    get zyx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[0]])}
+    get zyy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[1]])}
+    get zyz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[2]])}
+    get zzx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[0]])}
+    get zzy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[1]])}
+    get zzz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[2]])}
+
+    set xy(other: Direction2D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]}
+    set xz(other: Direction2D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]}
+    set yx(other: Direction2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
+    set yz(other: Direction2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]}
+    set zx(other: Direction2D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
+    set zy(other: Direction2D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]}
+
+    set xyz(other: Direction3D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[2][this.id] = other.arrays[2][other.id]}
+    set xzy(other: Direction3D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]; this.arrays[1][this.id] = other.arrays[2][other.id]}
+    set yxz(other: Direction3D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]; this.arrays[2][this.id] = other.arrays[2][other.id]}
+    set yzx(other: Direction3D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
+    set zxy(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]; this.arrays[1][this.id] = other.arrays[2][other.id]}
+    set zyx(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Direction4D extends CrossedDirection<DIM._4D, Matrix4x4> implements IDirection4D {
+export class Direction4D
+    extends CrossedDirection<DIM._4D, Matrix4x4>
+    implements IDirection4D
+{
     readonly _ = direction4DFunctions;
 
     setTo(x: number, y: number, z: number, w: number): this {
@@ -166,32 +242,78 @@ export class Direction4D extends CrossedDirection<DIM._4D, Matrix4x4> implements
     get y(): number {return this.arrays[1][this.id]}
     get z(): number {return this.arrays[2][this.id]}
     get w(): number {return this.arrays[3][this.id]}
+
+    get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
+    get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
+    get xz(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[2]])}
+
+    get yx(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[0]])}
+    get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
+    get yz(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[2]])}
+
+    get zx(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[0]])}
+    get zy(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[1]])}
+    get zz(): Direction2D {return new Direction2D(this.id, [this.arrays[2], this.arrays[2]])}
+
+    get xxx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[0]])}
+    get xxy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[1]])}
+    get xxz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[0], this.arrays[2]])}
+    get xyx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[0]])}
+    get xyy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[1]])}
+    get xyz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]])}
+    get xzx(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[0]])}
+    get xzy(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[1]])}
+    get xzz(): Direction3D {return new Direction3D(this.id, [this.arrays[0], this.arrays[2], this.arrays[2]])}
+
+    get yxx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[0]])}
+    get yxy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[1]])}
+    get yxz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[0], this.arrays[2]])}
+    get yyx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[0]])}
+    get yyy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[1]])}
+    get yyz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[1], this.arrays[2]])}
+    get yzx(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[0]])}
+    get yzy(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[1]])}
+    get yzz(): Direction3D {return new Direction3D(this.id, [this.arrays[1], this.arrays[2], this.arrays[2]])}
+
+    get zxx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[0]])}
+    get zxy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[1]])}
+    get zxz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[0], this.arrays[2]])}
+    get zyx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[0]])}
+    get zyy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[1]])}
+    get zyz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[1], this.arrays[2]])}
+    get zzx(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[0]])}
+    get zzy(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[1]])}
+    get zzz(): Direction3D {return new Direction3D(this.id, [this.arrays[2], this.arrays[2], this.arrays[2]])}
+
+    set xy(other: Direction2D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]}
+    set xz(other: Direction2D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]}
+    set yx(other: Direction2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
+    set yz(other: Direction2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]}
+    set zx(other: Direction2D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
+    set zy(other: Direction2D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]}
+
+    set xyz(other: Direction3D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[2][this.id] = other.arrays[2][other.id]}
+    set xzy(other: Direction3D) {this.arrays[0][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]; this.arrays[1][this.id] = other.arrays[2][other.id]}
+    set yxz(other: Direction3D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]; this.arrays[2][this.id] = other.arrays[2][other.id]}
+    set yzx(other: Direction3D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[2][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
+    set zxy(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]; this.arrays[1][this.id] = other.arrays[2][other.id]}
+    set zyx(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-const alloc2D = direction2DFunctions.allocator;
-const alloc3D = direction3DFunctions.allocator;
-const alloc4D = direction4DFunctions.allocator;
+export const dir2 = (
+    x: number = 0,
+    y: number = x
+): Direction2D => new Direction2D().setTo(x, y);
 
-export const dir2D = (
-    x: number | IVector = 0,
-    y: number = 0
-): Direction2D => typeof x === "number" ?
-    new Direction2D(alloc2D.allocateTemp(), alloc2D.temp_arrays).setTo(x, y) :
-    new Direction2D(x.id, x.arrays);
+export const dir3 = (
+    x: number = 0,
+    y: number = x,
+    z: number = x
+): Direction3D => new Direction3D().setTo(x, y, z);
 
-export const dir3D = (
-    x: number | IVector = 0,
-    y: number = 0,
-    z: number = 0
-): Direction3D => typeof x === "number" ?
-    new Direction3D(alloc3D.allocateTemp(), alloc3D.temp_arrays).setTo(x, y, z) :
-    new Direction3D(x.id, x.arrays);
-
-export const dir4D = (
-    x: number | IVector = 0,
-    y: number = 0,
-    z: number = 0,
-    w: number = 0
-): Direction4D => typeof x === "number" ?
-    new Direction4D(alloc4D.allocateTemp(), alloc4D.temp_arrays).setTo(x, y, z, w) :
-    new Direction4D(x.id, x.arrays);
+export const dir4 = (
+    x: number = 0,
+    y: number = x,
+    z: number = x,
+    w: number = x
+): Direction4D => new Direction4D().setTo(x, y, z, w);

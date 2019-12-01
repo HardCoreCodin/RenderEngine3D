@@ -3,10 +3,11 @@ import {ATTRIBUTE} from "../constants.js";
 import {FaceVertices, VertexFaces} from "./index.js";
 import {Color3D, dir3D, Direction3D, pos3D, Position3D, UV3D} from "../math/vec3.js";
 import {Color4D, Direction4D, Position4D} from "../math/vec4.js";
-import Mesh, {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./mesh.js";
 import {AnyConstructor, FloatArray, IntArray, NormalInputs, TypedArray} from "../types.js";
 import {BufferSizes, TypedArraysBuffer} from "../buffer.js";
 import {zip} from "../utils.js";
+import {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "../lib/mesh/inputs.js";
+import Mesh from "../lib/mesh/_base.js";
 
 
 type PositionTypes = Position3D | Position4D;
@@ -309,22 +310,22 @@ export class FaceNormals<DirectionType extends DirectionTypes, PositionType exte
                 p2 instanceof Position3D &&
                 p3 instanceof Position3D) {
 
-                p1.to(p2, dir1);
-                p1.to(p3, dir2);
+                p1.to(p2, dir_1);
+                p1.to(p3, dir_2);
             } else {
-                pos1.setTo(p1.x, p1.y, p1.z);
-                pos2.setTo(p2.x, p2.y, p2.z);
-                pos3.setTo(p3.x, p3.y, p3.z);
+                pos_1.setTo(p1.x, p1.y, p1.z);
+                pos_2.setTo(p2.x, p2.y, p2.z);
+                pos_3.setTo(p3.x, p3.y, p3.z);
 
-                pos1.to(pos2, dir1);
-                pos1.to(pos3, dir2);
+                pos_1.to(pos_2, dir_1);
+                pos_1.to(pos_3, dir_2);
             }
 
             if (face_normal instanceof Direction3D) {
-                dir1.cross(dir2).normalized(face_normal);
+                dir_1.cross(dir_2).normalized(face_normal);
             } else {
-                dir1.cross(dir2).normalize();
-                face_normal.setTo(dir1.x, dir1.y, dir1.z, 0);
+                dir_1.cross(dir_2).normalize();
+                face_normal.setTo(dir_1.x, dir_1.y, dir_1.z, 0);
             }
         }
     }
@@ -498,10 +499,10 @@ const randomize = (array: FloatArray, begin: number, end: number): void => {
         array[i] = Math.random();
 };
 
-const dir1 = dir3D();
-const dir2 = dir3D();
+const dir_1 = dir3D();
+const dir_2 = dir3D();
 
-const pos1 = pos3D();
-const pos2 = pos3D();
-const pos3 = pos3D();
+const pos_1 = pos3D();
+const pos_2 = pos3D();
+const pos_3 = pos3D();
 

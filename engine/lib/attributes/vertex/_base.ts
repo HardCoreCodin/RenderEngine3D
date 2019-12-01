@@ -1,8 +1,6 @@
 import {zip} from "../../../utils.js";
 import {Attribute} from "../_base.js";
 import {Vector} from "../../accessors/vector/_base.js";
-import {InputAttribute} from "../../../primitives/mesh.js";
-import {FaceVertices, VertexFaces} from "../../buffers/index.js";
 import {IFaceAttribute} from "../../_interfaces/attributes/face/_base.js";
 import {
     ILoadableVertexAttribute,
@@ -10,6 +8,8 @@ import {
     IVertexAttribute
 } from "../../_interfaces/attributes/vertex/_base.js";
 import {DIM} from "../../../constants.js";
+import {InputAttribute} from "../../mesh/inputs.js";
+import {VertexFaces} from "../../mesh/vertex/faces.js";
 
 export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector>
     extends Attribute<Dim, VectorType>
@@ -22,7 +22,7 @@ export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector
         VectorType
         ] = [null, null, null];
 
-    init(length: number, is_shared: number | boolean = false): void {
+    init(length: number = this._face_vertices.arrays[0].length, is_shared: number | boolean = true): void {
         this._is_shared = !!is_shared;
         super.init(is_shared ? length : length * 3);
 

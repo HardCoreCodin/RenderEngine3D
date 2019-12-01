@@ -1,11 +1,11 @@
 import {VECTOR_4D_ALLOCATOR} from "../allocators/float.js";
 import {PRECISION_DIGITS} from "../../constants.js";
 import {
-    ICrossFunctionSet,
+    ICrossDirectionFunctionSet,
     IPosition4DFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
-} from "../_interfaces/math_function_sets.js";
+} from "../_interfaces/function_sets.js";
 import {Float16, Float4} from "../../types.js";
 
 let t_x,
@@ -390,7 +390,7 @@ export const position4DFunctions: IPosition4DFunctionSet = {
     out_of_view
 };
 
-export const direction4DFunctions: ICrossFunctionSet = {
+export const direction4DFunctions: ICrossDirectionFunctionSet = {
     ...vector4DFunctions,
 
     length,

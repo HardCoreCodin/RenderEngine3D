@@ -51,8 +51,8 @@
 //         return this.cls.from(over(this.buffer, n));
 //     }
 //
-//     mul(n: number | mat4x4) : vec3d {
-//         if (n instanceof mat4x4)
+//     mul(n: number | mat4) : vec3d {
+//         if (n instanceof mat4)
 //             matMul(this.buffer, n.buffer, this.buffer);
 //         else
 //             mul(this.buffer, n);
@@ -60,9 +60,9 @@
 //         return this;
 //     }
 //
-//     times(n: number | mat4x4) : vec3d {
+//     times(n: number | mat4) : vec3d {
 //         return this.cls.from(
-//         n instanceof mat4x4 ?
+//         n instanceof mat4 ?
 //             matMul(this.buffer, n.buffer) :
 //             times(this.buffer, n)
 //         )

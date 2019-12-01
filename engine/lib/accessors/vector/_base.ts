@@ -5,10 +5,11 @@ import {ITransformableVectorFunctionSet, IVectorFunctionSet} from "../../_interf
 
 export abstract class Vector
     extends ArithmaticAccessor
-    implements IVector {
+    implements IVector
+{
     readonly abstract _: IVectorFunctionSet;
 
-    lerp(to: this, by: number, out: this = this.copy()): this {
+    lerp(to: this, by: number, out: this = this._new()): this {
         this._.lerp(
             this.id, this.arrays,
             to.id, to.arrays,
@@ -20,9 +21,9 @@ export abstract class Vector
     }
 }
 
-export abstract class TransformableVector<MatrixType extends Matrix>
-    extends Vector
-    implements ITransformableVector<MatrixType> {
+export abstract class TransformableVector<MatrixType extends Matrix> extends Vector
+    implements ITransformableVector<MatrixType>
+{
     readonly abstract _: ITransformableVectorFunctionSet;
 
     transform(matrix: MatrixType): this {
@@ -34,7 +35,7 @@ export abstract class TransformableVector<MatrixType extends Matrix>
         return this;
     }
 
-    transformedBy(matrix: MatrixType, out: this = this.copy()): this {
+    transformedBy(matrix: MatrixType, out: this = this._new()): this {
         if (out.is(this))
             this._.multiply_in_place(
                 this.id, this.arrays,

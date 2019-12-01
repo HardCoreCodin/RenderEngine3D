@@ -1,12 +1,12 @@
 import Screen from "./screen.js";
-import Camera, { cam } from "./objects/camera.js";
+import Camera, { cam } from "./lib/nodes/camera.js";
 import Triangle4D, { tri } from "./primitives/triangle.js";
 import FPSController, { fps } from "./input.js";
 import { mat4x4 } from "./math/mat4x4.js";
 import { dir4D } from "./math/vec4.js";
 import { rgb } from "./math/vec3.js";
-import Transform from "./objects/transform.js";
 import { rend } from "./objects/renderable.js";
+import Transform from "./lib/nodes/transform.js";
 export default class Engine3D {
     constructor(canvas, meshes) {
         this.canvas = canvas;

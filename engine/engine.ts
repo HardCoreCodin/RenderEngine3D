@@ -1,15 +1,16 @@
 import Screen from "./screen.js";
-import Mesh from "./primitives/mesh.js";
-import Camera, {cam} from "./objects/camera.js";
+import Camera, {cam} from "./lib/nodes/camera.js";
 import Triangle4D, {tri} from "./primitives/triangle.js";
 import FPSController, {fps} from "./input.js";
 import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
 import {dir4D, Direction4D} from "./math/vec4.js";
 import {rgb, RGB} from "./math/vec3.js";
 import {Allocators} from "./lib/allocators/float.js";
-import Transform, {trans} from "./objects/transform.js";
+import {trans} from "./objects/transform.js";
 import MeshRenderer, {rend} from "./objects/renderable.js";
 import {BufferSizes} from "./buffer.js";
+import Mesh from "./lib/mesh/_base.js";
+import Transform from "./lib/nodes/transform.js";
 
 export default class Engine3D {
     static SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({

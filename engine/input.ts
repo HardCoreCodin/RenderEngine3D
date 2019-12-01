@@ -1,7 +1,5 @@
-import Camera from "./objects/camera.js";
-import {Vector3DAllocator} from "./lib/allocators/float.js";
-import {dir3D, Direction3D} from "./math/vec3.js";
-import {IBufferSizes} from "./buffer.js";
+import Camera from "./lib/nodes/camera.js";
+import {Direction3D} from "./lib/accessors/vector/direction.js";
 
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
@@ -35,11 +33,8 @@ const pressed = {
     pitch_down: false
 };
 
-export default class FPSController {
-    static readonly SIZE: IBufferSizes = {
-        vec3D: 3
-    };
-
+export default class FPSController
+{
     public position_changed: boolean = false;
     public direction_changed: boolean = false;
 
@@ -56,16 +51,16 @@ export default class FPSController {
         private readonly camera: Camera,
         private readonly canvas: HTMLCanvasElement,
 
-        private readonly forward_movement: Direction3D,
-        private readonly right_movement: Direction3D,
-        private readonly _forward_direction: Direction3D,
+        private readonly forward_movement: Direction3D = new Direction3D(),
+        private readonly right_movement: Direction3D = new Direction3D(),
+        private readonly _forward_direction: Direction3D = new Direction3D(),
 
         public movement_speed: number = 0.1,
         public rotation_speed: number = 0.01,
         public mouse_sensitivity: number = 0.1,
 
-        private readonly look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
-        private readonly right_direction = camera.transform.rotation.matrix.i, // The player's right direction
+        private readonly look_direction = camera.transform.matrix.k, // The player's forward direction
+        private readonly right_direction = camera.transform.matrix.i, // The player's right direction
     ) {
         canvas.onmousemove = this.on_mousemove;
         document.onkeydown = this.on_keydown;
@@ -172,7 +167,7 @@ export default class FPSController {
                 if (pressed.forward)
                     this.camera.position.add(this.forward_movement);
                 else
-                    this.camera.position.sub(this.forward_movement);
+                    this.camera.position.subtract(this.forward_movement);
             }
 
             if (pressed.right ||
@@ -183,7 +178,7 @@ export default class FPSController {
                 if (pressed.right)
                     this.camera.position.add(this.right_movement);
                 else
-                    this.camera.position.sub(this.right_movement);
+                    this.camera.position.subtract(this.right_movement);
             }
 
             if (pressed.up ||
@@ -209,9 +204,3 @@ export default class FPSController {
         }
     }
 }
-
-export const fps = (
-    camera: Camera,
-    canvas: HTMLCanvasElement,
-    allocator: Vector3DAllocator
-) : FPSController => new FPSController(camera, canvas, dir3D(allocator), dir3D(allocator), dir3D(allocator));

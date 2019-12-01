@@ -1,6 +1,6 @@
 import {ArithmaticAccessor} from "./_base.js";
-import {Position3D, Position4D} from "./vector/position.js";
-import {Direction2D, Direction3D, Direction4D} from "./vector/direction.js";
+import {Position2D, Position3D} from "./vector/position.js";
+import {Direction2D, Direction3D} from "./vector/direction.js";
 import {matrix2x2Functions} from "../_arithmatic/mat2x2.js";
 import {matrix4x4Functions} from "../_arithmatic/mat4x4.js";
 import {matrix3x3Functions} from "../_arithmatic/mat3x3.js";
@@ -11,8 +11,10 @@ import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_
 
 export default abstract class Matrix
     extends ArithmaticAccessor
-    implements IMatrix {
+    implements IMatrix
+{
     readonly abstract _: IMatrixFunctionSet;
+    _newOut(): this {return this._new()}
 
     get is_identity(): boolean {
         return this._.is_identity(
@@ -75,7 +77,10 @@ export default abstract class Matrix
     }
 }
 
-export abstract class RotationMatrix extends Matrix implements IRotationMatrix {
+export abstract class RotationMatrix
+    extends Matrix
+    implements IRotationMatrix
+{
     readonly abstract _: IMatrixRotationFunctionSet;
 
     setRotationAroundX(angle: number, reset: boolean = false): this {
@@ -133,10 +138,9 @@ export class Matrix2x2
     public readonly i: Direction2D;
     public readonly j: Direction2D;
 
-    constructor(
-        public id: number,
-        public arrays: Float4
-    ) {
+    public arrays: Float4;
+
+    constructor(id?: number, arrays?: Float4) {
         super(id, arrays);
 
         this.i = new Direction2D(id, [arrays[0], arrays[1]]);
@@ -190,21 +194,27 @@ export class Matrix3x3
 {
     readonly _ = matrix3x3Functions;
 
-    public readonly i: Direction3D;
-    public readonly j: Direction3D;
-    public readonly k: Direction3D;
-    public readonly t: Position3D;
+    public readonly i: Direction2D;
+    public readonly j: Direction2D;
+    public readonly k: Direction2D;
 
-    constructor(
-        public id: number,
-        public arrays: Float9
-    ) {
+    public readonly pos2: Position2D;
+    public readonly mat2: Matrix2x2;
+
+    public arrays: Float9;
+
+    constructor(id?: number, arrays?: Float9) {
         super(id, arrays);
 
-        this.i = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]);
-        this.j = new Direction3D(id, [arrays[3], arrays[4], arrays[5]]);
-        this.k = new Direction3D(id, [arrays[6], arrays[7], arrays[8]]);
-        this.t = new Position3D(id, [arrays[6], arrays[7], arrays[8]]);
+        this.i = new Direction2D(id, [arrays[0], arrays[1]]);
+        this.j = new Direction2D(id, [arrays[3], arrays[4]]);
+        this.k = new Direction2D(id, [arrays[6], arrays[7]]);
+
+        this.pos2 = new Position2D(id, [arrays[6], arrays[7]]);
+        this.mat2 = new Matrix2x2(this.id, [
+            this.arrays[0], this.arrays[1],
+            this.arrays[3], this.arrays[4],
+        ]);
     }
 
     get m11(): number {return this.arrays[0][this.id]}
@@ -256,21 +266,28 @@ export class Matrix4x4
 {
     readonly _ = matrix4x4Functions;
 
-    public readonly i: Direction4D;
-    public readonly j: Direction4D;
-    public readonly k: Direction4D;
-    public readonly t: Position4D;
+    public readonly i: Direction3D;
+    public readonly j: Direction3D;
+    public readonly k: Direction3D;
 
-    constructor(
-        public id: number,
-        public arrays: Float16
-    ) {
+    public readonly pos3: Position3D;
+    public readonly mat3: Matrix3x3;
+
+    public arrays: Float16;
+
+    constructor(id?: number, arrays?: Float16) {
         super(id, arrays);
 
-        this.i = new Direction4D(id, [arrays[0], arrays[1], arrays[2], arrays[3]]);
-        this.j = new Direction4D(id, [arrays[4], arrays[5], arrays[6], arrays[7]]);
-        this.k = new Direction4D(id, [arrays[8], arrays[9], arrays[10], arrays[11]]);
-        this.t = new Position4D(id, [arrays[12], arrays[13], arrays[14], arrays[15]]);
+        this.i = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]);
+        this.j = new Direction3D(id, [arrays[4], arrays[5], arrays[6]]);
+        this.k = new Direction3D(id, [arrays[8], arrays[9], arrays[10]]);
+
+        this.pos3 = new Position3D(id, [arrays[12], arrays[13], arrays[14]]);
+        this.mat3 = new Matrix3x3(this.id, [
+            this.arrays[0], this.arrays[1], this.arrays[2],
+            this.arrays[4], this.arrays[5], this.arrays[6],
+            this.arrays[8], this.arrays[9], this.arrays[10]
+        ]);
     }
 
     set m11(m11: number) {this.arrays[0][this.id] = m11}
@@ -333,40 +350,30 @@ export class Matrix4x4
     }
 }
 
-
-export const mat2x2 = (
-    m11: number = 0, m12: number = 0,
-    m21: number = 0, m22: number = 0
-): Matrix2x2 => new Matrix2x2(
-    matrix2x2Functions.allocator.allocateTemp(),
-    matrix2x2Functions.allocator.temp_arrays as Float4
-).setTo(
+export const mat2 = (
+    m11: number = 0,   m12: number = m11,
+    m21: number = m11, m22: number = m11
+): Matrix2x2 => new Matrix2x2().setTo(
     m11, m12,
     m21, m22
 );
 
-export const mat3x3 = (
-    m11: number = 0, m12: number = 0, m13: number = 0,
-    m21: number = 0, m22: number = 0, m23: number = 0,
-    m31: number = 0, m32: number = 0, m33: number = 0,
-): Matrix3x3 => new Matrix3x3(
-    matrix3x3Functions.allocator.allocateTemp(),
-    matrix3x3Functions.allocator.temp_arrays as Float9
-).setTo(
+export const mat3 = (
+    m11: number = 0,   m12: number = m11, m13: number = m11,
+    m21: number = m11, m22: number = m11, m23: number = m11,
+    m31: number = m11, m32: number = m11, m33: number = m11,
+): Matrix3x3 => new Matrix3x3().setTo(
     m11, m12, m13,
     m21, m22, m23,
     m31, m32, m33
 );
 
-export const mat4x4 = (
-    m11: number = 0, m12: number = 0, m13: number = 0, m14: number = 0,
-    m21: number = 0, m22: number = 0, m23: number = 0, m24: number = 0,
-    m31: number = 0, m32: number = 0, m33: number = 0, m34: number = 0,
-    m41: number = 0, m42: number = 0, m43: number = 0, m44: number = 0
-): Matrix4x4 => new Matrix4x4(
-    matrix4x4Functions.allocator.allocateTemp(),
-    matrix4x4Functions.allocator.temp_arrays as Float16
-).setTo(
+export const mat4 = (
+    m11: number = 0,   m12: number = m11, m13: number = m11, m14: number = m11,
+    m21: number = m11, m22: number = m11, m23: number = m11, m24: number = m11,
+    m31: number = m11, m32: number = m11, m33: number = m11, m34: number = m11,
+    m41: number = m11, m42: number = m11, m43: number = m11, m44: number = m11
+): Matrix4x4 => new Matrix4x4().setTo(
     m11, m12, m13, m14,
     m21, m22, m23, m24,
     m31, m32, m33, m34,

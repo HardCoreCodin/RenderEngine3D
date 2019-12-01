@@ -1,4 +1,4 @@
-import { dir3D } from "./math/vec3.js";
+import { Direction3D } from "./lib/accessors/vector/direction.js";
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
 const LEFT_kEY_CODE = 65; // A
@@ -22,8 +22,8 @@ const pressed = {
     pitch_down: false
 };
 export default class FPSController {
-    constructor(camera, canvas, forward_movement, right_movement, _forward_direction, movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, look_direction = camera.transform.rotation.matrix.k, // The player's forward direction
-    right_direction = camera.transform.rotation.matrix.i) {
+    constructor(camera, canvas, forward_movement = new Direction3D(), right_movement = new Direction3D(), _forward_direction = new Direction3D(), movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, look_direction = camera.transform.matrix.k, // The player's forward direction
+    right_direction = camera.transform.matrix.i) {
         this.camera = camera;
         this.canvas = canvas;
         this.forward_movement = forward_movement;
@@ -156,7 +156,7 @@ export default class FPSController {
                 if (pressed.forward)
                     this.camera.position.add(this.forward_movement);
                 else
-                    this.camera.position.sub(this.forward_movement);
+                    this.camera.position.subtract(this.forward_movement);
             }
             if (pressed.right ||
                 pressed.left) {
@@ -164,7 +164,7 @@ export default class FPSController {
                 if (pressed.right)
                     this.camera.position.add(this.right_movement);
                 else
-                    this.camera.position.sub(this.right_movement);
+                    this.camera.position.subtract(this.right_movement);
             }
             if (pressed.up ||
                 pressed.down) {
@@ -186,8 +186,4 @@ export default class FPSController {
         }
     }
 }
-FPSController.SIZE = {
-    vec3D: 3
-};
-export const fps = (camera, canvas, allocator) => new FPSController(camera, canvas, dir3D(allocator), dir3D(allocator), dir3D(allocator));
 //# sourceMappingURL=input.js.map

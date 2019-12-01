@@ -1,6 +1,6 @@
 import {CACHE_LINE_BYTES, DIM} from "../../constants.js";
 import {IAllocator, IBaseAllocator, IFloatAllocator, IIntAllocator} from "../_interfaces/allocators.js";
-import {AnyConstructor, TypedArray, TypedArrayConstructor} from "../../types.js";
+import {AnyConstructor, Tuple, TypedArray, TypedArrayConstructor} from "../../types.js";
 
 export abstract class BaseAllocator<
     ArrayType extends TypedArray,
@@ -53,15 +53,15 @@ export abstract class AbstractTypedArraysAllocator<
     extends BaseAllocator<ArrayType, Dim>
     implements IAllocator<ArrayType, Dim>
 {
-    public temp_arrays: ArrayType[];
+    public temp_arrays: Tuple<ArrayType, Dim>;
 
     constructor() {
         super();
         this.temp_arrays = this.allocate(this._temp_length);
     }
 
-    allocate(length: number): ArrayType[] {
-        const arrays = Array<ArrayType>(this.dim);
+    allocate(length: number): Tuple<ArrayType, Dim> {
+        const arrays = Array<ArrayType>(this.dim) as Tuple<ArrayType, Dim>;
         const buffer = new ArrayBuffer(length * this._vector_bytees);
 
         for (let i = 0; i < this.dim; i++)

@@ -10,13 +10,13 @@ export interface IVector
     lerp(to: this, by: number, out?: this): this;
 }
 
-export interface ITransformableVector<MatrixInterface extends IMatrix = IMatrix>
+export interface ITransformableVector<Matrix extends IMatrix = IMatrix>
     extends IVector
 {
     _: IVectorFunctionSet & IMultiplyFunctionSet
 
-    transform(matrix: MatrixInterface): this;
-    transformedBy(matrix: MatrixInterface, out?: this): this;
+    transform(matrix: Matrix): this;
+    transformedBy(matrix: Matrix, out?: this): this;
 }
 
 export interface IVector2D {
@@ -24,16 +24,11 @@ export interface IVector2D {
     y: number;
 }
 
-export interface IVector3D {
-    x: number;
-    y: number;
+export interface IVector3D extends IVector2D {
     z: number;
 }
 
-export interface IVector4D {
-    x: number;
-    y: number;
-    z: number;
+export interface IVector4D extends IVector3D {
     w: number;
 }
 

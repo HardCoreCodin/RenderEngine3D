@@ -1,9 +1,9 @@
 import {LoadableVertexAttribute} from "./_base.js";
-import {InputUVs} from "../../../primitives/mesh.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {UV2D, UV3D} from "../../accessors/vector/uv.js";
 import {IVertexUVs} from "../../_interfaces/attributes/vertex/uv.js";
 import {VECTOR_3D_ALLOCATOR, VECTOR_2D_ALLOCATOR} from "../../allocators/float.js";
+import {InputUVs} from "../../mesh/inputs.js";
 
 export class VertexUVs2D extends LoadableVertexAttribute<DIM._2D, UV2D, InputUVs>
     implements IVertexUVs<DIM._2D, UV2D>

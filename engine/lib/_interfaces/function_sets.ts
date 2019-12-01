@@ -78,7 +78,7 @@ export interface IDirectionFunctionSet extends ITransformableVectorFunctionSet {
     dot(a: number, []: Arrays, b: number, []: Arrays): number;
 }
 
-export interface ICrossFunctionSet extends IDirectionFunctionSet {
+export interface ICrossDirectionFunctionSet extends IDirectionFunctionSet {
     cross(a: number, []: Arrays, b: number, []: Arrays, o: number, []: Arrays): void;
     cross_in_place(a: number, []: Arrays, b: number, []: Arrays): void;
 }

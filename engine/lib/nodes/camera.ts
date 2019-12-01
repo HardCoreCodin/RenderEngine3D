@@ -1,51 +1,34 @@
-import {Position3D} from "../math/vec3.js";
-import {pos4D, Position4D} from "../math/vec4.js";
-import Matrix4x4, {mat4x4} from "../math/mat4x4.js";
-import {Allocators} from "../lib/allocators/float.js";
-import Object3D from "./object.js";
-import Transform, {trans} from "./transform.js";
-import {BufferSizes} from "../buffer.js";
+import Node3D from "./_base.js";
+import {Matrix4x4} from "../accessors/matrix.js";
+import {Position4D} from "../accessors/vector/position.js";
 
-export default class Camera extends Object3D {
-    static readonly SIZE= new BufferSizes(Object3D.SIZE).addedWith({
-        mat4x4: 1,
-        vec4D: 1
-    });
+export default class Camera extends Node3D
+{
+    public readonly options = new CameraOptions();
 
-    public readonly options: CameraOptions = new CameraOptions();
+    // Position in space (0, 0, 0, 1) with perspective projection applied to it
+    public readonly projected_position: Position4D = new Position4D();
+    public readonly projection_matrix: Matrix4x4 = new Matrix4x4();
 
-    constructor(
-        public readonly transform: Transform,
+    updateProjection(): void {
+        const p = this.options.perspective_factor;
+        const a = this.options.aspect_ratio;
+        const d = this.options.depth_span;
+        const f = this.options.far;
+        const n = this.options.near;
 
-        // Position in space (0, 0, 0, 1) with perspective projection applied to it
-        public readonly projected_position: Position4D,
-        public readonly projection_matrix: Matrix4x4,
-
-        // Location in world space
-        public readonly position = new Position3D([
-                transform.translation.xs,
-                transform.translation.ys,
-                transform.translation.zs
-            ],
-            transform.translation.id
-        )
-    ) {
-        super(transform);
-    }
-
-    updateProjection() : void {
         // Update the matrix that converts from view space to clip space:
         this.projection_matrix.setTo(
-            this.options.perspective_factor, 0, 0, 0,
-            0, this.options.perspective_factor * this.options.aspect_ratio, 0, 0,
-            0, 0, this.options.far / this.options.depth_span, 1,
-            0, 0,  (-this.options.far * this.options.near) / this.options.depth_span, 0
+            p, 0, 0, 0,
+            0, p*a, 0, 0,
+            0, 0, f/d, 1,
+            0, 0,  f*n/d, 0
         );
 
         // Update the projected position:
         this.projected_position.w = 1;
         this.projected_position.z = 0;
-        this.projected_position.mul(this.projection_matrix);
+        this.projected_position.transform(this.projection_matrix);
     }
 }
 
@@ -176,12 +159,3 @@ export class CameraOptions {
         }
     }
 }
-
-export const cam = (allocators: Allocators) : Camera => new Camera(
-    trans(
-        allocators.mat4x4,
-        allocators.mat3x3
-    ),
-    pos4D(allocators.vec4D),
-    mat4x4(allocators.mat4x4)
-);

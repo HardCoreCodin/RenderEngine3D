@@ -248,7 +248,7 @@
 // //
 // //     film_back_width: number = DEFAULT_FILM_BACK_WIDTH,
 // //     film_back_height: number = DEFAULT_FILM_BACK_HEIGHT
-// // ) : mat4x4 => {
+// // ) : mat4 => {
 // //     // This is the projection matrix.
 // //     // It converts coordinates from 'eye space' to 'clip space'.
 // //     // From clip space, there is going to be a division by Ze,
@@ -596,7 +596,7 @@
 // //     focalLength: number = 0.5,
 // //     near: number = 0.1,
 // //     far: number = 1000
-// // ) : mat4x4 => {
+// // ) : mat4 => {
 // //     const depth = far - near;
 // //     return [
 // //         [aspectRatio * 2 * near /focalLength, 0, 0, 0],

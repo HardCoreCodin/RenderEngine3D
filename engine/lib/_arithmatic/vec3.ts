@@ -2,11 +2,11 @@ import {VECTOR_3D_ALLOCATOR} from "../allocators/float.js";
 import {Float3, Float9} from "../../types.js";
 import {PRECISION_DIGITS} from "../../constants.js";
 import {
-    ICrossFunctionSet,
+    ICrossDirectionFunctionSet,
     IPositionFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
-} from "../_interfaces/math_function_sets.js";
+} from "../_interfaces/function_sets.js";
 
 let t_x,
     t_y,
@@ -329,7 +329,7 @@ export const position3DFunctions: IPositionFunctionSet = {
     distance_squared
 };
 
-export const direction3DFunctions: ICrossFunctionSet = {
+export const direction3DFunctions: ICrossDirectionFunctionSet = {
     ...vector3DFunctions,
 
     length,
