@@ -6,7 +6,7 @@ import {
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
 } from "../_interfaces/function_sets.js";
-import {VECTOR_2D_ALLOCATOR} from "../allocators/float.js";
+import {VECTOR_2D_ALLOCATOR} from "../allocators.js";
 
 let t_x,
     t_y,

@@ -2,8 +2,8 @@ import {FaceAttribute} from "./_base.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {Color3D, Color4D} from "../../accessors/vector/color.js";
 import {IFaceColors} from "../../_interfaces/attributes/face/color.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators/float.js";
 import {VertexColors3D, VertexColors4D} from "../vertex/color.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators.js";
 
 
 export class FaceColors3D extends FaceAttribute<DIM._3D, Color3D, VertexColors3D>

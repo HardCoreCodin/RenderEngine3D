@@ -28,7 +28,7 @@ export default class Camera extends Node3D
         // Update the projected position:
         this.projected_position.w = 1;
         this.projected_position.z = 0;
-        this.projected_position.transform(this.projection_matrix);
+        this.projected_position.imatmul(this.projection_matrix);
     }
 }
 

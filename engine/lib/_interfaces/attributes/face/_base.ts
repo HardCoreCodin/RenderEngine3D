@@ -1,8 +1,8 @@
 import {IVector} from "../../accessors/vector/_base.js";
 import {IVertexAttribute} from "../vertex/_base.js";
 import {IAttribute} from "../_base.js";
-import {IFaceVertices} from "../../buffers/index.js";
 import {DIM} from "../../../../constants.js";
+import {IFaceVertices} from "../../buffers.js";
 
 export interface IFaceAttribute<
     Dim extends DIM,

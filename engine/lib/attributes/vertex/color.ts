@@ -1,10 +1,10 @@
 import {PulledVertexAttribute} from "./_base.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {Color3D, Color4D} from "../../accessors/vector/color.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators/float.js";
 import {IVertexColors} from "../../_interfaces/attributes/vertex/color.js";
 import {FaceColors3D, FaceColors4D} from "../face/color.js";
 import {InputColors} from "../../mesh/inputs.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators.js";
 
 export class VertexColors3D extends PulledVertexAttribute<DIM._3D, Color3D, InputColors, FaceColors3D>
     implements IVertexColors<DIM._3D, Color3D>

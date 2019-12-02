@@ -1,4 +1,3 @@
-import {VECTOR_4D_ALLOCATOR} from "../allocators/float.js";
 import {PRECISION_DIGITS} from "../../constants.js";
 import {
     ICrossDirectionFunctionSet,
@@ -7,6 +6,7 @@ import {
     IVectorFunctionSet
 } from "../_interfaces/function_sets.js";
 import {Float16, Float4} from "../../types.js";
+import {VECTOR_4D_ALLOCATOR} from "../allocators.js";
 
 let t_x,
     t_y,

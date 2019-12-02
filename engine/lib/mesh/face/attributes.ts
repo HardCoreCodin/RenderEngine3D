@@ -1,5 +1,4 @@
 import {MeshOptions} from "../options.js";
-import {FaceVertices} from "./vertices.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {FaceColors3D, FaceColors4D} from "../../attributes/face/color.js";
 import {FaceNormals3D, FaceNormals4D} from "../../attributes/face/normal.js";
@@ -7,6 +6,7 @@ import {FacePositions3D, FacePositions4D} from "../../attributes/face/position.j
 import {IFaceColors, IFaceColorsConstructor} from "../../_interfaces/attributes/face/color.js";
 import {IFaceNormals, IFaceNormalsConstructor} from "../../_interfaces/attributes/face/normal.js";
 import {IFacePositions, IFacePositionsConstructor} from "../../_interfaces/attributes/face/position.js";
+import {IFaceVertices} from "../../_interfaces/buffers.js";
 
 abstract class Faces<PositionDim extends DIM._3D | DIM._4D,
     NormalDim extends DIM._3D | DIM._4D = PositionDim,
@@ -20,7 +20,7 @@ abstract class Faces<PositionDim extends DIM._3D | DIM._4D,
     public readonly normals: IFaceNormals<NormalDim>|null;
     public readonly colors: IFaceColors<NormalDim>|null;
 
-    constructor(face_vertices: FaceVertices, mesh_options: MeshOptions) {
+    constructor(face_vertices: IFaceVertices, mesh_options: MeshOptions) {
         const included = mesh_options.face_attributes;
         this.positions = included & ATTRIBUTE.position ? new this.FacePositions(face_vertices) : null;
         this.normals = included & ATTRIBUTE.normal ? new this.FaceNormals(face_vertices) : null;

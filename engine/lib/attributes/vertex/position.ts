@@ -1,9 +1,9 @@
 import {LoadableVertexAttribute} from "./_base.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {Position3D, Position4D} from "../../accessors/vector/position.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators/float.js";
 import {IVertexPositions} from "../../_interfaces/attributes/vertex/position.js";
 import {InputPositions} from "../../mesh/inputs.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators.js";
 
 export class VertexPositions3D extends LoadableVertexAttribute<DIM._3D, Position3D, InputPositions>
     implements IVertexPositions<DIM._3D, Position3D>

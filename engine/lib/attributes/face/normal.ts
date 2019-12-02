@@ -2,9 +2,9 @@ import {FaceAttribute} from "./_base.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {Direction3D, Direction4D, dir3, dir4} from "../../accessors/vector/direction.js";
 import {VertexPositions3D, VertexPositions4D} from "../vertex/position.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators/float.js";
 import {IFaceNormals} from "../../_interfaces/attributes/face/normal.js";
 import {zip} from "../../../utils.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../../allocators.js";
 
 const d1_3D = dir3();
 const d2_3D = dir3();

@@ -9,8 +9,8 @@ import {
 } from "../../_interfaces/attributes/vertex/_base.js";
 import {DIM} from "../../../constants.js";
 import {InputAttribute} from "../../mesh/inputs.js";
-import {VertexFaces} from "../../mesh/vertex/faces.js";
-import {FaceVertices} from "../../mesh/face/vertices.js";
+import {FaceVerticesInt32} from "../../mesh/face/vertices.js";
+import {IVertexFaces} from "../../_interfaces/buffers.js";
 
 export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector>
     extends Attribute<Dim, VectorType>
@@ -24,7 +24,7 @@ export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector
         ] = [null, null, null];
 
     constructor(
-        protected _face_vertices: FaceVertices,
+        protected _face_vertices: FaceVerticesInt32,
         is_shared: number | boolean = true,
         protected _face_count: number = _face_vertices.length
     ) {
@@ -105,7 +105,7 @@ export abstract class PulledVertexAttribute<
     extends LoadableVertexAttribute<Dim, VectorType, InputAttributeType>
     implements IPulledVertexAttribute<Dim, VectorType, InputAttributeType, FaceAttributeType>
 {
-    protected _pullShared(input: FaceAttributeType, vertex_faces: VertexFaces): void {
+    protected _pullShared(input: FaceAttributeType, vertex_faces: IVertexFaces): void {
         // Average vertex-attribute values from their related face's attribute values:
         let face_id: number;
 
@@ -129,7 +129,7 @@ export abstract class PulledVertexAttribute<
         }
     }
 
-    pull(input: FaceAttributeType, vertex_faces: VertexFaces): void {
+    pull(input: FaceAttributeType, vertex_faces: IVertexFaces): void {
         if (this._is_shared)
             this._pullShared(input, vertex_faces);
         else

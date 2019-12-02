@@ -1,11 +1,12 @@
 import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {FaceVertices} from "./face/vertices.js";
-import {VertexFaces} from "./vertex/faces.js";
+import {FaceVerticesInt32} from "./face/vertices.js";
+import {VertexFacesInt32} from "./vertex/faces.js";
 import {Vertices3D} from "./vertex/attributes.js";
 import {Faces3D} from "./face/attributes.js";
 import {AABB3D} from "./bounds.js";
+import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 
 export default class Mesh {
     public readonly face: Faces3D;
@@ -16,10 +17,10 @@ export default class Mesh {
         public inputs: MeshInputs,
         public options: MeshOptions = new MeshOptions(),
 
-        public readonly face_vertices: FaceVertices = new FaceVertices(inputs.sanitize().position),
+        public readonly face_vertices: IFaceVertices = new FaceVerticesInt32(inputs.sanitize().position),
 
         public readonly vertex_count: number = inputs.position.vertices[0].length,
-        public readonly vertex_faces: VertexFaces = new VertexFaces(face_vertices, vertex_count),
+        public readonly vertex_faces: IVertexFaces = new VertexFacesInt32(face_vertices, vertex_count),
 
         public readonly face_count: number = face_vertices.length,
 

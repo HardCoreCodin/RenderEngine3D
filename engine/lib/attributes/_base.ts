@@ -1,10 +1,10 @@
-import {ATTRIBUTE, DIM} from "../../constants.js";
+import Mesh from "../mesh/_base.js";
 import {Vector} from "../accessors/vector/_base.js";
+import {FloatBuffer} from "../buffers.js";
+import {ATTRIBUTE, DIM} from "../../constants.js";
 import {IAttribute} from "../_interfaces/attributes/_base.js";
 import {VectorConstructor} from "../_interfaces/accessors/vector/_base.js";
-import {FloatBuffer} from "../buffers/float.js";
-import Mesh from "../mesh/_base.js";
-import {FaceVertices} from "../mesh/face/vertices.js";
+import {IFaceVertices} from "../_interfaces/buffers.js";
 
 export abstract class Attribute<Dim extends DIM, VectorType extends Vector>
     extends FloatBuffer<Dim>
@@ -16,7 +16,7 @@ export abstract class Attribute<Dim extends DIM, VectorType extends Vector>
     current: VectorType;
 
     constructor(
-        protected _face_vertices: FaceVertices,
+        protected _face_vertices: IFaceVertices,
         protected _face_count: number = _face_vertices.length,
         length: number = _face_count
     ) {

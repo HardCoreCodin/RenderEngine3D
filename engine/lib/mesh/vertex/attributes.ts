@@ -1,5 +1,4 @@
 import {MeshOptions} from "../options.js";
-import {FaceVertices} from "../face/vertices.js";
 import {ATTRIBUTE, DIM} from "../../../constants.js";
 import {VertexUVs2D, VertexUVs3D} from "../../attributes/vertex/uv.js";
 import {VertexColors3D, VertexColors4D} from "../../attributes/vertex/color.js";
@@ -9,6 +8,7 @@ import {IVertexUVs, IVertexUVsConstructor} from "../../_interfaces/attributes/ve
 import {IVertexColors, IVertexColorsConstructor} from "../../_interfaces/attributes/vertex/color.js";
 import {IVertexNormals, IVertexNormalsConstructor} from "../../_interfaces/attributes/vertex/normal.js";
 import {IVertexPositions, IVertexPositionsConstructor} from "../../_interfaces/attributes/vertex/position.js";
+import {IFaceVertices} from "../../_interfaces/buffers.js";
 
 
 abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
@@ -27,7 +27,7 @@ abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
     public uvs: IVertexUVs<UVDim>|null;
 
     constructor(
-        face_vertices: FaceVertices,
+        face_vertices: IFaceVertices,
         mesh_options: MeshOptions
     ) {
         const included = mesh_options.vertex_attributes;

@@ -1,5 +1,5 @@
 import {Float16, Float2, Float3, Float4, Float9} from "../../types.js";
-import {FloatNAllocator} from "../allocators/float.js";
+import {FloatNAllocator} from "../allocators.js";
 
 export type Arrays = Float2 | Float3 | Float4 | Float9 | Float16;
 

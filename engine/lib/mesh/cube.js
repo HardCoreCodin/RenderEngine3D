@@ -1,7 +1,8 @@
 import Mesh from "./_base.js";
 import { MeshOptions } from "./options.js";
 import { InputPositions, MeshInputs } from "./inputs.js";
-import { FaceVertices } from "./face/vertices.js";
+import { FaceVerticesInt8 } from "./face/vertices.js";
+import { VertexFacesInt8 } from "./vertex/faces.js";
 // Vertex position values:
 export const vertices = [
     [
@@ -28,12 +29,13 @@ export const indices = [
 // =====================
 export const positions = new InputPositions(4 /* QUAD */, vertices, indices).triangulate();
 export const inputs = new MeshInputs(3 /* TRIANGLE */, 1 /* position */, positions);
-export const face_vertices = new FaceVertices(positions);
+export const face_vertices = new FaceVerticesInt8(positions);
+export const vertex_faces = new VertexFacesInt8(face_vertices, 8);
 // Mesh options:
 const defaults = new MeshOptions();
 defaults.share = 1 /* position */;
 defaults.normal = 1 /* NO_VERTEX__GENERATE_FACE */;
 defaults.color = 1 /* NO_VERTEX__GENERATE_FACE */;
-const CubeMesh = (options = defaults) => new Mesh(inputs, options, face_vertices);
+const CubeMesh = (options = defaults) => new Mesh(inputs, options, face_vertices, 8, vertex_faces);
 export default CubeMesh;
 //# sourceMappingURL=cube.js.map

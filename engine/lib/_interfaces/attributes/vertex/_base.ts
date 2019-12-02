@@ -2,8 +2,8 @@ import {IVector} from "../../accessors/vector/_base.js";
 import {IAttribute} from "../_base.js";
 import {IFaceAttribute} from "../face/_base.js";
 import {IInputAttribute} from "../../mesh/inputs/attributes/_base.js";
-import {IFaceVertices, IVertexFaces} from "../../buffers/index.js";
 import {DIM} from "../../../../constants.js";
+import {IFaceVertices, IVertexFaces} from "../../buffers.js";
 
 export interface IVertexAttribute<Dim extends DIM, VectorType extends IVector = IVector>
     extends IAttribute<Dim, VectorType> {

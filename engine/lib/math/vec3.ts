@@ -1,4 +1,3 @@
-import {VECTOR_3D_ALLOCATOR} from "../allocators/float.js";
 import {Float3, Float9} from "../../types.js";
 import {PRECISION_DIGITS} from "../../constants.js";
 import {
@@ -7,6 +6,7 @@ import {
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
 } from "../_interfaces/function_sets.js";
+import {VECTOR_3D_ALLOCATOR} from "../allocators.js";
 
 let t_x,
     t_y,

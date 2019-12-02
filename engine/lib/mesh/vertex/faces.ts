@@ -1,20 +1,23 @@
-import {InputPositions} from "../inputs.js";
-import {Int1Buffer} from "../../buffers/int.js";
-import {Int1Allocator} from "../../allocators/int.js";
-import {IVertexFaces} from "../../_interfaces/buffers/index.js";
-import {VertexFacesIndices} from "../../../types.js";
-import {FaceVertices} from "../face/vertices.js";
+import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
+import {Buffer} from "../../buffers.js";
+import {DIM} from "../../../constants.js";
+import {IAllocator} from "../../_interfaces/allocators.js";
+import {
+    VERTEX_FACES_ALLOCATOR_INT16,
+    VERTEX_FACES_ALLOCATOR_INT32,
+    VERTEX_FACES_ALLOCATOR_INT8
+} from "../../allocators.js";
 
-export const VERTEX_FACES_ALLOCATOR = new Int1Allocator();
-
-export class VertexFaces
-    extends Int1Buffer
+export abstract class AbstractVertexFaces<ArrayType extends Uint8Array|Uint16Array|Uint32Array>
+    extends Buffer<ArrayType, DIM._1D>
     implements IVertexFaces
 {
-    allocator = VERTEX_FACES_ALLOCATOR;
-    indices: VertexFacesIndices = [];
+    dim = DIM._1D as DIM._1D;
+    abstract readonly allocator: IAllocator<DIM._1D>;
 
-    constructor(face_vertices: FaceVertices, vertex_count: number) {
+    indices: ArrayType[] = [];
+
+    constructor(face_vertices: IFaceVertices, vertex_count: number) {
         super();
 
         this.indices.length = vertex_count;
@@ -32,11 +35,29 @@ export class VertexFaces
 
         this.init(length);
 
-        let current_offset = 0;
-        const buffer_int_array = this.arrays[0];
+        let offset = 0;
+        const array = this.arrays[0];
         for (const [vertex_index, face_indices] of vertex_face_indices.entries()) {
-            this.indices[vertex_index] = buffer_int_array.subarray(current_offset, face_indices.length);
-            current_offset += face_indices.length;
+            this.indices[vertex_index] = array.subarray(offset, face_indices.length) as ArrayType;
+            offset += face_indices.length;
         }
     }
+}
+
+export class VertexFacesInt32
+    extends AbstractVertexFaces<Uint32Array>
+{
+    allocator = VERTEX_FACES_ALLOCATOR_INT32;
+}
+
+export class VertexFacesInt16
+    extends AbstractVertexFaces<Uint16Array>
+{
+    allocator = VERTEX_FACES_ALLOCATOR_INT16;
+}
+
+export class VertexFacesInt8
+    extends AbstractVertexFaces<Uint8Array>
+{
+    allocator = VERTEX_FACES_ALLOCATOR_INT8;
 }
