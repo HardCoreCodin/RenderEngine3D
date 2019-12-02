@@ -9,8 +9,6 @@ export interface IVertexAttribute<Dim extends DIM, VectorType extends IVector = 
     extends IAttribute<Dim, VectorType> {
     readonly is_shared: boolean;
 
-    init(length: number, is_shared: number | boolean): void;
-
     faces(): Generator<[VectorType, VectorType, VectorType]>;
 }
 
@@ -34,4 +32,4 @@ export interface IPulledVertexAttribute<
 }
 
 export type VertexAttributeConstructor<Dim extends DIM, VertexAttribute extends IVertexAttribute<Dim>> =
-    new (_face_vertices: IFaceVertices) => VertexAttribute;
+    new (_face_vertices: IFaceVertices, is_shared?: number|boolean, _face_count?: number) => VertexAttribute;

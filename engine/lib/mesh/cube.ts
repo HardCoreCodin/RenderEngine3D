@@ -34,17 +34,14 @@ export const indices: QuadInputs = [
 // =====================
 export const positions = new InputPositions(FACE_TYPE.QUAD, vertices, indices).triangulate();
 export const inputs = new MeshInputs(FACE_TYPE.TRIANGLE, ATTRIBUTE.position, positions);
-
-export const vertex_faces = new VertexFaces(positions);
 export const face_vertices = new FaceVertices(positions);
 
 // Mesh options:
-const default_options = new MeshOptions();
-default_options.share = ATTRIBUTE.position;
-default_options.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
-default_options.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
+const defaults = new MeshOptions();
+defaults.share = ATTRIBUTE.position;
+defaults.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
+defaults.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
 
-const CubeMesh = (options: MeshOptions = default_options): Mesh =>
-    new Mesh(inputs, options, 6, 8, vertex_faces, face_vertices);
+const CubeMesh = (options: MeshOptions = defaults): Mesh => new Mesh(inputs, options, face_vertices);
 
 export default CubeMesh;

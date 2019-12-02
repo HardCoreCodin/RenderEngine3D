@@ -1,4 +1,4 @@
-import {IDirection, IDirection2D, IDirection3D, IDirection4D} from "./direction.js";
+import {IDirection} from "./direction.js";
 import {ITransformableVector, IVector2D, IVector3D, IVector4D} from "./_base.js";
 import {IPosition4DFunctionSet, IPositionFunctionSet} from "../../function_sets.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4} from "../matrix.js";

@@ -384,7 +384,7 @@
 // //     // Given how it needs to land at -1 in NDC,
 // //     // applying the division by -Ze would be:
 // //     // Zndc: -1 = Zc / -Ze
-// //     // Inverting division is to multiply, so we get that:
+// //     // Inverting division is to matrix_multiply, so we get that:
 // //     // Zc = -1 * -Ze = Ze
 // //     // So, the Z coordinate of the the projection plane in clip space,
 // //     // should be exactly the same as it's coordinate at view space:
@@ -394,7 +394,7 @@
 // //     // Given that it needs to land at +1 in NDC,
 // //     // applying the division by -Ze would be:
 // //     // Zndc: +1 = Zc / -Ze
-// //     // Inverting division is to multiply, so we get that:
+// //     // Inverting division is to matrix_multiply, so we get that:
 // //     // Zc = +1 * -Ze = -Ze
 // //     // So, the clip space Z coordinates of the the far clipping plane,
 // //     // should be exactly the inverse of it's coordinate at view space:

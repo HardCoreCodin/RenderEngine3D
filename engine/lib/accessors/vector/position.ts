@@ -1,9 +1,9 @@
 import {TransformableVector} from "./_base.js";
 import Matrix, {Matrix2x2, Matrix3x3, Matrix4x4} from "../matrix.js";
 import {Direction2D, Direction3D, Direction4D, dir2, dir3, dir4} from "./direction.js";
-import {position3DFunctions} from "../../_arithmatic/vec3.js";
-import {position4DFunctions} from "../../_arithmatic/vec4.js";
-import {position2DFunctions} from "../../_arithmatic/vec2.js";
+import {position3DFunctions} from "../../math/vec3.js";
+import {position4DFunctions} from "../../math/vec4.js";
+import {position2DFunctions} from "../../math/vec2.js";
 import {IPositionFunctionSet} from "../../_interfaces/function_sets.js";
 import {IPosition, IPosition2D, IPosition3D, IPosition4D} from "../../_interfaces/accessors/vector/position.js";
 import {DIM} from "../../../constants.js";
@@ -175,7 +175,7 @@ export class Position4D extends Position<DIM._4D, Matrix4x4>
         far
     );
 
-    toNDC = (): this => this.divideBy(this.arrays[3][this.id]);
+    toNDC = (): this => this.div(this.arrays[3][this.id]);
 
     setTo(x: number, y: number, z: number, w: number): this {
         this._.set_to(this.id, this.arrays, x, y, z, w);

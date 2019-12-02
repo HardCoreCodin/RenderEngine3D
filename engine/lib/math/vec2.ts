@@ -136,38 +136,55 @@ const subtract_in_place = (
     Ya[a] -= Yb[b];
 };
 
+const multiply = (
+    a: number, [Xa, Ya]: Float2,
+    b: number, [Xb, Yb]: Float2,
+    o: number, [Xo, Yo]: Float2
+): void => {
+    Xo[o] = Xa[a] * Xb[b];
+    Yo[o] = Ya[a] * Yb[b];
+};
+
+const multiply_in_place = (
+    a: number, [Xa, Ya]: Float2,
+    b: number, [Xb, Yb]: Float2
+): void => {
+    Xa[a] *= Xb[b];
+    Ya[a] *= Yb[b];
+};
+
 const divide = (
     a: number, [Xa, Ya]: Float2,
-    o: number, [Xo, Yo]: Float2,
-    n: number
+    b: number,
+    o: number, [Xo, Yo]: Float2
 ): void => {
-    Xo[o] = Xa[a] / n;
-    Yo[o] = Ya[a] / n;
+    Xo[o] = Xa[a] / b;
+    Yo[o] = Ya[a] / b;
 };
 
 const divide_in_place = (
     a: number, [Xa, Ya]: Float2,
-    n: number
+    b: number
 ): void => {
-    Xa[a] /= n;
-    Ya[a] /= n;
+    Xa[a] /= b;
+    Ya[a] /= b;
 };
 
 const scale = (
     a: number, [Xa, Ya]: Float2,
+    b: number,
     o: number, [Xo, Yo]: Float2,
-    n: number
 ): void => {
-    Xo[o] = Xa[a] * n;
-    Yo[o] = Ya[a] * n;
+    Xo[o] = Xa[a] * b;
+    Yo[o] = Ya[a] * b;
 };
 
 const scale_in_place = (
     a: number, [Xa, Ya]: Float2,
-    n: number
+    b: number
 ): void => {
-    Xa[a] *= n;
-    Ya[a] *= n;
+    Xa[a] *= b;
+    Ya[a] *= b;
 };
 
 const normalize = (
@@ -202,7 +219,7 @@ const dot = (
     Xa[a] * Xb[b] +
     Ya[a] * Yb[b];
 
-const multiply = (
+const matrix_multiply = (
     a: number, [Xa, Ya]: Float2,
     m: number, [
         M11, M12,
@@ -214,7 +231,7 @@ const multiply = (
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m];
 };
 
-const multiply_in_place = (
+const matrix_multiply_in_place = (
     a: number, [Xa, Ya]: Float2,
     m: number, [
         M11, M12,
@@ -243,6 +260,9 @@ export const base2DFunctions: IVectorFunctionSet = {
     subtract,
     subtract_in_place,
 
+    multiply,
+    multiply_in_place,
+
     divide,
     divide_in_place,
 
@@ -258,8 +278,8 @@ export const base2DFunctions: IVectorFunctionSet = {
 export const vector2DFunctions: ITransformableVectorFunctionSet = {
     ...base2DFunctions,
 
-    multiply,
-    multiply_in_place,
+    matrix_multiply,
+    matrix_multiply_in_place,
 };
 
 export const position2DFunctions: IPositionFunctionSet = {

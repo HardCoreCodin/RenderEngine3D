@@ -10,6 +10,7 @@ import {
 import {DIM} from "../../../constants.js";
 import {InputAttribute} from "../../mesh/inputs.js";
 import {VertexFaces} from "../../mesh/vertex/faces.js";
+import {FaceVertices} from "../../mesh/face/vertices.js";
 
 export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector>
     extends Attribute<Dim, VectorType>
@@ -22,9 +23,17 @@ export abstract class VertexAttribute<Dim extends DIM, VectorType extends Vector
         VectorType
         ] = [null, null, null];
 
-    init(length: number = this._face_vertices.arrays[0].length, is_shared: number | boolean = true): void {
+    constructor(
+        protected _face_vertices: FaceVertices,
+        is_shared: number | boolean = true,
+        protected _face_count: number = _face_vertices.length
+    ) {
+        super(_face_vertices, _face_count, is_shared ? _face_count : _face_count * 3);
         this._is_shared = !!is_shared;
-        super.init(is_shared ? length : length * 3);
+    }
+
+    _postInit(): void {
+        super._postInit();
 
         this._current_face_vertex_vectors[0] = new this.Vector(0, this.arrays);
         this._current_face_vertex_vectors[1] = new this.Vector(0, this.arrays);

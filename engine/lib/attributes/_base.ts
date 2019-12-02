@@ -10,20 +10,22 @@ export abstract class Attribute<Dim extends DIM, VectorType extends Vector>
     extends FloatBuffer<Dim>
     implements IAttribute<Dim, VectorType>
 {
-    public current: VectorType;
-    abstract readonly attribute: ATTRIBUTE;
-    abstract readonly Vector: VectorConstructor<VectorType>;
+    readonly abstract attribute: ATTRIBUTE;
+    readonly abstract Vector: VectorConstructor<VectorType>;
+
+    current: VectorType;
 
     constructor(
         protected _face_vertices: FaceVertices,
-        protected _face_count: number = _face_vertices.length
+        protected _face_count: number = _face_vertices.length,
+        length: number = _face_count
     ) {
         super();
+        this.init(length);
+        this._postInit();
     }
 
-    init(length: number = this._face_vertices.arrays[0].length): void {
-        super.init(length);
-
+    protected _postInit(): void {
         this.current = new this.Vector(0, this.arrays);
     }
 

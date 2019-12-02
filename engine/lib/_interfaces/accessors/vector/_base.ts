@@ -1,9 +1,9 @@
-import {IMultiplyFunctionSet, IVectorFunctionSet} from "../../function_sets.js";
-import {IAccessorConstructor, IArithmaticAccessor} from "../_base.js";
 import {IMatrix} from "../matrix.js";
+import {IAccessorConstructor, IMathAccessor} from "../_base.js";
+import {ITransformableVectorFunctionSet, IVectorFunctionSet} from "../../function_sets.js";
 
 export interface IVector
-    extends IArithmaticAccessor
+    extends IMathAccessor
 {
     _: IVectorFunctionSet;
 
@@ -13,10 +13,10 @@ export interface IVector
 export interface ITransformableVector<Matrix extends IMatrix = IMatrix>
     extends IVector
 {
-    _: IVectorFunctionSet & IMultiplyFunctionSet
+    _: ITransformableVectorFunctionSet
 
-    transform(matrix: Matrix): this;
-    transformedBy(matrix: Matrix, out?: this): this;
+    imatmul(matrix: Matrix): this;
+    matmul(matrix: Matrix, out?: this): this;
 }
 
 export interface IVector2D {

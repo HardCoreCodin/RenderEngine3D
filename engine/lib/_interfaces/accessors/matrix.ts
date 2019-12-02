@@ -1,10 +1,10 @@
 import {IMatrix2x2FunctionSet, IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../function_sets.js";
-import {IArithmaticAccessor} from "./_base.js";
+import {IMathAccessor} from "./_base.js";
 import {IPosition2D, IPosition3D} from "./vector/position.js";
 import {IDirection2D, IDirection3D} from "./vector/direction.js";
 
 export interface IMatrix
-    extends IArithmaticAccessor
+    extends IMathAccessor
 {
     _: IMatrixFunctionSet;
 
@@ -15,9 +15,6 @@ export interface IMatrix
 
     transpose(): this;
     transposed(out?: this): this;
-
-    imul(matrix: this): this;
-    mul(matrix: this, out?: this): this;
 }
 
 export interface IRotationMatrix

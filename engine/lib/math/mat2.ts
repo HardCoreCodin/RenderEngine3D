@@ -28,7 +28,7 @@ const set_all_to = (
     value: number
 ): void => {
     M11a[a] = M12a[a] =
-        M21a[a] = M22a[a] = value;
+    M21a[a] = M22a[a] = value;
 };
 
 const set_from = (
@@ -223,15 +223,15 @@ const divide = (
         M21a, M22a
     ]: Float4,
 
+    b: number,
+
     o: number, [
         M11o, M12o,
         M21o, M22o
-    ]: Float4,
-
-    n: number
+    ]: Float4
 ) : void => {
-    M11o[o] = M11a[a] / n;  M21o[o] = M21a[a] / n;
-    M12o[o] = M12a[a] / n;  M22o[o] = M22a[a] / n;
+    M11o[o] = M11a[a] / b;  M21o[o] = M21a[a] / b;
+    M12o[o] = M12a[a] / b;  M22o[o] = M22a[a] / b;
 };
 
 const divide_in_place = (
@@ -240,10 +240,10 @@ const divide_in_place = (
         M21a, M22a
     ]: Float4,
 
-    n: number
+    b: number
 ) : void => {
-    M11a[a] /= n;  M21a[a] /= n;
-    M12a[a] /= n;  M22a[a] /= n;
+    M11a[a] /= b;  M21a[a] /= b;
+    M12a[a] /= b;  M22a[a] /= b;
 };
 
 const scale = (
@@ -252,15 +252,15 @@ const scale = (
         M21a, M22a
     ]: Float4,
 
+    b: number,
+
     o: number, [
         M11o, M12o,
         M21o, M22o
-    ]: Float4,
-
-    n: number
+    ]: Float4
 ) : void => {
-    M11o[o] = M11a[a] * n;  M21o[o] = M21a[a] * n;
-    M12o[o] = M12a[a] * n;  M22o[o] = M22a[a] * n;
+    M11o[o] = M11a[a] * b;  M21o[o] = M21a[a] * b;
+    M12o[o] = M12a[a] * b;  M22o[o] = M22a[a] * b;
 };
 
 const scale_in_place = (
@@ -269,10 +269,10 @@ const scale_in_place = (
         M21a, M22a
     ]: Float4,
 
-    n: number
+    b: number
 ) : void => {
-    M11a[a] *= n;  M21a[a] *= n;
-    M12a[a] *= n;  M22a[a] *= n;
+    M11a[a] *= b;  M21a[a] *= b;
+    M12a[a] *= b;  M22a[a] *= b;
 };
 
 const multiply = (

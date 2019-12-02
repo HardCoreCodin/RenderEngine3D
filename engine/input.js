@@ -154,24 +154,24 @@ export default class FPSController {
                 pressed.backwards) {
                 this.forward_direction.times(this.movement_amount, this.forward_movement);
                 if (pressed.forward)
-                    this.camera.position.add(this.forward_movement);
+                    this.camera.transform.translation.add(this.forward_movement);
                 else
-                    this.camera.position.subtract(this.forward_movement);
+                    this.camera.transform.translation.sub(this.forward_movement);
             }
             if (pressed.right ||
                 pressed.left) {
                 this.right_direction.times(this.movement_amount, this.right_movement);
                 if (pressed.right)
-                    this.camera.position.add(this.right_movement);
+                    this.camera.transform.translation.add(this.right_movement);
                 else
-                    this.camera.position.subtract(this.right_movement);
+                    this.camera.transform.translation.sub(this.right_movement);
             }
             if (pressed.up ||
                 pressed.down) {
                 if (pressed.up)
-                    this.camera.position.y += this.movement_amount;
+                    this.camera.transform.translation.y += this.movement_amount;
                 else
-                    this.camera.position.y -= this.movement_amount;
+                    this.camera.transform.translation.y -= this.movement_amount;
             }
         }
         if (this.mouse_x !== undefined) {

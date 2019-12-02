@@ -9,8 +9,6 @@ export interface IAttribute<Dim extends DIM, VectorType extends IVector>
     attribute: ATTRIBUTE;
     Vector: VectorConstructor<VectorType>;
 
-    init(length: number, is_shared?: number|boolean): void;
-
     [Symbol.iterator](): Generator<VectorType>;
 }
 

@@ -1,6 +1,6 @@
 import {Vector} from "./_base.js";
-import {base2DFunctions} from "../../_arithmatic/vec2.js";
-import {base3DFunctions} from "../../_arithmatic/vec3.js";
+import {base2DFunctions} from "../../math/vec2.js";
+import {base3DFunctions} from "../../math/vec3.js";
 import {IUV2D, IUV3D} from "../../_interfaces/accessors/vector/uv.js";
 
 export class UV2D

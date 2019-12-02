@@ -285,17 +285,17 @@ const divide = (
         M31a, M32a, M33a
     ]: Float9,
 
+    b: number,
+
     o: number, [
         M11o, M12o, M13o,
         M21o, M22o, M23o,
         M31o, M32o, M33o
-    ]: Float9,
-
-    n: number
+    ]: Float9
 ) : void => {
-    M11o[o] = M11a[a] / n;  M21o[o] = M21a[a] / n;  M31o[o] = M31a[a] / n;
-    M12o[o] = M12a[a] / n;  M22o[o] = M22a[a] / n;  M32o[o] = M32a[a] / n;
-    M13o[o] = M13a[a] / n;  M23o[o] = M23a[a] / n;  M33o[o] = M33a[a] / n;
+    M11o[o] = M11a[a] / b;  M21o[o] = M21a[a] / b;  M31o[o] = M31a[a] / b;
+    M12o[o] = M12a[a] / b;  M22o[o] = M22a[a] / b;  M32o[o] = M32a[a] / b;
+    M13o[o] = M13a[a] / b;  M23o[o] = M23a[a] / b;  M33o[o] = M33a[a] / b;
 };
 
 const divide_in_place = (
@@ -305,11 +305,11 @@ const divide_in_place = (
         M31a, M32a, M33a
     ]: Float9,
 
-    n: number
+    b: number
 ) : void => {
-    M11a[a] /= n;  M21a[a] /= n;  M31a[a] /= n;
-    M12a[a] /= n;  M22a[a] /= n;  M32a[a] /= n;
-    M13a[a] /= n;  M23a[a] /= n;  M33a[a] /= n;
+    M11a[a] /= b;  M21a[a] /= b;  M31a[a] /= b;
+    M12a[a] /= b;  M22a[a] /= b;  M32a[a] /= b;
+    M13a[a] /= b;  M23a[a] /= b;  M33a[a] /= b;
 };
 
 const scale = (
@@ -319,17 +319,17 @@ const scale = (
         M31a, M32a, M33a
     ]: Float9,
 
+    b: number,
+
     o: number, [
         M11o, M12o, M13o,
         M21o, M22o, M23o,
         M31o, M32o, M33o
-    ]: Float9,
-
-    n: number
+    ]: Float9
 ) : void => {
-    M11o[o] = M11a[a] * n;  M21o[o] = M21a[a] * n;  M31o[o] = M31a[a] * n;
-    M12o[o] = M12a[a] * n;  M22o[o] = M22a[a] * n;  M32o[o] = M32a[a] * n;
-    M13o[o] = M13a[a] * n;  M23o[o] = M23a[a] * n;  M33o[o] = M33a[a] * n;
+    M11o[o] = M11a[a] * b;  M21o[o] = M21a[a] * b;  M31o[o] = M31a[a] * b;
+    M12o[o] = M12a[a] * b;  M22o[o] = M22a[a] * b;  M32o[o] = M32a[a] * b;
+    M13o[o] = M13a[a] * b;  M23o[o] = M23a[a] * b;  M33o[o] = M33a[a] * b;
 };
 
 const scale_in_place = (
@@ -339,11 +339,11 @@ const scale_in_place = (
         M31a, M32a, M33a
     ]: Float9,
 
-    n: number
+    b: number
 ) : void => {
-    M11a[a] *= n;  M21a[a] *= n;  M31a[a] *= n;
-    M12a[a] *= n;  M22a[a] *= n;  M32a[a] *= n;
-    M13a[a] *= n;  M23a[a] *= n;  M33a[a] *= n;
+    M11a[a] *= b;  M21a[a] *= b;  M31a[a] *= b;
+    M12a[a] *= b;  M22a[a] *= b;  M32a[a] *= b;
+    M13a[a] *= b;  M23a[a] *= b;  M33a[a] *= b;
 };
 
 const multiply = (

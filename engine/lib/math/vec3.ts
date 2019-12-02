@@ -154,46 +154,61 @@ const subtract_in_place = (
     Za[a] -= Zb[b];
 };
 
+const multiply = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number, [Xb, Yb, Zb]: Float3,
+    o: number, [Xo, Yo, Zo]: Float3
+) : void => {
+    Xo[o] = Xa[a] * Xb[b];
+    Yo[o] = Ya[a] * Yb[b];
+    Zo[o] = Za[a] * Zb[b];
+};
+
+const multiply_in_place = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number, [Xb, Yb, Zb]: Float3
+) : void => {
+    Xa[a] *= Xb[b];
+    Ya[a] *= Yb[b];
+    Za[a] *= Zb[b];
+};
+
 const divide = (
     a: number, [Xa, Ya, Za]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3,
-
-    n: number
+    b: number,
+    o: number, [Xo, Yo, Zo]: Float3
 ) : void => {
-    Xo[o] = Xa[a] / n;
-    Yo[o] = Ya[a] / n;
-    Zo[o] = Za[a] / n;
+    Xo[o] = Xa[a] / b;
+    Yo[o] = Ya[a] / b;
+    Zo[o] = Za[a] / b;
 };
 
 const divide_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
-
-    n: number
+    b: number
 ) : void => {
-    Xa[a] /= n;
-    Ya[a] /= n;
-    Za[a] /= n;
+    Xa[a] /= b;
+    Ya[a] /= b;
+    Za[a] /= b;
 };
 
 const scale = (
     a: number, [Xa, Ya, Za]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3,
-
-    n: number
+    b: number,
+    o: number, [Xo, Yo, Zo]: Float3
 ) : void => {
-    Xo[o] = Xa[a] * n;
-    Yo[o] = Ya[a] * n;
-    Zo[o] = Za[a] * n;
+    Xo[o] = Xa[a] * b;
+    Yo[o] = Ya[a] * b;
+    Zo[o] = Za[a] * b;
 };
 
 const scale_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
-
-    n: number
+    b: number
 ) : void => {
-    Xa[a] *= n;
-    Ya[a] *= n;
-    Za[a] *= n;
+    Xa[a] *= b;
+    Ya[a] *= b;
+    Za[a] *= b;
 };
 
 const normalize = (
@@ -256,7 +271,7 @@ const cross_in_place = (
     Za[a] = t_x*Yb[b] - t_y*Xb[b];
 };
 
-const multiply = (
+const matrix_multiply = (
     a: number, [Xa, Ya, Za]: Float3,
     m: number, [
         M11, M12, M13,
@@ -270,7 +285,7 @@ const multiply = (
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
 };
 
-const multiply_in_place = (
+const matrix_multiply_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
     m: number, [
         M11, M12, M13,
@@ -303,6 +318,9 @@ export const base3DFunctions: IVectorFunctionSet = {
     subtract,
     subtract_in_place,
 
+    multiply,
+    multiply_in_place,
+
     divide,
     divide_in_place,
 
@@ -318,8 +336,8 @@ export const base3DFunctions: IVectorFunctionSet = {
 export const vector3DFunctions: ITransformableVectorFunctionSet = {
     ...base3DFunctions,
 
-    multiply,
-    multiply_in_place,
+    matrix_multiply,
+    matrix_multiply_in_place,
 };
 
 export const position3DFunctions: IPositionFunctionSet = {

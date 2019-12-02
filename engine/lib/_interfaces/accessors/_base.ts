@@ -1,4 +1,4 @@
-import {Arrays, IArithmaticFunctionSet, IFunctionSet} from "../function_sets.js";
+import {Arrays, IMathFunctionSet, IFunctionSet} from "../function_sets.js";
 
 export type IAccessorConstructor<Accessor extends IAccessor> = new (
     id?: number,
@@ -21,23 +21,22 @@ export interface IAccessor {
     copy(out?: this): this;
 }
 
-export interface IArithmaticAccessor
+export interface IMathAccessor
     extends IAccessor
 {
-    _: IArithmaticFunctionSet,
-    _newOut(): IArithmaticAccessor;
+    _: IMathFunctionSet,
+    _newOut(): IMathAccessor;
 
-    add(other: IArithmaticAccessor);
-    subtract(other: IArithmaticAccessor): this;
+    add(other: IMathAccessor);
+    sub(other: IMathAccessor): this;
+    mul(other: IMathAccessor|number): this;
+    times(other: IMathAccessor|number, out?: this): this;
 
-    divideBy(denominator: number): this;
+    div(denominator: number): this;
     over(denominator: number, out?: this): this;
 
-    scaleBy(factor: number): this;
-    times(factor: number, out?: this): this;
-
-    plus(other: IArithmaticAccessor, out?: IArithmaticAccessor): IArithmaticAccessor;
-    minus(other: IArithmaticAccessor, out?: IArithmaticAccessor): IArithmaticAccessor;
+    plus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
+    minus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
 
     invert(): this;
     inverted(out?: this): this;

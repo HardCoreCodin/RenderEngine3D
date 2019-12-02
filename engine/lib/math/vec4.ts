@@ -174,16 +174,36 @@ const subtract_in_place = (
     Wa[a] -= Wb[b];
 };
 
+const multiply = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number, [Xb, Yb, Zb, Wb]: Float4,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    Xo[o] = Xa[a] * Xb[b];
+    Yo[o] = Ya[a] * Yb[b];
+    Zo[o] = Za[a] * Zb[b];
+    Wo[o] = Wa[a] * Wb[b];
+};
+
+const multiply_in_place = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number, [Xb, Yb, Zb, Wb]: Float4
+) : void => {
+    Xa[a] *= Xb[b];
+    Ya[a] *= Yb[b];
+    Za[a] *= Zb[b];
+    Wa[a] *= Wb[b];
+};
+
 const divide = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number,
     o: number, [Xo, Yo, Zo, Wo]: Float4,
-
-    n: number
 ) : void => {
-    Xo[o] = Xa[a] / n;
-    Yo[o] = Ya[a] / n;
-    Zo[o] = Za[a] / n;
-    Wo[o] = Wa[a] / n;
+    Xo[o] = Xa[a] / b;
+    Yo[o] = Ya[a] / b;
+    Zo[o] = Za[a] / b;
+    Wo[o] = Wa[a] / b;
 };
 
 const divide_in_place = (
@@ -198,25 +218,23 @@ const divide_in_place = (
 
 const scale = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
-    o: number, [Xo, Yo, Zo, Wo]: Float4,
-
-    n: number
+    b: number,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
 ) : void => {
-    Xo[o] = Xa[a] * n;
-    Yo[o] = Ya[a] * n;
-    Zo[o] = Za[a] * n;
-    Wo[o] = Wa[a] * n;
+    Xo[o] = Xa[a] * b;
+    Yo[o] = Ya[a] * b;
+    Zo[o] = Za[a] * b;
+    Wo[o] = Wa[a] * b;
 };
 
 const scale_in_place = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
-
-    n: number
+    b: number
 ) : void => {
-    Xa[a] *= n;
-    Ya[a] *= n;
-    Za[a] *= n;
-    Wa[a] *= n;
+    Xa[a] *= b;
+    Ya[a] *= b;
+    Za[a] *= b;
+    Wa[a] *= b;
 };
 
 const normalize = (
@@ -310,7 +328,7 @@ const out_of_view = (
     -w > y || y > w ||
     -w > x  || x > w;
 
-const multiply = (
+const matrix_multiply = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     m: number, [
         M11, M12, M13, M14,
@@ -326,7 +344,7 @@ const multiply = (
     Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m] + Wa[a]*M44[m];
 };
 
-const multiply_in_place = (
+const matrix_multiply_in_place = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     m: number, [
         M11, M12, M13, M14,
@@ -361,6 +379,9 @@ export const base4DFunctions: IVectorFunctionSet = {
     subtract,
     subtract_in_place,
 
+    multiply,
+    multiply_in_place,
+
     divide,
     divide_in_place,
 
@@ -376,8 +397,8 @@ export const base4DFunctions: IVectorFunctionSet = {
 export const vector4DFunctions: ITransformableVectorFunctionSet = {
     ...base4DFunctions,
 
-    multiply,
-    multiply_in_place,
+    matrix_multiply,
+    matrix_multiply_in_place,
 };
 
 export const position4DFunctions: IPosition4DFunctionSet = {

@@ -1,8 +1,8 @@
 export class Vertex<
-        Position extends IPosition,
-        Direction extends IDirection,
-        Color extends IColor,
-        Uv extends IUV
+    Position extends IPosition,
+    Direction extends IDirection,
+    Color extends IColor,
+    Uv extends IUV
     >
 {
     constructor(
@@ -98,10 +98,10 @@ export class Vertex4D extends Vertex<Position4D, Direction4D, RGBA, UVW> {
 }
 
 export class VertexView<
-        Position extends IPosition,
-        Direction extends IDirection,
-        Color extends IColor,
-        Uv extends IUV
+    Position extends IPosition,
+    Direction extends IDirection,
+    Color extends IColor,
+    Uv extends IUV
     > extends Vertex<Position, Direction, Color, Uv> {
 
     constructor(

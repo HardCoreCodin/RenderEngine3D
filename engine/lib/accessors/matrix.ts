@@ -1,16 +1,16 @@
-import {ArithmaticAccessor} from "./_base.js";
+import {MathAccessor} from "./_base.js";
 import {Position2D, Position3D} from "./vector/position.js";
 import {Direction2D, Direction3D} from "./vector/direction.js";
-import {matrix2x2Functions} from "../_arithmatic/mat2x2.js";
-import {matrix4x4Functions} from "../_arithmatic/mat4x4.js";
-import {matrix3x3Functions} from "../_arithmatic/mat3x3.js";
+import {matrix2x2Functions} from "../math/mat2.js";
+import {matrix4x4Functions} from "../math/mat4.js";
+import {matrix3x3Functions} from "../math/mat3.js";
 import {Float16, Float4, Float9} from "../../types.js";
 import {IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/function_sets.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/accessors/matrix.js";
 
 
 export default abstract class Matrix
-    extends ArithmaticAccessor
+    extends MathAccessor
     implements IMatrix
 {
     readonly abstract _: IMatrixFunctionSet;
@@ -47,31 +47,6 @@ export default abstract class Matrix
             this.id, this.arrays,
             out.id, out.arrays
         );
-
-        return out;
-    }
-
-    imul(other: this): this {
-        this._.multiply_in_place(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
-
-        return this;
-    }
-
-    mul(other: this, out: this = this.copy()): this {
-        if (out.is(this))
-            this._.multiply_in_place(
-                this.id, this.arrays,
-                other.id, other.arrays
-            );
-        else
-            this._.multiply(
-                this.id, this.arrays,
-                other.id, other.arrays,
-                out.id, out.arrays
-            );
 
         return out;
     }

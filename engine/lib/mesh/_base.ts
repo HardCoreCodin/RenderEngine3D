@@ -5,22 +5,24 @@ import {FaceVertices} from "./face/vertices.js";
 import {VertexFaces} from "./vertex/faces.js";
 import {Vertices3D} from "./vertex/attributes.js";
 import {Faces3D} from "./face/attributes.js";
-import {AABB} from "./bounds.js";
+import {AABB3D} from "./bounds.js";
 
 export default class Mesh {
     public readonly face: Faces3D;
     public readonly vertex: Vertices3D;
-    public readonly bounds = new AABB();
+    public readonly bounds = new AABB3D();
 
     constructor(
         public inputs: MeshInputs,
-        public options = new MeshOptions(),
+        public options: MeshOptions = new MeshOptions(),
 
-        public readonly face_count: number = inputs.position.faces_vertices[0].length,
+        public readonly face_vertices: FaceVertices = new FaceVertices(inputs.sanitize().position),
+
         public readonly vertex_count: number = inputs.position.vertices[0].length,
+        public readonly vertex_faces: VertexFaces = new VertexFaces(face_vertices, vertex_count),
 
-        public readonly vertex_faces: VertexFaces = new VertexFaces(inputs.sanitize().position),
-        public readonly face_vertices: FaceVertices = new FaceVertices(inputs.sanitize().position)
+        public readonly face_count: number = face_vertices.length,
+
     ) {
         options.sanitize(this.inputs);
 

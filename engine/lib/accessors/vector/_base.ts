@@ -1,10 +1,10 @@
 import Matrix from "../matrix.js";
-import {ArithmaticAccessor} from "../_base.js";
+import {MathAccessor} from "../_base.js";
 import {ITransformableVector, IVector} from "../../_interfaces/accessors/vector/_base.js";
 import {ITransformableVectorFunctionSet, IVectorFunctionSet} from "../../_interfaces/function_sets.js";
 
 export abstract class Vector
-    extends ArithmaticAccessor
+    extends MathAccessor
     implements IVector
 {
     readonly abstract _: IVectorFunctionSet;
@@ -26,8 +26,8 @@ export abstract class TransformableVector<MatrixType extends Matrix> extends Vec
 {
     readonly abstract _: ITransformableVectorFunctionSet;
 
-    transform(matrix: MatrixType): this {
-        this._.multiply_in_place(
+    imatmul(matrix: MatrixType): this {
+        this._.matrix_multiply_in_place(
             this.id, this.arrays,
             matrix.id, matrix.arrays
         );
@@ -35,14 +35,14 @@ export abstract class TransformableVector<MatrixType extends Matrix> extends Vec
         return this;
     }
 
-    transformedBy(matrix: MatrixType, out: this = this._new()): this {
+    matmul(matrix: MatrixType, out: this = this._new()): this {
         if (out.is(this))
-            this._.multiply_in_place(
+            this._.matrix_multiply_in_place(
                 this.id, this.arrays,
                 matrix.id, matrix.arrays
             );
         else
-            this._.multiply(
+            this._.matrix_multiply(
                 this.id, this.arrays,
                 matrix.id, matrix.arrays,
                 out.id, out.arrays

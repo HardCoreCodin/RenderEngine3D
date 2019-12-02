@@ -1,10 +1,11 @@
+import {IntArray} from "../../types.js";
 import {IInt1Buffer, IInt3Buffer, IIntBuffer} from "../_interfaces/buffers/int.js";
 import {IIntAllocator} from "../_interfaces/allocators.js";
 import {Buffer} from "./_base.js";
 import {DIM} from "../../constants.js";
 import {Int1Allocator, Int3Allocator} from "../allocators/int.js";
 
-export abstract class IntBuffer<Dim extends DIM> extends Buffer<Uint32Array, Dim>
+export abstract class IntBuffer<Dim extends DIM> extends Buffer<IntArray, Dim>
     implements IIntBuffer<Dim>
 {
     abstract readonly allocator: IIntAllocator<Dim>;

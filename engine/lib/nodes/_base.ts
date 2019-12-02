@@ -6,12 +6,12 @@ import {Matrix4x4} from "../accessors/matrix.js";
 export abstract class Parent
     implements IParent
 {
-    public children: Node3D[];
+    public children: INode3D[];
 
-    refreshWorldMatrix(recurse: boolean = true, include_static: boolean = false) {
+    refreshWorldMatrix(recurse: boolean = true, include_static: boolean = false): void {
         if (this instanceof Node3D && (include_static || !this.is_static)) {
             if (this.parent instanceof Node3D)
-                this.transform.matrix.mul(this.parent.world_matrix, this.world_matrix);
+                this.transform.matrix.times(this.parent.world_matrix, this.world_matrix);
             else
                 this.world_matrix.setFrom(this.transform.matrix);
         }
@@ -37,7 +37,7 @@ export default class Node3D
     ) {
         super();
 
-        scene.children.push(this);
+        scene._add(this);
         this._parent = scene;
     }
 

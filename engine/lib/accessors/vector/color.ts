@@ -1,6 +1,6 @@
 import {Vector} from "./_base.js";
-import {base3DFunctions} from "../../_arithmatic/vec3.js";
-import {base4DFunctions} from "../../_arithmatic/vec4.js";
+import {base3DFunctions} from "../../math/vec3.js";
+import {base4DFunctions} from "../../math/vec4.js";
 import {IColor3D, IColor4D} from "../../_interfaces/accessors/vector/color.js";
 
 export class Color3D

@@ -9,9 +9,9 @@ import {
 } from "../../_interfaces/accessors/vector/direction.js";
 import {ICrossDirectionFunctionSet, IDirectionFunctionSet} from "../../_interfaces/function_sets.js";
 import {DIM, PRECISION_DIGITS} from "../../../constants.js";
-import {direction2DFunctions} from "../../_arithmatic/vec2.js";
-import {direction4DFunctions} from "../../_arithmatic/vec4.js";
-import {direction3DFunctions} from "../../_arithmatic/vec3.js";
+import {direction2DFunctions} from "../../math/vec2.js";
+import {direction4DFunctions} from "../../math/vec4.js";
+import {direction3DFunctions} from "../../math/vec3.js";
 
 export abstract class Direction<Dim extends DIM, MatrixType extends Matrix>
     extends TransformableVector<MatrixType>

@@ -1,23 +1,10 @@
-import {vert3, vert4, Vertex, Vertex3D, Vertex3DView, Vertex4D, Vertex4DView, VertexView} from "./vertex.js";
-import Matrix3x3 from "../math/mat3x3.js";
-import Matrix4x4 from "../math/mat4x4.js";
-import {IUV, UV} from "../math/vec2.js";
-import {Position3D, Direction3D, RGB, pos3D, dir3D, rgb, UVW, Base3D} from "../math/vec3.js";
-import {Position4D, Direction4D, RGBA, pos4D, dir4D, rgba, Base4D} from "../math/vec4.js";
-import {Vector2DAllocator, Vector3DAllocator, Vector4DAllocator} from "../lib/allocators/float.js";
-import {IBaseRotationMatrix} from "../math/interfaces.js";
-import {ATTRIBUTE} from "../constants.js";
-import {Faces3D, Faces4D, Vertices3D, Vertices4D} from "./attribute.js";
-import {IDirection, IPosition, IColor} from "../math/interfaces/classes.js";
-import {BufferSizes} from "../buffer.js";
-
 export class Triangle<
-        Matrix extends IBaseRotationMatrix,
-        Position extends IPosition,
-        Direction extends IDirection,
-        Color extends IColor,
-        Uv extends IUV,
-        VertexType extends Vertex<Position, Direction, Color, Uv> = Vertex<Position, Direction, Color, Uv>
+    Matrix extends IBaseRotationMatrix,
+    Position extends IPosition,
+    Direction extends IDirection,
+    Color extends IColor,
+    Uv extends IUV,
+    VertexType extends Vertex<Position, Direction, Color, Uv> = Vertex<Position, Direction, Color, Uv>
     > {
 
     constructor(

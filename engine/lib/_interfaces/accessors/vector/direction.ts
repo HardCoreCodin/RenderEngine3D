@@ -1,8 +1,7 @@
-import {ITransformableVector, IVector2D, IVector3D} from "./_base.js";
+import {ITransformableVector, IVector2D, IVector3D, IVector4D} from "./_base.js";
 import {ICrossDirectionFunctionSet, IDirectionFunctionSet} from "../../function_sets.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4} from "../matrix.js";
 import {DIM} from "../../../../constants.js";
-import {IVector4D} from "../../../../math/interfaces/classes.js";
 
 export interface IDirection<
     Dim extends DIM,

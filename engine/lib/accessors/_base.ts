@@ -1,5 +1,5 @@
-import {IAccessor, IAccessorConstructor, IArithmaticAccessor} from "../_interfaces/accessors/_base.js";
-import {Arrays, IArithmaticFunctionSet, IFunctionSet} from "../_interfaces/function_sets.js";
+import {IAccessor, IAccessorConstructor, IMathAccessor} from "../_interfaces/accessors/_base.js";
+import {Arrays, IMathFunctionSet, IFunctionSet} from "../_interfaces/function_sets.js";
 
 
 export class Accessor
@@ -80,14 +80,14 @@ export class Accessor
 
 }
 
-export abstract class ArithmaticAccessor
+export abstract class MathAccessor
     extends Accessor
-    implements IArithmaticAccessor
+    implements IMathAccessor
 {
-    readonly abstract _: IArithmaticFunctionSet;
-    abstract _newOut(): IArithmaticAccessor;
+    readonly abstract _: IMathFunctionSet;
+    abstract _newOut(): IMathAccessor;
 
-    add(other: IArithmaticAccessor) {
+    add(other: IMathAccessor) {
         this._.add_in_place(
             this.id, this.arrays,
             other.id, other.arrays
@@ -96,7 +96,7 @@ export abstract class ArithmaticAccessor
         return this;
     }
 
-    subtract(other: IArithmaticAccessor): this {
+    sub(other: IMathAccessor): this {
         this._.subtract_in_place(
             this.id, this.arrays,
             other.id, other.arrays
@@ -105,16 +105,22 @@ export abstract class ArithmaticAccessor
         return this;
     }
 
-    scaleBy(factor: number): this {
-        this._.scale_in_place(
-            this.id, this.arrays,
-            factor
-        );
+    mul(other: IMathAccessor|number): this {
+        if (typeof other === "number")
+            this._.scale_in_place(
+                this.id, this.arrays,
+                other
+            );
+        else
+            this._.multiply_in_place(
+                this.id, this.arrays,
+                other.id, other.arrays
+            );
 
         return this;
     }
 
-    divideBy(denominator: number): this {
+    div(denominator: number): this {
         this._.divide_in_place(
             this.id, this.arrays,
             denominator
@@ -123,7 +129,7 @@ export abstract class ArithmaticAccessor
         return this;
     }
 
-    plus(other: IArithmaticAccessor, out: IArithmaticAccessor = this._newOut()): IArithmaticAccessor {
+    plus(other: IMathAccessor, out: IMathAccessor = this._newOut()): IMathAccessor {
         if (out.is(this))
             this._.add_in_place(
                 this.id, this.arrays,
@@ -139,7 +145,7 @@ export abstract class ArithmaticAccessor
         return out;
     }
 
-    minus(other: IArithmaticAccessor, out: IArithmaticAccessor = this._newOut()): IArithmaticAccessor {
+    minus(other: IMathAccessor, out: IMathAccessor = this._newOut()): IMathAccessor {
         if (out.is(this) || out.equals(this))
             this._.set_all_to(
                 this.id, this.arrays,
@@ -155,18 +161,33 @@ export abstract class ArithmaticAccessor
         return out;
     }
 
-    times(factor: number, out: this = this._new()): this {
-        if (out.is(this))
-            this._.scale_in_place(
-                this.id, this.arrays,
-                factor
-            );
-        else
-            this._.scale(
-                this.id, this.arrays,
-                out.id, out.arrays,
-                factor
-            );
+    times(other: IMathAccessor|number, out: this = this._new()): this {
+        if (typeof other === "number") {
+            if (out.is(this))
+                this._.scale_in_place(
+                    this.id, this.arrays,
+                    other
+                );
+            else
+                this._.scale(
+                    this.id, this.arrays,
+                    other,
+                    out.id, out.arrays,
+                );
+        } else {
+            if (out.is(this))
+                this._.multiply_in_place(
+                    this.id, this.arrays,
+                    other.id, other.arrays
+                );
+            else
+                this._.multiply(
+                    this.id, this.arrays,
+                    other.id, other.arrays,
+                    out.id, out.arrays
+                );
+        }
+
 
         return out;
     }
@@ -180,8 +201,8 @@ export abstract class ArithmaticAccessor
         else
             this._.divide(
                 this.id, this.arrays,
-                out.id, out.arrays,
-                denominator
+                denominator,
+                out.id, out.arrays
             );
 
         return out;

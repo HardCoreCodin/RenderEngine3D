@@ -10,6 +10,7 @@ import {IVertexColors, IVertexColorsConstructor} from "../../_interfaces/attribu
 import {IVertexNormals, IVertexNormalsConstructor} from "../../_interfaces/attributes/vertex/normal.js";
 import {IVertexPositions, IVertexPositionsConstructor} from "../../_interfaces/attributes/vertex/position.js";
 
+
 abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
     NormalDim extends DIM._3D | DIM._4D = PositionDim,
     ColorDim extends DIM._3D | DIM._4D = PositionDim,
@@ -21,31 +22,34 @@ abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
     protected readonly VertexUVs: IVertexUVsConstructor<UVDim>;
 
     public positions: IVertexPositions<PositionDim>;
-    public normals: IVertexNormals<NormalDim>;
-    public colors: IVertexColors<ColorDim>;
-    public uvs: IVertexUVs<UVDim>;
+    public normals: IVertexNormals<NormalDim>|null;
+    public colors: IVertexColors<ColorDim>|null;
+    public uvs: IVertexUVs<UVDim>|null;
 
     constructor(
-        protected readonly _face_vertices: FaceVertices,
-        protected readonly _mesh_options: MeshOptions
+        face_vertices: FaceVertices,
+        mesh_options: MeshOptions
     ) {
-        this.positions = new this.VertexPositions(this._face_vertices);
-        this.normals = new this.VertexNormals(this._face_vertices);
-        this.colors = new this.VertexColors(this._face_vertices);
-        this.uvs = new this.VertexUVs(this._face_vertices);
+        const included = mesh_options.vertex_attributes;
 
-        this.init();
-    }
+        this.positions = new this.VertexPositions(
+            face_vertices,mesh_options.share & ATTRIBUTE.position
+        );
 
-    init(): void {
-        const count = this._face_vertices.length;
-        const shared = this._mesh_options.share;
-        const included = this._mesh_options.vertex_attributes;
+        this.normals = included & ATTRIBUTE.normal ?
+            new this.VertexNormals(
+                face_vertices,mesh_options.share & ATTRIBUTE.normal
+            ) : null;
 
-        this.positions.init(count, shared & ATTRIBUTE.position);
-        if (included & ATTRIBUTE.normal) this.normals.init(count, shared & ATTRIBUTE.normal);
-        if (included & ATTRIBUTE.color) this.colors.init(count, shared & ATTRIBUTE.color);
-        if (included & ATTRIBUTE.uv) this.uvs.init(count, shared & ATTRIBUTE.uv);
+        this.colors = included & ATTRIBUTE.color ?
+            new this.VertexColors(
+                face_vertices,mesh_options.share & ATTRIBUTE.color
+            ) : null;
+
+        this.uvs = included & ATTRIBUTE.uv ?
+            new this.VertexUVs(
+                face_vertices,mesh_options.share & ATTRIBUTE.color
+            ) : null;
     }
 }
 

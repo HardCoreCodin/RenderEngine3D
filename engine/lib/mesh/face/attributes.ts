@@ -16,28 +16,15 @@ abstract class Faces<PositionDim extends DIM._3D | DIM._4D,
     protected readonly FaceNormals: IFaceNormalsConstructor<NormalDim>;
     protected readonly FaceColors: IFaceColorsConstructor<NormalDim>;
 
-    public positions: IFacePositions<PositionDim>;
-    public normals: IFaceNormals<NormalDim>;
-    public colors: IFaceColors<NormalDim>;
+    public readonly positions: IFacePositions<PositionDim>|null;
+    public readonly normals: IFaceNormals<NormalDim>|null;
+    public readonly colors: IFaceColors<NormalDim>|null;
 
-    constructor(
-        protected readonly _face_vertices: FaceVertices,
-        protected readonly _mesh_options: MeshOptions,
-    ) {
-        this.positions = new this.FacePositions(this._face_vertices);
-        this.normals = new this.FaceNormals(this._face_vertices);
-        this.colors = new this.FaceColors(this._face_vertices);
-
-        this.init();
-    }
-
-    init(): void {
-        const count = this._face_vertices.length;
-        const included = this._mesh_options.face_attributes;
-
-        if (included & ATTRIBUTE.position) this.positions.init(count);
-        if (included & ATTRIBUTE.normal) this.normals.init(count);
-        if (included & ATTRIBUTE.color) this.colors.init(count);
+    constructor(face_vertices: FaceVertices, mesh_options: MeshOptions) {
+        const included = mesh_options.face_attributes;
+        this.positions = included & ATTRIBUTE.position ? new this.FacePositions(face_vertices) : null;
+        this.normals = included & ATTRIBUTE.normal ? new this.FaceNormals(face_vertices) : null;
+        this.colors = included & ATTRIBUTE.color ? new this.FaceColors(face_vertices) : null;
     }
 }
 
