@@ -5,8 +5,8 @@ import {
     IPositionFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
-} from "../_interfaces/function_sets.js";
-import {VECTOR_2D_ALLOCATOR} from "../allocators.js";
+} from "../_interfaces/functions.js";
+import {VECTOR_2D_ALLOCATOR} from "../memory/allocators.js";
 
 let t_x,
     t_y,

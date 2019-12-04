@@ -2,7 +2,7 @@ import spaceship from './spaceship.js';
 import teapot from './teapot.js';
 
 import Engine3D from "./engine/engine.js";
-import Mesh from "./engine/lib/mesh/_base.js";
+import Mesh from "./engine/lib/geometry/mesh.js";
 
 const teapot_mesh = Mesh.fromObj(teapot);
 // teapot_mesh.transform.rotationAngleForY = 180;

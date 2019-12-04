@@ -1,7 +1,7 @@
 import {PRECISION_DIGITS} from "../../constants.js";
 import {Float9} from "../../types.js";
-import {IMatrixRotationFunctionSet} from "../_interfaces/function_sets.js";
-import {MATRIX_3X3_ALLOCATOR} from "../allocators.js";
+import {IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
+import {MATRIX_3X3_ALLOCATOR} from "../memory/allocators.js";
 
 let t11, t12, t13,
     t21, t22, t23,

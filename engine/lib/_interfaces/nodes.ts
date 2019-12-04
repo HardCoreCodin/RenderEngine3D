@@ -1,4 +1,4 @@
-import {IMatrix4x4} from "./accessors/matrix.js";
+import {IMatrix4x4} from "./matrix.js";
 
 export interface IParent
 {

@@ -1,12 +1,12 @@
-import {MathAccessor} from "./_base.js";
-import {Position2D, Position3D} from "./vector/position.js";
-import {Direction2D, Direction3D} from "./vector/direction.js";
+import {MathAccessor} from "./accessor.js";
+import {Position2D, Position3D} from "./position.js";
+import {Direction2D, Direction3D} from "./direction.js";
 import {matrix2x2Functions} from "../math/mat2.js";
 import {matrix4x4Functions} from "../math/mat4.js";
 import {matrix3x3Functions} from "../math/mat3.js";
 import {Float16, Float4, Float9} from "../../types.js";
-import {IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/function_sets.js";
-import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/accessors/matrix.js";
+import {IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
+import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/matrix.js";
 
 
 export default abstract class Matrix

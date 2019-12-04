@@ -1,5 +1,5 @@
-import Screen from "./screen.js";
-import Camera, {cam} from "./lib/nodes/camera.js";
+import Screen from "./lib/render/screen.js";
+import Camera, {cam} from "./lib/render/camera.js";
 import Triangle4D, {tri} from "./primitives/triangle.js";
 import FPSController, {fps} from "./input.js";
 import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
@@ -9,8 +9,8 @@ import {Allocators} from "./lib/allocators/float.js";
 import {trans} from "./objects/transform.js";
 import MeshRenderer, {rend} from "./objects/renderable.js";
 import {BufferSizes} from "./buffer.js";
-import Mesh from "./lib/mesh/_base.js";
-import Transform from "./lib/nodes/transform.js";
+import Mesh from "./lib/geometry/mesh.js";
+import Transform from "./lib/scene_graph/transform.js";
 
 export default class Engine3D {
     static SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
@@ -144,7 +144,7 @@ export default class Engine3D {
 
         // Update projection matrix from camera (if needed);
         if (opts.projection_parameters_changed)
-            this.camera.updateProjection();
+            this.camera.updateProjectionMatrix();
 
         // Update concatenated world -> clip space matrix (if needed):
         if (this.fps_controller.direction_changed ||

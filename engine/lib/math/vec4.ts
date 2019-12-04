@@ -1,12 +1,12 @@
-import {PRECISION_DIGITS} from "../../constants.js";
+import {DIM, PRECISION_DIGITS} from "../../constants.js";
 import {
     ICrossDirectionFunctionSet,
-    IPosition4DFunctionSet,
+    IPosition4DFunctionSet, IPositionAttribute4DFunctionSet, ITransformableAttributeFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
-} from "../_interfaces/function_sets.js";
+} from "../_interfaces/functions.js";
 import {Float16, Float4} from "../../types.js";
-import {VECTOR_4D_ALLOCATOR} from "../allocators.js";
+import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 
 let t_x,
     t_y,
@@ -328,6 +328,52 @@ const out_of_view = (
     -w > y || y > w ||
     -w > x  || x > w;
 
+const in_view_any = (
+    [Xa, Ya, Za, Wa]: Float4,
+
+    near: number,
+    far: number
+) : boolean => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+        t_w = Wa[i];
+
+        if (
+            near <= t_z && t_z <= far &&
+            -t_w <= t_y && t_y <= t_w &&
+            -t_w <= t_x && t_x <= t_w
+        ) return true;
+    }
+
+    return false;
+};
+
+const out_of_view_any = (
+    [Xa, Ya, Za, Wa]: Float4,
+
+    near: number,
+    far: number
+) : boolean => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+        t_w = Wa[i];
+
+        if (
+            near > t_z || t_z > far ||
+            -t_w > t_y || t_y > t_w ||
+            -t_w > t_x  || t_x > t_w
+        ) return true;
+    }
+
+    return false;
+};
+
+
+
 const matrix_multiply = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     m: number, [
@@ -335,13 +381,31 @@ const matrix_multiply = (
         M21, M22, M23, M24,
         M31, M32, M33, M34,
         M41, M42, M43, M44
-    ]: Float16, o: number,
-    [Xo, Yo, Zo, Wo]: Float4
+    ]: Float16,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
 ) : void => {
     Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m] + Wa[a]*M41[m];
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m] + Wa[a]*M42[m];
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m] + Wa[a]*M43[m];
     Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m] + Wa[a]*M44[m];
+};
+
+export const matrix_multiply_all = (
+    [Xa, Ya, Za, Wa]: Float4,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + Wa[i]*M41[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + Wa[i]*M42[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + Wa[i]*M43[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m] + Wa[i]*M44[m];
+    }
 };
 
 const matrix_multiply_in_place = (
@@ -362,6 +426,40 @@ const matrix_multiply_in_place = (
     Ya[a] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m] + t_w*M42[m];
     Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m] + t_w*M43[m];
     Wa[a] = t_x*M14[m] + t_y*M24[m] + t_z*M34[m] + t_w*M44[m];
+};
+
+const matrix_multiply_in_place_all = (
+    [Xa, Ya, Za, Wa]: Float4,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+        t_w = Wa[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m] + t_w*M41[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m] + t_w*M42[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m] + t_w*M43[m];
+        Wa[i] = t_x*M14[m] + t_y*M24[m] + t_z*M34[m] + t_w*M44[m];
+    }
+};
+
+export const transformableAttribute4DFunctions: ITransformableAttributeFunctionSet<DIM._4D> = {
+    matrix_multiply_all,
+    matrix_multiply_in_place_all
+};
+
+export const positionAttribute4DFunctions: IPositionAttribute4DFunctionSet = {
+    ...transformableAttribute4DFunctions,
+
+    in_view_any,
+    out_of_view_any
 };
 
 export const base4DFunctions: IVectorFunctionSet = {

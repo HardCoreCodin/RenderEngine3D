@@ -1,12 +1,12 @@
-import Screen from "./screen.js";
-import Camera, { cam } from "./lib/nodes/camera.js";
+import Screen from "./lib/render/screen.js";
+import Camera, { cam } from "./lib/render/camera.js";
 import Triangle4D, { tri } from "./primitives/triangle.js";
 import FPSController, { fps } from "./input.js";
 import { mat4x4 } from "./math/mat4x4.js";
 import { dir4D } from "./math/vec4.js";
 import { rgb } from "./math/vec3.js";
 import { rend } from "./objects/renderable.js";
-import Transform from "./lib/nodes/transform.js";
+import Transform from "./lib/scene_graph/transform.js";
 export default class Engine3D {
     constructor(canvas, meshes) {
         this.canvas = canvas;
@@ -80,7 +80,7 @@ export default class Engine3D {
         const opts = this.camera.options;
         // Update projection matrix from camera (if needed);
         if (opts.projection_parameters_changed)
-            this.camera.updateProjection();
+            this.camera.updateProjectionMatrix();
         // Update concatenated world -> clip space matrix (if needed):
         if (this.fps_controller.direction_changed ||
             this.fps_controller.position_changed)

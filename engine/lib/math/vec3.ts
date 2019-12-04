@@ -1,12 +1,12 @@
 import {Float3, Float9} from "../../types.js";
-import {PRECISION_DIGITS} from "../../constants.js";
+import {DIM, PRECISION_DIGITS} from "../../constants.js";
 import {
     ICrossDirectionFunctionSet,
-    IPositionFunctionSet,
+    IPositionFunctionSet, ITransformableAttributeFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
-} from "../_interfaces/function_sets.js";
-import {VECTOR_3D_ALLOCATOR} from "../allocators.js";
+} from "../_interfaces/functions.js";
+import {VECTOR_3D_ALLOCATOR} from "../memory/allocators.js";
 
 let t_x,
     t_y,
@@ -285,6 +285,22 @@ const matrix_multiply = (
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
 };
 
+const matrix_multiply_all = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13,
+        M21, M22, M23,
+        M31, M32, M33
+    ]: Float9,
+    [Xo, Yo, Zo]: Float3
+): void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+    }
+};
+
 const matrix_multiply_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
     m: number, [
@@ -302,6 +318,29 @@ const matrix_multiply_in_place = (
     Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
 };
 
+const matrix_multiply_in_place_all = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13,
+        M21, M22, M23,
+        M31, M32, M33
+    ]: Float9
+): void => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
+    }
+};
+
+export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet<DIM._3D> = {
+    matrix_multiply_all,
+    matrix_multiply_in_place_all
+};
 
 export const base3DFunctions: IVectorFunctionSet = {
     allocator: VECTOR_3D_ALLOCATOR,

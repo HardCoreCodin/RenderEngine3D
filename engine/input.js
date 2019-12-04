@@ -1,4 +1,4 @@
-import { Direction3D } from "./lib/accessors/vector/direction.js";
+import { Direction3D } from "./lib/accessors/direction.js";
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
 const LEFT_kEY_CODE = 65; // A

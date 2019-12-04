@@ -1,5 +1,5 @@
-import Camera from "./lib/nodes/camera.js";
-import {Direction3D} from "./lib/accessors/vector/direction.js";
+import Camera from "./lib/render/camera.js";
+import {Direction3D} from "./lib/accessors/direction.js";
 
 const UP_KEY_CODE = 82; // R
 const DOWN_KEY_CODE = 70; // F
