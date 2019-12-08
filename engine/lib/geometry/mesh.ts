@@ -1,16 +1,16 @@
 import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {Vertices3D} from "./vertices.js";
-import {Faces3D} from "./faces.js";
-import {AABB3D} from "./bounds.js";
+import {Vertices3D, Vertices4D} from "./vertices.js";
+import {Faces3D, Faces4D} from "./faces.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
+import {Matrix4x4} from "../accessors/matrix.js";
+import BBox from "./bounds.js";
 
 export default class Mesh {
-    public readonly face: Faces3D;
-    public readonly vertex: Vertices3D;
-    public readonly bounds = new AABB3D();
+    public readonly data: MeshData3D;
+    public readonly bbox = new BBox();
 
     constructor(
         public inputs: MeshInputs,
@@ -26,33 +26,32 @@ export default class Mesh {
     ) {
         options.sanitize(this.inputs);
 
-        this.face = new Faces3D(face_vertices, options);
-        this.vertex = new Vertices3D(face_vertices, options);
+        this.data = new MeshData3D(face_vertices, options);
     }
 
     load(): this {
-        this.vertex.positions.load(this.inputs.position);
-        this.bounds.load(this.vertex.positions);
+        this.data.vertices.positions.load(this.inputs.position);
+        this.bbox.load(this.data.vertices.positions);
 
         if (this.options.include_uvs)
-            this.vertex.uvs.load(this.inputs.uv);
+            this.data.vertices.uvs.load(this.inputs.uv);
 
         switch (this.options.normal) {
             case NORMAL_SOURCING.NO_VERTEX__NO_FACE:
                 break;
             case NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE:
-                this.face.normals.pull(this.vertex.positions);
+                this.data.faces.normals.pull(this.data.vertices.positions);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE:
-                this.vertex.normals.load(this.inputs.normal);
+                this.data.vertices.normals.load(this.inputs.normal);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                this.vertex.normals.load(this.inputs.normal);
-                this.face.normals.pull(this.vertex.positions);
+                this.data.vertices.normals.load(this.inputs.normal);
+                this.data.faces.normals.pull(this.data.vertices.positions);
                 break;
             case NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this.face.normals.pull(this.vertex.positions);
-                this.vertex.normals.pull(this.face.normals, this.vertex_faces);
+                this.data.faces.normals.pull(this.data.vertices.positions);
+                this.data.vertices.normals.pull(this.data.faces.normals, this.vertex_faces);
                 break;
         }
 
@@ -60,36 +59,83 @@ export default class Mesh {
             case COLOR_SOURCING.NO_VERTEX__NO_FACE:
                 break;
             case COLOR_SOURCING.NO_VERTEX__GENERATE_FACE:
-                this.face.colors.generate();
+                this.data.faces.colors.generate();
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__NO_FACE:
-                this.vertex.colors.generate();
+                this.data.vertices.colors.generate();
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__GENERATE_FACE:
-                this.face.colors.generate();
-                this.vertex.colors.generate();
+                this.data.faces.colors.generate();
+                this.data.vertices.colors.generate();
                 break;
             case COLOR_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this.face.colors.generate();
-                this.vertex.colors.pull(this.face.colors, this.vertex_faces);
+                this.data.faces.colors.generate();
+                this.data.vertices.colors.pull(this.data.faces.colors, this.vertex_faces);
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__GATHER_FACE:
-                this.vertex.colors.generate();
-                this.face.colors.pull(this.vertex.colors);
+                this.data.vertices.colors.generate();
+                this.data.faces.colors.pull(this.data.vertices.colors);
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
-                this.vertex.colors.load(this.inputs.color);
+                this.data.vertices.colors.load(this.inputs.color);
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__GENERATE_FACE:
-                this.vertex.colors.load(this.inputs.color);
-                this.face.colors.generate();
+                this.data.vertices.colors.load(this.inputs.color);
+                this.data.faces.colors.generate();
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:
-                this.vertex.colors.load(this.inputs.color);
-                this.face.colors.pull(this.vertex.colors);
+                this.data.vertices.colors.load(this.inputs.color);
+                this.data.faces.colors.pull(this.data.vertices.colors);
         }
 
         return this;
     }
 }
 
+export class MeshData3D {
+    constructor(
+        public face_vertices: IFaceVertices,
+        public mesh_options: MeshOptions,
+
+        public readonly faces: Faces3D = new Faces3D(face_vertices, mesh_options),
+        public readonly vertices: Vertices3D = new Vertices3D(face_vertices, mesh_options)
+    ) {}
+
+    // homogenize(out?: MeshData4D): MeshData4D {
+    //     if (out) {
+    //         this.faces.homogenize(out.faces);
+    //         this.vertices.homogenize(out.vertices);
+    //         return out;
+    //     }
+    //
+    //     return new MeshData4D(
+    //         this.face_vertices,
+    //         this.mesh_options,
+    //
+    //         this.faces.homogenize(),
+    //         this.vertices.homogenize()
+    //     );
+    // }
+}
+
+export class MeshData4D {
+    constructor(
+        public face_vertices: IFaceVertices,
+        public mesh_options: MeshOptions,
+
+        public readonly faces: Faces4D = new Faces4D(face_vertices, mesh_options),
+        public readonly vertices: Vertices4D = new Vertices4D(face_vertices, mesh_options)
+    ) {}
+
+    mul(matrix: Matrix4x4, out?: this): this {
+        if (out) {
+            this.vertices.mul(matrix, out.vertices);
+            this.faces.mul(matrix, out.faces);
+            return out;
+        }
+
+        this.vertices.mul(matrix);
+        this.faces.mul(matrix);
+        return this;
+    }
+}

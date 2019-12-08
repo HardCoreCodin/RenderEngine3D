@@ -7,34 +7,25 @@ import {FaceVerticesInt8, VertexFacesInt8} from "./indices.js";
 
 // Vertex position values:
 export const vertices: number[][] = [
-    [ // X coordinates (0 = left, 1 = right)
-        0, 1, 1, 0,
-        0, 1, 1, 0
-    ],
-    [ // Y coordinates (0 = bottom, 1 = top)
-        0, 0, 1, 1,
-        0, 0, 1, 1
-    ],
-    [ // Z coordinates (0 = front, 1 = back)
-        0, 0, 0, 0,
-        1, 1, 1, 1
-    ],
+    [0, 0, 1, 1, 1, 1, 0, 0], // X coordinates (0 = left, 1 = right)
+    [0, 1, 1, 0, 0, 1, 1, 0], // Y coordinates (0 = bottom, 1 = top)
+    [0, 0, 0, 0, 1, 1, 1, 1], // Z coordinates (0 = front, 1 = back)
 ];
 
-// Quad face vertex-index_arrays:
+// Quad face vertex-index_arrays (Clockwise winding order for left-handed coordinate system):
 export const indices: QuadInputs = [
-    [0, 1, 5, 4, 0, 3], // Vertex 1 of each quad
-    [1, 5, 4, 0, 1, 2], // Vertex 2 of each quad
-    [2, 6, 7, 3, 5, 6], // Vertex 3 of each quad
-    [3, 2, 6, 7, 4, 7], // Vertex 4 of each quad
+    [0, 3, 4, 7, 2, 7], // Vertex 1 of each quad
+    [1, 2, 5, 6, 6, 0], // Vertex 2 of each quad
+    [2, 5, 6, 1, 5, 3], // Vertex 3 of each quad
+    [3, 4, 7, 0, 3, 4], // Vertex 4 of each quad
 ];
 
 // Cube inputs:
 // =====================
 export const positions = new InputPositions(FACE_TYPE.QUAD, vertices, indices).triangulate();
 export const inputs = new MeshInputs(FACE_TYPE.TRIANGLE, ATTRIBUTE.position, positions);
-export const face_vertices = new FaceVerticesInt8(positions);
-export const vertex_faces = new VertexFacesInt8(face_vertices, 8);
+export const cube_face_vertices = new FaceVerticesInt8(positions);
+export const cube_vertex_faces = new VertexFacesInt8(cube_face_vertices, 8);
 
 // Mesh options:
 const defaults = new MeshOptions();
@@ -43,7 +34,7 @@ defaults.normal = NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE;
 defaults.color = COLOR_SOURCING.NO_VERTEX__GENERATE_FACE;
 
 const CubeMesh = (options: MeshOptions = defaults): Mesh => new Mesh(
-    inputs, options, face_vertices, 8, vertex_faces
+    inputs, options, cube_face_vertices, 8, cube_vertex_faces
 );
 
 export default CubeMesh;

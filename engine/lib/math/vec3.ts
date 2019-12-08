@@ -1,8 +1,13 @@
-import {Float3, Float9} from "../../types.js";
+import {Float16, Float3, Float4, Float9} from "../../types.js";
 import {DIM, PRECISION_DIGITS} from "../../constants.js";
 import {
     ICrossDirectionFunctionSet,
-    IPositionFunctionSet, ITransformableAttributeFunctionSet,
+    IDirection3DFunctionSet,
+    IDirectionAttribute3DFunctionSet,
+    IPosition3DFunctionSet,
+    IPositionAttribute3DFunctionSet,
+    IPositionFunctionSet,
+    ITransformableAttributeFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
 } from "../_interfaces/functions.js";
@@ -240,6 +245,18 @@ const normalize_in_place = (
     Za[a] /= t_n;
 };
 
+const normalize_all_in_place = (
+    [X, Y, Z]: Float3
+) : void => {
+    for (let i = 0; i < X.length; i++) {
+        t_n = Math.hypot(X[i], Y[i], Z[i]);
+
+        X[i] /= t_n;
+        Y[i] /= t_n;
+        Z[i] /= t_n;
+    }
+};
+
 const dot = (
     a: number, [Xa, Ya, Za]: Float3,
     b: number, [Xb, Yb, Zb]: Float3
@@ -285,6 +302,38 @@ const matrix_multiply = (
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
 };
 
+const matrix_multiply_position_by_mat4 = (
+    a: number, [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m] + M41[m];
+    Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m] + M42[m];
+    Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m] + M43[m];
+    Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m] + M44[m];
+};
+
+const matrix_multiply_direction_by_mat4 = (
+    a: number, [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m];
+    Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
+    Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
+    Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m];
+};
+
 const matrix_multiply_all = (
     [Xa, Ya, Za]: Float3,
     m: number, [
@@ -300,6 +349,43 @@ const matrix_multiply_all = (
         Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
     }
 };
+
+export const matrix_multiply_all_positions_by_mat4 = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m] + M44[m];
+    }
+};
+
+export const matrix_multiply_all_directions_by_mat4 = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
+    }
+};
+
 
 const matrix_multiply_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
@@ -337,9 +423,72 @@ const matrix_multiply_in_place_all = (
     }
 };
 
+// const in_view_tri = (
+//     x1: number, y1: number, z1: number, top_1: number, right_1: number,
+//     x2: number, y2: number, z2: number, top_2: number, right_2: number,
+//     x3: number, y3: number, z3: number, top_3: number, right_3: number,
+//
+//     near: number,
+//     far: number
+// ) : boolean => (
+//         // Frustum culling:
+//         // ================
+//         !(near > z1 || z1 > far || y1 < -top_1 || y1 > top_1 || x1 < -right_1 || x1 > right_1) ||
+//         !(near > z2 || z2 > far || y2 < -top_2 || y2 > top_2 || x2 < -right_2 || x2 > right_2) ||
+//         !(near > z3 || z3 > far || y3 < -top_3 || y3 > top_3 || x3 < -right_3 || x3 > right_3)
+//     ) && (
+//         // Back-face culling:
+//         // ==================
+//         // Compute the determinant (area of the paralelogram formed by the 3 vertices)
+//         // If the area is zero, the triangle also has a zero surface so can not be drawn.
+//         // If the area is negative, the parallelogram (triangle) is facing backwards.
+//         (((x3 - x2) * (y1 - y2)) - ((y3 - y2) * (x1 - x2))) > 0
+//     );
+//
+// let behind, in_front, above, below, right_of, left_of, in_y, in_z: boolean;
+// const in_view_all = (
+//     [Xa, Ya, Za]: Float3,
+//
+//     near: number,
+//     far: number
+// ) : boolean => {
+//     behind = in_front = above = below = right_of = left_of = in_y = in_z = false;
+//
+//     for (let i = 0; i < Xa.length; i++) {
+//         t_z = Za[i];
+//
+//         if (t_z < near) {
+//             if (in_front)
+//                 return true;
+//
+//             behind = true;
+//         } else if (t_z > far) {
+//             if (behind)
+//                 return true;
+//
+//             in_front = true;
+//         } else return true;
+//     }
+//
+//     return false;
+// };
+
 export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet<DIM._3D> = {
     matrix_multiply_all,
     matrix_multiply_in_place_all
+};
+
+export const positionAttribute3DFunctions: IPositionAttribute3DFunctionSet = {
+    ...transformableAttribute3DFunctions,
+
+    matrix_multiply_all_positions_by_mat4
+};
+
+export const directionAttribute3DFunctions: IDirectionAttribute3DFunctionSet = {
+    ...transformableAttribute3DFunctions,
+
+    matrix_multiply_all_directions_by_mat4,
+    normalize_all_in_place
 };
 
 export const base3DFunctions: IVectorFunctionSet = {
@@ -379,14 +528,16 @@ export const vector3DFunctions: ITransformableVectorFunctionSet = {
     matrix_multiply_in_place,
 };
 
-export const position3DFunctions: IPositionFunctionSet = {
+export const position3DFunctions: IPosition3DFunctionSet = {
     ...vector3DFunctions,
 
     distance,
-    distance_squared
+    distance_squared,
+
+    matrix_multiply_position_by_mat4
 };
 
-export const direction3DFunctions: ICrossDirectionFunctionSet = {
+export const direction3DFunctions: IDirection3DFunctionSet = {
     ...vector3DFunctions,
 
     length,
@@ -396,6 +547,9 @@ export const direction3DFunctions: ICrossDirectionFunctionSet = {
     normalize_in_place,
 
     dot,
+
     cross,
-    cross_in_place
+    cross_in_place,
+
+    matrix_multiply_direction_by_mat4
 };

@@ -34,6 +34,7 @@ export const enum SHARE {
     UV       = 0b1000,
 }
 
+
 export const enum NORMAL_SOURCING {
     NO_VERTEX__NO_FACE,
     NO_VERTEX__GENERATE_FACE,
@@ -54,7 +55,9 @@ export const enum COLOR_SOURCING {
     GATHER_VERTEX__GENERATE_FACE
 }
 
-export const DEGREES_TO_RADIANS_FACTOR = (2 * Math.PI) / 360;
+export const PIE = Math.PI;
+export const TWO_PIE = 2 * PIE;
+export const DEGREES_TO_RADIANS_FACTOR = TWO_PIE / 360;
 export const RADIANS_TO_DEGREES_FACTOR = 1 / DEGREES_TO_RADIANS_FACTOR;
 
 export const KEY_CODES = {

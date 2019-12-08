@@ -2,24 +2,28 @@ import Scene from "../scene_graph/scene.js";
 import Viewport from "./viewport.js";
 
 export default class RenderPipeline {
-    near: number;
-    far: number;
 
     constructor(
         public scene: Scene,
+        private geometries = scene.geometries
     ){}
 
     render(viewport: Viewport): void {
-        this.near = viewport.camera.frustum.near;
-        this.far = viewport.camera.frustum.far;
+        for (const geometry of this.geometries) {
+            geometry.raterizer.rasterize(viewport);
 
-        for (const geometry of this.scene.geometries) {
-            // Update the clip-space bounding box
-            geometry.world_bounds.transform(viewport.clip_matrix, geometry.clip_bounds);
 
             // Only render geometries who's bounding boxes intersect the view frustum
-            if (geometry.clip_bounds.in_view(this.near, this.far)) {
+            if (clip_space_bounds.toNDC()) {
+                clip_space_vertices = geometry.clip_space.vertices.positions;
 
+                geometry.prepWorldAndClipSpaces(world_to_clip);
+                for (const clip_space_triangle of clip_space_vertices.triangles) {
+                    if (clip_space_triangle.in_view) {
+                        clip_space_triangle.as3D(ndc_space_triangle);
+                        clip_space_triangle.toNDC(ndc_space_triangle);
+                    }
+                }
             }
         }
     }

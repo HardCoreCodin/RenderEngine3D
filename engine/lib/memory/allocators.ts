@@ -7,7 +7,7 @@ export abstract class BaseAllocator<
     ArrayType extends TypedArray = Float32Array>
     implements IBaseAllocator<Dim>
 {
-    protected readonly abstract _constructor: AnyConstructor<ArrayType>;
+    readonly abstract _constructor: AnyConstructor<ArrayType>;
     public abstract dim: Dim;
 
     protected _temp_holes: number[] = [];
@@ -85,7 +85,7 @@ export abstract class AbstractFloatArrayAllocator<Dim extends DIM>
     extends AbstractTypedArraysAllocator<Dim, Float32Array>
     implements IAllocator<Dim, Float32Array>
 {
-    protected readonly _constructor = Float32Array;
+    readonly _constructor = Float32Array;
     public abstract dim: Dim;
 }
 
@@ -93,7 +93,7 @@ export abstract class AbstractInt8ArrayAllocator<Dim extends DIM>
     extends AbstractTypedArraysAllocator<Dim, Uint8Array>
     implements IAllocator<Dim, Uint8Array>
 {
-    protected readonly _constructor = Uint8Array;
+    readonly _constructor = Uint8Array;
     public abstract dim: Dim;
 }
 
@@ -101,7 +101,7 @@ export abstract class AbstractInt16ArrayAllocator<Dim extends DIM>
     extends AbstractTypedArraysAllocator<Dim, Uint16Array>
     implements IAllocator<Dim, Uint16Array>
 {
-    protected readonly _constructor = Uint16Array;
+    readonly _constructor = Uint16Array;
     public abstract dim: Dim;
 }
 
@@ -109,7 +109,7 @@ export abstract class AbstractInt32ArrayAllocator<Dim extends DIM>
     extends AbstractTypedArraysAllocator<Dim, Uint32Array>
     implements IAllocator<Dim, Uint32Array>
 {
-    protected readonly _constructor = Uint32Array;
+    readonly _constructor = Uint32Array;
     public abstract dim: Dim;
 }
 
@@ -263,6 +263,6 @@ export abstract class AbstractNestedFloatArrayAllocator<
     extends AbstractNestedTypedArraysAllocator<Dim, OuterDim>
     implements INestedAllocator<Dim, OuterDim, Float32Array>
 {
-    protected readonly _constructor = Float32Array;
+    readonly _constructor = Float32Array;
     public abstract outer_dim: OuterDim;
 }

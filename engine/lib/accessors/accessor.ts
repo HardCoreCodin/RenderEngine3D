@@ -74,7 +74,7 @@ export class Accessor
         return out;
     }
 
-    protected _new(): this {
+    _new(): this {
         return new (this.constructor as IAccessorConstructor<this>)();
     }
 

@@ -1,7 +1,7 @@
 import Camera from "../render/camera.js";
 import {INode3D, IScene} from "../_interfaces/nodes.js";
 import Mesh from "../geometry/mesh.js";
-import Geometry from "./geometry.js";
+import Geometry from "../render/geometry.js";
 import {Parent} from "./parent.js";
 
 

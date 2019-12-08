@@ -74,7 +74,6 @@ export interface ITransformableVectorFunctionSet
     matrix_multiply_in_place(a: number, []: Arrays, m: number, []: Arrays): void;
 }
 
-
 export interface ITransformableAttributeFunctionSet<Dim extends DIM>
 {
     matrix_multiply_all(
@@ -89,12 +88,39 @@ export interface ITransformableAttributeFunctionSet<Dim extends DIM>
     ): void;
 }
 
-export interface IPositionAttribute4DFunctionSet
+export interface IPositionAttribute3DFunctionSet
+    extends ITransformableAttributeFunctionSet<DIM._3D>
+{
+    matrix_multiply_all_positions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
+}
+
+export interface IDirectionAttribute3DFunctionSet
+    extends ITransformableAttributeFunctionSet<DIM._3D>
+{
+    matrix_multiply_all_directions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
+    normalize_all_in_place([]: Float3): void;
+}
+
+export interface IDirectionAttribute4DFunctionSet
     extends ITransformableAttributeFunctionSet<DIM._4D>
 {
-    out_of_view_any([Xa, Ya, Za, Wa]: Float4, near: number, far: number): boolean;
-    in_view_any([Xa, Ya, Za, Wa]: Float4, near: number, far: number): boolean;
+    normalize_all_in_place([]: Float4): void;
 }
+
+// export interface IPositionAttribute4DFunctionSet
+//     extends ITransformableAttributeFunctionSet<DIM._4D>
+// {
+//     in_view_all([Xa, Ya, Za, Wa]: Float4, mask?: Uint8Array): boolean;
+//     in_view_any([Xa, Ya, Za, Wa]: Float4): boolean;
+//     in_view_tri(
+//         x1: number, y1: number, z1: number, w1: number,
+//         x2: number, y2: number, z2: number, w2: number,
+//         x3: number, y3: number, z3: number, w3: number
+//     ): boolean;
+//
+//     to_ndc_all([]: Arrays, []: Arrays, mask?: Uint8Array): void;
+//     to_ndc_all_in_place([]: Arrays, mask?: Uint8Array): void;
+// }
 
 export interface IPositionFunctionSet
     extends ITransformableVectorFunctionSet
@@ -103,29 +129,28 @@ export interface IPositionFunctionSet
     distance_squared(a: number, []: Arrays, o: number, []: Arrays);
 }
 
-export interface IPosition4DFunctionSet
+export interface IPosition3DFunctionSet
     extends IPositionFunctionSet
 {
-    in_view(
-        x: number,
-        y: number,
-        z: number,
-        w: number,
-
-        n: number,
-        f: number
-    ) : boolean;
-
-    out_of_view(
-        x: number,
-        y: number,
-        z: number,
-        w: number,
-
-        n: number,
-        f: number
-    ) : boolean;
+    matrix_multiply_position_by_mat4(a: number, []: Arrays, m: number, []: Arrays, o: number, []: Arrays): void;
 }
+
+// export interface IPosition4DFunctionSet
+//     extends IPositionFunctionSet
+// {
+//     in_view(
+//         x: number,
+//         y: number,
+//         z: number,
+//         w: number,
+//
+//         n: number,
+//         f: number
+//     ) : boolean;
+//
+//     to_ndc(a: number, []: Arrays, o: number, []: Arrays): void;
+//     to_ndc_in_place(a: number, []: Arrays): void;
+// }
 
 export interface IDirectionFunctionSet
     extends ITransformableVectorFunctionSet
@@ -144,4 +169,10 @@ export interface ICrossDirectionFunctionSet
 {
     cross(a: number, []: Arrays, b: number, []: Arrays, o: number, []: Arrays): void;
     cross_in_place(a: number, []: Arrays, b: number, []: Arrays): void;
+}
+
+export interface IDirection3DFunctionSet
+    extends ICrossDirectionFunctionSet
+{
+    matrix_multiply_direction_by_mat4(a: number, []: Arrays, m: number, []: Arrays, o: number, []: Arrays): void;
 }

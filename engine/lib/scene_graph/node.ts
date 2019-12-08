@@ -1,6 +1,6 @@
+import Scene from "./scene.js";
 import Transform from "./transform.js";
 import {INode3D, IParent} from "../_interfaces/nodes.js";
-import {Scene} from "./scene.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {Parent} from "./parent.js";
 
@@ -8,8 +8,8 @@ export default class Node3D
     extends Parent
     implements INode3D
 {
-    public readonly transform = new Transform();
-    public readonly world_matrix = new Matrix4x4();
+    readonly transform = new Transform();
+    readonly local_to_world = new Matrix4x4();
 
     protected _is_static = false;
     protected _parent: IParent;

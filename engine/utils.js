@@ -1,4 +1,14 @@
+import { PIE, TWO_PIE } from "./constants.js";
 const memcpy = (from_array, to_array, amount, from_offset = 0, to_offset = 0) => new Uint8Array(to_array.buffer, to_offset, amount).set(new Uint8Array(from_array.buffer, from_offset, amount));
+let modded;
+export const wrapAngle = (theta) => {
+    modded = theta % TWO_PIE;
+    return modded > PIE ?
+        modded - TWO_PIE :
+        modded < -PIE ?
+            modded + TWO_PIE :
+            modded;
+};
 export function* zip(a, b, c) {
     const a_iterator = a[Symbol.iterator]();
     const b_iterator = b[Symbol.iterator]();

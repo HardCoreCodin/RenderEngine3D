@@ -83,6 +83,16 @@ export class Position3D extends Position<DIM._3D, Matrix3x3>
         return this;
     }
 
+    mat4mul(matrix: Matrix4x4, out: Position4D = new Position4D()): Position4D {
+        this._.matrix_multiply_position_by_mat4(
+            this.id, this.arrays,
+            matrix.id, matrix.arrays,
+            out.id, out.arrays
+        );
+
+        return out;
+    }
+
     set x(x: number) {this.arrays[0][this.id] = x}
     set y(y: number) {this.arrays[1][this.id] = y}
     set z(z: number) {this.arrays[2][this.id] = z}
@@ -156,25 +166,52 @@ export class Position4D extends Position<DIM._4D, Matrix4x4>
 
     protected readonly _dir = dir4;
 
-    readonly isInView = (near: number = 0, far: number = 1): boolean => this._.in_view(
-        this.arrays[0][this.id],
-        this.arrays[1][this.id],
-        this.arrays[2][this.id],
-        this.arrays[3][this.id],
-        near,
-        far
-    );
+    // readonly isInView = (near: number = 0, far: number = 1): boolean => this._.in_view(
+    //     this.arrays[0][this.id],
+    //     this.arrays[1][this.id],
+    //     this.arrays[2][this.id],
+    //     this.arrays[3][this.id],
+    //     near,
+    //     far
+    // );
+    //
+    // readonly isOutOfView = (near: number = 0, far: number = 1): boolean => this._.out_of_view(
+    //     this.arrays[0][this.id],
+    //     this.arrays[1][this.id],
+    //     this.arrays[2][this.id],
+    //     this.arrays[3][this.id],
+    //     near,
+    //     far
+    // );
+    //
+    // toNDC(out?: Position3D|Position4D): void {
+    //     if (out) {
+    //         this._.to_ndc(
+    //             this.id, this.arrays,
+    //             out.id, out.arrays
+    //         );
+    //     } else {
+    //         this._.to_ndc_in_place(
+    //             this.id, this.arrays
+    //         );
+    //     }
+    // }
 
-    readonly isOutOfView = (near: number = 0, far: number = 1): boolean => this._.out_of_view(
-        this.arrays[0][this.id],
-        this.arrays[1][this.id],
-        this.arrays[2][this.id],
-        this.arrays[3][this.id],
-        near,
-        far
-    );
+    as3D(out?: Position3D): Position3D {
+        if (out) {
+            out.id = this.id;
+            out.arrays[0] = this.arrays[0];
+            out.arrays[1] = this.arrays[1];
+            out.arrays[2] = this.arrays[2];
+            return out;
+        }
 
-    toNDC = (): this => this.div(this.arrays[3][this.id]);
+        return new Position3D(this.id, [
+            this.arrays[0],
+            this.arrays[1],
+            this.arrays[2]
+        ])
+    }
 
     setTo(x: number, y: number, z: number, w: number): this {
         this._.set_to(this.id, this.arrays, x, y, z, w);

@@ -1,4 +1,5 @@
 import {TypedArray} from "./types.js";
+import {PIE, TWO_PIE} from "./constants.js";
 
 const memcpy = (
     from_array: TypedArray,
@@ -12,6 +13,16 @@ const memcpy = (
     new Uint8Array(to_array.buffer, to_offset, amount).set(
     new Uint8Array(from_array.buffer, from_offset, amount)
 );
+
+let modded: number;
+export const wrapAngle = (theta: number): number => {
+    modded = theta % TWO_PIE;
+    return modded > PIE ?
+        modded - TWO_PIE :
+        modded < -PIE ?
+            modded + TWO_PIE :
+            modded;
+};
 
 export function* zip<A, B, C>(
     a: Iterable<A>,

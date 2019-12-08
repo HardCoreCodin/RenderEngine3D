@@ -3,34 +3,21 @@ import {Vector} from "../accessors/vector.js";
 import {FloatBuffer} from "../memory/buffers.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {zip} from "../../utils.js";
-import {InputAttribute, InputColors, InputNormals, InputPositions, InputUVs} from "./inputs.js";
-import {FaceVerticesInt32} from "./indices.js";
-import {Color3D, Color4D} from "../accessors/color.js";
-import {VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
-import {dir3, dir4, Direction3D, Direction4D} from "../accessors/direction.js";
-import {Position3D, Position4D} from "../accessors/position.js";
-import {UV2D, UV3D} from "../accessors/uv.js";
+import {InputAttribute} from "./inputs.js";
 import {
     IAttribute,
     IFaceAttribute,
-    IFaceColors,
-    IFaceNormals,
-    IFacePositions,
     ILoadableVertexAttribute,
     IPullableVertexAttribute,
-    IVertexAttribute,
-    IVertexColors,
-    IVertexNormals,
-    IVertexPositions,
-    IVertexUVs
+    IVertexAttribute
 } from "../_interfaces/attributes.js";
 import {IVector, VectorConstructor} from "../_interfaces/vectors.js";
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
-import {transformableAttribute3DFunctions} from "../math/vec3.js";
-import {positionAttribute4DFunctions, transformableAttribute4DFunctions} from "../math/vec4.js";
-import {Tuple} from "../../types.js";
+import {AnyConstructor, Tuple} from "../../types.js";
 
-export abstract class Attribute<Attr extends ATTRIBUTE, Dim extends DIM, VectorType extends Vector>
+export abstract class Attribute<
+    Attr extends ATTRIBUTE,
+    Dim extends DIM,
+    VectorType extends Vector>
     extends FloatBuffer<Dim>
     implements IAttribute<Attr, Dim, VectorType>
 {
@@ -43,10 +30,11 @@ export abstract class Attribute<Attr extends ATTRIBUTE, Dim extends DIM, VectorT
     constructor(
         protected _face_vertices: IFaceVertices,
         protected _face_count: number = _face_vertices.length,
-        length: number = _face_count
+        length = _face_count,
+        arrays?: Tuple<Float32Array, Dim>
     ) {
         super();
-        this.init(length);
+        this.init(length, arrays);
         this._postInit();
     }
 
@@ -61,9 +49,11 @@ export abstract class Attribute<Attr extends ATTRIBUTE, Dim extends DIM, VectorT
         }
     }
 
-    setFrom(other: IAttribute<Attr, DIM._2D|DIM._3D|DIM._4D, IVector>): void {
+    setFrom(other: IAttribute<Attr, DIM._2D|DIM._3D|DIM._4D, IVector>): this {
         for (const [this_array, other_array] of zip(this.arrays, other.arrays))
             this_array.set(other_array);
+
+        return this;
     }
 }
 
@@ -140,10 +130,15 @@ export abstract class FaceAttribute<
     }
 }
 
+export class Triangle<VectorType extends Vector> {
+    vertices: [VectorType, VectorType, VectorType];
+}
+
 export abstract class VertexAttribute<
     Attr extends ATTRIBUTE,
     Dim extends DIM,
-    VectorType extends Vector>
+    VectorType extends Vector,
+    TriangleType extends Triangle<VectorType>>
     extends Attribute<Attr, Dim, VectorType>
     implements IVertexAttribute<Attr, Dim, VectorType>
 {
@@ -154,12 +149,16 @@ export abstract class VertexAttribute<
         VectorType
         ] = [null, null, null];
 
+    readonly abstract Triangle: AnyConstructor<TriangleType>;
+    current_triangle: TriangleType;
+
     constructor(
-        protected _face_vertices: FaceVerticesInt32,
+        protected _face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        protected _face_count: number = _face_vertices.length
+        protected _face_count: number = _face_vertices.length,
+        arrays?: Tuple<Float32Array, Dim>
     ) {
-        super(_face_vertices, _face_count, is_shared ? _face_count : _face_count * 3);
+        super(_face_vertices, _face_count, is_shared ? _face_count : _face_count * 3, arrays);
         this._is_shared = !!is_shared;
     }
 
@@ -169,20 +168,23 @@ export abstract class VertexAttribute<
         this._current_face_vertex_vectors[0] = new this.Vector(0, this.arrays);
         this._current_face_vertex_vectors[1] = new this.Vector(0, this.arrays);
         this._current_face_vertex_vectors[2] = new this.Vector(0, this.arrays);
+
+        this.current_triangle = new this.Triangle();
+        this.current_triangle.vertices = this._current_face_vertex_vectors;
     }
 
     get is_shared(): boolean {
         return this._is_shared;
     }
 
-    * faces(): Generator<[VectorType, VectorType, VectorType]> {
+    protected *_iterTriangles() : Generator<TriangleType> {
         if (this._is_shared) {
             for (const [index_1, index_2, index_3] of this._face_vertices.values()) {
                 this._current_face_vertex_vectors[0].id = index_1;
                 this._current_face_vertex_vectors[1].id = index_2;
                 this._current_face_vertex_vectors[2].id = index_3;
 
-                yield this._current_face_vertex_vectors;
+                yield this.current_triangle;
             }
         } else {
             for (let face_index = 0; face_index < this._face_count; face_index++) {
@@ -190,9 +192,13 @@ export abstract class VertexAttribute<
                 this._current_face_vertex_vectors[1].id = face_index + this._face_count;
                 this._current_face_vertex_vectors[2].id = face_index + this._face_count + this._face_count;
 
-                yield this._current_face_vertex_vectors;
+                yield this.current_triangle;
             }
         }
+    }
+
+    get triangles(): Generator<TriangleType> {
+        return this._iterTriangles();
     }
 }
 
@@ -200,8 +206,9 @@ export abstract class LoadableVertexAttribute<
     Attr extends ATTRIBUTE,
     Dim extends DIM,
     VectorType extends Vector,
+    TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute>
-    extends VertexAttribute<Attr, Dim, VectorType>
+    extends VertexAttribute<Attr, Dim, VectorType, TriangleType>
     implements ILoadableVertexAttribute<Attr, Dim, VectorType, InputAttributeType>
 {
     protected _loadShared(input: InputAttributeType): void {
@@ -234,9 +241,10 @@ export abstract class PulledVertexAttribute<
     PulledAttr extends ATTRIBUTE,
     Dim extends DIM,
     VectorType extends Vector,
+    TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute,
     FaceAttributeType extends IFaceAttribute<Attr, PulledAttr, Dim>>
-    extends LoadableVertexAttribute<Attr, Dim, VectorType, InputAttributeType>
+    extends LoadableVertexAttribute<Attr, Dim, VectorType, TriangleType, InputAttributeType>
     implements IPullableVertexAttribute<Attr, PulledAttr, Dim, VectorType, InputAttributeType, FaceAttributeType>
 {
     protected _pullShared(input: FaceAttributeType, vertex_faces: IVertexFaces): void {
@@ -271,381 +279,3 @@ export abstract class PulledVertexAttribute<
     }
 }
 
-export class VertexPositions3D
-    extends LoadableVertexAttribute<ATTRIBUTE.position, DIM._3D, Position3D, InputPositions>
-    implements IVertexPositions<DIM._3D, Matrix3x3, Position3D>
-{
-    readonly attribute = ATTRIBUTE.position;
-    readonly _ = transformableAttribute3DFunctions;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Position3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    protected _loadShared(input_attribute: InputPositions): void {
-        this.arrays[0].set(input_attribute.vertices[0]);
-        this.arrays[1].set(input_attribute.vertices[1]);
-        this.arrays[2].set(input_attribute.vertices[2]);
-    }
-
-    homogenize(out: VertexPositions4D): VertexPositions4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
-    imatmul(matrix: Matrix3x3): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix3x3, out: VertexPositions3D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-}
-
-export class VertexPositions4D
-    extends LoadableVertexAttribute<ATTRIBUTE.position, DIM._4D, Position4D, InputPositions>
-    implements IVertexPositions<DIM._4D, Matrix4x4, Position4D>
-{
-    readonly attribute = ATTRIBUTE.position;
-    readonly _ = positionAttribute4DFunctions;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Position4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    protected _loadShared(input_attribute: InputPositions): void {
-        this.arrays[0].set(input_attribute.vertices[0]);
-        this.arrays[1].set(input_attribute.vertices[1]);
-        this.arrays[2].set(input_attribute.vertices[2]);
-        this.arrays[3].fill(1);
-    }
-
-    protected _loadUnshared(input: InputPositions): void {
-        super._loadUnshared(input);
-
-        this.arrays[3].fill(1);
-    }
-
-    imatmul(matrix: Matrix4x4): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix4x4, out: VertexPositions4D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-
-    any_in_view(near: number, far: number): boolean {
-        return this._.in_view_any(this.arrays, near, far);
-    }
-
-    any_out_ofview(near: number, far: number): boolean {
-        return this._.out_of_view_any(this.arrays, near, far);
-    }
-}
-
-export class FacePositions3D
-    extends FaceAttribute<ATTRIBUTE.position, ATTRIBUTE.position, DIM._3D, Position3D, VertexPositions3D>
-    implements IFacePositions<DIM._3D, Matrix3x3, Position3D, VertexPositions3D>
-{
-    readonly attribute = ATTRIBUTE.position;
-    readonly _ = transformableAttribute3DFunctions;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Position3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    homogenize(out: FacePositions4D): FacePositions4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
-    imatmul(matrix: Matrix3x3): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix3x3, out: FacePositions3D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-
-}
-
-export class FacePositions4D
-    extends FaceAttribute<ATTRIBUTE.position, ATTRIBUTE.position, DIM._4D, Position4D, VertexPositions4D>
-{
-    readonly attribute = ATTRIBUTE.position;
-    readonly _ = positionAttribute4DFunctions;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Position4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    pull(input: VertexPositions4D): void {
-        super.pull(input);
-
-        this.arrays[3].fill(1);
-    }
-
-    imatmul(matrix: Matrix4x4): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix4x4, out: FacePositions4D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-
-    any_in_view(near: number, far: number): boolean {
-        return this._.in_view_any(this.arrays, near, far);
-    }
-
-    any_out_ofview(near: number, far: number): boolean {
-        return this._.out_of_view_any(this.arrays, near, far);
-    }
-}
-
-export class FaceColors3D
-    extends FaceAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._3D, Color3D, VertexColors3D>
-    implements IFaceColors<DIM._3D, Color3D>
-{
-    readonly attribute = ATTRIBUTE.color;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Color3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    generate(): void {
-        const [array_0, array_1, array_2] = this.arrays;
-
-        for (let i = 0; i < this.length; i++) {
-            array_0[i] = Math.random();
-            array_1[i] = Math.random();
-            array_2[i] = Math.random();
-        }
-    }
-
-    homogenize(out: FaceColors4D): FaceColors4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-}
-
-export class FaceColors4D
-    extends FaceAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._4D, Color4D, VertexColors4D>
-    implements IFaceColors<DIM._4D, Color4D> {
-    readonly attribute = ATTRIBUTE.color;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Color4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    generate(): void {
-        const [array_0, array_1, array_2, array_3] = this.arrays;
-
-        for (let i = 0; i < this.length; i++) {
-            array_0[i] = Math.random();
-            array_1[i] = Math.random();
-            array_2[i] = Math.random();
-            array_3[i] = Math.random();
-        }
-    }
-}
-
-const d1_3D = dir3();
-const d2_3D = dir3();
-const d1_4D = dir4();
-const d2_4D = dir4();
-
-export class FaceNormals3D
-    extends FaceAttribute<ATTRIBUTE.normal, ATTRIBUTE.position, DIM._3D, Direction3D, VertexPositions3D>
-    implements IFaceNormals<DIM._3D, Matrix3x3, Direction3D, VertexPositions3D>
-{
-    readonly _ = transformableAttribute3DFunctions;
-
-    readonly attribute = ATTRIBUTE.normal;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Direction3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    pull(vertex_positions: VertexPositions3D) {
-        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.faces())) {
-            p1.to(p2, d1_3D);
-            p1.to(p3, d2_3D);
-            d1_3D.cross(d2_3D).normalized(face_normal);
-        }
-    }
-
-    homogenize(out: FaceNormals4D): FaceNormals4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
-    imatmul(matrix: Matrix3x3): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix3x3, out: FaceNormals3D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-}
-
-export class FaceNormals4D
-    extends FaceAttribute<ATTRIBUTE.normal, ATTRIBUTE.position, DIM._4D, Direction4D, VertexPositions4D>
-    implements IFaceNormals<DIM._4D, Matrix4x4, Direction4D, VertexPositions4D>
-{
-    readonly _ = transformableAttribute4DFunctions;
-    readonly attribute = ATTRIBUTE.normal;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Direction4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    pull(vertex_positions: VertexPositions4D) {
-        for (const [face_normal, [p1, p2, p3]] of zip(this, vertex_positions.faces())) {
-            p1.to(p2, d1_4D);
-            p1.to(p3, d2_4D);
-            d1_4D.cross(d2_4D).normalized(face_normal);
-        }
-    }
-
-    imatmul(matrix: Matrix4x4): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix4x4, out: FaceNormals4D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-}
-
-export class VertexNormals3D
-    extends PulledVertexAttribute<ATTRIBUTE.normal, ATTRIBUTE.position, DIM._3D, Direction3D, InputNormals, FaceNormals3D>
-    implements IVertexNormals<DIM._3D, Matrix3x3, Direction3D>
-{
-    readonly attribute = ATTRIBUTE.normal;
-    readonly _ = transformableAttribute3DFunctions;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Direction3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    homogenize(out: VertexNormals4D): VertexNormals4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
-    imatmul(matrix: Matrix3x3): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix3x3, out: VertexNormals3D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-}
-
-export class VertexNormals4D
-    extends PulledVertexAttribute<ATTRIBUTE.normal, ATTRIBUTE.position, DIM._4D, Direction4D, InputNormals, FaceNormals4D>
-    implements IVertexNormals<DIM._4D, Matrix4x4, Direction4D>
-{
-    readonly attribute = ATTRIBUTE.normal;
-    readonly _ = transformableAttribute4DFunctions;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Direction4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    imatmul(matrix: Matrix4x4): void {
-        this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-    }
-
-    matmul(matrix: Matrix4x4, out: VertexNormals4D): void {
-        this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-    }
-}
-
-export class VertexColors3D
-    extends PulledVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._3D, Color3D, InputColors, FaceColors3D>
-    implements IVertexColors<DIM._3D, Color3D> {
-    readonly attribute = ATTRIBUTE.color;
-
-    readonly dim = DIM._3D;
-    readonly Vector = Color3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    homogenize(out: VertexColors4D): VertexColors4D {
-        out.setFrom(this);
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
-    generate(): void {
-        const [array_0, array_1, array_2] = this.arrays;
-
-        for (let i = 0; i < this.length; i++) {
-            array_0[i] = Math.random();
-            array_1[i] = Math.random();
-            array_2[i] = Math.random();
-        }
-    }
-}
-
-export class VertexColors4D
-    extends PulledVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._4D, Color4D, InputColors, FaceColors4D>
-    implements IVertexColors<DIM._4D, Color4D>
-{
-    readonly attribute = ATTRIBUTE.color;
-
-    readonly dim = DIM._4D;
-    readonly Vector = Color4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-
-    generate(): void {
-        const [array_0, array_1, array_2, array_3] = this.arrays;
-
-        for (let i = 0; i < this.length; i++) {
-            array_0[i] = Math.random();
-            array_1[i] = Math.random();
-            array_2[i] = Math.random();
-            array_3[i] = Math.random();
-        }
-    }
-}
-
-export class VertexUVs2D
-    extends LoadableVertexAttribute<ATTRIBUTE.uv, DIM._2D, UV2D, InputUVs>
-    implements IVertexUVs<DIM._2D, UV2D>
-{
-    readonly attribute = ATTRIBUTE.uv;
-
-    readonly dim = DIM._2D;
-    readonly Vector = UV2D;
-    readonly allocator = VECTOR_2D_ALLOCATOR;
-
-    homogenize(out: VertexUVs3D): VertexUVs3D {
-        out.setFrom(this);
-        out.arrays[2].fill(1);
-
-        return out;
-    }
-
-}
-
-export class VertexUVs3D
-    extends LoadableVertexAttribute<ATTRIBUTE.uv, DIM._3D, UV3D, InputUVs>
-    implements IVertexUVs<DIM._3D, UV3D>
-{
-    readonly attribute = ATTRIBUTE.uv;
-
-    readonly dim = DIM._3D;
-    readonly Vector = UV3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-}

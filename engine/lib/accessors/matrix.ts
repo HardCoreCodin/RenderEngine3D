@@ -171,7 +171,6 @@ export class Matrix3x3
 
     public readonly i: Direction2D;
     public readonly j: Direction2D;
-    public readonly k: Direction2D;
 
     public readonly pos2: Position2D;
     public readonly mat2: Matrix2x2;
@@ -183,7 +182,6 @@ export class Matrix3x3
 
         this.i = new Direction2D(id, [arrays[0], arrays[1]]);
         this.j = new Direction2D(id, [arrays[3], arrays[4]]);
-        this.k = new Direction2D(id, [arrays[6], arrays[7]]);
 
         this.pos2 = new Position2D(id, [arrays[6], arrays[7]]);
         this.mat2 = new Matrix2x2(this.id, [

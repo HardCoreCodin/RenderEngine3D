@@ -1,12 +1,26 @@
 import {ATTRIBUTE, DIM, FACE_TYPE} from "../../constants.js";
 import {IBuffer, IFaceVertices, IVertexFaces} from "./buffers.js";
-import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
-import {IColor, IDirection, IPosition, ITransformableVector, IUV, IVector, VectorConstructor} from "./vectors.js";
-import {ITransformableAttributeFunctionSet} from "./functions.js";
-import {Matrix3x3} from "../accessors/matrix.js";
-import {IMatrix} from "./matrix.js";
-import {Attribute} from "../geometry/attributes.js";
+import {AnyConstructor, FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
+import {
+    IColor,
+    IDirection, IDirection3D, IDirection4D,
+    IPosition,
+    IPosition3D, IPosition4D,
+    ITransformableVector,
+    IUV,
+    IVector,
+    VectorConstructor
+} from "./vectors.js";
+import {
+    IDirectionAttribute3DFunctionSet, IDirectionAttribute4DFunctionSet,
+    IPositionAttribute3DFunctionSet,
+    ITransformableAttributeFunctionSet
+} from "./functions.js";
+import {IMatrix, IMatrix3x3, IMatrix4x4} from "./matrix.js";
 
+export interface ITriangle<VectorType extends IVector> {
+    vertices: [VectorType, VectorType, VectorType]
+}
 
 export interface IInputAttribute {
     dim: DIM;
@@ -37,43 +51,32 @@ export interface IAttribute<
 
     Vector: VectorConstructor<VectorType>;
     [Symbol.iterator](): Generator<VectorType>;
-    setFrom(other: IAttribute<Attribute, DIM._2D|DIM._3D|DIM._4D, IVector>);
+    setFrom(other: IAttribute<Attribute, DIM._2D|DIM._3D|DIM._4D, IVector>): this;
 }
 
 export interface ITransformableAttribute<
     Attribute extends ATTRIBUTE,
     Dim extends DIM,
     MatrixType extends IMatrix = IMatrix,
-    VectorType extends ITransformableVector<MatrixType> = ITransformableVector<MatrixType>,
-    OutAttribute extends IAttribute<Attribute, Dim, VectorType> = IAttribute<Attribute, Dim, VectorType>>
+    VectorType extends ITransformableVector<MatrixType> = ITransformableVector<MatrixType>>
     extends IAttribute<Attribute, Dim, VectorType>
 {
     _: ITransformableAttributeFunctionSet<Dim>;
 
-    imatmul(matrix: MatrixType): void;
-    matmul(matrix: MatrixType, out: OutAttribute): void;
+    matmul(matrix: MatrixType, out?: this): this;
 }
 
 export interface IPositionAttribute<
     Dim extends DIM,
     MatrixType extends IMatrix = IMatrix,
     Position extends IPosition<Dim, MatrixType> = IPosition<Dim, MatrixType>>
-    extends ITransformableAttribute<
-        ATTRIBUTE.position,
-        Dim, MatrixType,
-        Position,
-        IAttribute<ATTRIBUTE.position, Dim, Position>> {}
+    extends ITransformableAttribute<ATTRIBUTE.position, Dim, MatrixType, Position> {}
 
 export interface INormalAttribute<
     Dim extends DIM,
     MatrixType extends IMatrix = IMatrix,
     Direction extends IDirection<Dim, MatrixType> = IDirection<Dim, MatrixType>>
-    extends ITransformableAttribute<
-        ATTRIBUTE.normal,
-        Dim,
-        MatrixType,
-        Direction,
-        IAttribute<ATTRIBUTE.normal, Dim, Direction>> {}
+    extends ITransformableAttribute<ATTRIBUTE.normal, Dim, MatrixType, Direction> {}
 
 export interface IColorAttribute<
     Dim extends DIM,
@@ -87,7 +90,9 @@ export interface IVertexAttribute<
     extends IAttribute<Attribute, Dim, VectorType>
 {
     readonly is_shared: boolean;
-    faces(): Generator<[VectorType, VectorType, VectorType]>;
+    readonly triangles: Generator<ITriangle<VectorType>>;
+    current_triangle: ITriangle<VectorType>;
+    Triangle: AnyConstructor<ITriangle<VectorType>>;
 }
 
 export interface ILoadableVertexAttribute<
@@ -120,6 +125,22 @@ export interface IVertexPositions<
         IPositionAttribute<Dim, MatrixType, Position>,
         ILoadableVertexAttribute<ATTRIBUTE.position, Dim, Position> {}
 
+export interface IVertexPositions3D<
+    MatrixType extends IMatrix3x3 = IMatrix3x3,
+    Position extends IPosition3D = IPosition3D>
+    extends IVertexPositions<DIM._3D, MatrixType, Position>
+{
+    _: IPositionAttribute3DFunctionSet;
+
+    mat4mul(matrix: IMatrix4x4, out: IVertexPositions4D): IVertexPositions4D;
+}
+
+export interface IVertexPositions4D<
+    MatrixType extends IMatrix4x4 = IMatrix4x4,
+    Position extends IPosition4D = IPosition4D>
+    extends IVertexPositions<DIM._4D, MatrixType, Position>
+{}
+
 export interface IVertexNormals<
     Dim extends DIM,
     MatrixType extends IMatrix = IMatrix,
@@ -128,17 +149,43 @@ export interface IVertexNormals<
         INormalAttribute<Dim, MatrixType, Direction>,
         IPullableVertexAttribute<ATTRIBUTE.normal, ATTRIBUTE.position, Dim, Direction, IInputNormals> {}
 
+export interface IVertexNormals3D<
+    MatrixType extends IMatrix3x3 = IMatrix3x3,
+    Direction extends IDirection3D = IDirection3D>
+    extends IVertexNormals<DIM._3D, MatrixType, Direction>
+{
+    _: IDirectionAttribute3DFunctionSet;
+
+    mat4mul(matrix: IMatrix4x4, out: IVertexNormals4D): IVertexNormals4D;
+    normalize(): this;
+}
+
+export interface IVertexNormals4D<
+    MatrixType extends IMatrix4x4 = IMatrix4x4,
+    Direction extends IDirection4D = IDirection4D>
+    extends IVertexNormals<DIM._4D, MatrixType, Direction>
+{
+    _: IDirectionAttribute4DFunctionSet;
+
+    normalize(): this;
+}
+
 export interface IVertexColors<
     Dim extends DIM,
     Color extends IColor = IColor,
     FaceColors extends IFaceColors<Dim, Color> = IFaceColors<Dim, Color>>
     extends
         IColorAttribute<Dim, Color>,
-        IPullableVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, Dim, Color, IInputColors, FaceColors> {}
+        IPullableVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, Dim, Color, IInputColors, FaceColors>
+{
+    _: IDirectionAttribute4DFunctionSet;
+
+    normalize(): this;
+}
 
 export interface IVertexUVs<
     Dim extends DIM,
-    UV extends IUV>
+    UV extends IUV = IUV>
     extends ILoadableVertexAttribute<ATTRIBUTE.uv, Dim, UV, IInputUVs> {}
 
 export interface IFaceAttribute<

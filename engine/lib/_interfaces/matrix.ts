@@ -52,7 +52,6 @@ export interface IMatrix3x3
 
     i: IDirection2D;
     j: IDirection2D;
-    k: IDirection2D;
 
     m11: number;
     m12: number;

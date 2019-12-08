@@ -2,16 +2,6 @@ import {MeshOptions} from "./options.js";
 import {ATTRIBUTE, DIM} from "../../constants.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {
-    VertexColors3D,
-    VertexColors4D,
-    VertexNormals3D,
-    VertexNormals4D,
-    VertexPositions3D,
-    VertexPositions4D,
-    VertexUVs2D,
-    VertexUVs3D
-} from "./attributes.js";
-import {
     IVertexColors,
     IVertexColorsConstructor,
     IVertexNormals,
@@ -19,6 +9,11 @@ import {
     IVertexPositions,
     IVertexPositionsConstructor, IVertexUVs, IVertexUVsConstructor
 } from "../_interfaces/attributes.js";
+import {Matrix4x4} from "../accessors/matrix.js";
+import {VertexPositions3D, VertexPositions4D} from "./positions.js";
+import {VertexNormals3D, VertexNormals4D} from "./normals.js";
+import {VertexColors3D, VertexColors4D} from "./colors.js";
+import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 
 
 abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
@@ -37,27 +32,32 @@ abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
     public uvs: IVertexUVs<UVDim>|null;
 
     constructor(
-        face_vertices: IFaceVertices,
-        mesh_options: MeshOptions
+        public face_vertices: IFaceVertices,
+        public mesh_options: MeshOptions,
+
+        positions?: IVertexPositions<PositionDim>,
+        normals?: IVertexNormals<NormalDim>,
+        colors?: IVertexColors<ColorDim>,
+        uvs?: IVertexUVs<UVDim>,
     ) {
         const included = mesh_options.vertex_attributes;
 
-        this.positions = new this.VertexPositions(
+        this.positions = positions || new this.VertexPositions(
             face_vertices,mesh_options.share & ATTRIBUTE.position
         );
 
         this.normals = included & ATTRIBUTE.normal ?
-            new this.VertexNormals(
+            normals || new this.VertexNormals(
                 face_vertices,mesh_options.share & ATTRIBUTE.normal
             ) : null;
 
         this.colors = included & ATTRIBUTE.color ?
-            new this.VertexColors(
+            colors || new this.VertexColors(
                 face_vertices,mesh_options.share & ATTRIBUTE.color
             ) : null;
 
         this.uvs = included & ATTRIBUTE.uv ?
-            new this.VertexUVs(
+            uvs || new this.VertexUVs(
                 face_vertices,mesh_options.share & ATTRIBUTE.color
             ) : null;
     }
@@ -74,6 +74,26 @@ export class Vertices3D extends Vertices<DIM._3D>
     public normals: VertexNormals3D;
     public colors: VertexColors3D;
     public uvs: VertexUVs2D;
+
+    // homogenize(out?: Vertices4D): Vertices4D {
+    //     if (out) {
+    //         this.positions.homogenize(out.positions);
+    //         this.normals!.homogenize(out.normals);
+    //         this.colors!.homogenize(out.colors);
+    //         this.uvs!.homogenize(out.uvs);
+    //         return out;
+    //     }
+    //
+    //     return new Vertices4D(
+    //         this.face_vertices,
+    //         this.mesh_options,
+    //
+    //         this.positions.homogenize(),
+    //         this.normals!.homogenize(),
+    //         this.colors!.homogenize(),
+    //         this.uvs!.homogenize()
+    //     );
+    // }
 }
 
 export class Vertices4D extends Vertices<DIM._4D> {
@@ -86,6 +106,18 @@ export class Vertices4D extends Vertices<DIM._4D> {
     public normals: VertexNormals4D;
     public colors: VertexColors4D;
     public uvs: VertexUVs3D;
+
+    mul(matrix: Matrix4x4, out?: this): this {
+        if (out) {
+            this.positions.mul(matrix, out.positions);
+            this.normals!.mul(matrix, out.normals);
+            return out;
+        }
+
+        this.positions.mul(matrix);
+        this.normals!.mul(matrix);
+        return this;
+    }
 }
 
 

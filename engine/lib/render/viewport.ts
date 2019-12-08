@@ -1,16 +1,16 @@
 import Camera from "./camera.js";
 import RenderTarget from "./target.js";
 import RenderPipeline from "./pipelines.js";
-import {mat4} from "../accessors/matrix.js";
+import {mat3, mat4} from "../accessors/matrix.js";
 import {IVector2D} from "../_interfaces/vectors.js";
 import {IRectangle, IViewport} from "../_interfaces/render.js";
 
 export default class Viewport
     implements IViewport
 {
-    readonly view_matrix = mat4();
-    readonly clip_matrix = mat4();
-    readonly screen_matrix = mat4();
+    readonly world_to_view = mat4();
+    readonly world_to_clip = mat4();
+    readonly ndc_to_screen = mat3();
 
     aspect_ratio: number;
     aspect_ratio_has_changed: boolean = false;
@@ -46,15 +46,15 @@ export default class Viewport
         }
 
         if (this.camera_hase_moved_or_rotated) {
-            this.camera.transform.matrix.inverted(this.view_matrix);
-            this.view_matrix.times(this.camera.projection_matrix, this.clip_matrix);
+            this.camera.transform.matrix.inverted(this.world_to_view);
+            this.world_to_view.times(this.camera.projection_matrix, this.world_to_clip);
             this.camera_hase_moved_or_rotated = false;
         }
 
         if (this.size_has_changed) {
-            this.screen_matrix.i.x = this.screen_matrix.pos3.x = this.size.width * 0.5;
-            this.screen_matrix.j.y = this.screen_matrix.pos3.y = this.size.height * 0.5;
-            this.screen_matrix.j.y *= -1;
+            this.ndc_to_screen.i.x = this.ndc_to_screen.pos2.x = this.size.width * 0.5;
+            this.ndc_to_screen.j.y = this.ndc_to_screen.pos2.y = this.size.height * 0.5;
+            this.ndc_to_screen.j.y = -this.ndc_to_screen.j.y;
             // this.depth_buffer = new Float32Array(this.screen.width * this.screen.height);
             this.size_has_changed = false;
         }

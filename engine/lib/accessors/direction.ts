@@ -6,6 +6,7 @@ import {direction2DFunctions} from "../math/vec2.js";
 import {direction4DFunctions} from "../math/vec4.js";
 import {direction3DFunctions} from "../math/vec3.js";
 import {ICrossedDirection, IDirection, IDirection2D, IDirection3D, IDirection4D} from "../_interfaces/vectors.js";
+import {Position4D} from "./position.js";
 
 export abstract class Direction<Dim extends DIM, MatrixType extends Matrix>
     extends TransformableVector<MatrixType>
@@ -144,6 +145,16 @@ export class Direction3D
         );
 
         return this;
+    }
+
+    mat4mul(matrix: Matrix4x4, out: Direction4D = new Direction4D()): Direction4D {
+        this._.matrix_multiply_direction_by_mat4(
+            this.id, this.arrays,
+            matrix.id, matrix.arrays,
+            out.id, out.arrays
+        );
+
+        return out;
     }
 
     set x(x: number) {this.arrays[0][this.id] = x}

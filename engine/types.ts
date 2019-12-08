@@ -1,5 +1,5 @@
 export const IntArray = Uint32Array;
-export type IntArray = Uint32Array;
+export type IntArray = Uint32Array|Uint16Array|Uint32Array;
 
 export const FloatArray = Float32Array;
 export type FloatArray = Float32Array;
