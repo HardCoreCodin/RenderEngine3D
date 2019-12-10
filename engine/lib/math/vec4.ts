@@ -242,45 +242,45 @@ const normalize = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     o: number, [Xo, Yo, Zo, Wo]: Float4
 ) : void => {
-    t_n = Math.hypot(
+    t_n = 1 / Math.hypot(
         Xa[a],
         Ya[a],
         Za[a],
         Wa[a]
     );
 
-    Xo[o] = Xa[a] / t_n;
-    Yo[o] = Ya[a] / t_n;
-    Zo[o] = Za[a] / t_n;
-    Wo[o] = Wa[a] / t_n;
+    Xo[o] = Xa[a] * t_n;
+    Yo[o] = Ya[a] * t_n;
+    Zo[o] = Za[a] * t_n;
+    Wo[o] = Wa[a] * t_n;
 };
 
 const normalize_in_place = (
     a: number, [Xa, Ya, Za, Wa]: Float4
 ) : void => {
-    t_n = Math.hypot(
+    t_n = 1 / Math.hypot(
         Xa[a],
         Ya[a],
         Za[a],
         Wa[a]
     );
 
-    Xa[a] /= t_n;
-    Ya[a] /= t_n;
-    Za[a] /= t_n;
-    Wa[a] /= t_n;
+    Xa[a] *= t_n;
+    Ya[a] *= t_n;
+    Za[a] *= t_n;
+    Wa[a] *= t_n;
 };
 
 const normalize_all_in_place = (
     [X, Y, Z, W]: Float4
 ) : void => {
     for (let i = 0; i < X.length; i++) {
-        t_n = Math.hypot(X[i], Y[i], Z[i], W[i] );
+        t_n = 1 / Math.hypot(X[i], Y[i], Z[i], W[i] );
 
-        X[i] /= t_n;
-        Y[i] /= t_n;
-        Z[i] /= t_n;
-        W[i] /= t_n;
+        X[i] *= t_n;
+        Y[i] *= t_n;
+        Z[i] *= t_n;
+        W[i] *= t_n;
     }
 };
 

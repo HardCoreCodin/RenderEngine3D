@@ -192,25 +192,25 @@ const normalize = (
     a: number, [Xa, Ya]: Float2,
     o: number, [Xo, Yo]: Float2
 ): void => {
-    t_n = Math.hypot(
+    t_n = 1 / Math.hypot(
         Xa[a],
         Ya[a]
     );
 
-    Xo[o] = Xa[a] / t_n;
-    Yo[o] = Ya[a] / t_n;
+    Xo[o] = Xa[a] * t_n;
+    Yo[o] = Ya[a] * t_n;
 };
 
 const normalize_in_place = (
     a: number, [Xa, Ya]: Float2
 ): void => {
-    t_n = Math.hypot(
+    t_n = 1 / Math.hypot(
         Xa[a],
         Ya[a]
     );
 
-    Xa[a] /= t_n;
-    Ya[a] /= t_n;
+    Xa[a] *= t_n;
+    Ya[a] *= t_n;
 };
 
 const dot = (

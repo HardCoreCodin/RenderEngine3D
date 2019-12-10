@@ -1,4 +1,4 @@
-import {Float2, Float4, T2, T3} from "../../types.js";
+import {Float4, T3} from "../../types.js";
 
 // Culling flags:
 // ======================
@@ -8,56 +8,77 @@ export const BELOW = 0b0000_0100;
 export const ABOVE = 0b0000_1000;
 export const RIGHT = 0b0001_0000;
 export const LEFT  = 0b0010_0000;
-export const CULL  = 0b0100_0000;
 export const ALL   = 0b0011_1111;
+export const NDC   = 0b0100_0000;
+export const NDCE  = 0b1000_0000;
 
 // Clipping flags:
 // ===============
-export const INSIDE  = 0b0000;
-export const V1_NEAR = 0b0001;
-export const V2_NEAR = 0b0010;
-export const V3_NEAR = 0b0100;
-export const CLIP    = 0b0111;
+export const CULL    = 0b0000;
+export const CLIP    = 0b0001;
+export const INSIDE  = 0b0010;
+export const INEXTRA = 0b0100;
 
 let directions,
     shared_directions,
 
-    face,
+    face_count,
     face_area,
     face_index,
-    extra,
 
     one_over_w, w, x, y, z,
-    one_minus_t, t,
+    one_minus_t_1, t_1,
+    one_minus_t_2, t_2,
 
-    v1, x1, y1,
-    v2, x2, y2,
-    v3, x3, y3,
+    v1_flags, x1, y1,
+    v2_flags, x2, y2,
+    v3_flags, x3, y3,
 
-    from_index,
-    to_index,
+    first_vertex_inside,
+    first_vertex_inside_z,
 
-    first_vertex_inside, second_vertex_inside,
-    first_vertex_outside, second_Vertex_outside,
+    first_vertex_outside,
+    first_vertex_outside_z,
+
+    second_vertex_outside,
+    second_vertex_outside_z,
+
+    second_vertex_inside,
+    second_vertex_inside_z,
+
+    normal_x,
+    normal_y,
+    normal_z,
+    normal_length_rcp,
+
+    uv_index_from,
+    uv_index_to,
 
     v1_index,
     v2_index,
     v3_index: number;
 
 let has_inside,
-    has_near,
-    has_front_facing: boolean;
+    has_near;
 
-export const frustumCheck = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
+export const cullAndClip = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
     [X, Y, Z, W]: Float4,
-    [
-        indices_v1,
-        indices_v2,
-        indices_v3
-    ]: T3<FaceVerticesArrayType>,
+    [Xo, Yo, Zo, Wo]: Float4,
+    [Xe, Ye, Ze, We]: Float4,
+    [indices_v1, indices_v2, indices_v3]: T3<FaceVerticesArrayType>,
 
     vertex_flags: Uint8Array,
-    face_flags: Uint8Array
+    face_flags: Uint8Array,
+    face_areas?: Float32Array,
+    extra_face_areas?: Float32Array,
+
+    Xn?: Float32Array, Yn?: Float32Array, Zn?: Float32Array,
+    Xno?: Float32Array, Yno?: Float32Array, Zno?: Float32Array,
+    Xne?: Float32Array, Yne?: Float32Array, Zne?: Float32Array,
+
+    U?: Float32Array, V?: Float32Array,
+    Uo?: Float32Array, Vo?: Float32Array,
+    Ue?: Float32Array, Ve?: Float32Array,
 ): number => {
     // This is a 2-phaze process:
     // ==========================
@@ -85,7 +106,9 @@ export const frustumCheck = <FaceVerticesArrayType extends Uint8Array|Uint16Arra
     //
     // Phase 1 - Check vertex positions against the frustum:
     // =====================================================
-    vertex_flags.fill(0);
+    vertex_flags.fill(CULL);
+    face_flags.fill(CULL);
+
     directions = ALL;
     has_inside = has_near = false;
     for (let i = 0; i < X.length; i++) {
@@ -125,8 +148,10 @@ export const frustumCheck = <FaceVerticesArrayType extends Uint8Array|Uint16Arra
             // A. All vertices are inside the frustum - no need for face clipping.
             // B. All vertices are outside the frustum in at least one direction shared by all.
             //   (All vertises are above and/or all vertices on the left and/or all vertices behind, etc.)
-        } else
+        } else {
             has_inside = true;
+            vertex_flags[i] = INSIDE;
+        }
     }
 
     if (!has_inside && shared_directions)
@@ -144,165 +169,62 @@ export const frustumCheck = <FaceVerticesArrayType extends Uint8Array|Uint16Arra
 
     // Phase 2: Check face intersections against the frustum:
     // ------------------------------------------------------
-    face = 0;
     has_inside = has_near = false;
-    for (let face_index = 0; face_index < indices_v1.length; face_index++) {
+    face_count = indices_v1.length;
+    for (face_index = 0; face_index < face_count; face_index++) {
         v1_index = indices_v1[face_index];
         v2_index = indices_v2[face_index];
         v3_index = indices_v3[face_index];
 
-        v1 = vertex_flags[v1_index];
-        v2 = vertex_flags[v2_index];
-        v3 = vertex_flags[v3_index];
+        v1_flags = vertex_flags[v1_index];
+        v2_flags = vertex_flags[v2_index];
+        v3_flags = vertex_flags[v3_index];
 
-        if (v1 | v2 | v3) {
+        if (v1_flags | v2_flags | v3_flags) {
             // One or more vertices are outside - check edges for intersections:
-            if (v1 & v2 & v3) {
+            if (v1_flags & v2_flags & v3_flags) {
                 // All vertices share one or more out-direction(s).
-                // The face is fully outside the frustum, and does not intersect it - cull it.
-                face_flags[face_index] = CULL;
+                // The face is fully outside the frustum, and does not intersect it.
                 // Note: This includes the cases where all 3 vertices are "behind" the view frustum.
                 // In these cases the "behind" direction would be "a" direction that is shared.
                 // Below there are checks for when "any" of the vertices are "behind",
                 // Becuse the cases of 3 of them behind is skipped here, then below would only be
                 // handling case where only 1 or 2 of the vertices are behind.
-                // If all of them are behind, we skip the face here.
+                // If all of them are behind, the face is skipped here.
+                continue;
+            } // else:
+            // One or more vertices are outside, and no out-direction is shared across them.
+            // The face is visible in the view frustum in some way.
+
+            // If no clipping is asked for, there is nothing more that can be done here.
+            // Back-face culling happens after perspective-divide, which can not happen without clipping.
+            if (!face_areas) {
+                has_inside = true;
+                face_flags[face_index] = INSIDE;
                 continue;
             }
 
-            // One or more vertices are outside, and no out-direction is shared across them.
-            // The face is visible in the view frustum in some way.
-            // It's vertices should not be culled:
-            if (v1 & CULL) vertex_flags[v1_index] -= CULL;
-            if (v2 & CULL) vertex_flags[v2_index] -= CULL;
-            if (v3 & CULL) vertex_flags[v3_index] -= CULL;
-            // Note: Re-including the vertices could have ran the rist of a division-by-zero
-            // at the perspective devide step - however, this face will be clipped before that,
-            // so whichever vertex is behind the near clipping plane now, will be clamped to it by then.
-            // If no vertex is behind the view frustum, then no clipping will occur,
-            // but the face is still (potentially) visible in some way, so pesrpective-devide needs to
-            // occur on it's vertices. It may later be deemed back-facing and 'then' culled,
-            // but for that to be able to happen it needs to pass through the perspective-devide,
-            // such that back-face culling can be applied on it in screen-space.
-
-            // If any vertex is behind the view frustum, the face needs to be clipped:
-            face = 0;
-            if (v1 & NEAR) face |= V1_NEAR;
-            if (v2 & NEAR) face |= V2_NEAR;
-            if (v3 & NEAR) face |= V3_NEAR;
-            if (face) has_near = true;
-
-            face_flags[face_index] = face;
-            // Note: Even if no vertices are behind the view frustum,
-            // the face is still visible in the view frustum somehow,
-            // even though all it's vertices are outside of it.
-            // It either intersects the frustum in direction(s) other than the near clipping plane,
-            // or it may fully surrounding the whole view frustum.
-            // No geometric clipping is needed, but the face can not be culled at this point.
-        } else {
-            // No vertices are outside the frustum (the face is fully within it).
-            has_inside = true;
-            face_flags[face_index] = INSIDE;
-        }
-    }
-
-    return (
-        has_near ? CLIP :
-        has_inside ? INSIDE :
-        CULL
-    );
-};
-//
-// const sendToNearClippingPlane = (
-//     X: Float32Array,
-//     Y: Float32Array,
-//     Z: Float32Array,
-//     W: Float32Array,
-//
-//     from_index: number,
-//     to_index: number
-// ) => {
-//     const to_z = Z[to_index];
-//     const from_z = Z[from_index];
-//     const t = from_z / (from_z - to_z);
-//     const one_minus_t = 1 - t;
-//
-//     W[to_index] = one_minus_t*W[from_index] + t*W[to_index];
-//     X[to_index] = one_minus_t*X[from_index] + t*X[to_index];
-//     Y[to_index] = one_minus_t*Y[from_index] + t*Y[to_index];
-//     Z[to_index] = one_minus_t*from_z + t*to_z;
-// };
-
-
-export const perspectiveDevide = (
-    [X, Y, Z, W]: Float4,
-    vertex_flags: Uint8Array
-): void => {
-    for (let i = 0; i < X.length; i++)
-        if (CULL & vertex_flags[i]) {
-            one_over_w = 1.0 / W[i];
-            X[i] *= one_over_w;
-            Y[i] *= one_over_w;
-            Z[i] *= one_over_w;
-            W[i] *= one_over_w;
-        }
-};
-
-export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
-    [X, Y, Z, W]: Float4,
-    [indices_v1, indices_v2, indices_v3]: T3<FaceVerticesArrayType>,
-
-    face_flags: Uint8Array,
-    vertex_flags: Uint8Array,
-
-    [T_1, ONE_MINUS_T_1]: Float2,
-    [T_2, ONE_MINUS_T_2]: Float2,
-    [FROM_INDEX_1, TO_INDEX_1]: T2<FaceVerticesArrayType>,
-    [FROM_INDEX_2, TO_INDEX_2]: T2<FaceVerticesArrayType>,
-
-    [X_extra, Y_extra, Z_extra, W_extra]: Float4,
-
-    extra_face_flags: Uint8Array,
-    extra_vertex_flags: Uint8Array,
-
-    // [indices_v1_extra, indices_v2_extra, indices_v3_extra]: T3<FaceVerticesArrayType>,
-    [EXTRA_T_1, EXTRA_ONE_MINUS_T_1]: Float2,
-    [EXTRA_T_2, EXTRA_ONE_MINUS_T_2]: Float2,
-    [EXTRA_FROM_INDEX_1, EXTRA_TO_INDEX_1]: T2<FaceVerticesArrayType>,
-    [EXTRA_FROM_INDEX_2, EXTRA_TO_INDEX_2]: T2<FaceVerticesArrayType>,
-): number => {
-    extra = 0;
-    extra_face_flags.fill(CULL);
-    extra_vertex_flags.fill(CULL);
-
-    for (face_index = 0; face_index < indices_v1.length; face_index++) {
-        face = face_flags[face_index];
-        if (CLIP & face) {
-            face_flags[face_index] = INSIDE;
-
-            v1_index = indices_v1[face_index];
-            v2_index = indices_v2[face_index];
-            v3_index = indices_v3[face_index];
-
+            // Check if any vertex is behind the view frustum:
             second_vertex_inside = -1;
-            if (face & V1_NEAR) {
+            first_vertex_outside = -1;
+            if (v1_flags & NEAR) {
                 first_vertex_outside = v1_index;
-                if (face & V2_NEAR) {
-                    second_Vertex_outside = v2_index;
+                if (v2_flags & NEAR) {
+                    second_vertex_outside = v2_index;
                     first_vertex_inside = v3_index;
                 } else {
                     first_vertex_inside = v2_index;
-                    if (face & V3_NEAR)
-                        second_Vertex_outside = v3_index;
+                    if (v3_flags & NEAR)
+                        second_vertex_outside = v3_index;
                     else
                         second_vertex_inside = v3_index;
                 }
             } else {
                 first_vertex_inside = v1_index;
-                if (face & V2_NEAR) {
+                if (v2_flags & NEAR) {
                     first_vertex_outside = v2_index;
-                    if (face & V3_NEAR)
-                        second_Vertex_outside = v3_index;
+                    if (v3_flags & NEAR)
+                        second_vertex_outside = v3_index;
                     else
                         second_vertex_inside = v3_index;
                 } else {
@@ -311,159 +233,241 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 }
             }
 
-            // Break the input triangle into smaller output triangle(s).
-            // There are 2 possible cases:
-            if (second_vertex_inside === -1) {
-                // Only one vertex is inside the frustum.
-                // The triangle just needs to get smaller.
-                // The two new vertices need to be on the near clipping plane:
+            if (first_vertex_outside === -1) {
+                // There is at least one vertex behind the near clipping ploane.
+                // There face needs to be clipped:
 
-                from_index = FROM_INDEX_1[face_index] = first_vertex_inside;
-                to_index = TO_INDEX_1[face_index] = first_vertex_outside;
-                t = T_1[face_index] = Z[from_index] / (Z[from_index] - Z[to_index]);
-                one_minus_t = ONE_MINUS_T_1[face_index] = 1 - t;
+                // Break the input triangle into smaller output triangle(s)/
+                // There are 2 possible cases:
+                // 1: One vertex is inside the frustum, and the other two are behind the near clipping plane..
+                //    The triangle just needs to get smaller by having it's 2 ouside-vertices
+                //    moved right up-to the near clipping plane itself.
+                // 2: Two vertices are inside the frustum, and the third one is behind the near clipping plane.
+                //    Clipping forms a quad which needs to be split into 2 triangles.
+                //    The first one is formed from the original one, by moving the vertex that is behind the
+                //    clipping plane right up-to the near clipping plane itself (exactly as in the first case).
+                //    The second triangle is a new triangle that needs to be created, from the 2 vertices that
+                //    are inside, plus a new vertex that would need to be interpolated by moving the same vertex
+                //    that is outside up-to the near clipping plane but towars the other vertex that is inside.
+                //    Obviously the same vertex can-not be moved to 2 different places, so the vertex position
+                //    needs to be stored so it can be interpolated again.
 
-                W[to_index] = one_minus_t*W[from_index] + t*W[to_index];
-                X[to_index] = one_minus_t*X[from_index] + t*X[to_index];
-                Y[to_index] = one_minus_t*Y[from_index] + t*Y[to_index];
-                Z[to_index] = one_minus_t*Z[from_index] + t*Z[to_index];
+                first_vertex_inside_z = Z[first_vertex_inside];
+                first_vertex_outside_z = Z[first_vertex_outside];
 
+                if (vertex_flags[first_vertex_outside] < NDC) {
+                    t_1 = first_vertex_inside_z / (first_vertex_inside_z - first_vertex_outside_z);
+                    one_minus_t_1 = 1 - t_1;
+                    Wo[first_vertex_outside] = t_1*W[first_vertex_outside] + one_minus_t_1*W[first_vertex_inside];
+                    Xo[first_vertex_outside] = t_1*X[first_vertex_outside] + one_minus_t_1*X[first_vertex_inside];
+                    Yo[first_vertex_outside] = t_1*Y[first_vertex_outside] + one_minus_t_1*Y[first_vertex_inside];
+                    Zo[first_vertex_outside] = t_1*Z[first_vertex_outside] + one_minus_t_1*first_vertex_inside_z;
+                }
 
-                from_index = FROM_INDEX_2[face_index] = first_vertex_inside;
-                to_index = TO_INDEX_2[face_index] = second_Vertex_outside;
-                t = T_2[face_index] = Z[from_index] / (Z[from_index] - Z[to_index]);
-                one_minus_t = ONE_MINUS_T_2[face_index] = 1 - t;
+                if (second_vertex_inside === -1) {
+                    // Only one vertex is inside the frustum.
+                    // The triangle just needs to get smaller.
+                    // The two new vertices need to be on the near clipping plane:
+                    if (vertex_flags[second_vertex_outside] < NDC) {
+                        second_vertex_outside_z = Z[second_vertex_outside];
+                        t_2 = first_vertex_inside_z / (first_vertex_inside_z - second_vertex_outside_z);
+                        one_minus_t_2 = 1 - t_2;
+                        Wo[second_vertex_outside] = t_2 * W[second_vertex_outside] + one_minus_t_2 * W[first_vertex_inside];
+                        Xo[second_vertex_outside] = t_2 * X[second_vertex_outside] + one_minus_t_2 * X[first_vertex_inside];
+                        Yo[second_vertex_outside] = t_2 * Y[second_vertex_outside] + one_minus_t_2 * Y[first_vertex_inside];
+                        Zo[second_vertex_outside] = t_2 * second_vertex_outside_z + one_minus_t_2 * first_vertex_inside_z;
+                    }
+                } else {
+                    // Two vertices are inside the frustum.
+                    // Clipping forms a quad which needs to be split into 2 triangles.
+                    // The first is the original (only smaller, as above).
+                    if (vertex_flags[first_vertex_outside] < NDCE) {
+                        second_vertex_inside_z = Z[second_vertex_inside];
+                        t_2 = second_vertex_inside_z / (second_vertex_inside_z - first_vertex_outside_z);
+                        one_minus_t_2 = 1 - t_2;
+                        We[first_vertex_outside] = t_1 * W[first_vertex_outside] + one_minus_t_1 * W[second_vertex_inside];
+                        Xe[first_vertex_outside] = t_1 * X[first_vertex_outside] + one_minus_t_1 * X[second_vertex_inside];
+                        Ye[first_vertex_outside] = t_1 * Y[first_vertex_outside] + one_minus_t_1 * Y[second_vertex_inside];
+                        Ze[first_vertex_outside] = t_1 * Z[first_vertex_outside] + one_minus_t_1 * second_vertex_inside_z;
+                    }
+                }
 
-                W[to_index] = one_minus_t*W[from_index] + t*W[to_index];
-                X[to_index] = one_minus_t*X[from_index] + t*X[to_index];
-                Y[to_index] = one_minus_t*Y[from_index] + t*Y[to_index];
-                Z[to_index] = one_minus_t*Z[from_index] + t*Z[to_index];
-            } else {
-                // Two vertices are inside the frustum.
-                // Clipping forms a quad which needs to be split into 2 triangles.
-                // The first is the original (only smaller, as above).
+                // perspective devide:
+                if (vertex_flags[v1_index] < NDC) {
+                    one_over_w = 1 / Wo[v1_index];
+                    Xo[v1_index] *= one_over_w;
+                    Yo[v1_index] *= one_over_w;
+                    Zo[v1_index] *= one_over_w;
+                }
 
-                // this.sendToNearClippingPlane(first_vertex_inside, first_vertex_outside, near);
-                from_index = FROM_INDEX_1[face_index] = first_vertex_inside;
-                to_index = TO_INDEX_1[face_index] = first_vertex_outside;
-                t = T_1[face_index] = Z[from_index] / (Z[from_index] - Z[to_index]);
-                one_minus_t = ONE_MINUS_T_1[face_index] = 1 - t;
+                if (vertex_flags[v2_index] < NDC) {
+                    one_over_w = 1 / Wo[v2_index];
+                    Xo[v2_index] *= one_over_w;
+                    Yo[v2_index] *= one_over_w;
+                    Zo[v2_index] *= one_over_w;
+                }
 
-                W[to_index] = one_minus_t*W[from_index] + t*W[to_index];
-                X[to_index] = one_minus_t*X[from_index] + t*X[to_index];
-                Y[to_index] = one_minus_t*Y[from_index] + t*Y[to_index];
-                Z[to_index] = one_minus_t*Z[from_index] + t*Z[to_index];
+                if (vertex_flags[v3_index] < NDC) {
+                    one_over_w = 1 / Wo[v3_index];
+                    Xo[v3_index] *= one_over_w;
+                    Yo[v3_index] *= one_over_w;
+                    Zo[v3_index] *= one_over_w;
+                }
 
-                // The second is a new extra triangle, sharing 2 vertices:
-                // extra_triangle.setFromOther(this);
-                // extra_triangle.vertices[first_vertex_inside].setFromOther(this.vertices[first_vertex_outside]);
-                // switch (first_vertex_outside) {
-                //     case v1_index: {
-                //         indices_v1_extra[face_index] = first_vertex_outside;
-                //
-                //         switch (first_vertex_inside) {
-                //             case v2_index: {
-                //                 indices_v2_extra[face_index] = first_vertex_inside;
-                //                 indices_v3_extra[face_index] = v3_index;
-                //             }
-                //             case v3_index: {
-                //                 indices_v2_extra[face_index] = v2_index;
-                //                 indices_v3_extra[face_index] = first_vertex_inside;
-                //             }
-                //         }
-                //
-                //         break;
-                //     }
-                //     case v2_index: {
-                //         indices_v2_extra[face_index] = first_vertex_outside;
-                //
-                //         switch (first_vertex_inside) {
-                //             case v2_index: {
-                //                 indices_v1_extra[face_index] = first_vertex_inside;
-                //                 indices_v3_extra[face_index] = v3_index;
-                //             }
-                //             case v3_index: {
-                //                 indices_v1_extra[face_index] = v1_index;
-                //                 indices_v3_extra[face_index] = first_vertex_inside;
-                //             }
-                //         }
-                //
-                //         break;
-                //     }
-                //     case v3_index: {
-                //         indices_v3_extra[face_index] = first_vertex_outside;
-                //
-                //         switch (first_vertex_inside) {
-                //             case v1_index: {
-                //                 indices_v1_extra[face_index] = first_vertex_inside;
-                //                 indices_v2_extra[face_index] = v2_index;
-                //             }
-                //             case v2_index: {
-                //                 indices_v2_extra[face_index] = v2_index;
-                //                 indices_v3_extra[face_index] = first_vertex_inside;
-                //             }
-                //         }
-                //
-                //         break;
-                //     }
-                // }
+                // Back-face cull:
+                // Compute the determinant (area of the paralelogram formed by the 3 vertices)
+                // If the area is zero, the triangle also has a zero surface so can not be drawn.
+                // If the area is negative, the parallelogram (triangle) is facing backwards.
+                x1 = Xo[v1_index];
+                y1 = Yo[v1_index];
 
-                // extra_triangle.sendToNearClippingPlane(second_vertex_inside, first_vertex_outside, near);
-                from_index = EXTRA_FROM_INDEX_2[face_index] = second_vertex_inside;
-                to_index = EXTRA_TO_INDEX_2[face_index] = first_vertex_outside;
-                t = EXTRA_T_2[face_index] = Z[from_index] / (Z[from_index] - Z[to_index]);
-                one_minus_t = EXTRA_ONE_MINUS_T_2[face_index] = 1 - t;
+                x2 = Xo[v2_index];
+                y2 = Yo[v2_index];
 
-                W_extra[to_index] = one_minus_t*W[from_index] + t*W[to_index];
-                X_extra[to_index] = one_minus_t*X[from_index] + t*X[to_index];
-                Y_extra[to_index] = one_minus_t*Y[from_index] + t*Y[to_index];
-                Z_extra[to_index] = one_minus_t*Z[from_index] + t*Z[to_index];
+                x3 = Xo[v3_index];
+                y3 = Yo[v3_index];
 
-                extra_vertex_flags[to_index] = extra_face_flags[face_index] = INSIDE;
-                extra++;
-            }
-        }
+                face_area = (
+                    (x3 - x2) * (y1 - y2)
+                ) - (
+                    (y3 - y2) * (x1 - x2)
+                );
+                if (face_area > 0) {
+                    has_near = true;
+                    has_inside = true;
+                    face_flags[face_index] = INSIDE;
+                    face_areas[face_index] = face_area;
+
+                    if (second_vertex_inside !== -1) {
+                        face_flags[face_index] += INEXTRA;
+
+                        if (vertex_flags[first_vertex_outside] < NDCE) {
+                            // perspective devide:
+                            one_over_w = 1 / We[first_vertex_outside];
+                            Xe[first_vertex_outside] *= one_over_w;
+                            Ye[first_vertex_outside] *= one_over_w;
+                            Ze[first_vertex_outside] *= one_over_w;
+                        }
+
+                        x1 = Xo[first_vertex_inside];
+                        y1 = Yo[first_vertex_inside];
+
+                        x2 = Xe[first_vertex_outside];
+                        y2 = Ye[first_vertex_outside];
+
+                        x3 = Xo[second_vertex_inside];
+                        y3 = Yo[second_vertex_inside];
+
+                        extra_face_areas[face_index] = (
+                            (x3 - x2) * (y1 - y2)
+                        ) - (
+                            (y3 - y2) * (x1 - x2)
+                        );
+                    }
+
+                    if (Xn) {
+                        if (vertex_flags[first_vertex_outside] < NDC) {
+                            normal_x = t_1*Xn[first_vertex_outside] + one_minus_t_1*Xn[first_vertex_inside];
+                            normal_y = t_1*Yn[first_vertex_outside] + one_minus_t_1*Yn[first_vertex_inside];
+                            normal_y = t_1*Zn[first_vertex_outside] + one_minus_t_1*Zn[first_vertex_inside];
+                            normal_length_rcp = 1 / Math.hypot(normal_x, normal_y, normal_z);
+                            Xno[first_vertex_outside] = normal_x * normal_length_rcp;
+                            Yno[first_vertex_outside] = normal_y * normal_length_rcp;
+                            Zno[first_vertex_outside] = normal_z * normal_length_rcp;
+                        }
+
+                        if (second_vertex_inside === -1) {
+                            if (vertex_flags[second_vertex_outside] < NDC) {
+                                normal_x = t_2 * Xn[second_vertex_outside] + one_minus_t_2 * Xn[first_vertex_inside];
+                                normal_y = t_2 * Yn[second_vertex_outside] + one_minus_t_2 * Yn[first_vertex_inside];
+                                normal_y = t_2 * Zn[second_vertex_outside] + one_minus_t_2 * Zn[first_vertex_inside];
+                                normal_length_rcp = 1 / Math.hypot(normal_x, normal_y, normal_z);
+                                Xno[second_vertex_outside] = normal_x * normal_length_rcp;
+                                Yno[second_vertex_outside] = normal_y * normal_length_rcp;
+                                Zno[second_vertex_outside] = normal_z * normal_length_rcp;
+                            }
+                        } else {
+                            if (face_flags[second_vertex_inside] < NDCE) {
+                                normal_x = t_1*Xn[first_vertex_outside] + one_minus_t_1*Xn[second_vertex_inside];
+                                normal_y = t_1*Yn[first_vertex_outside] + one_minus_t_1*Yn[second_vertex_inside];
+                                normal_y = t_1*Zn[first_vertex_outside] + one_minus_t_1*Zn[second_vertex_inside];
+                                normal_length_rcp = 1 / Math.hypot(normal_x, normal_y, normal_z);
+                                Xne[first_vertex_outside] = normal_x * normal_length_rcp;
+                                Yne[first_vertex_outside] = normal_y * normal_length_rcp;
+                                Zne[first_vertex_outside] = normal_z * normal_length_rcp;
+                            }
+                        }
+                    }
+
+                    if (Uo) {
+                        uv_index_from = (
+                            first_vertex_outside === v3_index ?
+                                first_vertex_outside + face_count + face_count :
+                                first_vertex_outside === v2_index ?
+                                    first_vertex_outside + face_count :
+                                    first_vertex_outside
+                        );
+                        uv_index_to = (
+                            first_vertex_inside === v3_index ?
+                                first_vertex_inside + face_count + face_count :
+                                first_vertex_inside === v2_index ?
+                                    first_vertex_inside + face_count :
+                                    first_vertex_inside
+                        );
+                        Uo[uv_index_from] = t_1*U[uv_index_from] + one_minus_t_1*U[uv_index_to];
+                        Vo[uv_index_from] = t_1*V[uv_index_from] + one_minus_t_1*V[uv_index_to];
+
+                        if (second_vertex_inside === -1) {
+                            uv_index_from = (
+                                second_vertex_outside === v3_index ?
+                                    second_vertex_outside + face_count + face_count :
+                                    second_vertex_outside === v2_index ?
+                                        second_vertex_outside + face_count :
+                                        second_vertex_outside
+                            );
+                            Uo[uv_index_from] = t_2 * U[uv_index_from] + one_minus_t_2 * U[uv_index_to];
+                            Vo[uv_index_from] = t_2 * V[uv_index_from] + one_minus_t_2 * V[uv_index_to];
+                        } else {
+                            uv_index_from = (
+                                second_vertex_inside === v3_index ?
+                                    second_vertex_inside + face_count + face_count :
+                                    second_vertex_inside === v2_index ?
+                                        second_vertex_inside + face_count :
+                                        second_vertex_inside
+                            );
+
+                            Ue[uv_index_from] = t_1*U[uv_index_from] + one_minus_t_1*U[uv_index_to];
+                            Ve[uv_index_from] = t_1*V[uv_index_from] + one_minus_t_1*V[uv_index_to];
+                        }
+                    }
+
+                    if (vertex_flags[v1_index] < NDC)
+                        vertex_flags[v1_index] += NDC;
+                    if (vertex_flags[v2_index] < NDC)
+                        vertex_flags[v2_index] += NDC;
+                    if (vertex_flags[v3_index] < NDC)
+                        vertex_flags[v3_index] += NDC;
+                    if (second_vertex_inside !== -1 &&
+                        vertex_flags[second_vertex_inside] < NDCE)
+                        vertex_flags[second_vertex_inside] += NDCE;
+
+                }
+            } // else:
+            // Even when no vertices are behind the near clipping-plane, the face is may
+            // still be visible in the view frustum somehow:
+            // It either intersects the frustum in direction(s) other than the near clipping plane,
+            // or it may fully surrounding the whole view frustum.
+            // No geometric clipping is needed, but the face can not be culled.
+            has_inside = true;
+            face_flags[face_index] = INSIDE;
+        } // else:
+        // No vertices are outside the frustum (the face is fully within it).
+        has_inside = true;
+        face_flags[face_index] = INSIDE;
     }
 
-    return extra;
-};
-
-export const cullBackFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
-    [X, Y, Z, W]: Float4,
-    [indices_v1, indices_v2, indices_v3]: T3<FaceVerticesArrayType>,
-    face_areas: Float32Array,
-    face_flags: Uint8Array,
-    extra_face_flags: Uint8Array
-): number => {
-    has_front_facing = false;
-
-    for (face_index = 0; face_index < indices_v1.length; face_index++) if (!face_flags[face_index]) {
-        v1_index = indices_v1[face_index];
-        v2_index = indices_v2[face_index];
-        v3_index = indices_v3[face_index];
-
-        x1 = X[v1_index];
-        x2 = X[v2_index];
-        x3 = X[v3_index];
-
-        y1 = Y[v1_index];
-        y2 = Y[v2_index];
-        y3 = Y[v3_index];
-
-        // Compute the determinant (area of the paralelogram formed by the 3 vertices)
-        // If the area is zero, the triangle also has a zero surface so can not be drawn.
-        // If the area is negative, the parallelogram (triangle) is facing backwards.
-        face_area = (
-            (x3 - x2) * (y1 - y2)
-        ) - (
-            (y3 - y2) * (x1 - x2)
-        );
-        if (face_area > 0) {
-            has_front_facing = true;
-            face_areas[face_index] = face_area;
-        } else
-            face_flags[face_index] = extra_face_flags[face_index] = CULL;
-    }
-
-    return has_front_facing ? INSIDE : CULL;
+    return (
+        has_near ? CLIP :
+        has_inside ? INSIDE : CULL
+    );
 };
