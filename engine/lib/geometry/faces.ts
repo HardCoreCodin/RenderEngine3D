@@ -9,8 +9,7 @@ import {
     IFacePositions,
     IFacePositionsConstructor
 } from "../_interfaces/attributes.js";
-import {Vertices4D} from "./vertices.js";
-import {Matrix4x4} from "../accessors/matrix.js";
+import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
 import {FacePositions3D, FacePositions4D} from "./positions.js";
 import {FaceNormals3D, FaceNormals4D} from "./normals.js";
 import {FaceColors3D, FaceColors4D} from "./colors.js";
@@ -52,23 +51,26 @@ export class Faces3D extends Faces<DIM._3D>
     public normals: FaceNormals3D;
     public colors: FaceColors3D;
 
-    // homogenize(out?: Faces4D): Faces4D {
-    //     if (out) {
-    //         this.positions!.homogenize(out.positions);
-    //         this.normals!.homogenize(out.normals);
-    //         this.colors!.homogenize(out.colors);
-    //         return out;
-    //     }
-    //
-    //     return new Faces4D(
-    //         this.face_vertices,
-    //         this.mesh_options,
-    //
-    //         this.positions!.homogenize(),
-    //         this.normals!.homogenize(),
-    //         this.colors!.homogenize()
-    //     );
-    // }
+    matmul(matrix: Matrix3x3, out?: this): this {
+        if (out) {
+            this.positions.matmul(matrix, out.positions);
+            this.normals!.matmul(matrix, out.normals);
+
+            return out;
+        }
+
+        this.positions.matmul(matrix);
+        this.normals!.matmul(matrix);
+
+        return this;
+    }
+
+    mat4mul(matrix: Matrix4x4, out: Faces4D): Faces4D {
+        this.positions.mat4mul(matrix, out.positions);
+        this.normals!.mat4mul(matrix, out.normals);
+
+        return out;
+    }
 }
 
 export class Faces4D extends Faces<DIM._4D>
@@ -81,15 +83,17 @@ export class Faces4D extends Faces<DIM._4D>
     public normals: FaceNormals4D;
     public colors: FaceColors4D;
 
-    mul(matrix: Matrix4x4, out?: this): this {
+    matmul(matrix: Matrix4x4, out?: this): this {
         if (out) {
-            this.positions.mul(matrix, out.positions);
-            this.normals!.mul(matrix, out.normals);
+            this.positions.matmul(matrix, out.positions);
+            this.normals!.matmul(matrix, out.normals);
+
             return out;
         }
 
-        this.positions.mul(matrix);
-        this.normals!.mul(matrix);
+        this.positions.matmul(matrix);
+        this.normals!.matmul(matrix);
+
         return this;
     }
 }

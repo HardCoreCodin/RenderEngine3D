@@ -34,20 +34,6 @@ export class VertexNormals3D
     readonly Triangle = NormalTriangle3D;
     readonly allocator = VECTOR_3D_ALLOCATOR;
 
-    // homogenize(out?: VertexNormals4D): VertexNormals4D {
-    //     if (out) out.setFrom(this);
-    //     else out = new VertexNormals4D(this._face_vertices, this._is_shared, this._face_count, [
-    //         this.arrays[0],
-    //         this.arrays[1],
-    //         this.arrays[2],
-    //         new Float32Array(this.length)
-    //     ]);
-    //
-    //     out.arrays[3].fill(1);
-    //
-    //     return out;
-    // }
-
     normalize(): this {
         this._.normalize_all_in_place(this.arrays);
         return this;
@@ -147,20 +133,6 @@ export class FaceNormals3D
             triangle.computeNormal(face_normal);
     }
 
-    // homogenize(out?: FaceNormals4D): FaceNormals4D {
-    //     if (out) out.setFrom(this);
-    //     else out = new FaceNormals4D(this._face_vertices, this._face_count, this._face_count, [
-    //         this.arrays[0],
-    //         this.arrays[1],
-    //         this.arrays[2],
-    //         new Float32Array(this.length)
-    //     ]);
-    //
-    //     out.arrays[3].fill(1);
-    //
-    //     return out;
-    // }
-
     matmul(matrix: Matrix3x3, out?: this): this {
         if (out) {
             this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
@@ -169,6 +141,16 @@ export class FaceNormals3D
 
         this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
         return this;
+    }
+
+    mat4mul(matrix: Matrix4x4, out: FaceNormals4D): FaceNormals4D {
+        this._.matrix_multiply_all_directions_by_mat4(
+            this.arrays, matrix.id,
+            matrix.arrays,
+            out.arrays
+        );
+
+        return out;
     }
 }
 

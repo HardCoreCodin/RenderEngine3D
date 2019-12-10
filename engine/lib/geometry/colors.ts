@@ -26,20 +26,6 @@ export class VertexColors3D
     readonly Triangle = ColorTriangle3D;
     readonly allocator = VECTOR_3D_ALLOCATOR;
 
-    homogenize(out?: VertexColors4D): VertexColors4D {
-        if (out) out.setFrom(this);
-        else out = new VertexColors4D(this._face_vertices, this._is_shared, this._face_count, [
-            this.arrays[0],
-            this.arrays[1],
-            this.arrays[2],
-            new Float32Array(this.length)
-        ]);
-
-        out.arrays[3].fill(1);
-
-        return out;
-    }
-
     generate(): void {
         const [array_0, array_1, array_2] = this.arrays;
 
@@ -97,20 +83,6 @@ export class FaceColors3D
             array_1[i] = Math.random();
             array_2[i] = Math.random();
         }
-    }
-
-    homogenize(out?: FaceColors4D): FaceColors4D {
-        if (out) out.setFrom(this);
-        else out = new FaceColors4D(this._face_vertices, this._face_count, this._face_count, [
-            this.arrays[0],
-            this.arrays[1],
-            this.arrays[2],
-            new Float32Array(this.length)
-        ]);
-
-        out.arrays[3].fill(1);
-
-        return out;
     }
 }
 

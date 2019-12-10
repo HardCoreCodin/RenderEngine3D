@@ -6,20 +6,20 @@ import {Faces3D, Faces4D} from "./faces.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
 import {Matrix4x4} from "../accessors/matrix.js";
-import BBox from "./bounds.js";
+import {Bounds3D} from "./bounds.js";
 
 export default class Mesh {
     public readonly data: MeshData3D;
-    public readonly bbox = new BBox();
+    public readonly bbox = new Bounds3D();
 
     constructor(
         public inputs: MeshInputs,
         public options: MeshOptions = new MeshOptions(),
 
-        public readonly face_vertices: IFaceVertices = new FaceVerticesInt32(inputs.sanitize().position),
+        public readonly face_vertices: IFaceVertices = new FaceVerticesInt32().load(inputs.sanitize().position),
 
         public readonly vertex_count: number = inputs.position.vertices[0].length,
-        public readonly vertex_faces: IVertexFaces = new VertexFacesInt32(face_vertices, vertex_count),
+        public readonly vertex_faces: IVertexFaces = new VertexFacesInt32().load(face_vertices, vertex_count),
 
         public readonly face_count: number = face_vertices.length,
 
@@ -100,22 +100,6 @@ export class MeshData3D {
         public readonly faces: Faces3D = new Faces3D(face_vertices, mesh_options),
         public readonly vertices: Vertices3D = new Vertices3D(face_vertices, mesh_options)
     ) {}
-
-    // homogenize(out?: MeshData4D): MeshData4D {
-    //     if (out) {
-    //         this.faces.homogenize(out.faces);
-    //         this.vertices.homogenize(out.vertices);
-    //         return out;
-    //     }
-    //
-    //     return new MeshData4D(
-    //         this.face_vertices,
-    //         this.mesh_options,
-    //
-    //         this.faces.homogenize(),
-    //         this.vertices.homogenize()
-    //     );
-    // }
 }
 
 export class MeshData4D {

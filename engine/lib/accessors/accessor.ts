@@ -1,11 +1,11 @@
-import {Arrays, IMathFunctionSet, IFunctionSet} from "../_interfaces/functions.js";
+import {Arrays, IMathFunctionSet, IAccessorFunctionSet} from "../_interfaces/functions.js";
 import {IAccessor, IAccessorConstructor, IMathAccessor} from "../_interfaces/accessors.js";
 
 
 export class Accessor
     implements IAccessor
 {
-    readonly _: IFunctionSet;
+    readonly _: IAccessorFunctionSet;
 
     public id: number;
     public arrays: Arrays;

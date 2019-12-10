@@ -1,12 +1,13 @@
 import {PRECISION_DIGITS} from "../../constants.js";
 import {Float2, Float4} from "../../types.js";
 import {
-    IDirectionFunctionSet,
+    IDirectionFunctionSet, IAccessorFunctionSet, IMathFunctionSet,
     IPositionFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
 } from "../_interfaces/functions.js";
 import {VECTOR_2D_ALLOCATOR} from "../memory/allocators.js";
+import {IAccessor} from "../_interfaces/accessors.js";
 
 let t_x,
     t_y,
@@ -245,7 +246,7 @@ const matrix_multiply_in_place = (
     Ya[a] = t_x*M12[m] + t_y*M22[m];
 };
 
-export const base2DFunctions: IVectorFunctionSet = {
+export const accessor2DFunctions: IAccessorFunctionSet = {
     allocator: VECTOR_2D_ALLOCATOR,
 
     set_to,
@@ -253,6 +254,10 @@ export const base2DFunctions: IVectorFunctionSet = {
     set_all_to,
 
     equals,
+};
+
+export const math2DFunctions: IMathFunctionSet = {
+    ...accessor2DFunctions,
 
     add,
     add_in_place,
@@ -271,6 +276,10 @@ export const base2DFunctions: IVectorFunctionSet = {
 
     invert,
     invert_in_place,
+};
+
+export const base2DFunctions: IVectorFunctionSet = {
+    ...math2DFunctions,
 
     lerp
 };

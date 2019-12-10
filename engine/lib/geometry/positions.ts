@@ -1,16 +1,14 @@
 import {ATTRIBUTE, DIM} from "../../constants.js";
-import {Position3D, Position4D} from "../accessors/position.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
-import {IFacePositions, IVertexPositions, IVertexPositions3D, IVertexPositions4D} from "../_interfaces/attributes.js";
-import {positionAttribute3DFunctions, transformableAttribute3DFunctions} from "../math/vec3.js";
 import {InputPositions} from "./inputs.js";
+import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
+import {Position3D, Position4D} from "../accessors/position.js";
+import {Direction3D, Direction4D, dir3, dir4} from "../accessors/direction.js";
 import {Triangle, FaceAttribute, LoadableVertexAttribute} from "./attributes.js";
-import {ICrossedDirection, IPosition, IVector3D} from "../_interfaces/vectors.js";
-import {dir3, dir4, Direction3D, Direction4D} from "../accessors/direction.js";
+import {positionAttribute3DFunctions} from "../math/vec3.js";
 import {transformableAttribute4DFunctions} from "../math/vec4.js";
-// import {FaceVerticesInt32} from "./indices.js";
-// import {Tuple} from "../../types.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
+import {ICrossedDirection, IPosition, IVector3D} from "../_interfaces/vectors.js";
+import {IFacePositions, IVertexPositions3D, IVertexPositions4D} from "../_interfaces/attributes.js";
 
 const d1_3D = dir3();
 const d2_3D = dir3();
@@ -40,21 +38,6 @@ export class PositionTriangle4D extends PositionTriangle<DIM._4D, Position4D>
         [p1, p2, p3] = this.vertices;
         p1.to(p2, d1_4D).cross(p1.to(p3, d2_4D)).normalized(normal);
     }
-
-    // get in_view(): boolean {
-    //     [p1, p2, p3] = this.vertices;
-    //     return positionAttribute4DFunctions.in_view_tri(
-    //         p1.x, p1.y, p1.z, p1.w,
-    //         p2.x, p2.y, p2.z, p2.w,
-    //         p3.x, p3.y, p3.z, p3.w
-    //     );
-    // }
-    //
-    // toNDC(out?: PositionTriangle3D|PositionTriangle4D): void {
-    //     this.vertices[0].toNDC(out!.vertices[0]);
-    //     this.vertices[1].toNDC(out!.vertices[1]);
-    //     this.vertices[2].toNDC(out!.vertices[2]);
-    // }
 
     as3D(out: PositionTriangle3D = new PositionTriangle3D()): PositionTriangle3D {
         this.vertices[0].as3D(out.vertices[0]);
@@ -88,20 +71,6 @@ export class VertexPositions3D
         this.arrays[1].set(input_attribute.vertices[1]);
         this.arrays[2].set(input_attribute.vertices[2]);
     }
-    //
-    // homogenize(out: VertexPositions4D): VertexPositions4D {
-    //     if (out) out.setFrom(this);
-    //     else out = new VertexPositions4D(this._face_vertices, this._is_shared, this._face_count, [
-    //         this.arrays[0],
-    //         this.arrays[1],
-    //         this.arrays[2],
-    //         new Float32Array(this.length)
-    //     ]);
-    //
-    //     out.arrays[3].fill(1);
-    //
-    //     return out;
-    // }
 
     matmul(matrix: Matrix3x3, out?: this): this {
         if (out) {
@@ -157,17 +126,6 @@ export class VertexPositions4D
         this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
         return this;
     }
-
-    // inView(mask?: Uint8Array): boolean {
-    //     return this._.in_view_all(this.arrays, mask);
-    // }
-
-    // toNDC(out: VertexPositions3D|VertexPositions4D, mask?: Uint8Array): void {
-    //     if (out)
-    //         this._.to_ndc_all(this.arrays, out.arrays, mask);
-    //     else
-    //         this._.to_ndc_all_in_place(this.arrays, mask);
-    // }
 }
 
 export class FacePositions3D
@@ -175,25 +133,11 @@ export class FacePositions3D
     implements IFacePositions<DIM._3D, Matrix3x3, Position3D, VertexPositions3D>
 {
     readonly attribute = ATTRIBUTE.position;
-    readonly _ = transformableAttribute3DFunctions;
+    readonly _ = positionAttribute3DFunctions;
 
     readonly dim = DIM._3D;
     readonly Vector = Position3D;
     readonly allocator = VECTOR_3D_ALLOCATOR;
-
-    // homogenize(out?: FacePositions4D): FacePositions4D {
-    //     if (out) out.setFrom(this);
-    //     else out = new FacePositions4D(this._face_vertices, this._face_count, this._face_count, [
-    //         this.arrays[0],
-    //         this.arrays[1],
-    //         this.arrays[2],
-    //         new Float32Array(this.length)
-    //     ]);
-    //
-    //     out.arrays[3].fill(1);
-    //
-    //     return out;
-    // }
 
     matmul(matrix: Matrix3x3, out?: this): this {
         if (out) {
@@ -203,6 +147,16 @@ export class FacePositions3D
 
         this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
         return this;
+    }
+
+    mat4mul(matrix: Matrix4x4, out: FacePositions4D): FacePositions4D {
+        this._.matrix_multiply_all_positions_by_mat4(
+            this.arrays, matrix.id,
+            matrix.arrays,
+            out.arrays
+        );
+
+        return out;
     }
 }
 
@@ -231,15 +185,4 @@ export class FacePositions4D
         this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
         return this;
     }
-    //
-    // inView(mask?: Uint8Array): boolean {
-    //     return this._.in_view_all(this.arrays, mask);
-    // }
-    //
-    // toNDC(out: VertexPositions3D|VertexPositions4D, mask?: Uint8Array): void {
-    //     if (out)
-    //         this._.to_ndc_all(this.arrays, out.arrays, mask);
-    //     else
-    //         this._.to_ndc_all_in_place(this.arrays, mask);
-    // }
 }

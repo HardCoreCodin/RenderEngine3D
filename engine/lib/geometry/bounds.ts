@@ -1,11 +1,12 @@
 import {cube_face_vertices} from "./cube.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
+import {Position3D, Position4D} from "../accessors/position.js";
 
 
-export default class BBox {
-    constructor(
-        public readonly vertex_positions = new VertexPositions4D(cube_face_vertices)
-    ) {}
+abstract class Bounds {
+    readonly abstract vertex_positions: VertexPositions3D|VertexPositions4D;
+    readonly abstract min: Position3D|Position4D;
+    readonly abstract max: Position3D|Position4D;
 
     load(source_positions: VertexPositions3D|VertexPositions4D) {
         const [x, y, z] = this.vertex_positions.arrays;
@@ -18,5 +19,25 @@ export default class BBox {
 
         z[0] = z[1] = z[2] = z[3] = Math.min.apply(Math, source_positions[2]);
         z[4] = z[5] = z[6] = z[7] = Math.max.apply(Math, source_positions[2]);
+    }
+}
+
+export class Bounds3D extends Bounds {
+    constructor(
+        public readonly vertex_positions = new VertexPositions3D(cube_face_vertices),
+        public readonly min = new Position3D(0, vertex_positions.arrays),
+        public readonly max = new Position3D(6, vertex_positions.arrays)
+    ) {
+        super();
+    }
+}
+
+export class Bounds4D extends Bounds {
+    constructor(
+        public readonly vertex_positions = new VertexPositions4D(cube_face_vertices),
+        public readonly min = new Position4D(0, vertex_positions.arrays),
+        public readonly max = new Position4D(6, vertex_positions.arrays)
+    ) {
+        super();
     }
 }

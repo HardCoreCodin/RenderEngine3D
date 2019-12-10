@@ -22,11 +22,14 @@ export const enum DIM {
 }
 
 export const enum ATTRIBUTE {
-    position = 0b0001,
-    normal   = 0b0010,
-    color    = 0b0100,
-    uv       = 0b1000,
+    position     = 0b0000_0001,
+    normal       = 0b0000_0010,
+    color        = 0b0000_0100,
+    uv           = 0b0000_1000,
+    interpolator = 0b0001_0000,
+    barycentric  = 0b0010_0000
 }
+
 export const enum SHARE {
     POSITION = 0b0001,
     NORMAL   = 0b0010,

@@ -7,22 +7,25 @@ import {
     FACE_VERTICES_ALLOCATOR_INT16,
     FACE_VERTICES_ALLOCATOR_INT32,
     FACE_VERTICES_ALLOCATOR_INT8,
+    FROM_TO_INDICES_ALLOCATOR_INT16,
+    FROM_TO_INDICES_ALLOCATOR_INT32,
+    FROM_TO_INDICES_ALLOCATOR_INT8,
     VERTEX_FACES_ALLOCATOR_INT16,
     VERTEX_FACES_ALLOCATOR_INT32,
     VERTEX_FACES_ALLOCATOR_INT8
 } from "../memory/allocators.js";
 
+
 abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
     extends Buffer<ArrayType, DIM._1D>
-    implements IVertexFaces {
+    implements IVertexFaces
+{
     dim = DIM._1D as DIM._1D;
     abstract readonly allocator: IAllocator<DIM._1D, ArrayType>;
 
     indices: ArrayType[] = [];
 
-    constructor(face_vertices: IFaceVertices, vertex_count: number) {
-        super();
-
+    load(face_vertices: IFaceVertices, vertex_count: number): this {
         this.indices.length = vertex_count;
         const vertex_face_indices: number[][] = Array<number[]>(vertex_count);
         for (let i = 0; i < vertex_count; i++)
@@ -44,52 +47,86 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
             this.indices[vertex_index] = array.subarray(offset, face_indices.length) as ArrayType;
             offset += face_indices.length;
         }
+
+        return this;
     }
 }
 
 abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
     extends Buffer<ArrayType, DIM._3D>
-    implements IFaceVertices {
+    implements IFaceVertices
+{
     dim = DIM._3D as DIM._3D;
     abstract readonly allocator: IAllocator<DIM._3D, ArrayType>;
 
-    constructor(inputs: InputPositions) {
-        super();
-
-        this.init(inputs.faces_vertices[0].length);
+    load(inputs: InputPositions): this {
+        this.init(inputs.vertices[0].length);
 
         this.arrays[0].set(inputs.faces_vertices[0]);
         this.arrays[1].set(inputs.faces_vertices[1]);
         this.arrays[2].set(inputs.faces_vertices[2]);
+
+        return this;
     }
 }
 
 export class FaceVerticesInt8
-    extends FaceVertices<Uint8Array> {
+    extends FaceVertices<Uint8Array>
+{
     allocator = FACE_VERTICES_ALLOCATOR_INT8;
 }
 
 export class FaceVerticesInt16
-    extends FaceVertices<Uint16Array> {
+    extends FaceVertices<Uint16Array>
+{
     allocator = FACE_VERTICES_ALLOCATOR_INT16;
 }
 
 export class FaceVerticesInt32
-    extends FaceVertices<Uint32Array> {
+    extends FaceVertices<Uint32Array>
+{
     allocator = FACE_VERTICES_ALLOCATOR_INT32;
 }
 
 export class VertexFacesInt32
-    extends VertexFaces<Uint32Array> {
+    extends VertexFaces<Uint32Array>
+{
     allocator = VERTEX_FACES_ALLOCATOR_INT32;
 }
 
 export class VertexFacesInt16
-    extends VertexFaces<Uint16Array> {
+    extends VertexFaces<Uint16Array>
+{
     allocator = VERTEX_FACES_ALLOCATOR_INT16;
 }
 
 export class VertexFacesInt8
-    extends VertexFaces<Uint8Array> {
+    extends VertexFaces<Uint8Array>
+{
     allocator = VERTEX_FACES_ALLOCATOR_INT8;
+}
+
+abstract class FromToIndices<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
+    extends Buffer<ArrayType, DIM._2D>
+{
+    dim = DIM._2D as DIM._2D;
+    abstract readonly allocator: IAllocator<DIM._2D, ArrayType>;
+}
+
+export class FromToIndicesInt8
+    extends FromToIndices<Uint8Array>
+{
+    allocator = FROM_TO_INDICES_ALLOCATOR_INT8;
+}
+
+export class FromToIndicesInt16
+    extends FromToIndices<Uint16Array>
+{
+    allocator = FROM_TO_INDICES_ALLOCATOR_INT16;
+}
+
+export class FromToIndicesInt32
+    extends FromToIndices<Uint32Array>
+{
+    allocator = FROM_TO_INDICES_ALLOCATOR_INT32;
 }

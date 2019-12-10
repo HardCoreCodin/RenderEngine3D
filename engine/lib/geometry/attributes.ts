@@ -1,6 +1,7 @@
-import {ATTRIBUTE, DIM} from "../../constants.js";
+import {Accessor} from "../accessors/accessor.js";
 import {Vector} from "../accessors/vector.js";
 import {FloatBuffer} from "../memory/buffers.js";
+import {ATTRIBUTE, DIM} from "../../constants.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {zip} from "../../utils.js";
 import {InputAttribute} from "./inputs.js";
@@ -11,21 +12,22 @@ import {
     IPullableVertexAttribute,
     IVertexAttribute
 } from "../_interfaces/attributes.js";
-import {IVector, VectorConstructor} from "../_interfaces/vectors.js";
+import {IVector} from "../_interfaces/vectors.js";
 import {AnyConstructor, Tuple} from "../../types.js";
+import {IAccessorConstructor} from "../_interfaces/accessors.js";
 
 export abstract class Attribute<
     Attr extends ATTRIBUTE,
     Dim extends DIM,
-    VectorType extends Vector>
+    AccessorType extends Accessor>
     extends FloatBuffer<Dim>
-    implements IAttribute<Attr, Dim, VectorType>
+    implements IAttribute<Attr, Dim, AccessorType>
 {
     readonly abstract attribute: Attr;
-    readonly abstract Vector: VectorConstructor<VectorType>;
+    readonly abstract Vector: IAccessorConstructor<AccessorType>;
 
     arrays: Tuple<Float32Array, Dim>;
-    current: VectorType;
+    current: AccessorType;
 
     constructor(
         protected _face_vertices: IFaceVertices,
@@ -33,8 +35,7 @@ export abstract class Attribute<
         length = _face_count,
         arrays?: Tuple<Float32Array, Dim>
     ) {
-        super();
-        this.init(length, arrays);
+        super(length, arrays);
         this._postInit();
     }
 
@@ -42,7 +43,7 @@ export abstract class Attribute<
         this.current = new this.Vector(0, this.arrays);
     }
 
-    * [Symbol.iterator](): Generator<VectorType> {
+    * [Symbol.iterator](): Generator<AccessorType> {
         for (let id = 0; id < this.length; id++) {
             this.current.id = id;
             yield this.current;

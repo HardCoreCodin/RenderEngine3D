@@ -55,6 +55,7 @@ export type NumArrays4 = T4<number[]>;
 
 export type Ints3 = T3<IntArray[]>;
 export type Int3 = T3<IntArray>;
+export type Int2 = T2<IntArray>;
 
 export type Float2 = T2<FloatArray>;
 export type Float3 = T3<FloatArray>;

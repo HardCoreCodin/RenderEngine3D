@@ -1,8 +1,9 @@
 import {IAccessorConstructor, IMathAccessor} from "./accessors.js";
 import {
-    ICrossDirectionFunctionSet, IDirection3DFunctionSet,
-    IDirectionFunctionSet, IPosition3DFunctionSet,
-    // IPosition4DFunctionSet,
+    ICrossDirectionFunctionSet,
+    IDirection3DFunctionSet,
+    IDirectionFunctionSet,
+    IPosition3DFunctionSet,
     IPositionFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
@@ -12,7 +13,8 @@ import {DIM} from "../../constants.js";
 
 
 export interface IVector
-    extends IMathAccessor {
+    extends IMathAccessor
+{
     _: IVectorFunctionSet;
 
     lerp(to: this, by: number, out?: this): this;

@@ -24,8 +24,8 @@ export const indices: QuadInputs = [
 // =====================
 export const positions = new InputPositions(FACE_TYPE.QUAD, vertices, indices).triangulate();
 export const inputs = new MeshInputs(FACE_TYPE.TRIANGLE, ATTRIBUTE.position, positions);
-export const cube_face_vertices = new FaceVerticesInt8(positions);
-export const cube_vertex_faces = new VertexFacesInt8(cube_face_vertices, 8);
+export const cube_face_vertices = new FaceVerticesInt8().load(positions);
+export const cube_vertex_faces = new VertexFacesInt8().load(cube_face_vertices, 8);
 
 // Mesh options:
 const defaults = new MeshOptions();

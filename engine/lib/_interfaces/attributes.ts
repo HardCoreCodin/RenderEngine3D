@@ -9,14 +9,15 @@ import {
     ITransformableVector,
     IUV,
     IVector,
-    VectorConstructor
 } from "./vectors.js";
 import {
-    IDirectionAttribute3DFunctionSet, IDirectionAttribute4DFunctionSet,
+    IDirectionAttribute3DFunctionSet,
+    IDirectionAttribute4DFunctionSet,
     IPositionAttribute3DFunctionSet,
     ITransformableAttributeFunctionSet
 } from "./functions.js";
 import {IMatrix, IMatrix3x3, IMatrix4x4} from "./matrix.js";
+import {IAccessor, IAccessorConstructor} from "./accessors.js";
 
 export interface ITriangle<VectorType extends IVector> {
     vertices: [VectorType, VectorType, VectorType]
@@ -43,14 +44,14 @@ export interface IInputUVs extends IInputAttribute {id: ATTRIBUTE.uv}
 export interface IAttribute<
     Attribute extends ATTRIBUTE,
     Dim extends DIM,
-    VectorType extends IVector,
+    AccessorType extends IAccessor,
     > extends IBuffer<Dim>
 {
-    current: VectorType;
+    current: AccessorType;
     attribute: Attribute;
 
-    Vector: VectorConstructor<VectorType>;
-    [Symbol.iterator](): Generator<VectorType>;
+    Vector: IAccessorConstructor<AccessorType>;
+    [Symbol.iterator](): Generator<AccessorType>;
     setFrom(other: IAttribute<Attribute, DIM._2D|DIM._3D|DIM._4D, IVector>): this;
 }
 
@@ -176,12 +177,7 @@ export interface IVertexColors<
     FaceColors extends IFaceColors<Dim, Color> = IFaceColors<Dim, Color>>
     extends
         IColorAttribute<Dim, Color>,
-        IPullableVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, Dim, Color, IInputColors, FaceColors>
-{
-    _: IDirectionAttribute4DFunctionSet;
-
-    normalize(): this;
-}
+        IPullableVertexAttribute<ATTRIBUTE.color, ATTRIBUTE.color, Dim, Color, IInputColors, FaceColors> {}
 
 export interface IVertexUVs<
     Dim extends DIM,

@@ -1,4 +1,4 @@
-import {Arrays, IFunctionSet, IMathFunctionSet} from "./functions.js";
+import {Arrays, IAccessorFunctionSet, IMathFunctionSet} from "./functions.js";
 
 export type IAccessorConstructor<Accessor extends IAccessor> = new (
     id?: number,
@@ -6,7 +6,7 @@ export type IAccessorConstructor<Accessor extends IAccessor> = new (
 ) => Accessor;
 
 export interface IAccessor {
-    _: IFunctionSet,
+    _: IAccessorFunctionSet,
 
     id: number;
     arrays: Arrays;

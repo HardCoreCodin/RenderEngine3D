@@ -158,6 +158,7 @@ export type FloatNAllocator =
 export const VECTOR_2D_ALLOCATOR = new Float2Allocator();
 export const VECTOR_3D_ALLOCATOR = new Float3Allocator();
 export const VECTOR_4D_ALLOCATOR = new Float4Allocator();
+export const FACE_AREAS_ALLOCATOR = new Float3Allocator();
 export const MATRIX_2X2_ALLOCATOR = new Float4Allocator();
 export const MATRIX_3X3_ALLOCATOR = new Float9Allocator();
 export const MATRIX_4X4_ALLOCATOR = new Float16Allocator();
@@ -167,6 +168,13 @@ class Int8Allocator1D
     implements IAllocator<DIM._1D, Uint8Array>
 {
     public dim = DIM._1D as DIM._1D;
+}
+
+class Int8Allocator2D
+    extends AbstractInt8ArrayAllocator<DIM._2D>
+    implements IAllocator<DIM._2D, Uint8Array>
+{
+    public dim = DIM._2D as DIM._2D;
 }
 
 class Int8Allocator3D
@@ -183,6 +191,13 @@ class Int16Allocator1D
     public dim = DIM._1D as DIM._1D;
 }
 
+class Int16Allocator2D
+    extends AbstractInt16ArrayAllocator<DIM._2D>
+    implements IAllocator<DIM._2D, Uint16Array>
+{
+    public dim = DIM._2D as DIM._2D;
+}
+
 class Int16Allocator3D
     extends AbstractInt16ArrayAllocator<DIM._3D>
     implements IAllocator<DIM._3D, Uint16Array>
@@ -195,6 +210,13 @@ class Int32Allocator1D
     implements IAllocator<DIM._1D, Uint32Array>
 {
     public dim = DIM._1D as DIM._1D;
+}
+
+class Int32Allocator2D
+    extends AbstractInt32ArrayAllocator<DIM._2D>
+    implements IAllocator<DIM._2D, Uint32Array>
+{
+    public dim = DIM._2D as DIM._2D;
 }
 
 class Int32Allocator3D
@@ -210,6 +232,9 @@ export const FACE_VERTICES_ALLOCATOR_INT32 = new Int32Allocator3D();
 export const VERTEX_FACES_ALLOCATOR_INT8 = new Int8Allocator1D();
 export const VERTEX_FACES_ALLOCATOR_INT16 = new Int16Allocator1D();
 export const VERTEX_FACES_ALLOCATOR_INT32 = new Int32Allocator1D();
+export const FROM_TO_INDICES_ALLOCATOR_INT8 = new Int8Allocator2D();
+export const FROM_TO_INDICES_ALLOCATOR_INT16 = new Int16Allocator2D();
+export const FROM_TO_INDICES_ALLOCATOR_INT32 = new Int32Allocator2D();
 export const RENDER_TARGET_ALLOCATOR = new Int32Allocator1D();
 
 export abstract class AbstractNestedTypedArraysAllocator<

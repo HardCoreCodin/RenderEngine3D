@@ -1,10 +1,10 @@
-import {Float16, Float2, Float3, Float4, Float9, Tuple} from "../../types.js";
+import {Float16, Float2, Float3, Float4, Float9, Int2, Tuple} from "../../types.js";
 import {FloatNAllocator} from "../memory/allocators.js";
 import {DIM} from "../../constants.js";
 
 export type Arrays = Float2 | Float3 | Float4 | Float9 | Float16;
 
-export interface IFunctionSet
+export interface IAccessorFunctionSet
 {
     allocator: FloatNAllocator;
 
@@ -15,8 +15,37 @@ export interface IFunctionSet
     equals(a: number, []: Arrays, b: number, []: Arrays): boolean;
 }
 
+export interface ILinearInterpolatorFunctionSet
+    extends IAccessorFunctionSet
+{
+    linearly_interpolate(l: number, [t, one_minus_t]: Float2, a: number, from: Arrays, b: number, to: Arrays, o: number, out: Arrays): void;
+    linearly_interpolate_in_place(l: number, [t, one_minus_t]: Float2, a: number, from: Arrays, b: number, to: Arrays): void;
+}
+
+export interface ILinearInterpolatorAttributeFunctionSet
+{
+    linearly_interpolate_all([t, one_minus_t]: Float2, from: Arrays, to: Arrays, out: Arrays): void;
+    linearly_interpolate_in_place_all([t, one_minus_t]: Float2, from: Arrays, to: Arrays): void;
+
+    linearly_interpolate_some(flags: Uint8Array, [from_index, to_index]: Int2, [t, one_minus_t]: Float2, from: Arrays, to: Arrays, out: Arrays): void;
+    linearly_interpolate_in_place_some(flags: Uint8Array, [from_index, to_index]: Int2,[t, one_minus_t]: Float2, from: Arrays, to: Arrays): void;
+}
+
+export interface IBarycentricInterpolatorFunctionSet
+    extends IAccessorFunctionSet
+{
+    barycentric_interpolate(l: number, [w1, w2, w3]: Float3, a: number, from: Arrays, b: number, to: Arrays, o: number, out: Arrays): void;
+    barycentric_interpolate_in_place(l: number, [w1, w2, w3]: Float3, a: number, from: Arrays, b: number, to: Arrays): void;
+}
+
+export interface IBarycentricInterpolatorAttributeFunctionSet
+{
+    barycentric_interpolate_all([w1, w2, w3]: Float3, from: Arrays, to: Arrays, out: Arrays): void;
+    barycentric_interpolate_in_place_all([w1, w2, w3]: Float3, from: Arrays, to: Arrays): void;
+}
+
 export interface IMathFunctionSet
-    extends IFunctionSet
+    extends IAccessorFunctionSet
 {
     add(a: number, []: Arrays, b: number, []: Arrays, o: number, []: Arrays): void;
     add_in_place(a: number, []: Arrays, b: number, []: Arrays): void;
@@ -107,21 +136,6 @@ export interface IDirectionAttribute4DFunctionSet
     normalize_all_in_place([]: Float4): void;
 }
 
-// export interface IPositionAttribute4DFunctionSet
-//     extends ITransformableAttributeFunctionSet<DIM._4D>
-// {
-//     in_view_all([Xa, Ya, Za, Wa]: Float4, mask?: Uint8Array): boolean;
-//     in_view_any([Xa, Ya, Za, Wa]: Float4): boolean;
-//     in_view_tri(
-//         x1: number, y1: number, z1: number, w1: number,
-//         x2: number, y2: number, z2: number, w2: number,
-//         x3: number, y3: number, z3: number, w3: number
-//     ): boolean;
-//
-//     to_ndc_all([]: Arrays, []: Arrays, mask?: Uint8Array): void;
-//     to_ndc_all_in_place([]: Arrays, mask?: Uint8Array): void;
-// }
-
 export interface IPositionFunctionSet
     extends ITransformableVectorFunctionSet
 {
@@ -134,23 +148,6 @@ export interface IPosition3DFunctionSet
 {
     matrix_multiply_position_by_mat4(a: number, []: Arrays, m: number, []: Arrays, o: number, []: Arrays): void;
 }
-
-// export interface IPosition4DFunctionSet
-//     extends IPositionFunctionSet
-// {
-//     in_view(
-//         x: number,
-//         y: number,
-//         z: number,
-//         w: number,
-//
-//         n: number,
-//         f: number
-//     ) : boolean;
-//
-//     to_ndc(a: number, []: Arrays, o: number, []: Arrays): void;
-//     to_ndc_in_place(a: number, []: Arrays): void;
-// }
 
 export interface IDirectionFunctionSet
     extends ITransformableVectorFunctionSet

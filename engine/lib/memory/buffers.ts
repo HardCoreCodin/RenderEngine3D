@@ -14,10 +14,17 @@ export abstract class Buffer<
     length: number;
     arrays: Tuple<ArrayType, Dim>;
 
-    init(length: number, arrays?: Tuple<ArrayType, Dim>) {
+    constructor(length?: number, arrays?: Tuple<ArrayType, Dim>) {
+        if (length !== undefined)
+            this.init(length, arrays);
+    }
+
+    init(length: number, arrays?: Tuple<ArrayType, Dim>): this {
         this.length = length;
         this.arrays = arrays || this.allocator.allocate(length) as Tuple<ArrayType, Dim>;
         this._values = Array<number>(this.dim) as Tuple<number, Dim>;
+
+        return this;
     }
 
     * values(): Generator<Tuple<number, Dim>> {
