@@ -2,7 +2,7 @@ import {ATTRIBUTE, DIM} from "../../constants.js";
 import {FACE_AREAS_ALLOCATOR, VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR} from "../memory/allocators.js";
 import {BarycentricInterpolator, LinearInterpolator} from "../accessors/interpolator.js";
 import {Attribute} from "./attributes.js";
-import {barycentricInterpolatorAttributeFunctions, linearInterpolatorAttributeFunctions} from "../math/interpolation.js";
+import {barycentricInterpolatorAttributeFunctions, linearInterpolatorAttributeFunctions} from "../math/rendering/interpolation.js";
 import {IBuffer} from "../_interfaces/buffers.js";
 import {Arrays} from "../_interfaces/functions.js";
 import {FromToIndicesInt16, FromToIndicesInt32, FromToIndicesInt8} from "./indices.js";

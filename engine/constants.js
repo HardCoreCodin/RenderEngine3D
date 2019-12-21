@@ -1,5 +1,21 @@
 export const PRECISION_DIGITS = 3;
 export const CACHE_LINE_BYTES = 64;
+// Culling flags:
+// ======================
+export const NEAR = 1;
+export const FAR = 2;
+export const BELOW = 4;
+export const ABOVE = 8;
+export const RIGHT = 16;
+export const LEFT = 32;
+export const OUT = 63;
+export const NDC = 64;
+// Clipping flags:
+// ===============
+export const CULL = 0;
+export const CLIP = 1;
+export const INSIDE = 2;
+export const INEXTRA = 4;
 export const PIE = Math.PI;
 export const TWO_PIE = 2 * PIE;
 export const DEGREES_TO_RADIANS_FACTOR = TWO_PIE / 360;

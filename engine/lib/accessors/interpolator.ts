@@ -2,7 +2,7 @@ import {Accessor} from "./accessor.js";
 import {IAccessor} from "../_interfaces/accessors.js";
 import {Float2, Float3} from "../../types.js";
 import {IBarycentricInterpolator, ILinearInterpolator} from "../_interfaces/interpolators.js";
-import {barycentricInterpolatorFunctions, linearInterpolatorFunctions} from "../math/interpolation.js";
+import {barycentricInterpolatorFunctions, linearInterpolatorFunctions} from "../math/rendering/interpolation.js";
 
 
 export class LinearInterpolator<AccessorType extends IAccessor = IAccessor>

@@ -13,8 +13,8 @@ export interface IFrustom {
     far: number;
     near: number;
 
-    depth_span: number;
-    perspective_factor: number;
+    depth_factor: number;
+    fov_factor: number;
 
     has_changed: boolean;
 }

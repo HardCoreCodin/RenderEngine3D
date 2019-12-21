@@ -1,0 +1,214 @@
+Barycentric interpolation:
+==========================
+
+Given a 2D triangle ABC comprised of points:
+
+Eq.1:    A = [Ax, Ay]
+Eq.2:    B = [Bx, By]
+Eq.3:    C = [Cx, Cy]
+
+Define a point of interest:
+
+Eq.4:    P = [Px, Py]
+
+It's barycentric coordinates with respect to triangle ABC are a triplet of 3 "weights":
+
+Eq.5:    α = ΔABP / ΔABC
+Eq.6:    β = ΔBCP / ΔABC
+Eq.7:    γ = ΔCAP / ΔABC
+
+Each weight is how much the area of each "sub triangle" takes from the of the area of the "full" triangle.
+The 3 sub-triangles are formed by connecting P to each ot the 3 combinations of 2 corners of triangle ABC.
+The area of a triangle is half of the area of the parellelogram that it's corners form:
+
+Eq.8:    ΔABC = ▱ABC / 2
+
+Since the barycentric coordinates are all defined as ratios,
+they will not be affected if all areas are multiplied by the same constant factor.
+Doubling all areas gives ratios of the areas of the "parallelograms" for each triangle instead:
+
+Eq.9 :    α = ΔABP / ΔABC = 2*ΔABP / 2*ΔABC = ▱ABP / ▱ABC
+Eq.10:    β = ΔBCP / ΔABC = 2*ΔBCP / 2*ΔABC = ▱BCP / ▱ABC
+Eq.11:    γ = ΔCAP / ΔABC = 2*ΔCAP / 2*ΔABC = ▱CAP / ▱ABC
+
+Since these are trivial to compute they can be used instead of the triangle-areas.
+Given that the winding order of triangle corners in 2D space is counter clockwise,
+the area of the parallelogram of a triangle is:
+
+Eq.12:    ▱ABC = (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax)
+
+From Eq.9 The first barycentric weight of point P is:
+
+Eq.9:     α = ▱ABP / ▱ABC:
+
+Substituting C for P gives the area of the parallelogram of triangle ABP:
+Eq.13:    ▱ABP = (Bx - Ax)(Py - Ay) - (By - Ay)(Px - Ax)
+
+Expanding and factoring out the coordinates of P shows that ▱ABP is a linear function of P:
+
+Eq.14:    ▱ABP = (BxPy - BxAy - AxPy + AxAy) - (ByPx - ByAx - AyPx + AyAx)
+                = BxPy - BxAy - AxPy + AxAy - ByPx + ByAx + AyPx - AyAx
+                = AyPx - ByPx + BxPy - AxPy + ByAx - BxAy
+                = (Ay - By)Px + (Bx - Ax)Py + (ByAx - BxAy)
+
+This means it can be computed incrementally from an initial value(!).
+
+Defining constants α△x and α△y as coefficients for Px and Py, and a constant offset αK:
+
+Eq.15:    α△x = Ay - By
+Eq.16:    α△y = Bx - Ax
+Eq.17:    αK  = ByAx - BxAy
+
+Gives:
+
+Eq.18:    ▱ABP = α△xPx + α△yPy + αK
+
+These constants can then be used to compute a new ▱ABP as P changes:
+Given an initial value ▱ABP for point P(x, y) and a △x gives:
+
+Eq.19:    ▱ABP(Px + △x) = α△x(Px + △x) + α△yPy + αK
+                         = α△xPx + α△x△x + α△yPy + αK
+
+Likewise, given an initial value ▱ABP for point P(x, y) and a △y gives:
+
+Eq.20:    ▱ABP(Py + △y) = α△xPx + α△y(Py + △y) + αK
+                         = α△xPx + α△yPy + α△y△y + αK
+
+And so iterating over x and/or y, increasing it by 1 at each iteration,
+sets △x and/or △y to 1, giving:
+
+Eq.21:    ▱ABP(Px + 1) = α△x(Px + 1) + α△yPy + αK
+                        = α△xPx + α△yPy + α△x + αK
+                        = ▱ABP + α△x
+
+Eq.22:    ▱ABP(Py + 1) = α△xPx + α△y(Py + 1) + αK
+                        = α△xPx + α△yPy + α△y + αK
+                        = ▱ABP + α△y
+
+And so, coefficients α△x, α△y and αK need only be computed once for an initial coordinates of P,
+and then α△x and α△y could be used as increments for the areas on each iteration of P's x and y coordinates.
+
+However the barycentric coordinates needed here are 'ratios'
+between these sub-triangle areas to the 'full' area of the triangle.
+The pre-computed incremental coefficients can be made to incorporate that:
+
+Eq.23:    α = ▱ABP / ▱ABC
+            = ▱ABP * ⅟▱ABC
+            = (α△xPx + α△yPy + αK)⅟▱ABC
+            = (α△xPx)⅟▱ABC + (α△yPy)⅟▱ABC +(αK)⅟▱ABC
+            = (⅟▱ABC(α△x))Px + (⅟▱ABC(α△y))Py + (⅟▱ABC(αK))
+
+Thus the barycentric coordinates themselves can be made incremental:
+
+Defining:
+Eq.25:    α▱x = α△x * ⅟▱ABC = ⅟▱ABC(Ay - By)      #Ex.15
+Eq.26:    α▱y = α△y * ⅟▱ABC = ⅟▱ABC(Bx - Ax)      #Ex.16
+Eq.27:    α▱K = αK  * ⅟▱ABC = ⅟▱ABC(ByAx - BxAy)  #Ex.17
+
+Gives:
+Eq.28:    α(Px, Py) = (α▱x)Px + (α▱y)Py + α▱K
+Eq.29:    α(Px + 1, Py) = (α▱x)(Px + 1) + (α▱y)Py + α▱K
+                        = (α▱x)Px + α▱x + (α▱y)Py + α▱K
+                        = (α▱x)Px + (α▱y)Py + α▱K + α▱x
+                        = α + α▱x
+And:
+Eq.30:    α(Px, Py + 1) = (α▱x)Px + (α▱y)(Py +1) + α▱K
+                        = (α▱x)Px + (α▱y)Py + α▱y + α▱K
+                        = (α▱x)Px + (α▱y)Py + α▱K + α▱y
+                        = α + α▱y
+And more generally:
+E1.31:    α(Px + △x, Py + △y) = α(Px, Py) + (△x * α▱x) + (△y * α▱y)
+
+This can all be applied to the other 2 areas ▱BCP and ▱CAP to get incremental β and γ:
+
+Given:
+Eq.10:    β = ▱BCP / ▱ABC
+And:
+Eq.32:    ▱BCP = (By - Cy)Px + (Cx - Bx)Py + (CyBx - CxBy)
+
+Defining:
+Eq.33:    β△x = Cy - Ay
+Eq.34:    β△y = Ax - Cx
+Eq.35:    βK  = CxAy - CyAx
+Eq.36:    β▱x = ⅟▱ABC(β△x) = ⅟▱ABC(Cy - Ay)
+Eq.37:    β▱y = ⅟▱ABC(β△y) = ⅟▱ABC(Ax - Cx)
+Eq.38:    β▱K = ⅟▱ABC(βK)  = ⅟▱ABC(CxAy - CyAx)
+
+Gives:
+E1.39:    β(Px, Py) = (β▱x)Px + (β▱y)Py + β▱K
+E1.40:    β(Px + △x, Py + △y) = β(Px, Py) + (△x * β▱x) + (△y * β▱y)
+
+Given:
+Eq.11:    γ = ▱CAP / ▱ABC
+And:
+Eq.41:    ▱BAP = (By - Cy)Px + (Ax - Cx)Py + (AyCx - AxCy)
+
+Defining:
+Eq.42:    γ△x = By - Cy
+Eq.43:    γ△y = Ax - Cx
+Eq.44:    γK  = AyCx - AxCy
+Eq.45:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(By - Cy)
+Eq.46:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Ax - Cx)
+Eq.47:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(AyCx - AxCy)
+
+Gives:
+E1.48:    γ(Px, Py) = (γ▱x)Px + (γ▱y)Py + γ▱K
+E1.49:    γ(Px + △x, Py + △y) = γ(Px, Py) + (△x * γ▱x) + (△y * γ▱y)
+
+However, the 3 barycentric coordinates always add up to 1:
+E1.50:    α + β + γ = 1;
+
+So in practice only 2 of them need to actually be computed.
+The third could be computed as the complement of the other 2:
+E1.51:    β = 1 - α - γ
+
+This can be factored in later when using these
+computed barycentric coordinates to interpolate values:
+
+E1.52:   interpolated_value = αV1 + βV2 + γV3
+                            = αV1 + (1 - α - γ)V2 + γV1
+                            = αV1 + V2 - αV2 - γV2 + γV1
+                            = αV1 - αV2 + γV1 - γV2 + V2
+                            = α(V1 - V2) + γ(V3 - V2) + V2
+
+This way, the third coordinate (in this case β) would never needs
+to be computed at all, and so neither would it's coefficients and deltas.
+
+This leaves the following values that need to be pre-computed:
+==============================================================
+Eq.15:    α△x = Ay - By
+Eq.42:    γ△x = By - Cy
+
+Eq.16:    α△y = Bx - Ax
+Eq.43:    γ△y = Ax - Cx
+
+Eq.17:    αK  = ByAx - BxAy
+Eq.44:    γK  = AyCx - AxCy
+
+All would then need to be multiplied by ⅟▱ABC which would need to be computes:
+Eq.12:    ▱ABC = (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax)
+
+Notice that the first 2 component are already computed for the deltas:
+▱ABC = (α△y)(γ△x) - (By - Ay)(Cx - Ax)
+
+Also notice that the second 2 components had their negatives computed for the deltas:
+▱ABC = (α△y)(γ△x) - (-α△x)(-γ△y)
+
+But these 2 negatives cancel-out in their multiplication by each other:
+▱ABC = (α△y)(γ△x) - (-1)(α△x)(-1)(γ△y)
+      = (α△y)(γ△x) - (α△x)(γ△y)(-1)(-1)
+      = α△y*γ△x - α△x*γ△y
+
+Ans so:
+⅟▱ABC = 1 / ((α△y * γ△x) - (α△x * γ△y))
+
+In code, this can be efficiently accomplished in 3 steps:
+1. Compute the deltas themselves (6 subtractions, 4 multiplications)
+2. Use the first 4 of them to compute ⅟▱ABC (1 subtraction, 2 multiplications, 1 division)
+3. Multiply all 6 deltas by ⅟▱ABC (6 multiplications)
+
+Total setup cost:
+=================
+1 division
+12 multiplications
+7 subtractions

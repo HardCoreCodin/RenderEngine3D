@@ -37,6 +37,23 @@ export const enum SHARE {
     UV       = 0b1000,
 }
 
+// Culling flags:
+// ======================
+export const NEAR  = 0b0000_0001;
+export const FAR   = 0b0000_0010;
+export const BELOW = 0b0000_0100;
+export const ABOVE = 0b0000_1000;
+export const RIGHT = 0b0001_0000;
+export const LEFT  = 0b0010_0000;
+export const OUT   = 0b0011_1111;
+export const NDC   = 0b0100_0000;
+
+// Clipping flags:
+// ===============
+export const CULL    = 0b0000_0000;
+export const CLIP    = 0b0000_0001;
+export const INSIDE  = 0b0000_0010;
+export const INEXTRA = 0b0000_0100;
 
 export const enum NORMAL_SOURCING {
     NO_VERTEX__NO_FACE,

@@ -2,7 +2,7 @@ import Viewport from "./viewport.js";
 import Scene from "../scene_graph/scene.js";
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
-import {Position4D} from "../accessors/position.js";
+import {Position3D, Position4D} from "../accessors/position.js";
 import {DEGREES_TO_RADIANS_FACTOR} from "../../constants.js";
 import {ICamera, IFrustom} from "../_interfaces/render.js";
 
@@ -15,29 +15,28 @@ export default class Camera
 
     constructor(
         readonly scene: Scene,
-        readonly frustum: Frustom = new Frustom()
+        readonly frustum: Frustom = new Frustom(),
+
+        // Position in space (0, 0, 0, 1) with perspective projection applied to it
+        readonly projected_position = new Position4D(),
+        readonly projection_matrix = new Matrix4x4(),
+        readonly translation = projection_matrix.pos3,
+        readonly scale = new Position3D(projection_matrix.id, [
+            projection_matrix.i.arrays[0],
+            projection_matrix.j.arrays[1],
+            projection_matrix.k.arrays[2],
+        ])
     ) {
         super(scene);
+        this.projection_matrix.m34 = 1;
     }
 
-    // Position in space (0, 0, 0, 1) with perspective projection applied to it
-    readonly projected_position: Position4D = new Position4D();
-    readonly projection_matrix: Matrix4x4 = new Matrix4x4();
-
     updateProjectionMatrix(): void {
-        const a = this.viewport.aspect_ratio;
-        const p = this.frustum.perspective_factor;
-        const d = this.frustum.depth_span;
-        const f = this.frustum.far;
-        const n = this.frustum.near;
-
         // Update the matrix that converts from view space to clip space:
-        this.projection_matrix.setTo(
-            p, 0, 0, 0,
-            0, p * a, 0, 0,
-            0, 0, f / d, 1,
-            0, 0, f * n / d, 0
-        );
+        this.scale.x = this.frustum.fov_factor;
+        this.scale.y = this.frustum.fov_factor * this.viewport.aspect_ratio;
+        this.scale.z = this.frustum.depth_factor;
+        this.translation.z = this.frustum.depth_factor * -this.frustum.near;
 
         // Update the projected position:
         this.projected_position.w = 1;
@@ -49,8 +48,8 @@ export default class Camera
 export class Frustom
     implements IFrustom
 {
-    depth_span: number;
-    perspective_factor: number;
+    depth_factor: number;
+    fov_factor: number;
     has_changed: boolean = false;
 
     constructor(
@@ -71,7 +70,7 @@ export class Frustom
 
         this.field_of_view_in_degrees = degrees;
         this.field_of_view_in_radians = degrees * DEGREES_TO_RADIANS_FACTOR;
-        this.perspective_factor = 1.0 / Math.tan(0.5 * this.field_of_view_in_radians);
+        this.fov_factor = 1.0 / Math.tan(0.5 * this.field_of_view_in_radians);
         this.has_changed = true;
     }
 
@@ -84,7 +83,7 @@ export class Frustom
             return;
 
         this.far_clipping_plane_distance = far;
-        this.depth_span = far - this.near_clipping_plane_distance;
+        this.depth_factor = far / (far - this.near_clipping_plane_distance);
         this.has_changed = true;
     }
 
@@ -97,7 +96,7 @@ export class Frustom
             return;
 
         this.near_clipping_plane_distance = near;
-        this.depth_span = this.far_clipping_plane_distance - near;
+        this.depth_factor = this.far_clipping_plane_distance / (this.far_clipping_plane_distance - near);
         this.has_changed = true;
     }
 }

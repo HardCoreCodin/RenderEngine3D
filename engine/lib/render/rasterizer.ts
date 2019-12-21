@@ -2,7 +2,7 @@ import {Matrix4x4} from "../accessors/matrix.js";
 import {VertexPositions3D, VertexPositions4D} from "../geometry/positions.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {cube_face_vertices} from "../geometry/cube.js";
-import {cullAndClip, CULL} from "../math/rasterization.js";
+import {CULL} from "../math/rendering/rasterization.js";
 
 const clip_box_face_flags = new Uint8Array(6);
 const clip_box_vertex_flags = new Uint8Array(8);

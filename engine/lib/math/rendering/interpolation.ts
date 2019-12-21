@@ -1,12 +1,12 @@
-import {Float2, Float3, Int2} from "../../types.js";
+import {Float2, Float3, Int2} from "../../../types.js";
 import {
     Arrays,
     IBarycentricInterpolatorAttributeFunctionSet,
     IBarycentricInterpolatorFunctionSet,
     ILinearInterpolatorAttributeFunctionSet,
     ILinearInterpolatorFunctionSet
-} from "../_interfaces/functions.js";
-import {accessor2DFunctions} from "./vec2.js";
+} from "../../_interfaces/functions.js";
+import {accessor2DFunctions} from "../vec2.js";
 
 let i, j: number;
 
@@ -16,7 +16,7 @@ const linearly_interpolate = (
     b: number, to: Arrays,
     o: number, out: Arrays,
 ): void => {
-    for (let i = 0; i < from.length; i++)
+    for (i = 0; i < from.length; i++)
         out[i][o] = one_minus_t[l] * from[i][a] + t[l] * to[i][b];
 };
 
@@ -25,7 +25,7 @@ const linearly_interpolate_in_place = (
     a: number, from: Arrays,
     b: number, to: Arrays
 ): void => {
-    for (let i = 0; i < from.length; i++)
+    for (i = 0; i < from.length; i++)
         from[i][a] = one_minus_t[l] * from[i][a] + t[l] * to[i][b];
 };
 
