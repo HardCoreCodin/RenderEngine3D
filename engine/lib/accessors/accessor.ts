@@ -87,24 +87,42 @@ export abstract class MathAccessor
     readonly abstract _: IMathFunctionSet;
     abstract _newOut(): IMathAccessor;
 
-    add(other: IMathAccessor) {
-        this._.add_in_place(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
+    add(other: number): this;
+    add(other: IMathAccessor): this;
+    add(other: IMathAccessor|number) {
+        if (typeof other === "number")
+            this._.broadcast_add_in_place(
+                this.id, this.arrays,
+                other,
+            );
+        else
+            this._.add_in_place(
+                this.id, this.arrays,
+                other.id, other.arrays
+            );
 
         return this;
     }
 
-    sub(other: IMathAccessor): this {
-        this._.subtract_in_place(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
+    sub(other: number): this;
+    sub(other: IMathAccessor): this;
+    sub(other: IMathAccessor|number): this {
+        if (typeof other === "number")
+            this._.broadcast_subtract_in_place(
+                this.id, this.arrays,
+                other,
+            );
+        else
+            this._.subtract_in_place(
+                this.id, this.arrays,
+                other.id, other.arrays
+            );
 
         return this;
     }
 
+    mul(other: number): this;
+    mul(other: IMathAccessor): this;
     mul(other: IMathAccessor|number): this {
         if (typeof other === "number")
             this._.scale_in_place(
@@ -129,34 +147,66 @@ export abstract class MathAccessor
         return this;
     }
 
-    plus(other: IMathAccessor, out: IMathAccessor = this._newOut()): IMathAccessor {
-        if (out.is(this))
-            this._.add_in_place(
-                this.id, this.arrays,
-                other.id, other.arrays
-            );
-        else
-            this._.add(
-                this.id, this.arrays,
-                other.id, other.arrays,
-                out.id, out.arrays
-            );
+    plus(other: number, out?: IMathAccessor): IMathAccessor;
+    plus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
+    plus(other: IMathAccessor|number, out: IMathAccessor = this._newOut()): IMathAccessor {
+        if (typeof other === "number") {
+            if (out.is(this))
+                this._.broadcast_add_in_place(
+                    this.id, this.arrays,
+                    other
+                );
+            else
+                this._.broadcast_add(
+                    this.id, this.arrays,
+                    other,
+                    out.id, out.arrays
+                );
+        } else {
+            if (out.is(this))
+                this._.add_in_place(
+                    this.id, this.arrays,
+                    other.id, other.arrays
+                );
+            else
+                this._.add(
+                    this.id, this.arrays,
+                    other.id, other.arrays,
+                    out.id, out.arrays
+                );
+        }
 
         return out;
     }
 
+    minus(other: number, out?: IMathAccessor): IMathAccessor;
+    minus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
     minus(other: IMathAccessor, out: IMathAccessor = this._newOut()): IMathAccessor {
-        if (out.is(this) || out.equals(this))
-            this._.set_all_to(
-                this.id, this.arrays,
-                0
-            );
-        else
-            this._.subtract(
-                this.id, this.arrays,
-                other.id, other.arrays,
-                out.id, out.arrays
-            );
+        if (typeof other === "number") {
+            if (out.is(this))
+                this._.broadcast_subtract_in_place(
+                    this.id, this.arrays,
+                    other
+                );
+            else
+                this._.broadcast_subtract(
+                    this.id, this.arrays,
+                    other,
+                    out.id, out.arrays
+                );
+        } else {
+            if (out.is(this) || out.equals(this))
+                this._.set_all_to(
+                    this.id, this.arrays,
+                    0
+                );
+            else
+                this._.subtract(
+                    this.id, this.arrays,
+                    other.id, other.arrays,
+                    out.id, out.arrays
+                );
+        }
 
         return out;
     }

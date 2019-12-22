@@ -101,71 +101,71 @@ Eq.23:    α = ▱ABP / ▱ABC
 Thus the barycentric coordinates themselves can be made incremental:
 
 Defining:
-Eq.25:    α▱x = α△x * ⅟▱ABC = ⅟▱ABC(Ay - By)      #Ex.15
-Eq.26:    α▱y = α△y * ⅟▱ABC = ⅟▱ABC(Bx - Ax)      #Ex.16
-Eq.27:    α▱K = αK  * ⅟▱ABC = ⅟▱ABC(ByAx - BxAy)  #Ex.17
+Eq.24:    α▱x = α△x * ⅟▱ABC = ⅟▱ABC(Ay - By)      #Ex.15
+Eq.25:    α▱y = α△y * ⅟▱ABC = ⅟▱ABC(Bx - Ax)      #Ex.16
+Eq.26:    α▱K = αK  * ⅟▱ABC = ⅟▱ABC(ByAx - BxAy)  #Ex.17
 
 Gives:
-Eq.28:    α(Px, Py) = (α▱x)Px + (α▱y)Py + α▱K
-Eq.29:    α(Px + 1, Py) = (α▱x)(Px + 1) + (α▱y)Py + α▱K
+Eq.27:    α(Px, Py) = (α▱x)Px + (α▱y)Py + α▱K
+Eq.28:    α(Px + 1, Py) = (α▱x)(Px + 1) + (α▱y)Py + α▱K
                         = (α▱x)Px + α▱x + (α▱y)Py + α▱K
                         = (α▱x)Px + (α▱y)Py + α▱K + α▱x
                         = α + α▱x
 And:
-Eq.30:    α(Px, Py + 1) = (α▱x)Px + (α▱y)(Py +1) + α▱K
+Eq.29:    α(Px, Py + 1) = (α▱x)Px + (α▱y)(Py +1) + α▱K
                         = (α▱x)Px + (α▱y)Py + α▱y + α▱K
                         = (α▱x)Px + (α▱y)Py + α▱K + α▱y
                         = α + α▱y
 And more generally:
-E1.31:    α(Px + △x, Py + △y) = α(Px, Py) + (△x * α▱x) + (△y * α▱y)
+E1.30:    α(Px + △x, Py + △y) = α(Px, Py) + (△x * α▱x) + (△y * α▱y)
 
 This can all be applied to the other 2 areas ▱BCP and ▱CAP to get incremental β and γ:
 
 Given:
 Eq.10:    β = ▱BCP / ▱ABC
 And:
-Eq.32:    ▱BCP = (By - Cy)Px + (Cx - Bx)Py + (CyBx - CxBy)
+Eq.31:    ▱BCP = (By - Cy)Px + (Cx - Bx)Py + (CyBx - CxBy)
 
 Defining:
-Eq.33:    β△x = Cy - Ay
-Eq.34:    β△y = Ax - Cx
-Eq.35:    βK  = CxAy - CyAx
-Eq.36:    β▱x = ⅟▱ABC(β△x) = ⅟▱ABC(Cy - Ay)
-Eq.37:    β▱y = ⅟▱ABC(β△y) = ⅟▱ABC(Ax - Cx)
-Eq.38:    β▱K = ⅟▱ABC(βK)  = ⅟▱ABC(CxAy - CyAx)
+Eq.32:    β△x = Cy - Ay
+Eq.33:    β△y = Ax - Cx
+Eq.34:    βK  = CxAy - CyAx
+Eq.35:    β▱x = ⅟▱ABC(β△x) = ⅟▱ABC(Cy - Ay)
+Eq.36:    β▱y = ⅟▱ABC(β△y) = ⅟▱ABC(Ax - Cx)
+Eq.37:    β▱K = ⅟▱ABC(βK)  = ⅟▱ABC(CxAy - CyAx)
 
 Gives:
-E1.39:    β(Px, Py) = (β▱x)Px + (β▱y)Py + β▱K
-E1.40:    β(Px + △x, Py + △y) = β(Px, Py) + (△x * β▱x) + (△y * β▱y)
+E1.38:    β(Px, Py) = (β▱x)Px + (β▱y)Py + β▱K
+E1.39:    β(Px + △x, Py + △y) = β(Px, Py) + (△x * β▱x) + (△y * β▱y)
 
 Given:
 Eq.11:    γ = ▱CAP / ▱ABC
 And:
-Eq.41:    ▱BAP = (By - Cy)Px + (Ax - Cx)Py + (AyCx - AxCy)
+Eq.40:    ▱BAP = (By - Cy)Px + (Ax - Cx)Py + (AyCx - AxCy)
 
 Defining:
-Eq.42:    γ△x = By - Cy
-Eq.43:    γ△y = Ax - Cx
-Eq.44:    γK  = AyCx - AxCy
-Eq.45:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(By - Cy)
-Eq.46:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Ax - Cx)
-Eq.47:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(AyCx - AxCy)
+Eq.41:    γ△x = By - Cy
+Eq.42:    γ△y = Ax - Cx
+Eq.43:    γK  = AyCx - AxCy
+Eq.44:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(By - Cy)
+Eq.45:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Ax - Cx)
+Eq.46:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(AyCx - AxCy)
 
 Gives:
-E1.48:    γ(Px, Py) = (γ▱x)Px + (γ▱y)Py + γ▱K
-E1.49:    γ(Px + △x, Py + △y) = γ(Px, Py) + (△x * γ▱x) + (△y * γ▱y)
+Eq.47:    γ(Px, Py) = (γ▱x)Px + (γ▱y)Py + γ▱K
+Eq.48:    γ(Px + △x, Py + △y) = γ(Px, Py) + (△x * γ▱x) + (△y * γ▱y)
 
 However, the 3 barycentric coordinates always add up to 1:
-E1.50:    α + β + γ = 1;
+Eq.49:    α + β + γ = 1;
 
 So in practice only 2 of them need to actually be computed.
 The third could be computed as the complement of the other 2:
-E1.51:    β = 1 - α - γ
+Eq.50:    β = 1 - α - γ
 
 This can be factored in later when using these
 computed barycentric coordinates to interpolate values:
 
-E1.52:   interpolated_value = αV1 + βV2 + γV3
+Eq.51:   interpolated_value = αV1 + βV2 + γV3
                             = αV1 + (1 - α - γ)V2 + γV1
                             = αV1 + V2 - αV2 - γV2 + γV1
                             = αV1 - αV2 + γV1 - γV2 + V2
@@ -177,30 +177,30 @@ to be computed at all, and so neither would it's coefficients and deltas.
 This leaves the following values that need to be pre-computed:
 ==============================================================
 Eq.15:    α△x = Ay - By
-Eq.42:    γ△x = By - Cy
+Eq.41:    γ△x = By - Cy
 
 Eq.16:    α△y = Bx - Ax
-Eq.43:    γ△y = Ax - Cx
+Eq.42:    γ△y = Ax - Cx
 
 Eq.17:    αK  = ByAx - BxAy
-Eq.44:    γK  = AyCx - AxCy
+Eq.43:    γK  = AyCx - AxCy
 
 All would then need to be multiplied by ⅟▱ABC which would need to be computes:
 Eq.12:    ▱ABC = (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax)
 
 Notice that the first 2 component are already computed for the deltas:
-▱ABC = (α△y)(γ△x) - (By - Ay)(Cx - Ax)
+Eq.52:   ▱ABC = (α△y)(γ△x) - (By - Ay)(Cx - Ax)
 
 Also notice that the second 2 components had their negatives computed for the deltas:
-▱ABC = (α△y)(γ△x) - (-α△x)(-γ△y)
+Eq.53:   ▱ABC = (α△y)(γ△x) - (-α△x)(-γ△y)
 
 But these 2 negatives cancel-out in their multiplication by each other:
-▱ABC = (α△y)(γ△x) - (-1)(α△x)(-1)(γ△y)
-      = (α△y)(γ△x) - (α△x)(γ△y)(-1)(-1)
-      = α△y*γ△x - α△x*γ△y
+Eq.54:   ▱ABC = (α△y)(γ△x) - (-1)(α△x)(-1)(γ△y)
+               = (α△y)(γ△x) - (α△x)(γ△y)(-1)(-1)
+               = α△y * γ△x - α△x * γ△y
 
 Ans so:
-⅟▱ABC = 1 / ((α△y * γ△x) - (α△x * γ△y))
+Eq.55:   ⅟▱ABC = 1 / (α△y * γ△x - α△x * γ△y)
 
 In code, this can be efficiently accomplished in 3 steps:
 1. Compute the deltas themselves (6 subtractions, 4 multiplications)
@@ -212,3 +212,116 @@ Total setup cost:
 1 division
 12 multiplications
 7 subtractions
+
+
+Perspective correct interpolation of vertex attributes:
+=======================================================
+
+Setup: (Per vertex per triangle)
+--------------------------------
+1. Compute '1 / v_pos_w' of all 3 vertices:
+Eq.56:   v1_one_over_w = 1 / v1_pos_w
+Eq.57:   v2_one_over_w = 1 / v2_pos_w
+Eq.58:   v3_one_over_w = 1 / v3_pos_w
+
+2. Compute 'v_attr_j / v_pos_w' of all 3 vertices.
+Eq.59:   v1_attr_j_over_v1_pos_w = v1_attr_j * v1_one_over_w
+Eq.60:   v2_attr_j_over_v2_pos_w = v2_attr_j * v2_one_over_w
+Eq.61:   v3_attr_j_over_v3_pos_w = v3_attr_j * v3_one_over_w
+
+Interpolation: (Per pixel per vertex attribute)
+-----------------------------------------------
+1. Linearly interpolate pixel_one_over_pos_w:
+Eq.62:   pixel__one_over_pos_w = (
+           α * v1_one_over_w +
+           β * v2_one_over_w +
+           γ * v3_one_over_w
+         )
+2. Linearly interpolate pixel_attr_j_over_w:
+Eq.63:   pixel__attr_j_over_w = (
+           α * v1_one_over_attr_j +
+           β * v2_one_over_attr_j +
+           γ * v3_one_over_attr_j
+         )
+3. Divide the results:
+Eq.64:   pixel__attr_j_value = pixel__attr_j_over_w / pixel__one_over_pos_w
+
+When the vertices of a triangle have multiple attributes,
+they all need to be interpolated in the same perspective-correct way.
+
+Optimization 1: Reusing Interpolation Step 1 results across attributes
+----------------------------------------------------------------------
+For a given pixel, the same value of 'pixel__one_over_pos_w' that was
+computed in step 1 may be (re)used in step 3 for any/all vertex attribute(s).
+And since it's always going to be "divided by", it's reciprocal
+can be  (pre)computed and then be "multiplied by" instead in Interpolation Step 3.
+This '1 / pixel__one_over_pos_w' value is effectively the view-space
+depth of a point on the triangle that is precisely behind the pixel,
+viewed through the perspective projection.
+
+Definind:
+Eq.65:   z_behind_pixel = 1 / pixel__one_over_pos_w
+
+Step 1 then becomes: (pre-computed per-pixel before interpolation)
+Eq.66:   z_behind_pixel = 1 / (
+           α * v1_one_over_w +
+           β * v2_one_over_w +
+           γ * v3_one_over_w
+         )
+
+Step 3 then become: (for a given interpolating vertex attribute 'j')
+Eq.67:   pixel_attr_j_value = pixel__attr_j_over_w * z_behind_pixel
+
+Optimization 2: Eliminating Setup Step 2
+----------------------------------------
+For a given pixel, the value(s) of 'v(i)_one_over_w' are the same across
+any/all interpolating attributes, and so they may be re-used across them.
+
+Interpolation Step 2 can be re-written as:
+Eq.68:   pixel__attr_j_over_w = (
+           α * (v1_attr_j * v1_one_over_w) +
+           β * (v2_attr_j * v2_one_over_w) +
+           γ * (v3_attr_j * v3_one_over_w)
+         )
+
+Which is equivalent to:
+Eq.69:   pixel__attr_j_over_w = (
+           v1_attr_j * (α * v1_one_over_w) +
+           v2_attr_j * (β * v2_one_over_w) +
+           v3_attr_j * (γ * v3_one_over_w)
+         )
+
+Ans so the barycentric coordinates themselves may therefore be
+(pre)multiplied by 'v(i)_one_over_w' before interpolation:
+
+Defining:
+Eq.70:   αPC = α * v1_one_over_w
+Eq.71:   βPC = β * v2_one_over_w
+Eq.72:   γPC = γ * v3_one_over_w
+
+Step 2 of interpolation then becomes: (for a given vertex attribute 'j')
+Eq.73:   pixel__attr_j_over_w = (
+           αPC * v1_attr_j +
+           βPC * v2_attr_j +
+           γPC * v3_attr_j
+         )
+
+This effectively eliminates the need for Step 2 of the setup
+for each interpolating vertex attribute(s) on all vertices.
+
+
+Rasterization rules: (Top-left)
+===============================
+The convention used here for the rules of tasterization (a.k.a: "shadow rules")
+follow the "Top Left" rules (a-la DX*).
+It excludes pixels that lie exactly on an edge that isn't top/left.
+It relies on the observation that as winding order is consistent across all faces,
+any shared edge would have opposing directions across the 2 faces that share it.
+This can be determined by checking how each edge's vertex positions relate to each other.
+Horizontal and vertical edges are accounted by having each edge check include
+both vertical and horizontal checks (such that whenever one doesn't apply, the other would).
+Using a CCW winding order, the top-left rules states that pixels who's centers lie
+precicely on any given edge are included, if-and-only-if the edge goes either
+top-to-bottom or right-to-left-flat (horizontally).
+* For more details, see:
+https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules

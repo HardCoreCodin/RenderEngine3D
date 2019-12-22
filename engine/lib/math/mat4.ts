@@ -285,6 +285,45 @@ const add_in_place = (
     M14a[a] += M14b[b];  M24a[a] += M24b[b];  M34a[a] += M34b[b];  M44a[a] += M44b[b];
 };
 
+const broadcast_add = (
+    a: number, [
+        M11a, M12a, M13a, M14a,
+        M21a, M22a, M23a, M24a,
+        M31a, M32a, M33a, M34a,
+        M41a, M42a, M43a, M44a
+    ]: Float16,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o, M13o, M14o,
+        M21o, M22o, M23o, M24o,
+        M31o, M32o, M33o, M34o,
+        M41o, M42o, M43o, M44o
+    ]: Float16
+) : void => {
+    M11o[o] = M11a[a] + b;  M21o[o] = M21a[a] + b;  M31o[o] = M31a[a] + b;  M41o[o] = M41a[a] + b;
+    M12o[o] = M12a[a] + b;  M22o[o] = M22a[a] + b;  M32o[o] = M32a[a] + b;  M42o[o] = M42a[a] + b;
+    M13o[o] = M13a[a] + b;  M23o[o] = M23a[a] + b;  M33o[o] = M33a[a] + b;  M43o[o] = M43a[a] + b;
+    M14o[o] = M14a[a] + b;  M24o[o] = M24a[a] + b;  M34o[o] = M34a[a] + b;  M44o[o] = M44a[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [
+        M11a, M12a, M13a, M14a,
+        M21a, M22a, M23a, M24a,
+        M31a, M32a, M33a, M34a,
+        M41a, M42a, M43a, M44a
+    ]: Float16,
+
+    b: number
+) : void => {
+    M11a[a] += b;  M21a[a] += b;  M31a[a] += b;  M41a[a] += b;
+    M12a[a] += b;  M22a[a] += b;  M32a[a] += b;  M42a[a] += b;
+    M13a[a] += b;  M23a[a] += b;  M33a[a] += b;  M43a[a] += b;
+    M14a[a] += b;  M24a[a] += b;  M34a[a] += b;  M44a[a] += b;
+};
+
 const subtract = (
     a: number, [
         M11a, M12a, M13a, M14a,
@@ -332,6 +371,45 @@ const subtract_in_place = (
     M12a[a] -= M12b[b];  M22a[a] -= M22b[b];  M32a[a] -= M32b[b];  M42a[a] -= M42b[b];
     M13a[a] -= M13b[b];  M23a[a] -= M23b[b];  M33a[a] -= M33b[b];  M43a[a] -= M43b[b];
     M14a[a] -= M14b[b];  M24a[a] -= M24b[b];  M34a[a] -= M34b[b];  M44a[a] -= M44b[b];
+};
+
+const broadcast_subtract = (
+    a: number, [
+        M11a, M12a, M13a, M14a,
+        M21a, M22a, M23a, M24a,
+        M31a, M32a, M33a, M34a,
+        M41a, M42a, M43a, M44a
+    ]: Float16,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o, M13o, M14o,
+        M21o, M22o, M23o, M24o,
+        M31o, M32o, M33o, M34o,
+        M41o, M42o, M43o, M44o
+    ]: Float16
+) : void => {
+    M11o[o] = M11a[a] - b;  M21o[o] = M21a[a] - b;  M31o[o] = M31a[a] - b;  M41o[o] = M41a[a] - b;
+    M12o[o] = M12a[a] - b;  M22o[o] = M22a[a] - b;  M32o[o] = M32a[a] - b;  M42o[o] = M42a[a] - b;
+    M13o[o] = M13a[a] - b;  M23o[o] = M23a[a] - b;  M33o[o] = M33a[a] - b;  M43o[o] = M43a[a] - b;
+    M14o[o] = M14a[a] - b;  M24o[o] = M24a[a] - b;  M34o[o] = M34a[a] - b;  M44o[o] = M44a[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [
+        M11a, M12a, M13a, M14a,
+        M21a, M22a, M23a, M24a,
+        M31a, M32a, M33a, M34a,
+        M41a, M42a, M43a, M44a
+    ]: Float16,
+
+    b: number
+) : void => {
+    M11a[a] -= b;  M21a[a] -= b;  M31a[a] -= b;  M41a[a] -= b;
+    M12a[a] -= b;  M22a[a] -= b;  M32a[a] -= b;  M42a[a] -= b;
+    M13a[a] -= b;  M23a[a] -= b;  M33a[a] -= b;  M43a[a] -= b;
+    M14a[a] -= b;  M24a[a] -= b;  M34a[a] -= b;  M44a[a] -= b;
 };
 
 const divide = (
@@ -561,6 +639,12 @@ export const matrix4x4Functions: IMatrixRotationFunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     divide,
     divide_in_place,

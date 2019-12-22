@@ -140,6 +140,25 @@ const add_in_place = (
     Za[a] += Zb[b];
 };
 
+const broadcast_add = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number,
+    o: number, [Xo, Yo, Zo]: Float3
+) : void => {
+    Xo[o] = Xa[a] + b;
+    Yo[o] = Ya[a] + b;
+    Zo[o] = Za[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number
+) : void => {
+    Xa[a] += b;
+    Ya[a] += b;
+    Za[a] += b;
+};
+
 const subtract = (
     a: number, [Xa, Ya, Za]: Float3,
     b: number, [Xb, Yb, Zb]: Float3,
@@ -157,6 +176,25 @@ const subtract_in_place = (
     Xa[a] -= Xb[b];
     Ya[a] -= Yb[b];
     Za[a] -= Zb[b];
+};
+
+const broadcast_subtract = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number,
+    o: number, [Xo, Yo, Zo]: Float3
+) : void => {
+    Xo[o] = Xa[a] - b;
+    Yo[o] = Ya[a] - b;
+    Zo[o] = Za[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number
+) : void => {
+    Xa[a] -= b;
+    Ya[a] -= b;
+    Za[a] -= b;
 };
 
 const multiply = (
@@ -423,56 +461,6 @@ const matrix_multiply_in_place_all = (
     }
 };
 
-// const in_view_tri = (
-//     x1: number, y1: number, z1: number, top_1: number, right_1: number,
-//     x2: number, y2: number, z2: number, top_2: number, right_2: number,
-//     x3: number, y3: number, z3: number, top_3: number, right_3: number,
-//
-//     near: number,
-//     far: number
-// ) : boolean => (
-//         // Frustum culling:
-//         // ================
-//         !(near > z1 || z1 > far || y1 < -top_1 || y1 > top_1 || x1 < -right_1 || x1 > right_1) ||
-//         !(near > z2 || z2 > far || y2 < -top_2 || y2 > top_2 || x2 < -right_2 || x2 > right_2) ||
-//         !(near > z3 || z3 > far || y3 < -top_3 || y3 > top_3 || x3 < -right_3 || x3 > right_3)
-//     ) && (
-//         // Back-face culling:
-//         // ==================
-//         // Compute the determinant (area of the paralelogram formed by the 3 vertices)
-//         // If the area is zero, the triangle also has a zero surface so can not be drawn.
-//         // If the area is negative, the parallelogram (triangle) is facing backwards.
-//         (((x3 - x2) * (y1 - y2)) - ((y3 - y2) * (x1 - x2))) > 0
-//     );
-//
-// let behind, in_front, above, below, right_of, left_of, in_y, in_z: boolean;
-// const in_view_all = (
-//     [Xa, Ya, Za]: Float3,
-//
-//     near: number,
-//     far: number
-// ) : boolean => {
-//     behind = in_front = above = below = right_of = left_of = in_y = in_z = false;
-//
-//     for (let i = 0; i < Xa.length; i++) {
-//         t_z = Za[i];
-//
-//         if (t_z < near) {
-//             if (in_front)
-//                 return true;
-//
-//             behind = true;
-//         } else if (t_z > far) {
-//             if (behind)
-//                 return true;
-//
-//             in_front = true;
-//         } else return true;
-//     }
-//
-//     return false;
-// };
-
 export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet<DIM._3D> = {
     matrix_multiply_all,
     matrix_multiply_in_place_all
@@ -505,6 +493,12 @@ export const base3DFunctions: IVectorFunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     multiply,
     multiply_in_place,

@@ -154,6 +154,27 @@ const add_in_place = (
     Wa[a] += Wb[b];
 };
 
+const broadcast_add = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    Xo[o] = Xa[a] + b;
+    Yo[o] = Ya[a] + b;
+    Zo[o] = Za[a] + b;
+    Wo[o] = Wa[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number
+) : void => {
+    Xa[a] += b;
+    Ya[a] += b;
+    Za[a] += b;
+    Wa[a] += b;
+};
+
 const subtract = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     b: number, [Xb, Yb, Zb, Wb]: Float4,
@@ -173,6 +194,27 @@ const subtract_in_place = (
     Ya[a] -= Yb[b];
     Za[a] -= Zb[b];
     Wa[a] -= Wb[b];
+};
+
+const broadcast_subtract = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number,
+    o: number, [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    Xo[o] = Xa[a] - b;
+    Yo[o] = Ya[a] - b;
+    Zo[o] = Za[a] - b;
+    Wo[o] = Wa[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [Xa, Ya, Za, Wa]: Float4,
+    b: number
+) : void => {
+    Xa[a] -= b;
+    Ya[a] -= b;
+    Za[a] -= b;
+    Wa[a] -= b;
 };
 
 const multiply = (
@@ -403,18 +445,6 @@ export const directionAttribute4DFunctions: IDirectionAttribute4DFunctionSet = {
     normalize_all_in_place
 };
 
-//
-// export const positionAttribute4DFunctions: IPositionAttribute4DFunctionSet = {
-//     ...transformableAttribute4DFunctions,
-//
-//     in_view_tri,
-//     in_view_all,
-//     in_view_any,
-//
-//     to_ndc_all,
-//     to_ndc_all_in_place,
-// };
-
 export const base4DFunctions: IVectorFunctionSet = {
     allocator: VECTOR_4D_ALLOCATOR,
 
@@ -429,6 +459,12 @@ export const base4DFunctions: IVectorFunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     multiply,
     multiply_in_place,

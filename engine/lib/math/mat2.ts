@@ -182,6 +182,35 @@ const add_in_place = (
     M12a[a] += M12b[b];  M22a[a] += M22b[b];
 };
 
+const broadcast_add = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o,
+        M21o, M22o
+    ]: Float4
+) : void => {
+    M11o[o] = M11a[a] + b;  M21o[o] = M21a[a] + b;
+    M12o[o] = M12a[a] + b;  M22o[o] = M22a[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    b: number
+) : void => {
+    M11a[a] += b;  M21a[a] += b;
+    M12a[a] += b;  M22a[a] += b;
+};
+
 const subtract = (
     a: number, [
         M11a, M12a,
@@ -215,6 +244,35 @@ const subtract_in_place = (
 ) : void => {
     M11a[a] -= M11b[b];  M21a[a] -= M21b[b];
     M12a[a] -= M12b[b];  M22a[a] -= M22b[b];
+};
+
+const broadcast_subtract = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o,
+        M21o, M22o
+    ]: Float4
+) : void => {
+    M11o[o] = M11a[a] - b;  M21o[o] = M21a[a] - b;
+    M12o[o] = M12a[a] - b;  M22o[o] = M22a[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    b: number
+) : void => {
+    M11a[a] -= b;  M21a[a] -= b;
+    M12a[a] -= b;  M22a[a] -= b;
 };
 
 const divide = (
@@ -350,6 +408,12 @@ export const matrix2x2Functions: IMatrix2x2FunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     divide,
     divide_in_place,

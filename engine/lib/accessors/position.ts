@@ -166,36 +166,6 @@ export class Position4D extends Position<DIM._4D, Matrix4x4>
 
     protected readonly _dir = dir4;
 
-    // readonly isInView = (near: number = 0, far: number = 1): boolean => this._.in_view(
-    //     this.arrays[0][this.id],
-    //     this.arrays[1][this.id],
-    //     this.arrays[2][this.id],
-    //     this.arrays[3][this.id],
-    //     near,
-    //     far
-    // );
-    //
-    // readonly isOutOfView = (near: number = 0, far: number = 1): boolean => this._.out_of_view(
-    //     this.arrays[0][this.id],
-    //     this.arrays[1][this.id],
-    //     this.arrays[2][this.id],
-    //     this.arrays[3][this.id],
-    //     near,
-    //     far
-    // );
-    //
-    // toNDC(out?: Position3D|Position4D): void {
-    //     if (out) {
-    //         this._.to_ndc(
-    //             this.id, this.arrays,
-    //             out.id, out.arrays
-    //         );
-    //     } else {
-    //         this._.to_ndc_in_place(
-    //             this.id, this.arrays
-    //         );
-    //     }
-    // }
 
     as3D(out?: Position3D): Position3D {
         if (out) {

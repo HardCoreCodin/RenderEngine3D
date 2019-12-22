@@ -53,6 +53,12 @@ export interface IMathFunctionSet
     subtract(a: number, []: Arrays, b: number, []: Arrays, o: number, []: Arrays): void;
     subtract_in_place(a: number, []: Arrays, b: number, []: Arrays): void;
 
+    broadcast_add(a: number, []: Arrays, b: number, o: number, []: Arrays): void;
+    broadcast_add_in_place(a: number, []: Arrays, b: number): void;
+
+    broadcast_subtract(a: number, []: Arrays, b: number, o: number, []: Arrays): void;
+    broadcast_subtract_in_place(a: number, []: Arrays, b: number): void;
+
     multiply(a: number, []: Arrays, m: number, []: Arrays, o: number, []: Arrays): void;
     multiply_in_place(a: number, []: Arrays, m: number, []: Arrays): void;
 

@@ -7,7 +7,6 @@ import {
     IVectorFunctionSet
 } from "../_interfaces/functions.js";
 import {VECTOR_2D_ALLOCATOR} from "../memory/allocators.js";
-import {IAccessor} from "../_interfaces/accessors.js";
 
 let t_x,
     t_y,
@@ -120,6 +119,23 @@ const add_in_place = (
     Ya[a] += Yb[b];
 };
 
+const broadcast_add = (
+    a: number, [Xa, Ya]: Float2,
+    b: number,
+    o: number, [Xo, Yo]: Float2
+): void => {
+    Xo[o] = Xa[a] + b;
+    Yo[o] = Ya[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [Xa, Ya]: Float2,
+    b: number
+): void => {
+    Xa[a] += b;
+    Ya[a] += b;
+};
+
 const subtract = (
     a: number, [Xa, Ya]: Float2,
     b: number, [Xb, Yb]: Float2,
@@ -135,6 +151,23 @@ const subtract_in_place = (
 ): void => {
     Xa[a] -= Xb[b];
     Ya[a] -= Yb[b];
+};
+
+const broadcast_subtract = (
+    a: number, [Xa, Ya]: Float2,
+    b: number,
+    o: number, [Xo, Yo]: Float2
+): void => {
+    Xo[o] = Xa[a] - b;
+    Yo[o] = Ya[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [Xa, Ya]: Float2,
+    b: number
+): void => {
+    Xa[a] -= b;
+    Ya[a] -= b;
 };
 
 const multiply = (
@@ -264,6 +297,12 @@ export const math2DFunctions: IMathFunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     multiply,
     multiply_in_place,

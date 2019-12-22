@@ -236,6 +236,40 @@ const add_in_place = (
     M13a[a] += M13b[b];  M23a[a] += M23b[b];  M33a[a] += M33b[b];
 };
 
+const broadcast_add = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o, M13o,
+        M21o, M22o, M23o,
+        M31o, M32o, M33o
+    ]: Float9
+) : void => {
+    M11o[o] = M11a[a] + b;  M21o[o] = M21a[a] + b;  M31o[o] = M31a[a] + b;
+    M12o[o] = M12a[a] + b;  M22o[o] = M22a[a] + b;  M32o[o] = M32a[a] + b;
+    M13o[o] = M13a[a] + b;  M23o[o] = M23a[a] + b;  M33o[o] = M33a[a] + b;
+};
+
+const broadcast_add_in_place = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    b: number
+) : void => {
+    M11a[a] += b;  M21a[a] += b;  M31a[a] += b;
+    M12a[a] += b;  M22a[a] += b;  M32a[a] += b;
+    M13a[a] += b;  M23a[a] += b;  M33a[a] += b;
+};
+
 const subtract = (
     a: number, [
         M11a, M12a, M13a,
@@ -276,6 +310,40 @@ const subtract_in_place = (
     M11a[a] -= M11b[b];  M21a[a] -= M21b[b];  M31a[a] -= M31b[b];
     M12a[a] -= M12b[b];  M22a[a] -= M22b[b];  M32a[a] -= M32b[b];
     M13a[a] -= M13b[b];  M23a[a] -= M23b[b];  M33a[a] -= M33b[b];
+};
+
+const broadcast_subtract = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    b: number,
+
+    o: number, [
+        M11o, M12o, M13o,
+        M21o, M22o, M23o,
+        M31o, M32o, M33o
+    ]: Float9
+) : void => {
+    M11o[o] = M11a[a] - b;  M21o[o] = M21a[a] - b;  M31o[o] = M31a[a] - b;
+    M12o[o] = M12a[a] - b;  M22o[o] = M22a[a] - b;  M32o[o] = M32a[a] - b;
+    M13o[o] = M13a[a] - b;  M23o[o] = M23a[a] - b;  M33o[o] = M33a[a] - b;
+};
+
+const broadcast_subtract_in_place = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    b: number
+) : void => {
+    M11a[a] -= b;  M21a[a] -= b;  M31a[a] -= b;
+    M12a[a] -= b;  M22a[a] -= b;  M32a[a] -= b;
+    M13a[a] -= b;  M23a[a] -= b;  M33a[a] -= b;
 };
 
 const divide = (
@@ -471,6 +539,12 @@ export const matrix3x3Functions: IMatrixRotationFunctionSet = {
 
     subtract,
     subtract_in_place,
+
+    broadcast_add,
+    broadcast_add_in_place,
+
+    broadcast_subtract,
+    broadcast_subtract_in_place,
 
     divide,
     divide_in_place,
