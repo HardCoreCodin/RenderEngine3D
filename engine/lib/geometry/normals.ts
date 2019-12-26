@@ -143,12 +143,20 @@ export class FaceNormals3D
         return this;
     }
 
-    mat4mul(matrix: Matrix4x4, out: FaceNormals4D): FaceNormals4D {
-        this._.matrix_multiply_all_directions_by_mat4(
-            this.arrays, matrix.id,
-            matrix.arrays,
-            out.arrays
-        );
+    mat4mul(matrix: Matrix4x4, out: FaceNormals4D, flags: Uint8Array): FaceNormals4D {
+        if (flags)
+            this._.matrix_multiply_some_directions_by_mat4(
+                this.arrays, matrix.id,
+                matrix.arrays,
+                flags,
+                out.arrays
+            );
+        else
+            this._.matrix_multiply_all_directions_by_mat4(
+                this.arrays, matrix.id,
+                matrix.arrays,
+                out.arrays
+            );
 
         return out;
     }

@@ -22,7 +22,7 @@ export class VertexUVs2D
 
     homogenize(out?: VertexUVs3D): VertexUVs3D {
         if (out) out.setFrom(this);
-        else out = new VertexUVs3D(this._face_vertices, this._is_shared, this._face_count, [
+        else out = new VertexUVs3D(this.face_vertices, this._is_shared, this.face_count, [
             this.arrays[0],
             this.arrays[1],
             new Float32Array(this.length)

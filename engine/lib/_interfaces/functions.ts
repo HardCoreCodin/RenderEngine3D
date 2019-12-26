@@ -126,12 +126,14 @@ export interface ITransformableAttributeFunctionSet<Dim extends DIM>
 export interface IPositionAttribute3DFunctionSet
     extends ITransformableAttributeFunctionSet<DIM._3D>
 {
+    matrix_multiply_some_positions_by_mat4([]: Float3, m: number, []: Float16, flags: Uint8Array, []: Float4): void;
     matrix_multiply_all_positions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
 }
 
 export interface IDirectionAttribute3DFunctionSet
     extends ITransformableAttributeFunctionSet<DIM._3D>
 {
+    matrix_multiply_some_directions_by_mat4([]: Float3, m: number, []: Float16, flags: Uint8Array, []: Float4): void;
     matrix_multiply_all_directions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
     normalize_all_in_place([]: Float3): void;
 }

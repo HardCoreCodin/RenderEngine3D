@@ -154,12 +154,12 @@ export abstract class VertexAttribute<
     current_triangle: TriangleType;
 
     constructor(
-        protected _face_vertices: IFaceVertices,
+        public readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        protected _face_count: number = _face_vertices.length,
+        public readonly face_count: number = face_vertices.length,
         arrays?: Tuple<Float32Array, Dim>
     ) {
-        super(_face_vertices, _face_count, is_shared ? _face_count : _face_count * 3, arrays);
+        super(face_vertices, face_count, is_shared ? face_count : face_count * 3, arrays);
         this._is_shared = !!is_shared;
     }
 
@@ -180,7 +180,7 @@ export abstract class VertexAttribute<
 
     protected *_iterTriangles() : Generator<TriangleType> {
         if (this._is_shared) {
-            for (const [index_1, index_2, index_3] of this._face_vertices.values()) {
+            for (const [index_1, index_2, index_3] of this.face_vertices.values()) {
                 this._current_face_vertex_vectors[0].id = index_1;
                 this._current_face_vertex_vectors[1].id = index_2;
                 this._current_face_vertex_vectors[2].id = index_3;
@@ -188,10 +188,10 @@ export abstract class VertexAttribute<
                 yield this.current_triangle;
             }
         } else {
-            for (let face_index = 0; face_index < this._face_count; face_index++) {
+            for (let face_index = 0; face_index < this.face_count; face_index++) {
                 this._current_face_vertex_vectors[0].id = face_index;
-                this._current_face_vertex_vectors[1].id = face_index + this._face_count;
-                this._current_face_vertex_vectors[2].id = face_index + this._face_count + this._face_count;
+                this._current_face_vertex_vectors[1].id = face_index + this.face_count;
+                this._current_face_vertex_vectors[2].id = face_index + this.face_count + this.face_count;
 
                 yield this.current_triangle;
             }
@@ -215,7 +215,7 @@ export abstract class LoadableVertexAttribute<
     protected _loadShared(input: InputAttributeType): void {
         let in_index, out_index: number;
         for (const [in_component, out_component] of zip(input.vertices, this.arrays))
-            for (const [in_indicies, out_indicies] of zip(input.faces_vertices, this._face_vertices.arrays))
+            for (const [in_indicies, out_indicies] of zip(input.faces_vertices, this.face_vertices.arrays))
                 for ([in_index, out_index] of zip(in_indicies, out_indicies))
                     out_component[out_index] = in_component[in_index];
     }
@@ -226,7 +226,7 @@ export abstract class LoadableVertexAttribute<
         for (const [vertex_num, face_vertices] of input.faces_vertices.entries())
             for (const [in_component, out_component] of zip(input.vertices, this.arrays))
                 for ([face_index, vertex_index] of face_vertices.entries())
-                    out_component[vertex_num * this._face_count + face_index] = in_component[vertex_index];
+                    out_component[vertex_num * this.face_count + face_index] = in_component[vertex_index];
     }
 
     load(input: InputAttributeType): void {
@@ -267,7 +267,7 @@ export abstract class PulledVertexAttribute<
         // Copy over face-attribute values to their respective vertex-attribute values:
         let offset = 0;
         for (const [vertex_component, face_ccomponent] of zip(this.arrays, input.arrays)) {
-            for (offset = 0; offset < this.length; offset += this._face_count)
+            for (offset = 0; offset < this.length; offset += this.face_count)
                 vertex_component.set(face_ccomponent, offset);
         }
     }

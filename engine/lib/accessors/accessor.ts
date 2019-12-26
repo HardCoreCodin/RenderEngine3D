@@ -181,7 +181,7 @@ export abstract class MathAccessor
 
     minus(other: number, out?: IMathAccessor): IMathAccessor;
     minus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
-    minus(other: IMathAccessor, out: IMathAccessor = this._newOut()): IMathAccessor {
+    minus(other: IMathAccessor|number, out: IMathAccessor = this._newOut()): IMathAccessor {
         if (typeof other === "number") {
             if (out.is(this))
                 this._.broadcast_subtract_in_place(

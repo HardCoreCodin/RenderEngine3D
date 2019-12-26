@@ -1,9 +1,10 @@
-import {Float4, T3} from "../../../types.js";
+import {Float3, Float4, T2, T3} from "../../../types.js";
 import {ABOVE, BELOW, CLIP, CULL, FAR, INSIDE, LEFT, NDC, NEAR, OUT, RIGHT} from "../../../constants.js";
 
 export const cullVertices = (
     [X, Y, Z, W]: Float4,
-    vertex_flags: Uint8Array
+    vertex_flags: Uint8Array,
+    vertex_count: number
 ): number => {
     // Check vertex positions against the frustum:
     // ----------------------------------------------------
@@ -23,7 +24,7 @@ export const cullVertices = (
     let directions, shared_directions, w, x, y, z: number;
     directions = shared_directions = OUT;
 
-    for (let i = 0; i < X.length; i++) {
+    for (let i = 0; i < vertex_count; i++) {
         w = W[i];
         x = X[i];
         y = Y[i];
@@ -85,24 +86,19 @@ export const cullVertices = (
 };
 
 export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
-    [
-        indices_v1,
-        indices_v2,
-        indices_v3
-    ]: T3<FaceVerticesArrayType>,
-    vertex_flags: Uint8Array,
+    [X, Y, Z, W]: Float4,
+    [v1, v2, v3]: T3<FaceVerticesArrayType>,
+
+    face_count: number,
     face_flags: Uint8Array,
+    vertex_flags: Uint8Array,
 
     check_for_clipping: boolean = false,
     cull_back_faces: boolean = false,
 
-    X?: Float32Array,
-    Y?: Float32Array,
-    Z?: Float32Array,
-
-    projected_origin_x?:number,
-    projected_origin_y?:number,
-    projected_origin_z?:number
+    projected_position_x?: number,
+    projected_position_y?: number,
+    projected_position_z?: number
 ): number => {
     // Check face intersections against the frustum:
     face_flags.fill(CULL);
@@ -114,11 +110,11 @@ export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         v2_index, v2_flags, x2, y2, z2, d2_x, d2_y, d2_z,
         v3_index, v3_flags, x3, y3, z3, nx, ny, nz, dot: number;
 
-    for (let f = 0; f < indices_v1.length; f++) {
+    for (let f = 0; f < face_count; f++) {
         // Fetch the index and out-direction flags of each of the face's vertices:
-        v1_index = indices_v1[f];
-        v2_index = indices_v2[f];
-        v3_index = indices_v3[f];
+        v1_index = v1[f];
+        v2_index = v2[f];
+        v3_index = v3[f];
         v1_flags = vertex_flags[v1_index] & OUT;
         v2_flags = vertex_flags[v2_index] & OUT;
         v3_flags = vertex_flags[v3_index] & OUT;
@@ -138,8 +134,8 @@ export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
 
             if (cull_back_faces) {
                 // Check face orientation "early" (before the perspective divide)
-                // Note: This assumes that X, Y and Z arrays were provided, and that their values
-                // are the x y and z values of the positions of the vertices in "view" space(!)
+                // Note:
+                // This assumes that vertex positions were provided in 'clip' or 'view' space(!).
                 // Also, that projected_origin_x/y/z were provided - these are the coordinates of the origin
                 // which has the projection matrix alone applied to them.
                 x1 = X[v1_index]; x2 = X[v2_index]; x3 = X[v3_index];
@@ -160,9 +156,9 @@ export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                     (d1_y * d2_x);
 
                 // Compute a direction vector from the face to the origin (in projected/clip space):
-                d1_x = projected_origin_x - x1;
-                d1_y = projected_origin_y - y1;
-                d1_z = projected_origin_z - z1;
+                d1_x = projected_position_x - x1;
+                d1_y = projected_position_y - y1;
+                d1_z = projected_position_z - z1;
 
                 // Compute the dot product between that direction vector and the normal:
                 dot = (d1_x * nx) +

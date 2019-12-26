@@ -9,6 +9,7 @@ import {transformableAttribute4DFunctions} from "../math/vec4.js";
 import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {ICrossedDirection, IPosition, IVector3D} from "../_interfaces/vectors.js";
 import {IFacePositions, IVertexPositions3D, IVertexPositions4D} from "../_interfaces/attributes.js";
+import {Vector} from "../accessors/vector.js";
 
 const d1_3D = dir3();
 const d2_3D = dir3();
@@ -17,7 +18,7 @@ const d2_4D = dir4();
 
 abstract class PositionTriangle<
     Dim extends DIM,
-    VectorType extends IPosition<Dim> & IVector3D>
+    VectorType extends Vector & IPosition<Dim> & IVector3D>
     extends Triangle<VectorType>
 {
     computeNormal(normal: ICrossedDirection<Dim>): void {}
@@ -82,12 +83,20 @@ export class VertexPositions3D
         return this;
     }
 
-    mat4mul(matrix: Matrix4x4, out: VertexPositions4D): VertexPositions4D {
-        this._.matrix_multiply_all_positions_by_mat4(
-            this.arrays, matrix.id,
-            matrix.arrays,
-            out.arrays
-        );
+    mat4mul(matrix: Matrix4x4, out: VertexPositions4D, flags?: Uint8Array): VertexPositions4D {
+        if (flags)
+            this._.matrix_multiply_some_positions_by_mat4(
+                this.arrays, matrix.id,
+                matrix.arrays,
+                flags,
+                out.arrays
+            );
+        else
+            this._.matrix_multiply_all_positions_by_mat4(
+                this.arrays, matrix.id,
+                matrix.arrays,
+                out.arrays
+            );
 
         return out;
     }

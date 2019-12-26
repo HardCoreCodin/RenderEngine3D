@@ -388,6 +388,25 @@ const matrix_multiply_all = (
     }
 };
 
+export const matrix_multiply_some_positions_by_mat4 = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    flags: Uint8Array,
+    [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    for (let i = 0; i < Xa.length; i++) if (flags[i]) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m] + M44[m];
+    }
+};
+
 export const matrix_multiply_all_positions_by_mat4 = (
     [Xa, Ya, Za]: Float3,
     m: number, [
@@ -424,6 +443,24 @@ export const matrix_multiply_all_directions_by_mat4 = (
     }
 };
 
+export const matrix_multiply_some_directions_by_mat4 = (
+    [Xa, Ya, Za]: Float3,
+    m: number, [
+        M11, M12, M13, M14,
+        M21, M22, M23, M24,
+        M31, M32, M33, M34,
+        M41, M42, M43, M44
+    ]: Float16,
+    flags: Uint8Array,
+    [Xo, Yo, Zo, Wo]: Float4
+) : void => {
+    for (let i = 0; i < Xa.length; i++) if (flags[i]) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
+    }
+};
 
 const matrix_multiply_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
@@ -469,12 +506,14 @@ export const transformableAttribute3DFunctions: ITransformableAttributeFunctionS
 export const positionAttribute3DFunctions: IPositionAttribute3DFunctionSet = {
     ...transformableAttribute3DFunctions,
 
+    matrix_multiply_some_positions_by_mat4,
     matrix_multiply_all_positions_by_mat4
 };
 
 export const directionAttribute3DFunctions: IDirectionAttribute3DFunctionSet = {
     ...transformableAttribute3DFunctions,
 
+    matrix_multiply_some_directions_by_mat4,
     matrix_multiply_all_directions_by_mat4,
     normalize_all_in_place
 };

@@ -14,7 +14,7 @@ export interface INode3D
     extends IParent
 {
     parent: IParent;
-    local_to_world: IMatrix4x4;
+    model_to_world: IMatrix4x4;
     is_static: boolean;
 
     refreshWorldMatrix(recurse?: boolean, include_static?: boolean): void;
