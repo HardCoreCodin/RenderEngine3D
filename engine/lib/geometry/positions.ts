@@ -6,23 +6,24 @@ import {Direction3D, Direction4D, dir3, dir4} from "../accessors/direction.js";
 import {Triangle, FaceAttribute, LoadableVertexAttribute} from "./attributes.js";
 import {positionAttribute3DFunctions} from "../math/vec3.js";
 import {transformableAttribute4DFunctions} from "../math/vec4.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
+import {
+    Float32Allocator3D,
+    Float32Allocator4D,
+    VECTOR_3D_ALLOCATOR,
+    VECTOR_4D_ALLOCATOR
+} from "../memory/allocators.js";
 import {ICrossedDirection, IPosition, IVector3D} from "../_interfaces/vectors.js";
 import {IFacePositions, IVertexPositions3D, IVertexPositions4D} from "../_interfaces/attributes.js";
 import {Vector} from "../accessors/vector.js";
+import {IAccessorConstructor} from "../_interfaces/accessors.js";
+import {AnyConstructor} from "../../types.js";
 
 const d1_3D = dir3();
 const d2_3D = dir3();
 const d1_4D = dir4();
 const d2_4D = dir4();
 
-abstract class PositionTriangle<VectorType extends Vector & IPosition & IVector3D>
-    extends Triangle<VectorType>
-{
-    computeNormal(normal: ICrossedDirection): void {}
-}
-
-export class PositionTriangle3D extends PositionTriangle<Position3D> {
+export class PositionTriangle3D extends Triangle<Position3D> {
     computeNormal(normal: Direction3D): void {
         this.vertices[0].to(this.vertices[1], d1_3D);
         this.vertices[0].to(this.vertices[2], d2_3D);
@@ -31,19 +32,11 @@ export class PositionTriangle3D extends PositionTriangle<Position3D> {
 }
 
 let p1, p2, p3: Position4D;
-export class PositionTriangle4D extends PositionTriangle<Position4D>
+export class PositionTriangle4D extends Triangle<Position4D>
 {
     computeNormal(normal: Direction4D): void {
         [p1, p2, p3] = this.vertices;
         p1.to(p2, d1_4D).cross(p1.to(p3, d2_4D)).normalized(normal);
-    }
-
-    as3D(out: PositionTriangle3D = new PositionTriangle3D()): PositionTriangle3D {
-        this.vertices[0].as3D(out.vertices[0]);
-        this.vertices[1].as3D(out.vertices[1]);
-        this.vertices[2].as3D(out.vertices[2]);
-
-        return out;
     }
 }
 
@@ -53,9 +46,9 @@ export class VertexPositions3D
 {
     readonly _ = positionAttribute3DFunctions;
     readonly attribute = ATTRIBUTE.position;
-    readonly Vector = Position3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
-    readonly Triangle = PositionTriangle3D;
+    protected _getTriangleConstructor(): AnyConstructor<PositionTriangle3D> {return PositionTriangle3D}
+    protected _getVectorConstructor(): IAccessorConstructor<Position3D> {return Position3D}
+    protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
 
     load(input_attribute: InputPositions): void {
         this._is_shared = true;
@@ -99,9 +92,9 @@ export class VertexPositions4D
 {
     readonly _ = transformableAttribute4DFunctions;
     readonly attribute = ATTRIBUTE.position;
-    readonly Vector = Position4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
-    readonly Triangle = PositionTriangle4D;
+    protected _getTriangleConstructor(): AnyConstructor<PositionTriangle4D> {return PositionTriangle4D}
+    protected _getVectorConstructor(): IAccessorConstructor<Position4D> {return Position4D}
+    protected _getAllocator(): Float32Allocator4D {return VECTOR_4D_ALLOCATOR}
 
     load(input_attribute: InputPositions): void {
         this.arrays[0].set(input_attribute.vertices[0]);
@@ -124,10 +117,10 @@ export class VertexPositions4D
 export class FacePositions3D extends FaceAttribute<Position3D, VertexPositions3D>
     implements IFacePositions<Matrix3x3, Position3D, VertexPositions3D>
 {
-    readonly _ = positionAttribute3DFunctions;
     readonly attribute = ATTRIBUTE.position;
-    readonly Vector = Position3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
+    readonly _ = positionAttribute3DFunctions;
+    protected _getVectorConstructor(): IAccessorConstructor<Position3D> {return Position3D}
+    protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
 
     matmul(matrix: Matrix3x3, out?: this): this {
         if (out) {
@@ -152,10 +145,10 @@ export class FacePositions3D extends FaceAttribute<Position3D, VertexPositions3D
 
 export class FacePositions4D extends FaceAttribute<Position4D, VertexPositions4D>
 {
-    readonly _ = transformableAttribute4DFunctions;
     readonly attribute = ATTRIBUTE.position;
-    readonly Vector = Position4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
+    readonly _ = transformableAttribute4DFunctions;
+    protected _getVectorConstructor(): IAccessorConstructor<Position4D> {return Position4D}
+    protected _getAllocator(): Float32Allocator4D {return VECTOR_4D_ALLOCATOR}
 
     pull(input: VertexPositions4D): void {
         super.pull(input);

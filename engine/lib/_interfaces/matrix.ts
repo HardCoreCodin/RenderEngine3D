@@ -14,8 +14,6 @@ export interface IMatrix
 
     transpose(): this;
     transposed(out?: this): this;
-
-    toArray(array: Float32Array): Float32Array;
 }
 
 export interface IRotationMatrix

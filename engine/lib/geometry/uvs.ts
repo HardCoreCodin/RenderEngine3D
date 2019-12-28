@@ -2,12 +2,18 @@ import {ATTRIBUTE} from "../../constants.js";
 import {InputUVs} from "./inputs.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {LoadableVertexAttribute, Triangle} from "./attributes.js";
-import {VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR} from "../memory/allocators.js";
+import {
+    Float32Allocator2D,
+    Float32Allocator3D,
+    VECTOR_2D_ALLOCATOR,
+    VECTOR_3D_ALLOCATOR
+} from "../memory/allocators.js";
 import {IVertexUVs} from "../_interfaces/attributes.js";
+import {IAccessorConstructor} from "../_interfaces/accessors.js";
+import {AnyConstructor} from "../../types.js";
 
-class UVTriangle<VectorType extends UV2D|UV3D> extends Triangle<VectorType> {}
-class UVTriangle2D extends UVTriangle<UV2D> {}
-class UVTriangle3D extends UVTriangle<UV3D> {}
+class UVTriangle2D extends Triangle<UV2D> {}
+class UVTriangle3D extends Triangle<UV3D> {}
 
 
 export class VertexUVs2D
@@ -15,9 +21,9 @@ export class VertexUVs2D
     implements IVertexUVs<UV2D>
 {
     readonly attribute = ATTRIBUTE.uv;
-    readonly Vector = UV2D;
-    readonly Triangle = UVTriangle2D;
-    readonly allocator = VECTOR_2D_ALLOCATOR;
+    protected _getTriangleConstructor(): AnyConstructor<UVTriangle2D> {return UVTriangle2D}
+    protected _getAllocator(): Float32Allocator2D {return VECTOR_2D_ALLOCATOR}
+    protected _getVectorConstructor(): IAccessorConstructor<UV2D> {return UV2D}
 }
 
 export class VertexUVs3D
@@ -25,7 +31,7 @@ export class VertexUVs3D
     implements IVertexUVs<UV3D>
 {
     readonly attribute = ATTRIBUTE.uv;
-    readonly Vector = UV3D;
-    readonly Triangle = UVTriangle3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
+    protected _getTriangleConstructor(): AnyConstructor<UVTriangle3D> {return UVTriangle3D}
+    protected _getVectorConstructor(): IAccessorConstructor<UV3D> {return UV3D}
+    protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
 }

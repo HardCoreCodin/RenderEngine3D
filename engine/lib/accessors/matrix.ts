@@ -49,8 +49,6 @@ export default abstract class Matrix extends MathAccessor implements IMatrix
 
         return out;
     }
-
-    abstract toArray(array?: Float32Array): Float32Array;
 }
 
 export abstract class RotationMatrix extends Matrix implements IRotationMatrix
@@ -244,15 +242,6 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2
 
         return this;
     }
-
-    toArray(array: Float32Array = new Float32Array(4)): Float32Array {
-        array[0] = this.arrays[0][this.id];
-        array[1] = this.arrays[1][this.id];
-        array[2] = this.arrays[2][this.id];
-        array[3] = this.arrays[3][this.id];
-
-        return array;
-    }
 }
 
 export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
@@ -326,20 +315,6 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
         );
 
         return this;
-    }
-
-    toArray(array: Float32Array = new Float32Array(9)): Float32Array {
-        array[0] = this.arrays[0][this.id];
-        array[1] = this.arrays[1][this.id];
-        array[2] = this.arrays[2][this.id];
-        array[3] = this.arrays[3][this.id];
-        array[4] = this.arrays[4][this.id];
-        array[5] = this.arrays[5][this.id];
-        array[6] = this.arrays[6][this.id];
-        array[7] = this.arrays[7][this.id];
-        array[8] = this.arrays[8][this.id];
-
-        return array;
     }
 
     translateBy(x: number, y: number = 0): this {
@@ -452,27 +427,6 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
         return this;
     }
 
-    toArray(array: Float32Array = new Float32Array(16)): Float32Array {
-        array[0] = this.arrays[0][this.id];
-        array[1] = this.arrays[1][this.id];
-        array[2] = this.arrays[2][this.id];
-        array[3] = this.arrays[3][this.id];
-        array[4] = this.arrays[4][this.id];
-        array[5] = this.arrays[5][this.id];
-        array[6] = this.arrays[6][this.id];
-        array[7] = this.arrays[7][this.id];
-        array[8] = this.arrays[8][this.id];
-        array[9] = this.arrays[9][this.id];
-        array[10] = this.arrays[10][this.id];
-        array[11] = this.arrays[11][this.id];
-        array[12] = this.arrays[12][this.id];
-        array[13] = this.arrays[13][this.id];
-        array[14] = this.arrays[14][this.id];
-        array[15] = this.arrays[15][this.id];
-
-        return array;
-    }
-
     translateBy(x: number, y: number = 0, z: number = 0): this {
         if (x) this.translation.x += x;
         if (y) this.translation.y += y;
@@ -487,6 +441,15 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
         if (z !== 1) this.z_axis.mul(z);
 
         return this;
+    }
+
+    toString(): string {
+        const a = this.arrays;
+        const i = this.id;
+        return `${a[0][i]} ${a[1][i]} ${a[2][i]} ${a[3][i]}
+${a[4][i]} ${a[5][i]} ${a[6][i]} ${a[7][i]}
+${a[8][i]} ${a[9][i]} ${a[10][i]} ${a[11][i]}
+${a[12][i]} ${a[13][i]} ${a[14][i]} ${a[15][i]}`;
     }
 }
 

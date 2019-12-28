@@ -103,15 +103,15 @@ export class ArraysBlocksAllocator<ArrayType extends TypedArray = Float32Array>
 export abstract class Allocator<ArrayType extends TypedArray>
     implements IAllocator<ArrayType>
 {
-    readonly blocks: ArraysBlocksAllocator<ArrayType>;
+    protected abstract _getArrayConstructor(): AnyConstructor<ArrayType>;
 
-    protected constructor(
-        readonly dim: DIM,
-        readonly ArrayConstructor: AnyConstructor<ArrayType>
-    ) {
+    readonly blocks: ArraysBlocksAllocator<ArrayType>;
+    readonly ArrayConstructor: AnyConstructor<ArrayType>;
+
+    protected constructor(readonly dim: DIM) {
+        this.ArrayConstructor = this._getArrayConstructor();
         this.blocks = new ArraysBlocksAllocator<ArrayType>(
-            dim,
-            ArrayConstructor as TypedArrayConstructor<ArrayType>
+            dim, this.ArrayConstructor as TypedArrayConstructor<ArrayType>
         );
     }
 
@@ -135,13 +135,8 @@ export abstract class Allocator<ArrayType extends TypedArray>
     }
 }
 
-export abstract class Float32Allocator extends Allocator<Float32Array>
-{
-    protected constructor(
-        readonly dim: DIM
-    ) {
-        super(dim, Float32Array);
-    }
+export abstract class Float32Allocator extends Allocator<Float32Array> {
+    protected _getArrayConstructor(): AnyConstructor<Float32Array> {return Float32Array}
 }
 export class Float32Allocator2D extends Float32Allocator {constructor() {super(DIM._2D)}}
 export class Float32Allocator3D extends Float32Allocator {constructor() {super(DIM._3D)}}
@@ -149,37 +144,22 @@ export class Float32Allocator4D extends Float32Allocator {constructor() {super(D
 export class Float32Allocator9D extends Float32Allocator {constructor() {super(DIM._9D)}}
 export class Float32Allocator16D extends Float32Allocator {constructor() {super(DIM._16D)}}
 
-export abstract class Int8Allocator extends Allocator<Uint8Array>
-{
-    protected constructor(
-        readonly dim: DIM
-    ) {
-        super(dim, Uint8Array);
-    }
+export abstract class Int8Allocator extends Allocator<Uint8Array> {
+    protected _getArrayConstructor(): AnyConstructor<Uint8Array> {return Uint8Array}
 }
 export class Int8Allocator1D extends Int8Allocator {constructor() {super(DIM._1D)}}
 export class Int8Allocator2D extends Int8Allocator {constructor() {super(DIM._2D)}}
 export class Int8Allocator3D extends Int8Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class Int16Allocator extends Allocator<Uint16Array>
-{
-    protected constructor(
-        readonly dim: DIM
-    ) {
-        super(dim, Uint16Array);
-    }
+export abstract class Int16Allocator extends Allocator<Uint16Array> {
+    protected _getArrayConstructor(): AnyConstructor<Uint16Array> {return Uint16Array}
 }
 export class Int16Allocator1D extends Int16Allocator {constructor() {super(DIM._1D)}}
 export class Int16Allocator2D extends Int16Allocator {constructor() {super(DIM._2D)}}
 export class Int16Allocator3D extends Int16Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class Int32Allocator extends Allocator<Uint32Array>
-{
-    protected constructor(
-        readonly dim: DIM
-    ) {
-        super(dim, Uint32Array);
-    }
+export abstract class Int32Allocator extends Allocator<Uint32Array> {
+    protected _getArrayConstructor(): AnyConstructor<Uint32Array> {return Uint32Array}
 }
 export class Int32Allocator1D extends Int32Allocator {constructor() {super(DIM._1D)}}
 export class Int32Allocator2D extends Int32Allocator {constructor() {super(DIM._2D)}}

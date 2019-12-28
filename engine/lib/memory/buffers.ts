@@ -1,10 +1,11 @@
 import {TypedArray} from "../../types.js";
 import {IBuffer} from "../_interfaces/buffers.js";
 import {IAllocator} from "../_interfaces/allocators.js";
-import {Float32Allocator} from "./allocators.js";
 
-export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType> {
-    abstract readonly allocator: IAllocator<ArrayType>;
+export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType>
+{
+    protected abstract _getAllocator(): IAllocator<ArrayType>;
+    readonly allocator: IAllocator<ArrayType>;
     protected _values: number[];
 
     length: number;
@@ -14,6 +15,7 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
         length?: number,
         arrays?: ArrayType[]
     ) {
+        this.allocator = this._getAllocator();
         if (length !== undefined)
             this.init(length, arrays);
     }
@@ -35,5 +37,10 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
 }
 
 export abstract class FloatBuffer extends Buffer<Float32Array> implements IBuffer {
-    abstract readonly allocator: Float32Allocator;
+    constructor(
+        length?: number,
+        arrays?: Float32Array[]
+    ) {
+        super(length, arrays);
+    }
 }

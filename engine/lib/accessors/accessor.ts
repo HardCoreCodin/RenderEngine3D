@@ -77,6 +77,13 @@ export class Accessor implements IAccessor
         return new (this.constructor as IAccessorConstructor<this>)();
     }
 
+    toArray(array: Float32Array = new Float32Array(this._.allocator.dim)): Float32Array {
+        const id = this.id;
+        for (const [i, a] of this.arrays.entries())
+            array[i] = a[id];
+
+        return array;
+    }
 }
 
 export abstract class MathAccessor

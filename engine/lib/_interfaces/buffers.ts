@@ -24,6 +24,8 @@ export interface IVertexFaces<ArrayType extends TypedArray = Uint8Array|Uint16Ar
     indices: Array<ArrayType>;
 }
 
-export interface IFromToIndices<ArrayType extends Uint8Array | Uint16Array | Uint32Array> {
+export interface IFromToIndices<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
+    extends IBuffer<ArrayType>
+{
     allocator: IAllocator<ArrayType>;
 }

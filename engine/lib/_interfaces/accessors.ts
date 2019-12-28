@@ -18,7 +18,7 @@ export interface IAccessor {
     is(other: IAccessor): boolean;
     equals(other: IAccessor): boolean;
     copy(out?: this): this;
-
+    toArray(array: Float32Array): Float32Array;
     _new(): this;
 }
 

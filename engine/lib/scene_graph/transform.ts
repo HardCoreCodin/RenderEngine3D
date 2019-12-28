@@ -91,7 +91,7 @@ export class EulerRotation {
         this._rotation_matrix.transpose();
         this._matrix.mul(this._rotation_matrix);
 
-        this._rotation_matrix.setRotationAroundZ(this._z_angle); // Roll
+        this._rotation_matrix.setRotationAroundZ(this._z_angle, true); // Roll
         this._rotation_matrix.rotateAroundX(this._x_angle); // Pitch
         this._rotation_matrix.rotateAroundY(this._y_angle); // Yaw
 

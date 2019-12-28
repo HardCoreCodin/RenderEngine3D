@@ -11,7 +11,7 @@ import {
     IVertexAttribute
 } from "../_interfaces/attributes.js";
 import {IVector} from "../_interfaces/vectors.js";
-import {AnyConstructor} from "../../types.js";
+import {AnyConstructor, T3} from "../../types.js";
 import {IAccessor, IAccessorConstructor} from "../_interfaces/accessors.js";
 import {Arrays} from "../_interfaces/functions.js";
 import {ATTRIBUTE} from "../../constants.js";
@@ -21,7 +21,8 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
     implements IAttribute<AccessorType>
 {
     readonly abstract attribute: ATTRIBUTE;
-    readonly abstract Vector: IAccessorConstructor<AccessorType>;
+    readonly Vector: IAccessorConstructor<AccessorType>;
+    protected abstract _getVectorConstructor(): IAccessorConstructor<AccessorType>;
 
     arrays: Arrays;
     current: AccessorType;
@@ -33,6 +34,7 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
         arrays?: Arrays
     ) {
         super(length, arrays);
+        this.Vector = this._getVectorConstructor();
         this._postInit();
     }
 
@@ -99,13 +101,11 @@ export abstract class VertexAttribute<
     implements IVertexAttribute<VectorType>
 {
     protected _is_shared: boolean;
-    protected readonly _current_face_vertex_vectors: [
-        VectorType,
-        VectorType,
-        VectorType
-        ] = [null, null, null];
+    protected _current_face_vertex_vectors: T3<VectorType>;
 
-    readonly abstract Triangle: AnyConstructor<TriangleType>;
+    Triangle: AnyConstructor<TriangleType>;
+    protected abstract _getTriangleConstructor(): AnyConstructor<TriangleType>;
+
     current_triangle: TriangleType;
 
     constructor(
@@ -121,10 +121,13 @@ export abstract class VertexAttribute<
     _postInit(): void {
         super._postInit();
 
-        this._current_face_vertex_vectors[0] = new this.Vector(0, this.arrays);
-        this._current_face_vertex_vectors[1] = new this.Vector(0, this.arrays);
-        this._current_face_vertex_vectors[2] = new this.Vector(0, this.arrays);
+        this._current_face_vertex_vectors = [
+            new this.Vector(0, this.arrays),
+            new this.Vector(0, this.arrays),
+            new this.Vector(0, this.arrays)
+        ];
 
+        this.Triangle = this._getTriangleConstructor();
         this.current_triangle = new this.Triangle();
         this.current_triangle.vertices = this._current_face_vertex_vectors;
     }
@@ -143,10 +146,12 @@ export abstract class VertexAttribute<
                 yield this.current_triangle;
             }
         } else {
+            let offset = 0;
             for (let face_index = 0; face_index < this.face_count; face_index++) {
-                this._current_face_vertex_vectors[0].id = face_index;
-                this._current_face_vertex_vectors[1].id = face_index + this.face_count;
-                this._current_face_vertex_vectors[2].id = face_index + this.face_count + this.face_count;
+                this._current_face_vertex_vectors[0].id = offset;
+                this._current_face_vertex_vectors[1].id = offset + 1;
+                this._current_face_vertex_vectors[2].id = offset + 2;
+                offset += 3;
 
                 yield this.current_triangle;
             }
@@ -155,6 +160,19 @@ export abstract class VertexAttribute<
 
     get triangles(): Generator<TriangleType> {
         return this._iterTriangles();
+    }
+
+    toArray(array: Float32Array = new Float32Array(this.arrays.length * this.arrays[0].length)): Float32Array {
+        const num_components = this.arrays.length;
+        for (const [component, values] of this.arrays.entries()) {
+            let index = component;
+            for (const value of values) {
+                array[index] = value;
+                index += num_components;
+            }
+        }
+
+        return array;
     }
 }
 
@@ -174,12 +192,20 @@ export abstract class LoadableVertexAttribute<
     }
 
     protected _loadUnshared(input: InputAttributeType): void {
-        let face_index, vertex_index: number;
-
-        for (const [vertex_num, face_vertices] of input.faces_vertices.entries())
-            for (const [in_component, out_component] of zip(input.vertices, this.arrays))
-                for ([face_index, vertex_index] of face_vertices.entries())
-                    out_component[vertex_num * this.face_count + face_index] = in_component[vertex_index];
+        let offset, face_index: number;
+        const v1_indices = input.faces_vertices[0];
+        const v2_indices = input.faces_vertices[1];
+        const v3_indices = input.faces_vertices[2];
+        const face_count = v1_indices.length;
+        for (const [in_component, out_component] of zip(input.vertices, this.arrays)) {
+            offset = 0;
+            for (face_index = 0; face_index < face_count; face_index++) {
+                out_component[offset  ] = in_component[v1_indices[face_index]];
+                out_component[offset+1] = in_component[v2_indices[face_index]];
+                out_component[offset+2] = in_component[v3_indices[face_index]];
+                offset += 3;
+            }
+        }
     }
 
     load(input: InputAttributeType): void {

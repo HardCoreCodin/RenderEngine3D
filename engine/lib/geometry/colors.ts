@@ -1,23 +1,28 @@
-import {ATTRIBUTE, DIM} from "../../constants.js";
+import {ATTRIBUTE} from "../../constants.js";
 import {Color3D, Color4D} from "../accessors/color.js";
 import {IFaceColors, IVertexColors} from "../_interfaces/attributes.js";
-import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
+import {
+    Float32Allocator3D,
+    Float32Allocator4D,
+    VECTOR_3D_ALLOCATOR,
+    VECTOR_4D_ALLOCATOR
+} from "../memory/allocators.js";
 import {InputColors} from "./inputs.js";
 import {FaceAttribute, PulledVertexAttribute, Triangle} from "./attributes.js";
+import {IAccessorConstructor} from "../_interfaces/accessors.js";
+import {AnyConstructor} from "../../types.js";
 
-class ColorTriangle<VectorType extends Color3D|Color4D> extends Triangle<VectorType> {}
-class ColorTriangle3D extends ColorTriangle<Color3D> {}
-class ColorTriangle4D extends ColorTriangle<Color4D> {}
+class ColorTriangle3D extends Triangle<Color3D> {}
+class ColorTriangle4D extends Triangle<Color4D> {}
 
 export class VertexColors3D
     extends PulledVertexAttribute<Color3D, ColorTriangle3D, InputColors, FaceColors3D>
     implements IVertexColors<Color3D>
 {
-    readonly dim = DIM._3D;
     readonly attribute = ATTRIBUTE.color;
-    readonly Vector = Color3D;
-    readonly Triangle = ColorTriangle3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
+    protected _getTriangleConstructor(): AnyConstructor<ColorTriangle3D> {return ColorTriangle3D}
+    protected _getVectorConstructor(): IAccessorConstructor<Color3D> {return Color3D}
+    protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
 
     generate(): void {
         const [array_0, array_1, array_2] = this.arrays;
@@ -34,11 +39,10 @@ export class VertexColors4D
     extends PulledVertexAttribute<Color4D, ColorTriangle4D, InputColors, FaceColors4D>
     implements IVertexColors<Color4D>
 {
-    readonly dim = DIM._4D;
     readonly attribute = ATTRIBUTE.color;
-    readonly Vector = Color4D;
-    readonly Triangle = ColorTriangle4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
+    protected _getTriangleConstructor(): AnyConstructor<ColorTriangle4D> {return ColorTriangle4D}
+    protected _getVectorConstructor(): IAccessorConstructor<Color4D> {return Color4D}
+    protected _getAllocator(): Float32Allocator4D {return VECTOR_4D_ALLOCATOR}
 
     generate(): void {
         const [array_0, array_1, array_2, array_3] = this.arrays;
@@ -57,9 +61,8 @@ export class FaceColors3D
     implements IFaceColors<Color3D>
 {
     readonly attribute = ATTRIBUTE.color;
-    readonly dim = DIM._3D;
-    readonly Vector = Color3D;
-    readonly allocator = VECTOR_3D_ALLOCATOR;
+    protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
+    protected _getVectorConstructor(): IAccessorConstructor<Color3D> {return Color3D}
 
     generate(): void {
         const [array_0, array_1, array_2] = this.arrays;
@@ -76,10 +79,9 @@ export class FaceColors4D
     extends FaceAttribute<Color4D, VertexColors4D>
     implements IFaceColors<Color4D>
 {
-    readonly dim = DIM._4D;
     readonly attribute = ATTRIBUTE.color;
-    readonly Vector = Color4D;
-    readonly allocator = VECTOR_4D_ALLOCATOR;
+    protected _getVectorConstructor(): IAccessorConstructor<Color4D> {return Color4D}
+    protected _getAllocator(): Float32Allocator4D {return VECTOR_4D_ALLOCATOR}
 
     generate(): void {
         const [array_0, array_1, array_2, array_3] = this.arrays;
