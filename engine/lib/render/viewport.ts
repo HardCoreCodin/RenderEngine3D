@@ -26,11 +26,11 @@ export default class Viewport
 
         private readonly render_target = new RenderTarget(size, pixels),
 
-        private readonly ndc_to_screen_translate_x = this.ndc_to_screen.pos2.arrays[0],
-        private readonly ndc_to_screen_translate_y = this.ndc_to_screen.pos2.arrays[1],
+        private readonly ndc_to_screen_translate_x = this.ndc_to_screen.translation.arrays[0],
+        private readonly ndc_to_screen_translate_y = this.ndc_to_screen.translation.arrays[1],
 
-        private readonly ndc_to_screen_scale_x = this.ndc_to_screen.i.arrays[0],
-        private readonly ndc_to_screen_scale_y = this.ndc_to_screen.j.arrays[1]
+        private readonly ndc_to_screen_scale_x = this.ndc_to_screen.x_axis.arrays[0],
+        private readonly ndc_to_screen_scale_y = this.ndc_to_screen.y_axis.arrays[1]
     ) {
         camera.viewport = this;
     }

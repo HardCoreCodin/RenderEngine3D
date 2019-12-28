@@ -1,12 +1,11 @@
-import {Float16, Float2, Float3, Float4, Float9, Int2, Tuple} from "../../types.js";
-import {FloatNAllocator} from "../memory/allocators.js";
-import {DIM} from "../../constants.js";
+import {Float16, Float2, Float3, Float4, Float9, Int2} from "../../types.js";
+import {IAllocator} from "./allocators.js";
 
 export type Arrays = Float2 | Float3 | Float4 | Float9 | Float16;
 
 export interface IAccessorFunctionSet
 {
-    allocator: FloatNAllocator;
+    allocator: IAllocator<Float32Array>;
 
     set_to(a: number, []: Arrays, ...values: number[]): void;
     set_all_to(a: number, []: Arrays, value: number): void;
@@ -24,17 +23,17 @@ export interface ILinearInterpolatorFunctionSet
 
 export interface ILinearInterpolatorAttributeFunctionSet
 {
-    linearly_interpolate_all([t, one_minus_t]: Float2, from: Arrays, to: Arrays, out: Arrays): void;
-    linearly_interpolate_in_place_all([t, one_minus_t]: Float2, from: Arrays, to: Arrays): void;
+    linearly_interpolate_all([t, one_minus_t]: Arrays, from: Arrays, to: Arrays, out: Arrays): void;
+    linearly_interpolate_in_place_all([t, one_minus_t]: Arrays, from: Arrays, to: Arrays): void;
 
-    linearly_interpolate_some(flags: Uint8Array, [from_index, to_index]: Int2, [t, one_minus_t]: Float2, from: Arrays, to: Arrays, out: Arrays): void;
-    linearly_interpolate_in_place_some(flags: Uint8Array, [from_index, to_index]: Int2,[t, one_minus_t]: Float2, from: Arrays, to: Arrays): void;
+    linearly_interpolate_some(flags: Uint8Array, [from_index, to_index]: Int2, [t, one_minus_t]: Arrays, from: Arrays, to: Arrays, out: Arrays): void;
+    linearly_interpolate_in_place_some(flags: Uint8Array, [from_index, to_index]: Int2,[t, one_minus_t]: Arrays, from: Arrays, to: Arrays): void;
 }
 
 export interface IBarycentricInterpolatorFunctionSet
     extends IAccessorFunctionSet
 {
-    barycentric_interpolate(l: number, [w1, w2, w3]: Float3, a: number, from: Arrays, b: number, to: Arrays, o: number, out: Arrays): void;
+    barycentric_interpolate(l: number, [w1, w2, w3]: Arrays, a: number, from: Arrays, b: number, to: Arrays, o: number, out: Arrays): void;
     barycentric_interpolate_in_place(l: number, [w1, w2, w3]: Float3, a: number, from: Arrays, b: number, to: Arrays): void;
 }
 
@@ -86,6 +85,8 @@ export interface IMatrix2x2FunctionSet
     extends IMatrixFunctionSet
 {
     set_rotation(a: number, []: Arrays, cos: number, sin: number): void;
+    rotate_in_place(a: number, []: Arrays, cos: number, sin: number): void;
+    rotate(a: number, []: Arrays, cos: number, sin: number, o: number, []: Arrays): void;
 }
 
 export interface IMatrixRotationFunctionSet
@@ -94,6 +95,14 @@ export interface IMatrixRotationFunctionSet
     set_rotation_around_x(a: number, []: Arrays, cos: number, sin: number): void;
     set_rotation_around_y(a: number, []: Arrays, cos: number, sin: number): void;
     set_rotation_around_z(a: number, []: Arrays, cos: number, sin: number): void;
+
+    rotate_around_x(a: number, []: Arrays, cos: number, sin: number, o: number, []: Arrays): void;
+    rotate_around_y(a: number, []: Arrays, cos: number, sin: number, o: number, []: Arrays): void;
+    rotate_around_z(a: number, []: Arrays, cos: number, sin: number, o: number, []: Arrays): void;
+
+    rotate_around_x_in_place(a: number, []: Arrays, cos: number, sin: number): void;
+    rotate_around_y_in_place(a: number, []: Arrays, cos: number, sin: number): void;
+    rotate_around_z_in_place(a: number, []: Arrays, cos: number, sin: number): void;
 }
 
 export interface IVectorFunctionSet
@@ -109,39 +118,39 @@ export interface ITransformableVectorFunctionSet
     matrix_multiply_in_place(a: number, []: Arrays, m: number, []: Arrays): void;
 }
 
-export interface ITransformableAttributeFunctionSet<Dim extends DIM>
+export interface ITransformableAttributeFunctionSet
 {
     matrix_multiply_all(
-        []: Tuple<Float32Array, Dim>,
-        m: number, []: Arrays,
-        []: Tuple<Float32Array, Dim>
+        []: Arrays, m: number,
+        []: Arrays,
+        []: Arrays
     ): void;
 
     matrix_multiply_in_place_all(
-        []: Tuple<Float32Array, Dim>,
-        m: number, []: Arrays
+        []: Arrays, m: number,
+        []: Arrays
     ): void;
 }
 
 export interface IPositionAttribute3DFunctionSet
-    extends ITransformableAttributeFunctionSet<DIM._3D>
+    extends ITransformableAttributeFunctionSet
 {
-    matrix_multiply_some_positions_by_mat4([]: Float3, m: number, []: Float16, flags: Uint8Array, []: Float4): void;
-    matrix_multiply_all_positions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
+    matrix_multiply_some_positions_by_mat4([]: Arrays, m: number, []: Arrays, flags: Uint8Array, []: Arrays): void;
+    matrix_multiply_all_positions_by_mat4([]: Arrays, m: number, []: Arrays, []: Arrays): void;
 }
 
 export interface IDirectionAttribute3DFunctionSet
-    extends ITransformableAttributeFunctionSet<DIM._3D>
+    extends ITransformableAttributeFunctionSet
 {
-    matrix_multiply_some_directions_by_mat4([]: Float3, m: number, []: Float16, flags: Uint8Array, []: Float4): void;
-    matrix_multiply_all_directions_by_mat4([]: Float3, m: number, []: Float16, []: Float4): void;
-    normalize_all_in_place([]: Float3): void;
+    matrix_multiply_some_directions_by_mat4([]: Arrays, m: number, []: Arrays, flags: Uint8Array, []: Arrays): void;
+    matrix_multiply_all_directions_by_mat4([]: Arrays, m: number, []: Arrays, []: Arrays): void;
+    normalize_all_in_place([]: Arrays): void;
 }
 
 export interface IDirectionAttribute4DFunctionSet
-    extends ITransformableAttributeFunctionSet<DIM._4D>
+    extends ITransformableAttributeFunctionSet
 {
-    normalize_all_in_place([]: Float4): void;
+    normalize_all_in_place([]: Arrays): void;
 }
 
 export interface IPositionFunctionSet

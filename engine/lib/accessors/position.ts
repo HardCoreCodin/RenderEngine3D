@@ -4,19 +4,17 @@ import {Direction2D, Direction3D, Direction4D, dir2, dir3, dir4} from "./directi
 import {position3DFunctions} from "../math/vec3.js";
 import {position4DFunctions} from "../math/vec4.js";
 import {position2DFunctions} from "../math/vec2.js";
-import {IPositionFunctionSet} from "../_interfaces/functions.js";
-import {DIM} from "../../constants.js";
+import {Arrays, IPosition3DFunctionSet, IPositionFunctionSet} from "../_interfaces/functions.js";
 import {IDirection, IPosition, IPosition2D, IPosition3D, IPosition4D} from "../_interfaces/vectors.js";
 
 export abstract class Position<
-    Dim extends DIM,
     MatrixType extends Matrix>
     extends TransformableVector<MatrixType>
-    implements IPosition<Dim, MatrixType>
+    implements IPosition<MatrixType>
 {
     _: IPositionFunctionSet;
 
-    abstract _newOut(): IDirection<Dim, MatrixType>;
+    abstract _newOut(): IDirection<MatrixType>;
 
     readonly distanceTo = (other: this): number => this._.distance(
         this.id, this.arrays,
@@ -28,7 +26,7 @@ export abstract class Position<
         other.id, other.arrays
     );
 
-    to(other: IPosition<Dim>, out: IDirection<Dim, MatrixType> = this._newOut()): typeof out {
+    to(other: IPosition<MatrixType>, out: IDirection<MatrixType> = this._newOut()): typeof out {
         this._.subtract(
             other.id, other.arrays,
             this.id, this.arrays,
@@ -39,11 +37,15 @@ export abstract class Position<
     }
 }
 
-export class Position2D
-    extends Position<DIM._2D, Matrix2x2>
-    implements IPosition2D
+export class Position2D extends Position<Matrix2x2> implements IPosition2D
 {
-    readonly _ = position2DFunctions;
+    constructor(
+        id?: number,
+        arrays?: Arrays
+    ) {
+        super(position2DFunctions, id, arrays)
+    }
+
     _newOut(): Direction2D {return new Direction2D()}
 
     protected readonly _dir = dir2;
@@ -71,10 +73,17 @@ export class Position2D
     get yy(): Position2D {return new Position2D(this.id, [this.arrays[1], this.arrays[1]])}
 }
 
-export class Position3D extends Position<DIM._3D, Matrix3x3>
-    implements IPosition3D
+export class Position3D extends Position<Matrix3x3> implements IPosition3D
 {
-    readonly _ = position3DFunctions;
+    readonly _: IPosition3DFunctionSet;
+
+    constructor(
+        id?: number,
+        arrays?: Arrays
+    ) {
+        super(position3DFunctions, id, arrays)
+    }
+
     _newOut(): Direction3D {return new Direction3D()}
 
     setTo(x: number, y: number, z: number): this {
@@ -158,14 +167,20 @@ export class Position3D extends Position<DIM._3D, Matrix3x3>
     set zyx(other: Position3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Position4D extends Position<DIM._4D, Matrix4x4>
-    implements IPosition4D
+export class Position4D extends Position<Matrix4x4> implements IPosition4D
 {
-    readonly _ = position4DFunctions;
+    readonly _: IPositionFunctionSet;
+
+    constructor(
+        id?: number,
+        arrays?: Arrays
+    ) {
+        super(position4DFunctions, id, arrays)
+    }
+
     _newOut(): Direction4D {return new Direction4D()}
 
     protected readonly _dir = dir4;
-
 
     as3D(out?: Position3D): Position3D {
         if (out) {

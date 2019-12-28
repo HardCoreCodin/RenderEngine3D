@@ -2,12 +2,19 @@ import {Vector} from "./vector.js";
 import {base2DFunctions} from "../math/vec2.js";
 import {base3DFunctions} from "../math/vec3.js";
 import {IUV2D, IUV3D} from "../_interfaces/vectors.js";
+import {Arrays, IVectorFunctionSet} from "../_interfaces/functions.js";
 
-export class UV2D
-    extends Vector
-    implements IUV2D
+export class UV2D extends Vector implements IUV2D
 {
-    readonly _ = base2DFunctions;
+    readonly _: IVectorFunctionSet;
+
+    constructor(
+        id?: number,
+        arrays?: Arrays
+    ) {
+        super(base2DFunctions, id, arrays)
+    }
+
     _newOut(): this {return this._new()}
 
     setTo(u: number, v: number): this {
@@ -35,11 +42,17 @@ export class UV2D
     set vu(other: UV2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
 }
 
-export class UV3D
-    extends Vector
-    implements IUV3D
+export class UV3D extends Vector implements IUV3D
 {
-    readonly _ = base3DFunctions;
+    readonly _: IVectorFunctionSet;
+
+    constructor(
+        id?: number,
+        arrays?: Arrays
+    ) {
+        super(base3DFunctions, id, arrays)
+    }
+
     _newOut(): this {return this._new()}
 
     setTo(u: number, v: number, w: number): this {

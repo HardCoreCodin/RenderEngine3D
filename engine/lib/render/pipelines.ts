@@ -50,7 +50,7 @@ export default class RenderPipeline {
             this.current_max_face_count = max_face_count;
 
             this.face_flags = new Uint8Array(max_face_count);
-            this.clip_space_vertex_positions.arrays = VECTOR_4D_ALLOCATOR.allocate(max_face_count);
+            this.clip_space_vertex_positions.arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count);
 
             this.src_trg_numbers = new Uint8Array(max_face_count);
 

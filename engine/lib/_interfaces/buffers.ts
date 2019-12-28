@@ -1,30 +1,29 @@
-import {DIM} from "../../constants.js";
 import {IAllocator} from "./allocators.js";
-import {Tuple, TypedArray} from "../../types.js";
+import {TypedArray} from "../../types.js";
 
-export interface IBuffer<
-    Dim extends DIM,
-    ArrayType extends TypedArray = Float32Array>
+export interface IBuffer<ArrayType extends TypedArray = Float32Array>
 {
-    dim: number;
-    allocator: IAllocator<Dim, ArrayType>;
+    allocator: IAllocator<ArrayType>;
     length: number;
-    arrays: Tuple<ArrayType, Dim>;
+    arrays: ArrayType[];
 
     init(length: number): void;
-
-    values(): Generator<Tuple<number, Dim>>;
+    values(): Generator<number[]>;
 }
 
 export interface IFaceVertices<ArrayType extends TypedArray = Uint8Array|Uint16Array|Uint32Array>
-    extends IBuffer<DIM._3D, ArrayType>
+    extends IBuffer<ArrayType>
 {
-    allocator: IAllocator<DIM._3D, ArrayType>;
+    allocator: IAllocator<ArrayType>;
 }
 
 export interface IVertexFaces<ArrayType extends TypedArray = Uint8Array|Uint16Array|Uint32Array>
-    extends IBuffer<DIM._1D, ArrayType>
+    extends IBuffer<ArrayType>
 {
-    allocator: IAllocator<DIM._1D, ArrayType>;
+    allocator: IAllocator<ArrayType>;
     indices: Array<ArrayType>;
+}
+
+export interface IFromToIndices<ArrayType extends Uint8Array | Uint16Array | Uint32Array> {
+    allocator: IAllocator<ArrayType>;
 }

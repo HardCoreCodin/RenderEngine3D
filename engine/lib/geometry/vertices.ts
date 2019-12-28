@@ -1,5 +1,5 @@
 import {MeshOptions} from "./options.js";
-import {ATTRIBUTE, DIM} from "../../constants.js";
+import {ATTRIBUTE} from "../../constants.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {
     IVertexColors,
@@ -16,29 +16,25 @@ import {VertexColors3D, VertexColors4D} from "./colors.js";
 import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 
 
-abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
-    NormalDim extends DIM._3D | DIM._4D = PositionDim,
-    ColorDim extends DIM._3D | DIM._4D = PositionDim,
-    UVDim extends DIM._2D | DIM._3D = PositionDim extends DIM._3D ? DIM._2D : DIM._3D>
-{
-    protected readonly VertexPositions: IVertexPositionsConstructor<PositionDim>;
-    protected readonly VertexNormals: IVertexNormalsConstructor<NormalDim>;
-    protected readonly VertexColors: IVertexColorsConstructor<ColorDim>;
-    protected readonly VertexUVs: IVertexUVsConstructor<UVDim>;
+export class Vertices {
+    protected readonly VertexPositions: IVertexPositionsConstructor;
+    protected readonly VertexNormals: IVertexNormalsConstructor;
+    protected readonly VertexColors: IVertexColorsConstructor;
+    protected readonly VertexUVs: IVertexUVsConstructor;
 
-    public positions: IVertexPositions<PositionDim>;
-    public normals: IVertexNormals<NormalDim>|null;
-    public colors: IVertexColors<ColorDim>|null;
-    public uvs: IVertexUVs<UVDim>|null;
+    public positions: IVertexPositions;
+    public normals: IVertexNormals|null;
+    public colors: IVertexColors|null;
+    public uvs: IVertexUVs|null;
 
     constructor(
         public face_vertices: IFaceVertices,
         public mesh_options: MeshOptions,
 
-        positions?: IVertexPositions<PositionDim>,
-        normals?: IVertexNormals<NormalDim>,
-        colors?: IVertexColors<ColorDim>,
-        uvs?: IVertexUVs<UVDim>,
+        positions?: IVertexPositions,
+        normals?: IVertexNormals,
+        colors?: IVertexColors,
+        uvs?: IVertexUVs,
     ) {
         const included = mesh_options.vertex_attributes;
 
@@ -63,8 +59,7 @@ abstract class Vertices<PositionDim extends DIM._3D | DIM._4D,
     }
 }
 
-export class Vertices3D extends Vertices<DIM._3D>
-{
+export class Vertices3D extends Vertices {
     protected readonly VertexPositions = VertexPositions3D;
     protected readonly VertexNormals = VertexNormals3D;
     protected readonly VertexColors = VertexColors3D;
@@ -74,29 +69,9 @@ export class Vertices3D extends Vertices<DIM._3D>
     public normals: VertexNormals3D;
     public colors: VertexColors3D;
     public uvs: VertexUVs2D;
-
-    // homogenize(out?: Vertices4D): Vertices4D {
-    //     if (out) {
-    //         this.positions.homogenize(out.positions);
-    //         this.normals!.homogenize(out.normals);
-    //         this.colors!.homogenize(out.colors);
-    //         this.uvs!.homogenize(out.uvs);
-    //         return out;
-    //     }
-    //
-    //     return new Vertices4D(
-    //         this.face_vertices,
-    //         this.mesh_options,
-    //
-    //         this.positions.homogenize(),
-    //         this.normals!.homogenize(),
-    //         this.colors!.homogenize(),
-    //         this.uvs!.homogenize()
-    //     );
-    // }
 }
 
-export class Vertices4D extends Vertices<DIM._4D> {
+export class Vertices4D extends Vertices {
     protected readonly VertexPositions = VertexPositions4D;
     protected readonly VertexNormals = VertexNormals4D;
     protected readonly VertexColors = VertexColors4D;
@@ -109,16 +84,13 @@ export class Vertices4D extends Vertices<DIM._4D> {
 
     mul(matrix: Matrix4x4, out?: this): this {
         if (out) {
-            this.positions.mul(matrix, out.positions);
-            this.normals!.mul(matrix, out.normals);
+            this.positions.matmul(matrix, out.positions);
+            this.normals!.matmul(matrix, out.normals);
             return out;
         }
 
-        this.positions.mul(matrix);
-        this.normals!.mul(matrix);
+        this.positions.matmul(matrix);
+        this.normals!.matmul(matrix);
         return this;
     }
 }
-
-
-

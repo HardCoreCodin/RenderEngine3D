@@ -1,7 +1,5 @@
-import {Accessor} from "../accessors/accessor.js";
 import {Vector} from "../accessors/vector.js";
 import {FloatBuffer} from "../memory/buffers.js";
-import {ATTRIBUTE, DIM} from "../../constants.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {zip} from "../../utils.js";
 import {InputAttribute} from "./inputs.js";
@@ -13,27 +11,26 @@ import {
     IVertexAttribute
 } from "../_interfaces/attributes.js";
 import {IVector} from "../_interfaces/vectors.js";
-import {AnyConstructor, Tuple} from "../../types.js";
-import {IAccessorConstructor} from "../_interfaces/accessors.js";
+import {AnyConstructor} from "../../types.js";
+import {IAccessor, IAccessorConstructor} from "../_interfaces/accessors.js";
+import {Arrays} from "../_interfaces/functions.js";
+import {ATTRIBUTE} from "../../constants.js";
 
-export abstract class Attribute<
-    Attr extends ATTRIBUTE,
-    Dim extends DIM,
-    AccessorType extends Accessor>
-    extends FloatBuffer<Dim>
-    implements IAttribute<Attr, Dim, AccessorType>
+export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
+    extends FloatBuffer
+    implements IAttribute<AccessorType>
 {
-    readonly abstract attribute: Attr;
+    readonly abstract attribute: ATTRIBUTE;
     readonly abstract Vector: IAccessorConstructor<AccessorType>;
 
-    arrays: Tuple<Float32Array, Dim>;
+    arrays: Arrays;
     current: AccessorType;
 
     constructor(
         protected _face_vertices: IFaceVertices,
         protected _face_count: number = _face_vertices.length,
         length = _face_count,
-        arrays?: Tuple<Float32Array, Dim>
+        arrays?: Arrays
     ) {
         super(length, arrays);
         this._postInit();
@@ -50,7 +47,7 @@ export abstract class Attribute<
         }
     }
 
-    setFrom(other: IAttribute<Attr, DIM._2D|DIM._3D|DIM._4D, IVector>): this {
+    setFrom(other: IAttribute<IVector>): this {
         for (const [this_array, other_array] of zip(this.arrays, other.arrays))
             this_array.set(other_array);
 
@@ -58,51 +55,11 @@ export abstract class Attribute<
     }
 }
 
-// export abstract class TransformableAttribute<
-//     Attr extends ATTRIBUTE,
-//     Dim extends DIM,
-//     MatrixType extends Matrix = Matrix,
-//     VectorType extends TransformableVector<MatrixType> = TransformableVector<MatrixType>>
-//     extends Attribute<Attr, Dim, VectorType>
-//     implements ITransformableAttribute<Attr, Dim>
-// {
-//     abstract _: ITransformableAttributeFunctionSet<Dim>;
-//
-//     imatmul(matrix: MatrixType): void {
-//         this._.matrix_multiply_in_place_all(this.arrays, matrix.id, matrix.arrays);
-//
-//     }
-//
-//     matmul(matrix: MatrixType, out: ITransformableAttribute<Attr, Dim>): void {
-//         this._.matrix_multiply_all(this.arrays, matrix.id, matrix.arrays, out.arrays);
-//
-//     }
-// }
-
-// export abstract class Attribute3D<
-//     Attr extends ATTRIBUTE,
-//     VectorType extends Vector,
-//     HVectorType extends Vector & IVector4D,
-//     HAttribute extends Attribute<Attr, DIM._4D, HVectorType>>
-//     extends Attribute<Attr, DIM._3D, VectorType>
-//     implements IAttribute<Attr, DIM._3D, VectorType>
-// {
-//     homogenize(out: HAttribute): HAttribute {
-//         out.setFrom(this);
-//         out.arrays[3].fill(1);
-//
-//         return out;
-//     }
-// }
-
 export abstract class FaceAttribute<
-    Attr extends ATTRIBUTE,
-    PulledAttr extends ATTRIBUTE,
-    Dim extends DIM,
     VectorType extends Vector,
-    VertexAttribute extends IVertexAttribute<PulledAttr, Dim>>
-    extends Attribute<Attr, Dim, VectorType>
-    implements IFaceAttribute<Attr, PulledAttr, Dim, VectorType, VertexAttribute>
+    VertexAttribute extends IVertexAttribute>
+    extends Attribute<VectorType>
+    implements IFaceAttribute<VectorType, VertexAttribute>
 {
     pull(input: VertexAttribute): void {
         let face_index,
@@ -136,12 +93,10 @@ export class Triangle<VectorType extends Vector> {
 }
 
 export abstract class VertexAttribute<
-    Attr extends ATTRIBUTE,
-    Dim extends DIM,
     VectorType extends Vector,
     TriangleType extends Triangle<VectorType>>
-    extends Attribute<Attr, Dim, VectorType>
-    implements IVertexAttribute<Attr, Dim, VectorType>
+    extends Attribute<VectorType>
+    implements IVertexAttribute<VectorType>
 {
     protected _is_shared: boolean;
     protected readonly _current_face_vertex_vectors: [
@@ -157,7 +112,7 @@ export abstract class VertexAttribute<
         public readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
         public readonly face_count: number = face_vertices.length,
-        arrays?: Tuple<Float32Array, Dim>
+        arrays?: Arrays
     ) {
         super(face_vertices, face_count, is_shared ? face_count : face_count * 3, arrays);
         this._is_shared = !!is_shared;
@@ -204,13 +159,11 @@ export abstract class VertexAttribute<
 }
 
 export abstract class LoadableVertexAttribute<
-    Attr extends ATTRIBUTE,
-    Dim extends DIM,
     VectorType extends Vector,
     TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute>
-    extends VertexAttribute<Attr, Dim, VectorType, TriangleType>
-    implements ILoadableVertexAttribute<Attr, Dim, VectorType, InputAttributeType>
+    extends VertexAttribute<VectorType, TriangleType>
+    implements ILoadableVertexAttribute<VectorType, InputAttributeType>
 {
     protected _loadShared(input: InputAttributeType): void {
         let in_index, out_index: number;
@@ -238,15 +191,12 @@ export abstract class LoadableVertexAttribute<
 }
 
 export abstract class PulledVertexAttribute<
-    Attr extends ATTRIBUTE,
-    PulledAttr extends ATTRIBUTE,
-    Dim extends DIM,
     VectorType extends Vector,
     TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute,
-    FaceAttributeType extends IFaceAttribute<Attr, PulledAttr, Dim>>
-    extends LoadableVertexAttribute<Attr, Dim, VectorType, TriangleType, InputAttributeType>
-    implements IPullableVertexAttribute<Attr, PulledAttr, Dim, VectorType, InputAttributeType, FaceAttributeType>
+    FaceAttributeType extends IFaceAttribute>
+    extends LoadableVertexAttribute<VectorType, TriangleType, InputAttributeType>
+    implements IPullableVertexAttribute<VectorType, InputAttributeType, FaceAttributeType>
 {
     protected _pullShared(input: FaceAttributeType, vertex_faces: IVertexFaces): void {
         // Average vertex-attribute values from their related face's attribute values:

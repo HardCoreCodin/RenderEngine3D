@@ -1,5 +1,5 @@
 import {MeshOptions} from "./options.js";
-import {ATTRIBUTE, DIM} from "../../constants.js";
+import {ATTRIBUTE} from "../../constants.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {
     IFaceColors,
@@ -14,25 +14,23 @@ import {FacePositions3D, FacePositions4D} from "./positions.js";
 import {FaceNormals3D, FaceNormals4D} from "./normals.js";
 import {FaceColors3D, FaceColors4D} from "./colors.js";
 
-abstract class Faces<PositionDim extends DIM._3D | DIM._4D,
-    NormalDim extends DIM._3D | DIM._4D = PositionDim,
-    ColorDim extends DIM._3D | DIM._4D = PositionDim>
+class Faces
 {
-    protected readonly FacePositions: IFacePositionsConstructor<PositionDim>;
-    protected readonly FaceNormals: IFaceNormalsConstructor<NormalDim>;
-    protected readonly FaceColors: IFaceColorsConstructor<NormalDim>;
+    protected readonly FacePositions: IFacePositionsConstructor;
+    protected readonly FaceNormals: IFaceNormalsConstructor;
+    protected readonly FaceColors: IFaceColorsConstructor;
 
-    public readonly positions: IFacePositions<PositionDim>|null;
-    public readonly normals: IFaceNormals<NormalDim>|null;
-    public readonly colors: IFaceColors<NormalDim>|null;
+    public readonly positions: IFacePositions|null;
+    public readonly normals: IFaceNormals|null;
+    public readonly colors: IFaceColors|null;
 
     constructor(
         public face_vertices: IFaceVertices,
         public mesh_options: MeshOptions,
 
-        positions?: IFacePositions<PositionDim>,
-        normals?: IFaceNormals<NormalDim>,
-        colors?: IFaceColors<NormalDim>
+        positions?: IFacePositions,
+        normals?: IFaceNormals,
+        colors?: IFaceColors
     ) {
         const included = mesh_options.face_attributes;
         this.positions = included & ATTRIBUTE.position ? positions || new this.FacePositions(face_vertices) : null;
@@ -41,7 +39,7 @@ abstract class Faces<PositionDim extends DIM._3D | DIM._4D,
     }
 }
 
-export class Faces3D extends Faces<DIM._3D>
+export class Faces3D extends Faces
 {
     protected readonly FacePositions = FacePositions3D;
     protected readonly FaceNormals = FaceNormals3D;
@@ -73,7 +71,7 @@ export class Faces3D extends Faces<DIM._3D>
     }
 }
 
-export class Faces4D extends Faces<DIM._4D>
+export class Faces4D extends Faces
 {
     protected readonly FacePositions = FacePositions4D;
     protected readonly FaceNormals = FaceNormals4D;

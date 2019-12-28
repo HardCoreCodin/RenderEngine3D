@@ -1,4 +1,3 @@
-import {IAccessorConstructor, IMathAccessor} from "./accessors.js";
 import {
     ICrossDirectionFunctionSet,
     IDirection3DFunctionSet,
@@ -8,8 +7,8 @@ import {
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
 } from "./functions.js";
+import {IMathAccessor} from "./accessors.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4} from "./matrix.js";
-import {DIM} from "../../constants.js";
 
 
 export interface IVector
@@ -25,7 +24,6 @@ export interface ITransformableVector<Matrix extends IMatrix = IMatrix>
     _: ITransformableVectorFunctionSet
 
     imatmul(matrix: Matrix): this;
-
     matmul(matrix: Matrix, out?: this): this;
 }
 
@@ -42,11 +40,9 @@ export interface IVector4D extends IVector3D {
     w: number;
 }
 
-export type VectorConstructor<VectorType extends IVector> = IAccessorConstructor<VectorType>;
-
-export interface IDirection<Dim extends DIM,
-    Matrix extends IMatrix = IMatrix>
-    extends ITransformableVector<Matrix> {
+export interface IDirection<Matrix extends IMatrix = IMatrix>
+    extends ITransformableVector<Matrix>
+{
     _: IDirectionFunctionSet;
 
     length: number;
@@ -60,19 +56,17 @@ export interface IDirection<Dim extends DIM,
     normalized(out?: this): this;
 }
 
-export interface ICrossedDirection<
-    Dim extends DIM,
-    Matrix extends IMatrix = IMatrix>
-    extends IDirection<Dim, Matrix>
+export interface ICrossedDirection<Matrix extends IMatrix = IMatrix>
+    extends IDirection<Matrix>
 {
     _: ICrossDirectionFunctionSet;
 
-    cross(other: ICrossedDirection<Dim, Matrix>): this;
-    crossedWith(other: ICrossedDirection<Dim, Matrix>, out: this): this;
+    cross(other: ICrossedDirection<Matrix>): this;
+    crossedWith(other: ICrossedDirection<Matrix>, out: this): this;
 }
 
 export interface IDirection2D<Matrix extends IMatrix2x2 = IMatrix2x2>
-    extends IDirection<DIM._2D, Matrix>, IVector2D {
+    extends IDirection<Matrix>, IVector2D {
     setTo(x: number, y: number): this;
 
     xx: IDirection2D;
@@ -83,7 +77,7 @@ export interface IDirection2D<Matrix extends IMatrix2x2 = IMatrix2x2>
 }
 
 export interface IDirection3D<Matrix extends IMatrix3x3 = IMatrix3x3>
-    extends ICrossedDirection<DIM._3D, Matrix>, IVector3D
+    extends ICrossedDirection<Matrix>, IVector3D
 {
     _: IDirection3DFunctionSet,
 
@@ -134,7 +128,7 @@ export interface IDirection3D<Matrix extends IMatrix3x3 = IMatrix3x3>
 }
 
 export interface IDirection4D<Matrix extends IMatrix4x4 = IMatrix4x4>
-    extends ICrossedDirection<DIM._4D, Matrix>, IVector4D
+    extends ICrossedDirection<Matrix>, IVector4D
 {
     setTo(x: number, y: number, z: number, w: number): this;
 
@@ -181,19 +175,17 @@ export interface IDirection4D<Matrix extends IMatrix4x4 = IMatrix4x4>
     zzz: IDirection3D;
 }
 
-export interface IPosition<
-    Dim extends DIM,
-    Matrix extends IMatrix = IMatrix>
+export interface IPosition<Matrix extends IMatrix = IMatrix>
     extends ITransformableVector<Matrix> {
     _: IPositionFunctionSet
 
-    to(other: IPosition<Dim>, out: IDirection<Dim>): IDirection<Dim>;
+    to(other: IPosition, out: IDirection): IDirection;
     distanceTo(other: this): number;
     squaredDistanceTo(other: this): number;
 }
 
 export interface IPosition2D<Matrix extends IMatrix2x2 = IMatrix2x2>
-    extends IPosition<DIM._2D, Matrix>, IVector2D
+    extends IPosition<Matrix>, IVector2D
 {
     setTo(x: number, y: number): this;
 
@@ -205,7 +197,7 @@ export interface IPosition2D<Matrix extends IMatrix2x2 = IMatrix2x2>
 }
 
 export interface IPosition3D<Matrix extends IMatrix3x3 = IMatrix3x3>
-    extends IPosition<DIM._3D, Matrix>, IVector3D
+    extends IPosition<Matrix>, IVector3D
 {
     _: IPosition3DFunctionSet,
 
@@ -256,7 +248,7 @@ export interface IPosition3D<Matrix extends IMatrix3x3 = IMatrix3x3>
 }
 
 export interface IPosition4D<Matrix extends IMatrix4x4 = IMatrix4x4>
-    extends IPosition<DIM._4D, Matrix>, IVector4D
+    extends IPosition<Matrix>, IVector4D
 {
     _: IPositionFunctionSet
 

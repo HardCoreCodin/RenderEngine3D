@@ -54,8 +54,8 @@ abstract class Controller
     }
 
     get forward_direction(): Direction3D {
-        this._forward_direction.x = this.camera.transform.matrix.k.x;
-        this._forward_direction.z = this.camera.transform.matrix.k.z;
+        this._forward_direction.x = this.camera.transform.matrix.z_axis.x;
+        this._forward_direction.z = this.camera.transform.matrix.z_axis.z;
         this._forward_direction.normalize();
 
         return this._forward_direction;
@@ -134,7 +134,7 @@ abstract class Controller
             if (this.key_pressed.right ||
                 this.key_pressed.left) {
 
-                this.camera.transform.matrix.i.times(this.movement_amount, this.right_movement);
+                this.camera.transform.matrix.x_axis.times(this.movement_amount, this.right_movement);
 
                 if (this.key_pressed.right)
                     this.camera.transform.translation.add(this.right_movement);

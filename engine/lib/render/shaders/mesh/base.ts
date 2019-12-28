@@ -19,38 +19,33 @@ export abstract class MeshShader<
     Inputs extends IMeshShaderInputs,
     Outputs extends IMeshShaderOutputs>
 {
-    readonly clip_attributes = new Map<string, Arrays[]>();
-
     constructor(
         public mesh: Mesh,
         readonly max_face_count: number,
-        readonly inputs: Inputs,
         readonly outputs: Outputs
     ) {
         for (const attribute in Object.keys(this.outputs)) {
 
         }
-            this.clip_attributes.set(attribute, VECTOR_4D_ALLOCATOR)
     }
+    //
+    // bindMesh(mesh: Mesh): this {
+    //     this.mesh = mesh;
+    //     this.model_space_vertex_positions = mesh.data.vertices.positions;
+    //     return this;
+    // }
+    //
+    // bindInputs(inputs: IMeshShaderInputs): this {
+    //     this.model_to_clip = inputs.model_to_clip;
+    //     return this;
+    // }
+    //
+    // bindOutputs(outputs: IMeshShaderOutputs): this {
+    //     this.clip_space_vertex_position = outputs.clip_space_vertex_positions;
+    //     return this;
+    // }
 
-
-    bindMesh(mesh: Mesh): this {
-        this.mesh = mesh;
-        this.model_space_vertex_positions = mesh.data.vertices.positions;
-        return this;
-    }
-
-    bindInputs(inputs: IMeshShaderInputs): this {
-        this.model_to_clip = inputs.model_to_clip;
-        return this;
-    }
-
-    bindOutputs(outputs: IMeshShaderOutputs): this {
-        this.clip_space_vertex_position = outputs.clip_space_vertex_positions;
-        return this;
-    }
-
-    shade(): number {
+    shade(inputs: Inputs): number {
         // Transform the mesh's vertex positions into clip space:
         this.model_space_vertex_positions.mat4mul(this.model_to_clip, this.clip_space_vertex_position);
 

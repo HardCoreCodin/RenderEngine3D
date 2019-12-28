@@ -7,7 +7,7 @@ export abstract class Vector
     extends MathAccessor
     implements IVector
 {
-    readonly abstract _: IVectorFunctionSet;
+    readonly _: IVectorFunctionSet;
 
     lerp(to: this, by: number, out: this = this._new()): this {
         this._.lerp(
@@ -25,7 +25,7 @@ export abstract class TransformableVector<MatrixType extends Matrix>
     extends Vector
     implements ITransformableVector<MatrixType>
 {
-    readonly abstract _: ITransformableVectorFunctionSet;
+    readonly _: ITransformableVectorFunctionSet;
 
     imatmul(matrix: MatrixType): this {
         this._.matrix_multiply_in_place(

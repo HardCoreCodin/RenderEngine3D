@@ -59,8 +59,8 @@ export default class FPSController
         public rotation_speed: number = 0.01,
         public mouse_sensitivity: number = 0.1,
 
-        private readonly look_direction = camera.transform.matrix.k, // The player's forward direction
-        private readonly right_direction = camera.transform.matrix.i, // The player's right direction
+        private readonly look_direction = camera.transform.matrix.z_axis, // The player's forward direction
+        private readonly right_direction = camera.transform.matrix.x_axis, // The player's right direction
     ) {
         canvas.onmousemove = this.on_mousemove;
         document.onkeydown = this.on_keydown;
@@ -133,19 +133,21 @@ export default class FPSController
             if (pressed.yaw_left ||
                 pressed.yaw_right) {
 
-                if (pressed.yaw_left)
-                    this.camera.transform.rotation.y += this.rotation_amount;
-                else
-                    this.camera.transform.rotation.y -= this.rotation_amount;
+                this.camera.transform.rotation.rotateAroundY(
+                    pressed.yaw_left ?
+                        this.rotation_amount :
+                        -this.rotation_amount
+                );
             }
 
             if (pressed.pitch_up ||
                 pressed.pitch_down) {
 
-                if (pressed.pitch_up)
-                    this.camera.transform.rotation.x -= this.rotation_amount;
-                else
-                    this.camera.transform.rotation.x += this.rotation_amount;
+                this.camera.transform.rotation.rotateAroundX(
+                    pressed.pitch_up ?
+                        -this.rotation_amount :
+                        this.rotation_amount
+                );
             }
         }
 
@@ -165,9 +167,9 @@ export default class FPSController
                 this.forward_direction.times(this.movement_amount, this.forward_movement);
 
                 if (pressed.forward)
-                    this.camera.transform.translation.add(this.forward_movement);
+                    this.camera.transform.matrix.translation.add(this.forward_movement);
                 else
-                    this.camera.transform.translation.sub(this.forward_movement);
+                    this.camera.transform.matrix.translation.sub(this.forward_movement);
             }
 
             if (pressed.right ||
@@ -176,18 +178,18 @@ export default class FPSController
                 this.right_direction.times(this.movement_amount, this.right_movement);
 
                 if (pressed.right)
-                    this.camera.transform.translation.add(this.right_movement);
+                    this.camera.transform.matrix.translation.add(this.right_movement);
                 else
-                    this.camera.transform.translation.sub(this.right_movement);
+                    this.camera.transform.matrix.translation.sub(this.right_movement);
             }
 
             if (pressed.up ||
                 pressed.down) {
 
                 if (pressed.up)
-                    this.camera.transform.translation.y += this.movement_amount;
+                    this.camera.transform.matrix.translation.y += this.movement_amount;
                 else
-                    this.camera.transform.translation.y -= this.movement_amount;
+                    this.camera.transform.matrix.translation.y -= this.movement_amount;
             }
         }
 

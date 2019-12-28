@@ -1,230 +1,197 @@
 import {CACHE_LINE_BYTES, DIM} from "../../constants.js";
-import {IAllocator, IBaseAllocator, INestedAllocator} from "../_interfaces/allocators.js";
-import {AnyConstructor, Tuple, TypedArray, TypedArrayConstructor} from "../../types.js";
+import {IAllocator, IArraysBlock, IArraysBlocksAllocator} from "../_interfaces/allocators.js";
+import {AnyConstructor, TypedArray, TypedArrayConstructor} from "../../types.js";
 
-export abstract class BaseAllocator<
-    Dim extends DIM,
-    ArrayType extends TypedArray = Float32Array>
-    implements IBaseAllocator<Dim>
+export class ArraysBlock<ArrayType extends TypedArray>
+    implements IArraysBlock<ArrayType>
 {
-    readonly abstract _constructor: AnyConstructor<ArrayType>;
-    public abstract dim: Dim;
+    protected _holes: number[] = [];
+    protected _cursor: number = 0;
+    protected _is_full: boolean;
 
-    protected _temp_holes: number[] = [];
-    protected _temp_cursor: number = 0;
-    protected _temp_length: number;
-
-    protected readonly _temp_cache_lines: number = 16;
-    protected readonly _cache_line_length: number;
-    protected readonly _component_bytes: number;
-    protected readonly _vector_bytees: number;
-
-    protected readonly _getVectorBytes = (): number => this._component_bytes * this.dim;
-    protected readonly _getComponentBytes = (): number => (this._constructor as TypedArrayConstructor<ArrayType>).BYTES_PER_ELEMENT;
-
-    protected constructor() {
-        this._component_bytes = this._getComponentBytes();
-        this._vector_bytees = this._getVectorBytes();
-        this._cache_line_length = CACHE_LINE_BYTES / this._component_bytes;
-        this._temp_length = this._cache_line_length * this._temp_cache_lines;
-    }
-
-    allocateTemp(): number {
-        if (this._temp_cursor === this._temp_length) {
-            if (this._temp_holes.length)
-                return this._temp_holes.pop();
-            else
-                this._growTempArrays();
+    constructor(
+        readonly dim: DIM,
+        readonly length: number,
+        readonly buffer: ArrayType,
+        readonly arrays: ArrayType[] = Array<ArrayType>(dim)
+    ) {
+        let start = 0;
+        let end = length;
+        for (let i = 0; i < this.dim; i++) {
+            this.arrays[i] = this.buffer.subarray(start, end) as ArrayType;
+            start += length;
+            end += length;
         }
-
-        return this._temp_length++;
     }
 
-    deallocateTemp(index: number): void {
-        this._temp_holes.push(index);
+    get is_full(): boolean {
+        return this._is_full;
     }
 
-    protected abstract _growTempArrays(): void;
+    allocate(): number {
+        if (this._is_full)
+            throw `Blcok is full!`;
+
+        if (this._cursor === this.length) {
+            if (this._holes.length === 1)
+                this._is_full = true;
+
+            return this._holes.pop();
+        } else if (this._cursor + 1 === this.length)
+            this._is_full = true;
+
+        return this._cursor++;
+    }
+
+    deallocate(index: number): void {
+        this._holes.push(index);
+    }
 }
 
-export abstract class AbstractTypedArraysAllocator<
-    Dim extends DIM,
-    ArrayType extends TypedArray>
-    extends BaseAllocator<Dim, ArrayType>
-    implements IAllocator<Dim, ArrayType>
+export class ArraysBlocksAllocator<ArrayType extends TypedArray = Float32Array>
+    implements IArraysBlocksAllocator<ArrayType>
 {
-    public temp_arrays: Tuple<ArrayType, Dim>;
+    protected readonly _block_length: number;
+    protected readonly _cache_lines: number = 16;
+    protected readonly _array_blocks: ArraysBlock<ArrayType>[] = [];
 
-    constructor() {
-        super();
-        this.temp_arrays = this.allocate(this._temp_length);
+    constructor(
+        readonly dim: DIM,
+        readonly ArrayConstructor: TypedArrayConstructor<ArrayType>
+    ) {
+        this._block_length = this._cache_lines * CACHE_LINE_BYTES / this.ArrayConstructor.BYTES_PER_ELEMENT;
     }
 
-    allocate(length: number): Tuple<ArrayType, Dim> {
-        const arrays = Array<ArrayType>(this.dim) as Tuple<ArrayType, Dim>;
-        const buffer = new ArrayBuffer(length * this._vector_bytees);
+    allocate(arrays?: ArrayType[]): number {
+        for (const block of this._array_blocks) {
+            if (!block.is_full) {
+                if (arrays) {
+                    for (const [i, array] of block.arrays.entries())
+                        arrays[i] = array;
+                }
+                return block.allocate();
+            }
+        }
 
-        for (let i = 0; i < this.dim; i++)
-            arrays[i] = new this._constructor(buffer, i * length, length);
+        const new_block = new ArraysBlock<ArrayType>(
+            this.dim,
+            this._block_length,
+            new this.ArrayConstructor(this._block_length * this.dim)
+        );
+        this._array_blocks.unshift(new_block);
+
+        if (arrays) {
+            for (const [i, array] of new_block.arrays.entries())
+                arrays[i] = array;
+        }
+
+        return new_block.allocate();
+    }
+
+    deallocate(array: ArrayType, index: number): void {
+        for (const block of this._array_blocks) {
+            if (block.arrays.indexOf(array) >= 0) {
+                block.deallocate(index);
+                return;
+            }
+        }
+
+        throw `Could not find array in block!`;
+    }
+}
+
+export abstract class Allocator<ArrayType extends TypedArray>
+    implements IAllocator<ArrayType>
+{
+    readonly blocks: ArraysBlocksAllocator<ArrayType>;
+
+    protected constructor(
+        readonly dim: DIM,
+        readonly ArrayConstructor: AnyConstructor<ArrayType>
+    ) {
+        this.blocks = new ArraysBlocksAllocator<ArrayType>(
+            dim,
+            ArrayConstructor as TypedArrayConstructor<ArrayType>
+        );
+    }
+
+    allocate(arrays?: ArrayType[]): number {
+        return this.blocks.allocate(arrays);
+    }
+
+    allocateBuffer(length: number): ArrayType[] {
+        const arrays = Array<ArrayType>(this.dim) as ArrayType[];
+        const buffer = new this.ArrayConstructor(length * this.dim);
+
+        let start = 0;
+        let end = length;
+        for (let i = 0; i < this.dim; i++) {
+            arrays[i] = buffer.subarray(start, end) as ArrayType;
+            start += length;
+            end += length;
+        }
 
         return arrays;
     }
+}
 
-    protected _growTempArrays() {
-        this._temp_length += this._cache_line_length;
-        const new_arrays = this.allocate(this._temp_length);
-
-        for (const [i, array] of this.temp_arrays.entries())
-            new_arrays[i].set(array);
-
-        this.temp_arrays = new_arrays;
+export abstract class Float32Allocator extends Allocator<Float32Array>
+{
+    protected constructor(
+        readonly dim: DIM
+    ) {
+        super(dim, Float32Array);
     }
 }
+export class Float32Allocator2D extends Float32Allocator {constructor() {super(DIM._2D)}}
+export class Float32Allocator3D extends Float32Allocator {constructor() {super(DIM._3D)}}
+export class Float32Allocator4D extends Float32Allocator {constructor() {super(DIM._4D)}}
+export class Float32Allocator9D extends Float32Allocator {constructor() {super(DIM._9D)}}
+export class Float32Allocator16D extends Float32Allocator {constructor() {super(DIM._16D)}}
 
-export abstract class AbstractFloatArrayAllocator<Dim extends DIM>
-    extends AbstractTypedArraysAllocator<Dim, Float32Array>
-    implements IAllocator<Dim, Float32Array>
+export abstract class Int8Allocator extends Allocator<Uint8Array>
 {
-    readonly _constructor = Float32Array;
-    public abstract dim: Dim;
+    protected constructor(
+        readonly dim: DIM
+    ) {
+        super(dim, Uint8Array);
+    }
 }
+export class Int8Allocator1D extends Int8Allocator {constructor() {super(DIM._1D)}}
+export class Int8Allocator2D extends Int8Allocator {constructor() {super(DIM._2D)}}
+export class Int8Allocator3D extends Int8Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class AbstractInt8ArrayAllocator<Dim extends DIM>
-    extends AbstractTypedArraysAllocator<Dim, Uint8Array>
-    implements IAllocator<Dim, Uint8Array>
+export abstract class Int16Allocator extends Allocator<Uint16Array>
 {
-    readonly _constructor = Uint8Array;
-    public abstract dim: Dim;
+    protected constructor(
+        readonly dim: DIM
+    ) {
+        super(dim, Uint16Array);
+    }
 }
+export class Int16Allocator1D extends Int16Allocator {constructor() {super(DIM._1D)}}
+export class Int16Allocator2D extends Int16Allocator {constructor() {super(DIM._2D)}}
+export class Int16Allocator3D extends Int16Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class AbstractInt16ArrayAllocator<Dim extends DIM>
-    extends AbstractTypedArraysAllocator<Dim, Uint16Array>
-    implements IAllocator<Dim, Uint16Array>
+export abstract class Int32Allocator extends Allocator<Uint32Array>
 {
-    readonly _constructor = Uint16Array;
-    public abstract dim: Dim;
+    protected constructor(
+        readonly dim: DIM
+    ) {
+        super(dim, Uint32Array);
+    }
 }
+export class Int32Allocator1D extends Int32Allocator {constructor() {super(DIM._1D)}}
+export class Int32Allocator2D extends Int32Allocator {constructor() {super(DIM._2D)}}
+export class Int32Allocator3D extends Int32Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class AbstractInt32ArrayAllocator<Dim extends DIM>
-    extends AbstractTypedArraysAllocator<Dim, Uint32Array>
-    implements IAllocator<Dim, Uint32Array>
-{
-    readonly _constructor = Uint32Array;
-    public abstract dim: Dim;
-}
-
-class Float2Allocator
-    extends AbstractFloatArrayAllocator<DIM._2D>
-    implements IAllocator<DIM._2D, Float32Array>
-{
-    public dim = DIM._2D as DIM._2D;
-}
-
-class Float3Allocator
-    extends AbstractFloatArrayAllocator<DIM._3D>
-    implements IAllocator<DIM._3D, Float32Array>
-{
-    public dim = DIM._3D as DIM._3D;
-}
-
-class Float4Allocator
-    extends AbstractFloatArrayAllocator<DIM._4D>
-    implements IAllocator<DIM._4D, Float32Array>
-{
-    public dim = DIM._4D as DIM._4D;
-}
-
-class Float9Allocator
-    extends AbstractFloatArrayAllocator<DIM._9D>
-    implements IAllocator<DIM._9D, Float32Array>
-{
-    public dim = DIM._9D as DIM._9D;
-}
-
-class Float16Allocator
-    extends AbstractFloatArrayAllocator<DIM._16D>
-    implements IAllocator<DIM._16D, Float32Array>
-{
-    public dim = DIM._16D as DIM._16D;
-}
-
-export type FloatNAllocator =
-    Float2Allocator |
-    Float3Allocator |
-    Float4Allocator |
-    Float9Allocator |
-    Float16Allocator;
-
-export const VECTOR_2D_ALLOCATOR = new Float2Allocator();
-export const VECTOR_3D_ALLOCATOR = new Float3Allocator();
-export const VECTOR_4D_ALLOCATOR = new Float4Allocator();
-export const FACE_AREAS_ALLOCATOR = new Float3Allocator();
-export const MATRIX_2X2_ALLOCATOR = new Float4Allocator();
-export const MATRIX_3X3_ALLOCATOR = new Float9Allocator();
-export const MATRIX_4X4_ALLOCATOR = new Float16Allocator();
-
-class Int8Allocator1D
-    extends AbstractInt8ArrayAllocator<DIM._1D>
-    implements IAllocator<DIM._1D, Uint8Array>
-{
-    public dim = DIM._1D as DIM._1D;
-}
-
-class Int8Allocator2D
-    extends AbstractInt8ArrayAllocator<DIM._2D>
-    implements IAllocator<DIM._2D, Uint8Array>
-{
-    public dim = DIM._2D as DIM._2D;
-}
-
-class Int8Allocator3D
-    extends AbstractInt8ArrayAllocator<DIM._3D>
-    implements IAllocator<DIM._3D, Uint8Array>
-{
-    public dim = DIM._3D as DIM._3D;
-}
-
-class Int16Allocator1D
-    extends AbstractInt16ArrayAllocator<DIM._1D>
-    implements IAllocator<DIM._1D, Uint16Array>
-{
-    public dim = DIM._1D as DIM._1D;
-}
-
-class Int16Allocator2D
-    extends AbstractInt16ArrayAllocator<DIM._2D>
-    implements IAllocator<DIM._2D, Uint16Array>
-{
-    public dim = DIM._2D as DIM._2D;
-}
-
-class Int16Allocator3D
-    extends AbstractInt16ArrayAllocator<DIM._3D>
-    implements IAllocator<DIM._3D, Uint16Array>
-{
-    public dim = DIM._3D as DIM._3D;
-}
-
-class Int32Allocator1D
-    extends AbstractInt32ArrayAllocator<DIM._1D>
-    implements IAllocator<DIM._1D, Uint32Array>
-{
-    public dim = DIM._1D as DIM._1D;
-}
-
-class Int32Allocator2D
-    extends AbstractInt32ArrayAllocator<DIM._2D>
-    implements IAllocator<DIM._2D, Uint32Array>
-{
-    public dim = DIM._2D as DIM._2D;
-}
-
-class Int32Allocator3D
-    extends AbstractInt32ArrayAllocator<DIM._3D>
-    implements IAllocator<DIM._3D, Uint32Array>
-{
-    public dim = DIM._3D as DIM._3D;
-}
+export const VECTOR_2D_ALLOCATOR = new Float32Allocator2D();
+export const VECTOR_3D_ALLOCATOR = new Float32Allocator3D();
+export const VECTOR_4D_ALLOCATOR = new Float32Allocator4D();
+export const FACE_AREAS_ALLOCATOR = new Float32Allocator3D();
+export const MATRIX_2X2_ALLOCATOR = new Float32Allocator4D();
+export const MATRIX_3X3_ALLOCATOR = new Float32Allocator9D();
+export const MATRIX_4X4_ALLOCATOR = new Float32Allocator16D();
 
 export const FACE_VERTICES_ALLOCATOR_INT8 = new Int8Allocator3D();
 export const FACE_VERTICES_ALLOCATOR_INT16 = new Int16Allocator3D();
@@ -236,58 +203,3 @@ export const FROM_TO_INDICES_ALLOCATOR_INT8 = new Int8Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT16 = new Int16Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT32 = new Int32Allocator2D();
 export const RENDER_TARGET_ALLOCATOR = new Int32Allocator1D();
-
-export abstract class AbstractNestedTypedArraysAllocator<
-    Dim extends DIM,
-    OuterDim extends DIM,
-    ArrayType extends TypedArray = Float32Array>
-    extends BaseAllocator<Dim, ArrayType>
-    implements INestedAllocator<Dim, OuterDim, ArrayType>
-{
-    abstract outer_dim: OuterDim;
-
-    protected _temp_arrays: Tuple<Tuple<ArrayType, Dim>, OuterDim>;
-
-    constructor() {
-        super();
-        this._temp_arrays = this.allocate(this._temp_length);
-    }
-
-    allocate(length: number): Tuple<Tuple<ArrayType, Dim>, OuterDim> {
-        const arrays = Array(this.outer_dim);
-        const buffer = new ArrayBuffer(length * this._vector_bytees);
-
-        let offset = 0;
-        for (let outer = 0; outer < this.outer_dim; outer++) {
-            arrays[outer] = Array<ArrayType>(this.dim) as ArrayType[];
-
-            for (let inner = 0; inner < this.dim; inner++) {
-                arrays[outer][inner] = new this._constructor(buffer, offset, length);
-                offset += length
-            }
-        }
-
-        return arrays as Tuple<Tuple<ArrayType, Dim>, OuterDim>;
-    }
-
-    protected _growTempArrays() {
-        this._temp_length += this._cache_line_length;
-        const new_arrays = this.allocate(this._temp_length);
-
-        for (let outer = 0; outer < this.outer_dim; outer++)
-            for (let inner = 0; inner < this.dim; inner++)
-                new_arrays[outer][inner].set(this._temp_arrays[outer][inner]);
-
-        this._temp_arrays = new_arrays;
-    }
-}
-
-export abstract class AbstractNestedFloatArrayAllocator<
-    Dim extends DIM,
-    OuterDim extends DIM>
-    extends AbstractNestedTypedArraysAllocator<Dim, OuterDim>
-    implements INestedAllocator<Dim, OuterDim, Float32Array>
-{
-    readonly _constructor = Float32Array;
-    public abstract outer_dim: OuterDim;
-}

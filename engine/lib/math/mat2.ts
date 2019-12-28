@@ -391,6 +391,94 @@ const set_rotation = (
     M21a[a] = -sin;
 };
 
+const rotate = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    cos: number,
+    sin: number,
+
+    o: number, [
+        M11o, M12o,
+        M21o, M22o
+    ]: Float4,
+) : void => {
+    // t11 t12 * r11 r12
+    // t21 t22   r21 r22
+    //
+    // (t11 t12).(r11 r21) (t11 t12).(r12 r22)
+    // (t21 t22).(r11 r21) (t21 t22).(r12 r22)
+    //
+    // r11 r12 = cos  sin
+    // r21 r22  -sin  cos
+    //
+    // (t11 t12).(cos -sin) (t11 t12).(sin cos)
+    // (t21 t22).(cos -sin) (t21 t22).(sin cos)
+    //
+    // (t11*cos + t12*-sin + t13*0) (t11*sin + t12*cos + t13*0)
+    // (t21*cos + t22*-sin + t23*0) (t21*sin + t22*cos + t23*0)
+    //
+    // (t11*cos + t12*-sin + 0) (t11*sin + t12*cos + 0)
+    // (t21*cos + t22*-sin + 0) (t21*sin + t22*cos + 0)
+    //
+    // (t11*cos - t12*sin) (t11*sin + t12*cos)
+    // (t21*cos - t22*sin) (t21*sin + t22*cos)
+    //
+    // o11=(t11*cos - t12*sin)  o12=(t11*sin + t12*cos)
+    // o21=(t21*cos - t22*sin)  o22=(t21*sin + t22*cos)
+    //
+    // o11 = t11*cos - t12*sin  o12 = t11*sin + t12*cos
+    // o21 = t21*cos - t22*sin  o22 = t21*sin + t22*cos
+
+    M11o[o] = M11a[a]*cos - M12a[a]*sin;  M12o[o] = M11a[a]*sin + M12a[a]*cos;
+    M21o[o] = M21a[a]*cos + M22a[a]*sin;  M22o[o] = M21a[a]*sin + M22a[a]*cos;
+};
+
+const rotate_in_place = (
+    a: number, [
+        M11a, M12a,
+        M21a, M22a
+    ]: Float4,
+
+    cos: number,
+    sin: number
+) : void => {
+    // t11 t12 *= r11 r12
+    // t21 t22    r21 r22
+    //
+    // (t11 t12).(r11 r21) (t11 t12).(r12 r22)
+    // (t21 t22).(r11 r21) (t21 t22).(r12 r22)
+    //
+    // r11 r12 = cos  sin
+    // r21 r22  -sin  cos
+    //
+    // (t11 t12).(cos -sin) (t11 t12).(sin cos)
+    // (t21 t22).(cos -sin) (t21 t22).(sin cos)
+    //
+    // (t11*cos + t12*-sin + t13*0) (t11*sin + t12*cos + t13*0)
+    // (t21*cos + t22*-sin + t23*0) (t21*sin + t22*cos + t23*0)
+    //
+    // (t11*cos + t12*-sin + 0) (t11*sin + t12*cos + 0)
+    // (t21*cos + t22*-sin + 0) (t21*sin + t22*cos + 0)
+    //
+    // (t11*cos - t12*sin) (t11*sin + t12*cos)
+    // (t21*cos - t22*sin) (t21*sin + t22*cos)
+    //
+    // o11=(t11*cos - t12*sin)  o12=(t11*sin + t12*cos)
+    // o21=(t21*cos - t22*sin)  o22=(t21*sin + t22*cos)
+    //
+    // o11 = t11*cos - t12*sin  o12 = t11*sin + t12*cos
+    // o21 = t21*cos - t22*sin  o22 = t21*sin + t22*cos
+
+    t11 = M11a[a];  t21 = M21a[a];
+    t12 = M12a[a];  t22 = M22a[a];
+
+    M11a[a] = t11 * cos - t12 * sin;   M12a[a] = t11 * sin + t12 * cos;
+    M21a[a] = t21 * cos + t22 * sin;   M22a[a] = t21 * sin + t22 * cos;
+};
+
 export const matrix2x2Functions: IMatrix2x2FunctionSet = {
     allocator: MATRIX_2X2_ALLOCATOR,
 
@@ -430,5 +518,7 @@ export const matrix2x2Functions: IMatrix2x2FunctionSet = {
     transpose,
     transpose_in_place,
 
-    set_rotation
+    set_rotation,
+    rotate,
+    rotate_in_place
 };

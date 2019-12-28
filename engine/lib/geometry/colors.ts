@@ -10,18 +10,11 @@ class ColorTriangle3D extends ColorTriangle<Color3D> {}
 class ColorTriangle4D extends ColorTriangle<Color4D> {}
 
 export class VertexColors3D
-    extends PulledVertexAttribute<
-        ATTRIBUTE.color,
-        ATTRIBUTE.color,
-        DIM._3D,
-        Color3D,
-        ColorTriangle3D,
-        InputColors,
-        FaceColors3D>
-    implements IVertexColors<DIM._3D, Color3D> {
-    readonly attribute = ATTRIBUTE.color;
-
+    extends PulledVertexAttribute<Color3D, ColorTriangle3D, InputColors, FaceColors3D>
+    implements IVertexColors<Color3D>
+{
     readonly dim = DIM._3D;
+    readonly attribute = ATTRIBUTE.color;
     readonly Vector = Color3D;
     readonly Triangle = ColorTriangle3D;
     readonly allocator = VECTOR_3D_ALLOCATOR;
@@ -38,18 +31,11 @@ export class VertexColors3D
 }
 
 export class VertexColors4D
-    extends PulledVertexAttribute<
-        ATTRIBUTE.color,
-        ATTRIBUTE.color,
-        DIM._4D,
-        Color4D,
-        ColorTriangle4D,
-        InputColors,
-        FaceColors4D>
-    implements IVertexColors<DIM._4D, Color4D> {
-    readonly attribute = ATTRIBUTE.color;
-
+    extends PulledVertexAttribute<Color4D, ColorTriangle4D, InputColors, FaceColors4D>
+    implements IVertexColors<Color4D>
+{
     readonly dim = DIM._4D;
+    readonly attribute = ATTRIBUTE.color;
     readonly Vector = Color4D;
     readonly Triangle = ColorTriangle4D;
     readonly allocator = VECTOR_4D_ALLOCATOR;
@@ -67,10 +53,10 @@ export class VertexColors4D
 }
 
 export class FaceColors3D
-    extends FaceAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._3D, Color3D, VertexColors3D>
-    implements IFaceColors<DIM._3D, Color3D> {
+    extends FaceAttribute<Color3D, VertexColors3D>
+    implements IFaceColors<Color3D>
+{
     readonly attribute = ATTRIBUTE.color;
-
     readonly dim = DIM._3D;
     readonly Vector = Color3D;
     readonly allocator = VECTOR_3D_ALLOCATOR;
@@ -87,11 +73,11 @@ export class FaceColors3D
 }
 
 export class FaceColors4D
-    extends FaceAttribute<ATTRIBUTE.color, ATTRIBUTE.color, DIM._4D, Color4D, VertexColors4D>
-    implements IFaceColors<DIM._4D, Color4D> {
-    readonly attribute = ATTRIBUTE.color;
-
+    extends FaceAttribute<Color4D, VertexColors4D>
+    implements IFaceColors<Color4D>
+{
     readonly dim = DIM._4D;
+    readonly attribute = ATTRIBUTE.color;
     readonly Vector = Color4D;
     readonly allocator = VECTOR_4D_ALLOCATOR;
 

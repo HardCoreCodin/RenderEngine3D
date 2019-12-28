@@ -22,8 +22,8 @@ const pressed = {
     pitch_down: false
 };
 export default class FPSController {
-    constructor(camera, canvas, forward_movement = new Direction3D(), right_movement = new Direction3D(), _forward_direction = new Direction3D(), movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, look_direction = camera.transform.matrix.k, // The player's forward direction
-    right_direction = camera.transform.matrix.i) {
+    constructor(camera, canvas, forward_movement = new Direction3D(), right_movement = new Direction3D(), _forward_direction = new Direction3D(), movement_speed = 0.1, rotation_speed = 0.01, mouse_sensitivity = 0.1, look_direction = camera.transform.matrix.z_axis, // The player's forward direction
+    right_direction = camera.transform.matrix.x_axis) {
         this.camera = camera;
         this.canvas = canvas;
         this.forward_movement = forward_movement;
@@ -129,17 +129,15 @@ export default class FPSController {
             this.rotation_amount = this.rotation_speed * delta_time;
             if (pressed.yaw_left ||
                 pressed.yaw_right) {
-                if (pressed.yaw_left)
-                    this.camera.transform.rotation.y += this.rotation_amount;
-                else
-                    this.camera.transform.rotation.y -= this.rotation_amount;
+                this.camera.transform.rotation.rotateAroundY(pressed.yaw_left ?
+                    this.rotation_amount :
+                    -this.rotation_amount);
             }
             if (pressed.pitch_up ||
                 pressed.pitch_down) {
-                if (pressed.pitch_up)
-                    this.camera.transform.rotation.x -= this.rotation_amount;
-                else
-                    this.camera.transform.rotation.x += this.rotation_amount;
+                this.camera.transform.rotation.rotateAroundX(pressed.pitch_up ?
+                    -this.rotation_amount :
+                    this.rotation_amount);
             }
         }
         if (pressed.forward ||
@@ -154,24 +152,24 @@ export default class FPSController {
                 pressed.backwards) {
                 this.forward_direction.times(this.movement_amount, this.forward_movement);
                 if (pressed.forward)
-                    this.camera.transform.translation.add(this.forward_movement);
+                    this.camera.transform.matrix.translation.add(this.forward_movement);
                 else
-                    this.camera.transform.translation.sub(this.forward_movement);
+                    this.camera.transform.matrix.translation.sub(this.forward_movement);
             }
             if (pressed.right ||
                 pressed.left) {
                 this.right_direction.times(this.movement_amount, this.right_movement);
                 if (pressed.right)
-                    this.camera.transform.translation.add(this.right_movement);
+                    this.camera.transform.matrix.translation.add(this.right_movement);
                 else
-                    this.camera.transform.translation.sub(this.right_movement);
+                    this.camera.transform.matrix.translation.sub(this.right_movement);
             }
             if (pressed.up ||
                 pressed.down) {
                 if (pressed.up)
-                    this.camera.transform.translation.y += this.movement_amount;
+                    this.camera.transform.matrix.translation.y += this.movement_amount;
                 else
-                    this.camera.transform.translation.y -= this.movement_amount;
+                    this.camera.transform.matrix.translation.y -= this.movement_amount;
             }
         }
         if (this.mouse_x !== undefined) {

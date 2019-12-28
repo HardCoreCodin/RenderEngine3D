@@ -434,7 +434,7 @@ const matrix_multiply_in_place_all = (
     }
 };
 
-export const transformableAttribute4DFunctions: ITransformableAttributeFunctionSet<DIM._4D> = {
+export const transformableAttribute4DFunctions: ITransformableAttributeFunctionSet = {
     matrix_multiply_all,
     matrix_multiply_in_place_all
 };
@@ -493,11 +493,6 @@ export const position4DFunctions: IPositionFunctionSet = {
 
     distance,
     distance_squared
-    //
-    // in_view,
-    //
-    // to_ndc,
-    // to_ndc_in_place
 };
 
 export const direction4DFunctions: ICrossDirectionFunctionSet = {

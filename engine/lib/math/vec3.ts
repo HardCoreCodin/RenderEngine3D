@@ -498,7 +498,7 @@ const matrix_multiply_in_place_all = (
     }
 };
 
-export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet<DIM._3D> = {
+export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet = {
     matrix_multiply_all,
     matrix_multiply_in_place_all
 };

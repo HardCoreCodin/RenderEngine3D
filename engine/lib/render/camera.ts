@@ -20,11 +20,11 @@ export default class Camera
         // Position in space (0, 0, 0, 1) with perspective projection applied to it
         readonly projected_position = new Position4D(),
         readonly projection_matrix = new Matrix4x4(),
-        readonly translation = projection_matrix.pos3,
+        readonly translation = projection_matrix.translation,
         readonly scale = new Position3D(projection_matrix.id, [
-            projection_matrix.i.arrays[0],
-            projection_matrix.j.arrays[1],
-            projection_matrix.k.arrays[2],
+            projection_matrix.x_axis.arrays[0],
+            projection_matrix.y_axis.arrays[1],
+            projection_matrix.z_axis.arrays[2],
         ])
     ) {
         super(scene);

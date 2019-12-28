@@ -5,15 +5,14 @@ import {matrix2x2Functions} from "../math/mat2.js";
 import {matrix4x4Functions} from "../math/mat4.js";
 import {matrix3x3Functions} from "../math/mat3.js";
 import {Float16, Float4, Float9} from "../../types.js";
-import {IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
+import {IMatrix2x2FunctionSet, IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/matrix.js";
 
 
-export default abstract class Matrix
-    extends MathAccessor
-    implements IMatrix
+export default abstract class Matrix extends MathAccessor implements IMatrix
 {
-    readonly abstract _: IMatrixFunctionSet;
+    readonly _: IMatrixFunctionSet;
+
     _newOut(): this {return this._new()}
 
     get is_identity(): boolean {
@@ -50,13 +49,67 @@ export default abstract class Matrix
 
         return out;
     }
+
+    abstract toArray(array?: Float32Array): Float32Array;
 }
 
-export abstract class RotationMatrix
-    extends Matrix
-    implements IRotationMatrix
+export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 {
-    readonly abstract _: IMatrixRotationFunctionSet;
+    readonly _: IMatrixRotationFunctionSet;
+
+    rotateAroundX(angle: number, out?: this): this {
+        if (out && !Object.is(out, this)) {
+            this._.rotate_around_x(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle),
+                out.id, out.arrays
+            );
+        } else
+            this._.rotate_around_x_in_place(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle)
+            );
+
+        return this;
+    }
+
+    rotateAroundY(angle: number, out?: this): this {
+        if (out && !Object.is(out, this)) {
+            this._.rotate_around_y(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle),
+                out.id, out.arrays
+            );
+        } else
+            this._.rotate_around_y_in_place(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle)
+            );
+
+        return this;
+    }
+
+    rotateAroundZ(angle: number, out?: this): this {
+        if (out && !Object.is(out, this)) {
+            this._.rotate_around_z(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle),
+                out.id, out.arrays
+            );
+        } else
+            this._.rotate_around_z_in_place(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle)
+            );
+
+        return this;
+    }
 
     setRotationAroundX(angle: number, reset: boolean = false): this {
         if (reset)
@@ -102,24 +155,29 @@ export abstract class RotationMatrix
 
         return this;
     }
+
+    rotateBy(x: number, y: number = 0, z: number = 0): this {
+        if (x) this.rotateAroundX(x);
+        if (y) this.rotateAroundY(y);
+        if (z) this.rotateAroundZ(z);
+
+        return this;
+    }
 }
 
-export class Matrix2x2
-    extends Matrix
-    implements IMatrix2x2
+export class Matrix2x2 extends Matrix implements IMatrix2x2
 {
-    readonly _ = matrix2x2Functions;
-
-    public readonly i: Direction2D;
-    public readonly j: Direction2D;
+    readonly _: IMatrix2x2FunctionSet;
+    public readonly x_axis: Direction2D;
+    public readonly y_axis: Direction2D;
 
     public arrays: Float4;
 
     constructor(id?: number, arrays?: Float4) {
-        super(id, arrays);
+        super(matrix2x2Functions, id, arrays);
 
-        this.i = new Direction2D(id, [arrays[0], arrays[1]]);
-        this.j = new Direction2D(id, [arrays[2], arrays[3]]);
+        this.x_axis = new Direction2D(this.id, [arrays[0], arrays[1]]);
+        this.y_axis = new Direction2D(this.id, [arrays[2], arrays[3]]);
     }
 
     set m11(m11: number) {this.arrays[0][this.id] = m11}
@@ -161,33 +219,71 @@ export class Matrix2x2
 
         return this;
     }
+
+    rotateBy(angle: number, out?: this): this {
+        if (out && !Object.is(out, this)) {
+            this._.rotate(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle),
+                out.id, out.arrays
+            );
+        } else
+            this._.rotate_in_place(
+                this.id, this.arrays,
+                Math.cos(angle),
+                Math.sin(angle)
+            );
+
+        return this;
+    }
+
+    scaleBy(x: number, y: number = x): this {
+        if (x !== 1) this.x_axis.mul(x);
+        if (y !== 1) this.y_axis.mul(y);
+
+        return this;
+    }
+
+    toArray(array: Float32Array = new Float32Array(4)): Float32Array {
+        array[0] = this.arrays[0][this.id];
+        array[1] = this.arrays[1][this.id];
+        array[2] = this.arrays[2][this.id];
+        array[3] = this.arrays[3][this.id];
+
+        return array;
+    }
 }
 
-export class Matrix3x3
-    extends RotationMatrix
-    implements IMatrix3x3
+export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
 {
-    readonly _ = matrix3x3Functions;
+    readonly _: IMatrixRotationFunctionSet;
 
-    public readonly i: Direction2D;
-    public readonly j: Direction2D;
-
-    public readonly pos2: Position2D;
     public readonly mat2: Matrix2x2;
+    public readonly translation: Position2D;
+    public readonly x_axis_2D: Direction2D;
+    public readonly y_axis_2D: Direction2D;
+
+    public readonly x_axis: Direction3D;
+    public readonly y_axis: Direction3D;
+    public readonly z_axis: Direction3D;
 
     public arrays: Float9;
 
     constructor(id?: number, arrays?: Float9) {
-        super(id, arrays);
+        super(matrix3x3Functions, id, arrays);
 
-        this.i = new Direction2D(id, [arrays[0], arrays[1]]);
-        this.j = new Direction2D(id, [arrays[3], arrays[4]]);
-
-        this.pos2 = new Position2D(id, [arrays[6], arrays[7]]);
         this.mat2 = new Matrix2x2(this.id, [
             this.arrays[0], this.arrays[1],
             this.arrays[3], this.arrays[4],
         ]);
+        this.translation = new Position2D(this.id, [this.arrays[6], this.arrays[7]]);
+        this.x_axis_2D = new Direction2D(this.id, [this.arrays[0], this.arrays[1]]);
+        this.y_axis_2D = new Direction2D(this.id, [this.arrays[3], this.arrays[4]]);
+
+        this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
+        this.y_axis = new Direction3D(this.id, [this.arrays[3], this.arrays[4], this.arrays[5]]);
+        this.z_axis = new Direction3D(this.id, [this.arrays[6], this.arrays[7], this.arrays[8]]);
     }
 
     get m11(): number {return this.arrays[0][this.id]}
@@ -231,31 +327,65 @@ export class Matrix3x3
 
         return this;
     }
+
+    toArray(array: Float32Array = new Float32Array(9)): Float32Array {
+        array[0] = this.arrays[0][this.id];
+        array[1] = this.arrays[1][this.id];
+        array[2] = this.arrays[2][this.id];
+        array[3] = this.arrays[3][this.id];
+        array[4] = this.arrays[4][this.id];
+        array[5] = this.arrays[5][this.id];
+        array[6] = this.arrays[6][this.id];
+        array[7] = this.arrays[7][this.id];
+        array[8] = this.arrays[8][this.id];
+
+        return array;
+    }
+
+    translateBy(x: number, y: number = 0): this {
+        if (x) this.translation.x += x;
+        if (y) this.translation.y += y;
+
+        return this;
+    }
+
+    scale2DBy(x: number, y: number = x): this {
+        if (x !== 1) this.x_axis_2D.mul(x);
+        if (y !== 1) this.y_axis_2D.mul(y);
+
+        return this;
+    }
+
+    scaleBy(x: number, y: number = x, z: number = x): this {
+        if (x !== 1) this.x_axis.mul(x);
+        if (y !== 1) this.y_axis.mul(y);
+        if (z !== 1) this.z_axis.mul(z);
+
+        return this;
+    }
 }
 
-export class Matrix4x4
-    extends RotationMatrix
-    implements IMatrix4x4
+export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
 {
-    readonly _ = matrix4x4Functions;
+    readonly _: IMatrixRotationFunctionSet;
 
-    public readonly i: Direction3D;
-    public readonly j: Direction3D;
-    public readonly k: Direction3D;
-
-    public readonly pos3: Position3D;
     public readonly mat3: Matrix3x3;
+    public readonly translation: Position3D;
+
+    public readonly x_axis: Direction3D;
+    public readonly y_axis: Direction3D;
+    public readonly z_axis: Direction3D;
 
     public arrays: Float16;
 
     constructor(id?: number, arrays?: Float16) {
-        super(id, arrays);
+        super(matrix4x4Functions, id, arrays);
 
-        this.i = new Direction3D(id, [arrays[0], arrays[1], arrays[2]]);
-        this.j = new Direction3D(id, [arrays[4], arrays[5], arrays[6]]);
-        this.k = new Direction3D(id, [arrays[8], arrays[9], arrays[10]]);
+        this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
+        this.y_axis = new Direction3D(this.id, [this.arrays[4], this.arrays[5], this.arrays[6]]);
+        this.z_axis = new Direction3D(this.id, [this.arrays[8], this.arrays[9], this.arrays[10]]);
 
-        this.pos3 = new Position3D(id, [arrays[12], arrays[13], arrays[14]]);
+        this.translation = new Position3D(this.id, [this.arrays[12], this.arrays[13], this.arrays[14]]);
         this.mat3 = new Matrix3x3(this.id, [
             this.arrays[0], this.arrays[1], this.arrays[2],
             this.arrays[4], this.arrays[5], this.arrays[6],
@@ -318,6 +448,43 @@ export class Matrix4x4
             m31, m32, m33, m34,
             m41, m42, m43, m44
         );
+
+        return this;
+    }
+
+    toArray(array: Float32Array = new Float32Array(16)): Float32Array {
+        array[0] = this.arrays[0][this.id];
+        array[1] = this.arrays[1][this.id];
+        array[2] = this.arrays[2][this.id];
+        array[3] = this.arrays[3][this.id];
+        array[4] = this.arrays[4][this.id];
+        array[5] = this.arrays[5][this.id];
+        array[6] = this.arrays[6][this.id];
+        array[7] = this.arrays[7][this.id];
+        array[8] = this.arrays[8][this.id];
+        array[9] = this.arrays[9][this.id];
+        array[10] = this.arrays[10][this.id];
+        array[11] = this.arrays[11][this.id];
+        array[12] = this.arrays[12][this.id];
+        array[13] = this.arrays[13][this.id];
+        array[14] = this.arrays[14][this.id];
+        array[15] = this.arrays[15][this.id];
+
+        return array;
+    }
+
+    translateBy(x: number, y: number = 0, z: number = 0): this {
+        if (x) this.translation.x += x;
+        if (y) this.translation.y += y;
+        if (z) this.translation.z += z;
+
+        return this;
+    }
+
+    scaleBy(x: number, y: number = x, z: number = x): this {
+        if (x !== 1) this.x_axis.mul(x);
+        if (y !== 1) this.y_axis.mul(y);
+        if (z !== 1) this.z_axis.mul(z);
 
         return this;
     }

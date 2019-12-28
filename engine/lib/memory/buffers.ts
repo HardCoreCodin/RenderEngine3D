@@ -1,33 +1,32 @@
-import {DIM} from "../../constants.js";
-import {Tuple, TypedArray} from "../../types.js";
+import {TypedArray} from "../../types.js";
 import {IBuffer} from "../_interfaces/buffers.js";
 import {IAllocator} from "../_interfaces/allocators.js";
+import {Float32Allocator} from "./allocators.js";
 
-export abstract class Buffer<
-    ArrayType extends TypedArray,
-    Dim extends DIM>
-    implements IBuffer<Dim, ArrayType>
-{
-    abstract readonly dim: Dim;
-    abstract readonly allocator: IAllocator<Dim, ArrayType>;
-    protected _values: Tuple<number, Dim>;
+export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType> {
+    abstract readonly allocator: IAllocator<ArrayType>;
+    protected _values: number[];
+
     length: number;
-    arrays: Tuple<ArrayType, Dim>;
+    arrays: ArrayType[];
 
-    constructor(length?: number, arrays?: Tuple<ArrayType, Dim>) {
+    constructor(
+        length?: number,
+        arrays?: ArrayType[]
+    ) {
         if (length !== undefined)
             this.init(length, arrays);
     }
 
-    init(length: number, arrays?: Tuple<ArrayType, Dim>): this {
+    init(length: number, arrays?: ArrayType[]): this {
         this.length = length;
-        this.arrays = arrays || this.allocator.allocate(length) as Tuple<ArrayType, Dim>;
-        this._values = Array<number>(this.dim) as Tuple<number, Dim>;
+        this.arrays = arrays || this.allocator.allocateBuffer(length);
+        this._values = Array<number>(this.allocator.dim);
 
         return this;
     }
 
-    * values(): Generator<Tuple<number, Dim>> {
+    * values(): Generator<number[]> {
         for (const [i, array] of this.arrays.entries())
             this._values[i] = array[i];
 
@@ -35,10 +34,6 @@ export abstract class Buffer<
     }
 }
 
-export abstract class FloatBuffer<Dim extends DIM>
-    extends Buffer<Float32Array, Dim>
-    implements IBuffer<Dim>
-{
-    abstract readonly allocator: IAllocator<Dim, Float32Array>;
+export abstract class FloatBuffer extends Buffer<Float32Array> implements IBuffer {
+    abstract readonly allocator: Float32Allocator;
 }
-

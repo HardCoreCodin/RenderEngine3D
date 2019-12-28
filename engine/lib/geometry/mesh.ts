@@ -25,7 +25,7 @@ export default class Mesh {
         public readonly vertex_faces: IVertexFaces = new VertexFacesInt32().load(face_vertices, vertex_count),
 
         public readonly face_count: number = face_vertices.length,
-        public readonly vertex_arrays = VECTOR_4D_ALLOCATOR.allocate(face_count*2)
+        public readonly vertex_arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(face_count*2)
     ) {
         options.sanitize(this.inputs);
 

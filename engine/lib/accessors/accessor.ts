@@ -2,24 +2,23 @@ import {Arrays, IMathFunctionSet, IAccessorFunctionSet} from "../_interfaces/fun
 import {IAccessor, IAccessorConstructor, IMathAccessor} from "../_interfaces/accessors.js";
 
 
-export class Accessor
-    implements IAccessor
+export class Accessor implements IAccessor
 {
-    readonly _: IAccessorFunctionSet;
-
     public id: number;
     public arrays: Arrays;
 
-    constructor(id?: number, arrays?: Arrays) {
-        if (id === undefined)
-            this.id = this._.allocator.allocateTemp();
-        else
-            this.id = id;
-
-        if (arrays === undefined)
-            this.arrays = this._.allocator.temp_arrays;
-        else
+    constructor(
+        readonly _: IAccessorFunctionSet,
+        id?: number,
+        arrays?: Arrays
+    ) {
+        if (arrays) {
             this.arrays = arrays;
+            this.id = id;
+        } else {
+            this.arrays = Array<Float32Array>(_.allocator.dim) as Arrays;
+            this.id = _.allocator.allocate(this.arrays);
+        }
     }
 
     setTo(...values: number[]): this {
