@@ -6,16 +6,7 @@ import {Arrays, IVectorFunctionSet} from "../_interfaces/functions.js";
 
 export class UV2D extends Vector implements IUV2D
 {
-    readonly _: IVectorFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(base2DFunctions, id, arrays)
-    }
-
-    _newOut(): this {return this._new()}
+    protected _getFunctionSet(): IVectorFunctionSet {return base2DFunctions}
 
     setTo(u: number, v: number): this {
         this._.set_to(
@@ -44,16 +35,7 @@ export class UV2D extends Vector implements IUV2D
 
 export class UV3D extends Vector implements IUV3D
 {
-    readonly _: IVectorFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(base3DFunctions, id, arrays)
-    }
-
-    _newOut(): this {return this._new()}
+    protected _getFunctionSet(): IVectorFunctionSet {return base3DFunctions}
 
     setTo(u: number, v: number, w: number): this {
         this._.set_to(

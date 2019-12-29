@@ -1,20 +1,18 @@
 import {TransformableVector} from "./vector.js";
 import Matrix, {Matrix2x2, Matrix3x3, Matrix4x4} from "./matrix.js";
-import {Direction2D, Direction3D, Direction4D, dir2, dir3, dir4} from "./direction.js";
+import {dir2, dir4} from "./direction.js";
 import {position3DFunctions} from "../math/vec3.js";
 import {position4DFunctions} from "../math/vec4.js";
 import {position2DFunctions} from "../math/vec2.js";
-import {Arrays, IPosition3DFunctionSet, IPositionFunctionSet} from "../_interfaces/functions.js";
+import {IPosition3DFunctionSet, IPositionFunctionSet} from "../_interfaces/functions.js";
 import {IDirection, IPosition, IPosition2D, IPosition3D, IPosition4D} from "../_interfaces/vectors.js";
 
-export abstract class Position<
-    MatrixType extends Matrix>
+export abstract class Position<MatrixType extends Matrix>
     extends TransformableVector<MatrixType>
     implements IPosition<MatrixType>
 {
-    _: IPositionFunctionSet;
-
-    abstract _newOut(): IDirection<MatrixType>;
+    readonly _: IPositionFunctionSet;
+    protected abstract _getFunctionSet(): IPositionFunctionSet;
 
     readonly distanceTo = (other: this): number => this._.distance(
         this.id, this.arrays,
@@ -26,7 +24,7 @@ export abstract class Position<
         other.id, other.arrays
     );
 
-    to(other: IPosition<MatrixType>, out: IDirection<MatrixType> = this._newOut()): typeof out {
+    to(other: IPosition<MatrixType>, out: IDirection<MatrixType>): typeof out {
         this._.subtract(
             other.id, other.arrays,
             this.id, this.arrays,
@@ -39,15 +37,7 @@ export abstract class Position<
 
 export class Position2D extends Position<Matrix2x2> implements IPosition2D
 {
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(position2DFunctions, id, arrays)
-    }
-
-    _newOut(): Direction2D {return new Direction2D()}
-
+    protected _getFunctionSet(): IPositionFunctionSet {return position2DFunctions}
     protected readonly _dir = dir2;
 
     setTo(x: number, y: number): this {
@@ -76,15 +66,7 @@ export class Position2D extends Position<Matrix2x2> implements IPosition2D
 export class Position3D extends Position<Matrix3x3> implements IPosition3D
 {
     readonly _: IPosition3DFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(position3DFunctions, id, arrays)
-    }
-
-    _newOut(): Direction3D {return new Direction3D()}
+    protected _getFunctionSet(): IPosition3DFunctionSet {return position3DFunctions}
 
     setTo(x: number, y: number, z: number): this {
         this._.set_to(this.id, this.arrays, x, y, z);
@@ -169,34 +151,9 @@ export class Position3D extends Position<Matrix3x3> implements IPosition3D
 
 export class Position4D extends Position<Matrix4x4> implements IPosition4D
 {
-    readonly _: IPositionFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(position4DFunctions, id, arrays)
-    }
-
-    _newOut(): Direction4D {return new Direction4D()}
+    protected _getFunctionSet(): IPositionFunctionSet {return position4DFunctions}
 
     protected readonly _dir = dir4;
-
-    as3D(out?: Position3D): Position3D {
-        if (out) {
-            out.id = this.id;
-            out.arrays[0] = this.arrays[0];
-            out.arrays[1] = this.arrays[1];
-            out.arrays[2] = this.arrays[2];
-            return out;
-        }
-
-        return new Position3D(this.id, [
-            this.arrays[0],
-            this.arrays[1],
-            this.arrays[2]
-        ])
-    }
 
     setTo(x: number, y: number, z: number, w: number): this {
         this._.set_to(this.id, this.arrays, x, y, z, w);

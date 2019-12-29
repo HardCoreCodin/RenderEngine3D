@@ -5,15 +5,17 @@ import {matrix2x2Functions} from "../math/mat2.js";
 import {matrix4x4Functions} from "../math/mat4.js";
 import {matrix3x3Functions} from "../math/mat3.js";
 import {Float16, Float4, Float9} from "../../types.js";
-import {IMatrix2x2FunctionSet, IMatrixFunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
+import {
+    IMatrix2x2FunctionSet,
+    IMatrixFunctionSet,
+    IMatrixRotationFunctionSet
+} from "../_interfaces/functions.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/matrix.js";
-
 
 export default abstract class Matrix extends MathAccessor implements IMatrix
 {
     readonly _: IMatrixFunctionSet;
-
-    _newOut(): this {return this._new()}
+    protected abstract _getFunctionSet(): IMatrixFunctionSet;
 
     get is_identity(): boolean {
         return this._.is_identity(
@@ -54,6 +56,7 @@ export default abstract class Matrix extends MathAccessor implements IMatrix
 export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 {
     readonly _: IMatrixRotationFunctionSet;
+    protected abstract _getFunctionSet(): IMatrixRotationFunctionSet;
 
     rotateAroundX(angle: number, out?: this): this {
         if (out && !Object.is(out, this)) {
@@ -166,13 +169,15 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 export class Matrix2x2 extends Matrix implements IMatrix2x2
 {
     readonly _: IMatrix2x2FunctionSet;
+    protected _getFunctionSet(): IMatrix2x2FunctionSet {return matrix2x2Functions}
+
     public readonly x_axis: Direction2D;
     public readonly y_axis: Direction2D;
 
     public arrays: Float4;
 
     constructor(id?: number, arrays?: Float4) {
-        super(matrix2x2Functions, id, arrays);
+        super(id, arrays);
 
         this.x_axis = new Direction2D(this.id, [arrays[0], arrays[1]]);
         this.y_axis = new Direction2D(this.id, [arrays[2], arrays[3]]);
@@ -246,7 +251,7 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2
 
 export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
 {
-    readonly _: IMatrixRotationFunctionSet;
+    protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix3x3Functions}
 
     public readonly mat2: Matrix2x2;
     public readonly translation: Position2D;
@@ -260,7 +265,7 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
     public arrays: Float9;
 
     constructor(id?: number, arrays?: Float9) {
-        super(matrix3x3Functions, id, arrays);
+        super(id, arrays);
 
         this.mat2 = new Matrix2x2(this.id, [
             this.arrays[0], this.arrays[1],
@@ -342,7 +347,7 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
 
 export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
 {
-    readonly _: IMatrixRotationFunctionSet;
+    protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix4x4Functions}
 
     public readonly mat3: Matrix3x3;
     public readonly translation: Position3D;
@@ -354,7 +359,7 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
     public arrays: Float16;
 
     constructor(id?: number, arrays?: Float16) {
-        super(matrix4x4Functions, id, arrays);
+        super(id, arrays);
 
         this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
         this.y_axis = new Direction3D(this.id, [this.arrays[4], this.arrays[5], this.arrays[6]]);

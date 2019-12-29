@@ -3,18 +3,16 @@ import {IAccessor} from "../_interfaces/accessors.js";
 import {Float2, Float3} from "../../types.js";
 import {IBarycentricInterpolator, ILinearInterpolator} from "../_interfaces/interpolators.js";
 import {barycentricInterpolatorFunctions, linearInterpolatorFunctions} from "../math/rendering/interpolation.js";
+import {IBarycentricInterpolatorFunctionSet, ILinearInterpolatorFunctionSet} from "../_interfaces/functions.js";
 
 
-export class LinearInterpolator<AccessorType extends IAccessor = IAccessor>
-    extends Accessor
+export class LinearInterpolator<AccessorType extends IAccessor = IAccessor> extends Accessor
     implements ILinearInterpolator<AccessorType>
 {
-    readonly _ = linearInterpolatorFunctions;
-    public arrays: Float2;
+    readonly _: ILinearInterpolatorFunctionSet;
+    protected _getFunctionSet(): ILinearInterpolatorFunctionSet {return linearInterpolatorFunctions}
 
-    _newOut(): this {
-        return this._new();
-    }
+    public arrays: Float2;
 
     setTo(from: number, to: number): this {
         this._.set_to(
@@ -54,16 +52,13 @@ export class LinearInterpolator<AccessorType extends IAccessor = IAccessor>
 }
 
 
-export class BarycentricInterpolator<AccessorType extends IAccessor = IAccessor>
-    extends Accessor
+export class BarycentricInterpolator<AccessorType extends IAccessor = IAccessor> extends Accessor
     implements IBarycentricInterpolator<AccessorType>
 {
-    readonly _ = barycentricInterpolatorFunctions;
-    public arrays: Float3;
+    readonly _: IBarycentricInterpolatorFunctionSet;
+    protected _getFunctionSet(): IBarycentricInterpolatorFunctionSet {return barycentricInterpolatorFunctions}
 
-    _newOut(): this {
-        return this._new();
-    }
+    public arrays: Float3;
 
     setTo(w1: number, w2: number, w3: number): this {
         this._.set_to(

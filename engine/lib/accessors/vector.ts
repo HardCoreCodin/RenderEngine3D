@@ -3,8 +3,7 @@ import {MathAccessor} from "./accessor.js";
 import {ITransformableVectorFunctionSet, IVectorFunctionSet} from "../_interfaces/functions.js";
 import {ITransformableVector, IVector} from "../_interfaces/vectors.js";
 
-export abstract class Vector
-    extends MathAccessor
+export abstract class Vector extends MathAccessor
     implements IVector
 {
     readonly _: IVectorFunctionSet;
@@ -21,8 +20,7 @@ export abstract class Vector
     }
 }
 
-export abstract class TransformableVector<MatrixType extends Matrix>
-    extends Vector
+export abstract class TransformableVector<MatrixType extends Matrix> extends Vector
     implements ITransformableVector<MatrixType>
 {
     readonly _: ITransformableVectorFunctionSet;

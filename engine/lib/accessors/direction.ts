@@ -1,14 +1,13 @@
 import {TransformableVector} from "./vector.js";
 import Matrix, {Matrix2x2, Matrix3x3, Matrix4x4} from "./matrix.js";
 import {
-    Arrays,
     ICrossDirectionFunctionSet,
     IDirection3DFunctionSet,
-    IDirectionFunctionSet
+    IDirectionFunctionSet,
 } from "../_interfaces/functions.js";
 import {PRECISION_DIGITS} from "../../constants.js";
 import {direction2DFunctions} from "../math/vec2.js";
-import { direction4DFunctions} from "../math/vec4.js";
+import {direction4DFunctions} from "../math/vec4.js";
 import {direction3DFunctions} from "../math/vec3.js";
 import {ICrossedDirection, IDirection, IDirection2D, IDirection3D, IDirection4D} from "../_interfaces/vectors.js";
 
@@ -16,8 +15,8 @@ export abstract class Direction<MatrixType extends Matrix>
     extends TransformableVector<MatrixType>
     implements IDirection<MatrixType>
 {
-    _: IDirectionFunctionSet;
-    _newOut(): this {return this._new()}
+    readonly _: IDirectionFunctionSet;
+    protected abstract _getFunctionSet(): IDirectionFunctionSet;
 
     readonly dot = (other: this): number =>
         this._.dot(
@@ -71,6 +70,7 @@ export abstract class CrossedDirection<MatrixType extends Matrix>
     implements ICrossedDirection<MatrixType>
 {
     readonly _: ICrossDirectionFunctionSet;
+    protected abstract _getFunctionSet(): ICrossDirectionFunctionSet;
 
     get z(): number {
         return this.arrays[2][this.id]
@@ -105,12 +105,7 @@ export abstract class CrossedDirection<MatrixType extends Matrix>
 
 export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
 {
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(direction2DFunctions, id, arrays)
-    }
+    protected _getFunctionSet(): IDirectionFunctionSet {return direction2DFunctions}
 
     setTo(x: number, y: number): this {
         this._.set_to(
@@ -139,13 +134,7 @@ export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
 export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirection3D
 {
     readonly _: IDirection3DFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(direction3DFunctions, id, arrays)
-    }
+    protected _getFunctionSet(): IDirection3DFunctionSet {return direction3DFunctions}
 
     setTo(x: number, y: number, z: number): this {
         this._.set_to(
@@ -234,14 +223,7 @@ export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirecti
 
 export class Direction4D extends CrossedDirection<Matrix4x4> implements IDirection4D
 {
-    readonly _: ICrossDirectionFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(direction4DFunctions, id, arrays)
-    }
+    protected _getFunctionSet(): ICrossDirectionFunctionSet {return direction4DFunctions}
 
     setTo(x: number, y: number, z: number, w: number): this {
         this._.set_to(

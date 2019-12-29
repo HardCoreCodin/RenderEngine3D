@@ -11,17 +11,16 @@ import {IMathAccessor} from "./accessors.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4} from "./matrix.js";
 
 
-export interface IVector
-    extends IMathAccessor
+export interface IVector extends IMathAccessor
 {
     _: IVectorFunctionSet;
 
     lerp(to: this, by: number, out?: this): this;
 }
 
-export interface ITransformableVector<Matrix extends IMatrix = IMatrix>
-    extends IVector {
-    _: ITransformableVectorFunctionSet
+export interface ITransformableVector<Matrix extends IMatrix = IMatrix> extends IVector
+{
+    readonly _: ITransformableVectorFunctionSet
 
     imatmul(matrix: Matrix): this;
     matmul(matrix: Matrix, out?: this): this;
@@ -43,7 +42,7 @@ export interface IVector4D extends IVector3D {
 export interface IDirection<Matrix extends IMatrix = IMatrix>
     extends ITransformableVector<Matrix>
 {
-    _: IDirectionFunctionSet;
+    readonly _: IDirectionFunctionSet;
 
     length: number;
     length_squared: number;

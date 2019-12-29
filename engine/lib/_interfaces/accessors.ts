@@ -22,23 +22,13 @@ export interface IAccessor {
     _new(): this;
 }
 
-export interface IMathAccessor
-    extends IAccessor {
+export interface IMathAccessor extends IAccessor
+{
     _: IMathFunctionSet,
 
-    _newOut(): IMathAccessor;
-
-    add(other: IMathAccessor);
-    sub(other: IMathAccessor): this;
-    mul(other: IMathAccessor | number): this;
-    times(other: IMathAccessor | number, out?: this): this;
-
+    add(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out;
+    sub(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out;
+    mul(other: this|number, out?: this): this;
     div(denominator: number): this;
-    over(denominator: number, out?: this): this;
-
-    plus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
-    minus(other: IMathAccessor, out?: IMathAccessor): IMathAccessor;
-
-    invert(): this;
-    inverted(out?: this): this;
+    invert(out?: this): this;
 }

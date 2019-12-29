@@ -2,20 +2,11 @@ import {Vector} from "./vector.js";
 import {base3DFunctions} from "../math/vec3.js";
 import {base4DFunctions} from "../math/vec4.js";
 import {IColor3D, IColor4D} from "../_interfaces/vectors.js";
-import {Arrays, IVectorFunctionSet} from "../_interfaces/functions.js";
+import {IVectorFunctionSet} from "../_interfaces/functions.js";
 
 export class Color3D extends Vector implements IColor3D
 {
-    readonly _: IVectorFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(base3DFunctions, id, arrays)
-    }
-
-    _newOut(): this {return this._new()}
+    protected _getFunctionSet(): IVectorFunctionSet {return base3DFunctions}
 
     setTo(r: number, g: number, b: number): this {
         this._.set_to(
@@ -76,16 +67,7 @@ export class Color3D extends Vector implements IColor3D
 
 export class Color4D extends Vector implements IColor4D
 {
-    readonly _: IVectorFunctionSet;
-
-    constructor(
-        id?: number,
-        arrays?: Arrays
-    ) {
-        super(base4DFunctions, id, arrays)
-    }
-
-    _newOut(): this {return this._new()}
+    protected _getFunctionSet(): IVectorFunctionSet {return base4DFunctions}
 
     readonly toString = (): string => `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`;
 
