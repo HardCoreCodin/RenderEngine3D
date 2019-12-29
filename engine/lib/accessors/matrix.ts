@@ -23,10 +23,6 @@ export default abstract class Matrix extends MathAccessor implements IMatrix
         );
     }
 
-    get T(): this {
-        return this.copy().transpose();
-    }
-
     setToIdentity(): this {
         this._.set_to_identity(
             this.id, this.arrays
@@ -35,21 +31,21 @@ export default abstract class Matrix extends MathAccessor implements IMatrix
         return this;
     }
 
-    transpose(): this {
+    transpose(out?: this): this {
+        if (out && !out.is(this)) {
+            this._.transpose(
+                this.id, this.arrays,
+                out.id, out.arrays
+            );
+
+            return out;
+        }
+
         this._.transpose_in_place(
             this.id, this.arrays
         );
 
         return this;
-    }
-
-    transposed(out: this = this.copy()): this {
-        this._.transpose(
-            this.id, this.arrays,
-            out.id, out.arrays
-        );
-
-        return out;
     }
 }
 
@@ -58,61 +54,66 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     readonly _: IMatrixRotationFunctionSet;
     protected abstract _getFunctionSet(): IMatrixRotationFunctionSet;
 
-    rotateAroundX(angle: number, out?: this): this {
-        if (out && !Object.is(out, this)) {
+    readonly abstract translation: Position3D;
+    readonly abstract x_axis: Direction3D;
+    readonly abstract y_axis: Direction3D;
+    readonly abstract z_axis: Direction3D;
+
+    rotateAroundX(angle_in_radians: number, out?: this): this {
+        if (out && !out.is(this)) {
             this._.rotate_around_x(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle),
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians),
                 out.id, out.arrays
             );
         } else
             this._.rotate_around_x_in_place(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle)
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians)
             );
 
         return this;
     }
 
-    rotateAroundY(angle: number, out?: this): this {
-        if (out && !Object.is(out, this)) {
+    rotateAroundY(angle_in_radians: number, out?: this): this {
+        if (out && !out.is(this)) {
             this._.rotate_around_y(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle),
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians),
                 out.id, out.arrays
             );
         } else
             this._.rotate_around_y_in_place(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle)
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians)
             );
 
         return this;
     }
 
-    rotateAroundZ(angle: number, out?: this): this {
-        if (out && !Object.is(out, this)) {
+    rotateAroundZ(angle_in_radians: number, out?: this): this {
+        if (out && !out.is(this)) {
             this._.rotate_around_z(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle),
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians),
                 out.id, out.arrays
             );
         } else
             this._.rotate_around_z_in_place(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle)
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians)
             );
 
         return this;
     }
 
-    setRotationAroundX(angle: number, reset: boolean = false): this {
+    setRotationAroundX(angle_in_radians: number, reset: boolean = false): this {
         if (reset)
             this._.set_to_identity(
                 this.id, this.arrays
@@ -120,14 +121,14 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 
         this._.set_rotation_around_x(
             this.id, this.arrays,
-            Math.cos(angle),
-            Math.sin(angle)
+            Math.cos(angle_in_radians),
+            Math.sin(angle_in_radians)
         );
 
         return this;
     }
 
-    setRotationAroundY(angle: number, reset: boolean = false): this {
+    setRotationAroundY(angle_in_radians: number, reset: boolean = false): this {
         if (reset)
             this._.set_to_identity(
                 this.id, this.arrays
@@ -135,14 +136,14 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 
         this._.set_rotation_around_y(
             this.id, this.arrays,
-            Math.cos(angle),
-            Math.sin(angle)
+            Math.cos(angle_in_radians),
+            Math.sin(angle_in_radians)
         );
 
         return this;
     }
 
-    setRotationAroundZ(angle: number, reset: boolean = false): this {
+    setRotationAroundZ(angle_in_radians: number, reset: boolean = false): this {
         if (reset)
             this._.set_to_identity(
                 this.id, this.arrays
@@ -150,17 +151,66 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
 
         this._.set_rotation_around_z(
             this.id, this.arrays,
-            Math.cos(angle),
-            Math.sin(angle)
+            Math.cos(angle_in_radians),
+            Math.sin(angle_in_radians)
         );
 
         return this;
     }
 
-    rotateBy(x: number, y: number = 0, z: number = 0): this {
-        if (x) this.rotateAroundX(x);
-        if (y) this.rotateAroundY(y);
-        if (z) this.rotateAroundZ(z);
+    translateBy(x: number, y: number = 0, z: number = 0, out?: this): this {
+        if (out && !out.is(this)) {
+            if (x) out.translation.arrays[0][out.id] = x + this.translation.arrays[0][this.id];
+            if (y) out.translation.arrays[1][out.id] = y + this.translation.arrays[1][this.id];
+            if (z) out.translation.arrays[2][out.id] = z + this.translation.arrays[2][this.id];
+
+            return out;
+        }
+
+        if (x) this.translation.arrays[0][this.id] += x;
+        if (y) this.translation.arrays[1][this.id] += y;
+        if (z) this.translation.arrays[2][this.id] += z;
+
+        return this;
+    }
+
+    rotateBy(x: number, y: number = 0, z: number = 0, out?: this): this {
+        if (x) this.rotateAroundX(x, out);
+        if (y) this.rotateAroundY(y, out);
+        if (z) this.rotateAroundZ(z, out);
+
+        return this;
+    }
+
+    scaleBy(x: number, y: number = x, z: number = x, out?: this): this {
+        if (out && !out.is(this)) {
+            if (x !== 1)
+                this.x_axis._.scale(
+                    this.id, this.x_axis.arrays,
+                    x,
+                    out.id, out.x_axis.arrays
+                );
+
+            if (y !== 1)
+                this.y_axis._.scale(
+                    this.id, this.y_axis.arrays,
+                    y,
+                    out.id, out.y_axis.arrays
+                );
+
+            if (z !== 1)
+                this.z_axis._.scale(
+                    this.id, this.z_axis.arrays,
+                    z,
+                    out.id, out.z_axis.arrays
+                );
+
+            return out;
+        }
+
+        if (x !== 1) this.x_axis._.scale_in_place(this.id, this.x_axis.arrays, x);
+        if (y !== 1) this.y_axis._.scale_in_place(this.id, this.y_axis.arrays, y);
+        if (z !== 1) this.z_axis._.scale_in_place(this.id, this.z_axis.arrays, z);
 
         return this;
     }
@@ -223,27 +273,48 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2
         return this;
     }
 
-    rotateBy(angle: number, out?: this): this {
-        if (out && !Object.is(out, this)) {
+    rotateBy(angle_in_radians: number, out?: this): this {
+        if (out && !out.is(this)) {
             this._.rotate(
                 this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle),
+                Math.cos(angle_in_radians),
+                Math.sin(angle_in_radians),
                 out.id, out.arrays
             );
-        } else
-            this._.rotate_in_place(
-                this.id, this.arrays,
-                Math.cos(angle),
-                Math.sin(angle)
-            );
+
+            return out;
+        }
+
+        this._.rotate_in_place(
+            this.id, this.arrays,
+            Math.cos(angle_in_radians),
+            Math.sin(angle_in_radians)
+        );
 
         return this;
     }
 
-    scaleBy(x: number, y: number = x): this {
-        if (x !== 1) this.x_axis.mul(x);
-        if (y !== 1) this.y_axis.mul(y);
+    scaleBy(x: number, y: number = x, out?: this): this {
+        if (out && !out.is(this)) {
+            if (x !== 1)
+                this.x_axis._.scale(
+                    this.id, this.x_axis.arrays,
+                    x,
+                    out.id, out.x_axis.arrays
+                );
+
+            if (y !== 1)
+                this.y_axis._.scale(
+                    this.id, this.y_axis.arrays,
+                    y,
+                    out.id, out.y_axis.arrays
+                );
+
+            return out;
+        }
+
+        if (x !== 1) this.x_axis._.scale_in_place(this.id, this.x_axis.arrays, x);
+        if (y !== 1) this.y_axis._.scale_in_place(this.id, this.y_axis.arrays, y);
 
         return this;
     }
@@ -253,16 +324,14 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
 {
     protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix3x3Functions}
 
-    public readonly mat2: Matrix2x2;
-    public readonly translation: Position2D;
-    public readonly x_axis_2D: Direction2D;
-    public readonly y_axis_2D: Direction2D;
+    readonly mat2: Matrix2x2;
+    readonly translation2D: Position2D;
+    readonly translation: Position3D;
+    readonly x_axis: Direction3D;
+    readonly y_axis: Direction3D;
+    readonly z_axis: Direction3D;
 
-    public readonly x_axis: Direction3D;
-    public readonly y_axis: Direction3D;
-    public readonly z_axis: Direction3D;
-
-    public arrays: Float9;
+    arrays: Float9;
 
     constructor(id?: number, arrays?: Float9) {
         super(id, arrays);
@@ -271,10 +340,8 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
             this.arrays[0], this.arrays[1],
             this.arrays[3], this.arrays[4],
         ]);
-        this.translation = new Position2D(this.id, [this.arrays[6], this.arrays[7]]);
-        this.x_axis_2D = new Direction2D(this.id, [this.arrays[0], this.arrays[1]]);
-        this.y_axis_2D = new Direction2D(this.id, [this.arrays[3], this.arrays[4]]);
-
+        this.translation2D = new Position2D(this.id, [this.arrays[6], this.arrays[7]]);
+        this.translation = new Position3D(this.id, [this.arrays[6], this.arrays[7], this.arrays[8]]);
         this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
         this.y_axis = new Direction3D(this.id, [this.arrays[3], this.arrays[4], this.arrays[5]]);
         this.z_axis = new Direction3D(this.id, [this.arrays[6], this.arrays[7], this.arrays[8]]);
@@ -322,24 +389,16 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
         return this;
     }
 
-    translateBy(x: number, y: number = 0): this {
-        if (x) this.translation.x += x;
-        if (y) this.translation.y += y;
+    translate2DBy(x: number, y: number = 0, out?: this): this {
+        if (out && !out.is(this)) {
+            if (x) out.mat2.x_axis.arrays[0][out.id] = x + this.mat2.x_axis.arrays[0][this.id];
+            if (y) out.mat2.y_axis.arrays[1][out.id] = y + this.mat2.y_axis.arrays[1][this.id];
 
-        return this;
-    }
+            return out;
+        }
 
-    scale2DBy(x: number, y: number = x): this {
-        if (x !== 1) this.x_axis_2D.mul(x);
-        if (y !== 1) this.y_axis_2D.mul(y);
-
-        return this;
-    }
-
-    scaleBy(x: number, y: number = x, z: number = x): this {
-        if (x !== 1) this.x_axis.mul(x);
-        if (y !== 1) this.y_axis.mul(y);
-        if (z !== 1) this.z_axis.mul(z);
+        if (x) this.mat2.x_axis.arrays[0][this.id] += x;
+        if (y) this.mat2.y_axis.arrays[1][this.id] += y;
 
         return this;
     }
@@ -349,14 +408,12 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
 {
     protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix4x4Functions}
 
-    public readonly mat3: Matrix3x3;
-    public readonly translation: Position3D;
-
-    public readonly x_axis: Direction3D;
-    public readonly y_axis: Direction3D;
-    public readonly z_axis: Direction3D;
-
-    public arrays: Float16;
+    arrays: Float16;
+    readonly mat3: Matrix3x3;
+    readonly translation: Position3D;
+    readonly x_axis: Direction3D;
+    readonly y_axis: Direction3D;
+    readonly z_axis: Direction3D;
 
     constructor(id?: number, arrays?: Float16) {
         super(id, arrays);
@@ -428,22 +485,6 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
             m31, m32, m33, m34,
             m41, m42, m43, m44
         );
-
-        return this;
-    }
-
-    translateBy(x: number, y: number = 0, z: number = 0): this {
-        if (x) this.translation.x += x;
-        if (y) this.translation.y += y;
-        if (z) this.translation.z += z;
-
-        return this;
-    }
-
-    scaleBy(x: number, y: number = x, z: number = x): this {
-        if (x !== 1) this.x_axis.mul(x);
-        if (y !== 1) this.y_axis.mul(y);
-        if (z !== 1) this.z_axis.mul(z);
 
         return this;
     }

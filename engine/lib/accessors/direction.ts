@@ -18,11 +18,12 @@ export abstract class Direction<MatrixType extends Matrix>
     readonly _: IDirectionFunctionSet;
     protected abstract _getFunctionSet(): IDirectionFunctionSet;
 
-    readonly dot = (other: this): number =>
-        this._.dot(
+    dot(other: this): number {
+        return this._.dot(
             this.id, this.arrays,
             other.id, other.arrays
         );
+    }
 
     get length(): number {
         return this._.length(
@@ -40,28 +41,25 @@ export abstract class Direction<MatrixType extends Matrix>
         return this.length_squared.toFixed(PRECISION_DIGITS) === '1.000';
     }
 
-    normalize(): this {
+    normalize(out?: this): this {
+        if (out && !out.is(this)) {
+            if (this.is_normalized)
+                return out.setFrom(this);
+
+            this._.normalize(
+                this.id, this.arrays,
+                out.id, out.arrays
+            );
+
+            return out;
+        }
+
         if (!this.is_normalized)
             this._.normalize_in_place(
                 this.id, this.arrays
             );
 
         return this;
-    }
-
-    normalized(out: this = this.copy()): this {
-        if (out.is(this))
-            return this.normalize();
-
-        if (this.is_normalized)
-            return out.setFrom(this);
-
-        this._.normalize(
-            this.id, this.arrays,
-            out.id, out.arrays
-        );
-
-        return out;
     }
 }
 
@@ -80,7 +78,17 @@ export abstract class CrossedDirection<MatrixType extends Matrix>
         this.arrays[2][this.id] = z
     }
 
-    cross(other: ICrossedDirection<MatrixType>): this {
+    cross(other: ICrossedDirection<MatrixType>, out?: this): this {
+        if (out && !out.is(this)) {
+            this._.cross(
+                this.id, this.arrays,
+                other.id, other.arrays,
+                out.id, out.arrays
+            );
+
+            return out;
+        }
+
         this._.cross_in_place(
             this.id, this.arrays,
             other.id, other.arrays
@@ -88,19 +96,6 @@ export abstract class CrossedDirection<MatrixType extends Matrix>
 
         return this;
     };
-
-    crossedWith(other: ICrossedDirection<MatrixType>, out: this): this {
-        if (out.is(this))
-            return out.cross(other);
-
-        this._.cross(
-            this.id, this.arrays,
-            other.id, other.arrays,
-            out.id, out.arrays
-        );
-
-        return out;
-    }
 }
 
 export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
@@ -146,7 +141,7 @@ export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirecti
         return this;
     }
 
-    mat4mul(matrix: Matrix4x4, out: Direction4D = new Direction4D()): Direction4D {
+    mat4mul(matrix: Matrix4x4, out: Direction4D): Direction4D {
         this._.matrix_multiply_direction_by_mat4(
             this.id, this.arrays,
             matrix.id, matrix.arrays,

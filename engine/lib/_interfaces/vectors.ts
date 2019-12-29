@@ -49,10 +49,7 @@ export interface IDirection<Matrix extends IMatrix = IMatrix>
     is_normalized: boolean;
 
     dot(other: this): number;
-
-    normalize(): this;
-
-    normalized(out?: this): this;
+    normalize(out?: this): this;
 }
 
 export interface ICrossedDirection<Matrix extends IMatrix = IMatrix>
@@ -60,8 +57,7 @@ export interface ICrossedDirection<Matrix extends IMatrix = IMatrix>
 {
     _: ICrossDirectionFunctionSet;
 
-    cross(other: ICrossedDirection<Matrix>): this;
-    crossedWith(other: ICrossedDirection<Matrix>, out: this): this;
+    cross(other: ICrossedDirection<Matrix>, out?: this): this;
 }
 
 export interface IDirection2D<Matrix extends IMatrix2x2 = IMatrix2x2>
@@ -81,7 +77,7 @@ export interface IDirection3D<Matrix extends IMatrix3x3 = IMatrix3x3>
     _: IDirection3DFunctionSet,
 
     setTo(x: number, y: number, z: number): this;
-    mat4mul(matrix: IMatrix4x4, out?: IDirection4D): IDirection4D;
+    mat4mul(matrix: IMatrix4x4, out: IDirection4D): IDirection4D;
 
     xx: IDirection2D;
     xy: IDirection2D;
@@ -201,7 +197,7 @@ export interface IPosition3D<Matrix extends IMatrix3x3 = IMatrix3x3>
     _: IPosition3DFunctionSet,
 
     setTo(x: number, y: number, z: number): this;
-    mat4mul(matrix: IMatrix4x4, out?: IPosition4D): IPosition4D;
+    mat4mul(matrix: IMatrix4x4, out: IPosition4D): IPosition4D;
 
     xx: IPosition2D;
     xy: IPosition2D;

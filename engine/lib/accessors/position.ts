@@ -14,15 +14,19 @@ export abstract class Position<MatrixType extends Matrix>
     readonly _: IPositionFunctionSet;
     protected abstract _getFunctionSet(): IPositionFunctionSet;
 
-    readonly distanceTo = (other: this): number => this._.distance(
-        this.id, this.arrays,
-        other.id, other.arrays
-    );
+    distanceTo(other: this): number {
+        return this._.distance(
+            this.id, this.arrays,
+            other.id, other.arrays
+        );
+    }
 
-    readonly squaredDistanceTo = (other: this): number => this._.distance_squared(
-        this.id, this.arrays,
-        other.id, other.arrays
-    );
+    squaredDistanceTo(other: this): number {
+        return this._.distance_squared(
+            this.id, this.arrays,
+            other.id, other.arrays
+        );
+    }
 
     to(other: IPosition<MatrixType>, out: IDirection<MatrixType>): typeof out {
         this._.subtract(
@@ -74,7 +78,7 @@ export class Position3D extends Position<Matrix3x3> implements IPosition3D
         return this;
     }
 
-    mat4mul(matrix: Matrix4x4, out: Position4D = new Position4D()): Position4D {
+    mat4mul(matrix: Matrix4x4, out: Position4D): Position4D {
         this._.matrix_multiply_position_by_mat4(
             this.id, this.arrays,
             matrix.id, matrix.arrays,

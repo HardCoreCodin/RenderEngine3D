@@ -2,7 +2,7 @@ import {Vector} from "./vector.js";
 import {base2DFunctions} from "../math/vec2.js";
 import {base3DFunctions} from "../math/vec3.js";
 import {IUV2D, IUV3D} from "../_interfaces/vectors.js";
-import {Arrays, IVectorFunctionSet} from "../_interfaces/functions.js";
+import {IVectorFunctionSet} from "../_interfaces/functions.js";
 
 export class UV2D extends Vector implements IUV2D
 {

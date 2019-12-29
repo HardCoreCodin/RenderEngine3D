@@ -17,7 +17,9 @@ export class Color3D extends Vector implements IColor3D
         return this;
     }
 
-    readonly toString = (): string => `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`;
+    toString(): string {
+        return `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`;
+    }
 
     get r(): number {return this.arrays[0][this.id]}
     get g(): number {return this.arrays[1][this.id]}
@@ -69,7 +71,9 @@ export class Color4D extends Vector implements IColor4D
 {
     protected _getFunctionSet(): IVectorFunctionSet {return base4DFunctions}
 
-    readonly toString = (): string => `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`;
+    toString(): string {
+        return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`;
+    }
 
     setTo(r: number, g: number, b: number, a: number): this {
         this._.set_to(
