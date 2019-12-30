@@ -105,6 +105,13 @@ export interface IMatrixRotationFunctionSet
     rotate_around_z_in_place(a: number, []: Arrays, cos: number, sin: number): void;
 }
 
+export interface IMatrix3x3FunctionSet
+    extends IMatrixRotationFunctionSet
+{
+    set_to_cross_product(a: number, []: Arrays, v: number, []: Arrays): void;
+    set_to_outer_product(a: number, []: Arrays, v1: number, []: Arrays, v2: number, []: Arrays): void;
+}
+
 export interface IVectorFunctionSet
     extends IMathFunctionSet
 {

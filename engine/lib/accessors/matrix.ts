@@ -6,11 +6,13 @@ import {matrix4x4Functions} from "../math/mat4.js";
 import {matrix3x3Functions} from "../math/mat3.js";
 import {Float16, Float4, Float9} from "../../types.js";
 import {
-    IMatrix2x2FunctionSet,
+    IMatrix2x2FunctionSet, IMatrix3x3FunctionSet,
     IMatrixFunctionSet,
     IMatrixRotationFunctionSet
 } from "../_interfaces/functions.js";
 import {IMatrix, IMatrix2x2, IMatrix3x3, IMatrix4x4, IRotationMatrix} from "../_interfaces/matrix.js";
+import {IVector3D} from "../_interfaces/vectors.js";
+import {Vector} from "./vector.js";
 
 export default abstract class Matrix extends MathAccessor implements IMatrix
 {
@@ -322,7 +324,8 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2
 
 export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
 {
-    protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix3x3Functions}
+    readonly _: IMatrix3x3FunctionSet;
+    protected _getFunctionSet(): IMatrix3x3FunctionSet {return matrix3x3Functions}
 
     readonly mat2: Matrix2x2;
     readonly translation2D: Position2D;
@@ -384,6 +387,25 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
             m11, m12, m13,
             m21, m22, m23,
             m31, m32, m33
+        );
+
+        return this;
+    }
+
+    setToCrossProductOf(v: Vector & IVector3D): this {
+        this._.set_to_cross_product(
+            this.id, this.arrays,
+            v.id, v.arrays
+        );
+
+        return this;
+    }
+
+    setToOuterProductOf(v1: Vector & IVector3D, v2: Vector & IVector3D = v1): this {
+        this._.set_to_outer_product(
+            this.id, this.arrays,
+            v1.id, v1.arrays,
+            v2.id, v2.arrays
         );
 
         return this;

@@ -1,9 +1,14 @@
-import {IMatrix2x2FunctionSet, IMatrixFunctionSet, IMatrixRotationFunctionSet} from "./functions.js";
+import {
+    IMatrix2x2FunctionSet,
+    IMatrix3x3FunctionSet,
+    IMatrixFunctionSet,
+    IMatrixRotationFunctionSet
+} from "./functions.js";
 import {IMathAccessor} from "./accessors.js";
-import {IDirection2D, IDirection3D, IPosition2D, IPosition3D} from "./vectors.js";
+import {IDirection3D, IPosition2D, IPosition3D, IVector, IVector3D} from "./vectors.js";
+import {Vector} from "../accessors/vector.js";
 
-export interface IMatrix
-    extends IMathAccessor
+export interface IMatrix extends IMathAccessor
 {
     is_identity: boolean;
     readonly _: IMatrixFunctionSet;
@@ -12,8 +17,7 @@ export interface IMatrix
     transpose(out?: this): this;
 }
 
-export interface IRotationMatrix
-    extends IMatrix
+export interface IRotationMatrix extends IMatrix
 {
     readonly _: IMatrixRotationFunctionSet;
 
@@ -55,9 +59,10 @@ export interface IMatrix2x2 extends IMatrix
     scaleBy(x: number, y?: number, out?: this): this;
 }
 
-export interface IMatrix3x3
-    extends IRotationMatrix
+export interface IMatrix3x3 extends IRotationMatrix
 {
+    readonly _: IMatrix3x3FunctionSet,
+
     mat2: IMatrix2x2;
     translation2D: IPosition2D;
 
@@ -74,6 +79,8 @@ export interface IMatrix3x3
     m33: number;
 
     translate2DBy(x: number, y?: number, out?: this): this;
+    setToCrossProductOf(v: IVector & IVector3D): this;
+    setToOuterProductOf(v1: IVector & IVector3D, v2?: IVector & IVector3D): this;
 }
 
 export interface IMatrix4x4

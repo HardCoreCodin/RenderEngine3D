@@ -95,10 +95,7 @@ export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
 
     check_for_clipping: boolean = false,
     cull_back_faces: boolean = false,
-
-    projected_position_x?: number,
-    projected_position_y?: number,
-    projected_position_z?: number
+    pz?: number
 ): number => {
     // Check face intersections against the frustum:
     face_flags.fill(CULL);
@@ -155,15 +152,8 @@ export const cullFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 nz = (d1_x * d2_y) -
                     (d1_y * d2_x);
 
-                // Compute a direction vector from the face to the origin (in projected/clip space):
-                d1_x = projected_position_x - x1;
-                d1_y = projected_position_y - y1;
-                d1_z = projected_position_z - z1;
-
-                // Compute the dot product between that direction vector and the normal:
-                dot = (d1_x * nx) +
-                    (d1_y * ny) +
-                    (d1_z * nz);
+                // Dot the vector from the face to the origin with the normal:
+                dot = nz*(pz - z1) - ny*y1 - nx*x1;
 
                 if (dot > 0) {
                     // if the angle is than 90 degrees the face is facing the camera

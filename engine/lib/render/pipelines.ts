@@ -96,14 +96,8 @@ export default class RenderPipeline {
 
         let fv: T3<Uint8Array|Uint16Array|Uint32Array>;
         let v1, v2, v3: Uint8Array|Uint16Array|Uint32Array;
-        let vc, fc, ppx, ppy, ppz, result: number;
-
-        if (cbf) {
-            const pp = viewport.camera.projected_position;
-            ppx = pp.x;
-            ppy = pp.y;
-            ppz = pp.z;
-        }
+        let vc, fc, result: number;
+        const pz = viewport.camera.translation.z;
 
         for (const material of this.scene.materials) {
             mesh_shader = material.mesh_shader;
@@ -127,37 +121,37 @@ export default class RenderPipeline {
                         if (cullVertices(cp, vf, vc)) {
                             // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
                             // Check it's faces as well and check for clipping cases:
-                            result = cullFaces(cp, fv, fc, ff, vf, cc, cbf, ppx, ppy, ppz);
+                            result = cullFaces(cp, fv, fc, ff, vf, cc, cbf, pz);
                             if (result) {
                                 if (result === CLIP) {
 
                                 }
                             }
                         }
-
-                        for (vertex_attribute of this.material.vertex_attributes) {
-                            if (vertex_attribute.is_shared)
-                                clipSharedAttribute(
-                                    vertex_attribute.arrays,
-
-                                    this.src_trg_indices,
-                                    this.src_trg_numbers,
-                                    this.interpolations,
-                                    this.face_flags,
-
-                                    clipped_vertex_attribute.arrays
-                                );
-                            else
-                                clipUnsharedAttribute(
-                                    vertex_attribute.arrays,
-
-                                    this.src_trg_numbers,
-                                    this.interpolations,
-                                    this.face_flags,
-
-                                    clipped_vertex_attribute.arrays
-                                );
-                        }
+                        //
+                        // for (vertex_attribute of this.material.vertex_attributes) {
+                        //     if (vertex_attribute.is_shared)
+                        //         clipSharedAttribute(
+                        //             vertex_attribute.arrays,
+                        //
+                        //             this.src_trg_indices,
+                        //             this.src_trg_numbers,
+                        //             this.interpolations,
+                        //             this.face_flags,
+                        //
+                        //             clipped_vertex_attribute.arrays
+                        //         );
+                        //     else
+                        //         clipUnsharedAttribute(
+                        //             vertex_attribute.arrays,
+                        //
+                        //             this.src_trg_numbers,
+                        //             this.interpolations,
+                        //             this.face_flags,
+                        //
+                        //             clipped_vertex_attribute.arrays
+                        //         );
+                        // }
 
                         // Note:
                         // Additional vertex attributes might need to be 'clipped' as well if the mesh has any:

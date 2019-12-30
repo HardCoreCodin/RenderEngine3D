@@ -1,7 +1,8 @@
 import {PRECISION_DIGITS} from "../../constants.js";
 import {Float9} from "../../types.js";
-import {IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
+import {IMatrix3x3FunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
 import {MATRIX_3X3_ALLOCATOR} from "../memory/allocators.js";
+import {IVector3D} from "../_interfaces/vectors.js";
 
 let t11, t12, t13,
     t21, t22, t23,
@@ -64,6 +65,36 @@ const set_to_identity = (
 ) : void => {
     M11a[a] = M22a[a] = M33a[a] = 1;
     M12a[a] = M13a[a] = M21a[a] = M23a[a] = M31a[a] = M32a[a] = 0;
+};
+
+const set_to_cross_product = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    v: number, [X, Y, Z]
+) : void => {
+    M11a[a] = M22a[a] = M33a[a] = 0;
+    M23a[a] = X[v];  M32a[a] = -X[v];
+    M31a[a] = Y[v];  M13a[a] = -Y[v];
+    M12a[a] = Z[v];  M21a[a] = -Z[v];
+};
+
+const set_to_outer_product = (
+    a: number, [
+        M11a, M12a, M13a,
+        M21a, M22a, M23a,
+        M31a, M32a, M33a
+    ]: Float9,
+
+    v1: number, [X1, Y1, Z1],
+    v2: number, [X2, Y2, Z2]
+) : void => {
+    M11a[a] = X1[v1] * X2[v2];  M12a[a] = Y1[v1] * X2[v2];  M13a[a] = Z1[v1] * X2[v2];
+    M21a[a] = X1[v1] * Y2[v2];  M22a[a] = Y1[v1] * Y2[v2];  M23a[a] = Z1[v1] * Y2[v2];
+    M31a[a] = X1[v1] * Z2[v2];  M32a[a] = Y1[v1] * Z2[v2];  M33a[a] = Z1[v1] * Z2[v2];
 };
 
 const invert = (
@@ -859,7 +890,7 @@ const rotate_around_z_in_place = (
     M31a[a] = t31*cos - t32*sin;  M32a[a] = t31*sin + t32*cos;
 };
 
-export const matrix3x3Functions: IMatrixRotationFunctionSet = {
+export const rotationMatrixFunctions: IMatrixRotationFunctionSet = {
     allocator: MATRIX_3X3_ALLOCATOR,
 
     set_to,
@@ -909,4 +940,11 @@ export const matrix3x3Functions: IMatrixRotationFunctionSet = {
     rotate_around_x_in_place,
     rotate_around_y_in_place,
     rotate_around_z_in_place
+};
+
+export const matrix3x3Functions: IMatrix3x3FunctionSet = {
+    ...rotationMatrixFunctions,
+
+    set_to_cross_product,
+    set_to_outer_product
 };

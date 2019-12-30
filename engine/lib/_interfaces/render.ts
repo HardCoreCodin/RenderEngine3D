@@ -14,21 +14,18 @@ export interface IFrustom {
     near: number;
 
     depth_factor: number;
-    fov_factor: number;
+    focal_length: number;
 
     has_changed: boolean;
 }
 
 export interface ICamera {
+    viewport: IViewport;
     readonly scene: IScene;
     readonly frustum: IFrustom;
+    readonly projection_matrix: IMatrix4x4;
 
-    viewport: IViewport;
-
-    projected_position: IPosition4D;
-    projection_matrix: IMatrix4x4;
-
-    updateProjectionMatrix(): void;
+    updateProjectionMatrix(perspective?: boolean, zoom?: number): void;
 }
 
 export interface IViewport {
