@@ -22,14 +22,15 @@ export class Vertices {
     protected readonly VertexColors: IVertexColorsConstructor;
     protected readonly VertexUVs: IVertexUVsConstructor;
 
-    public positions: IVertexPositions;
-    public normals: IVertexNormals|null;
-    public colors: IVertexColors|null;
-    public uvs: IVertexUVs|null;
+    readonly positions: IVertexPositions;
+    readonly normals: IVertexNormals|null;
+    readonly colors: IVertexColors|null;
+    readonly uvs: IVertexUVs|null;
 
     constructor(
-        public face_vertices: IFaceVertices,
-        public mesh_options: MeshOptions,
+        readonly vertex_count: number,
+        readonly face_vertices: IFaceVertices,
+        readonly mesh_options: MeshOptions,
 
         positions?: IVertexPositions,
         normals?: IVertexNormals,
@@ -39,22 +40,30 @@ export class Vertices {
         const included = mesh_options.vertex_attributes;
 
         this.positions = positions || new this.VertexPositions(
-            face_vertices,mesh_options.share & ATTRIBUTE.position
+            vertex_count,
+            face_vertices,
+            mesh_options.share & ATTRIBUTE.position
         );
 
         this.normals = included & ATTRIBUTE.normal ?
             normals || new this.VertexNormals(
-                face_vertices,mesh_options.share & ATTRIBUTE.normal
+                vertex_count,
+                face_vertices,
+            mesh_options.share & ATTRIBUTE.normal
             ) : null;
 
         this.colors = included & ATTRIBUTE.color ?
             colors || new this.VertexColors(
-                face_vertices,mesh_options.share & ATTRIBUTE.color
+                vertex_count,
+                face_vertices,
+            mesh_options.share & ATTRIBUTE.color
             ) : null;
 
         this.uvs = included & ATTRIBUTE.uv ?
             uvs || new this.VertexUVs(
-                face_vertices,mesh_options.share & ATTRIBUTE.color
+                vertex_count,
+                face_vertices,
+            mesh_options.share & ATTRIBUTE.color
             ) : null;
     }
 }
@@ -65,10 +74,10 @@ export class Vertices3D extends Vertices {
     protected readonly VertexColors = VertexColors3D;
     protected readonly VertexUVs = VertexUVs2D;
 
-    public positions: VertexPositions3D;
-    public normals: VertexNormals3D;
-    public colors: VertexColors3D;
-    public uvs: VertexUVs2D;
+    readonly positions: VertexPositions3D;
+    readonly normals: VertexNormals3D;
+    readonly colors: VertexColors3D;
+    readonly uvs: VertexUVs2D;
 }
 
 export class Vertices4D extends Vertices {
@@ -77,10 +86,10 @@ export class Vertices4D extends Vertices {
     protected readonly VertexColors = VertexColors4D;
     protected readonly VertexUVs = VertexUVs3D;
 
-    public positions: VertexPositions4D;
-    public normals: VertexNormals4D;
-    public colors: VertexColors4D;
-    public uvs: VertexUVs3D;
+    readonly positions: VertexPositions4D;
+    readonly normals: VertexNormals4D;
+    readonly colors: VertexColors4D;
+    readonly uvs: VertexUVs3D;
 
     mul(matrix: Matrix4x4, out?: this): this {
         if (out) {

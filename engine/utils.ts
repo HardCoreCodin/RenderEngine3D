@@ -31,7 +31,7 @@ export function* zip<A, B, C>(
 ): Generator<[A, B, C, number] | [A, B, number]> {
     const a_iterator = a[Symbol.iterator]();
     const b_iterator = b[Symbol.iterator]();
-    const c_iterator = c![Symbol.iterator]();
+    let c_iterator = c ? c[Symbol.iterator]() : null;
 
     let result: [A, B, number] | [A, B, C, number];
     if (c)

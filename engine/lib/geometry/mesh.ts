@@ -1,11 +1,10 @@
 import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {Vertices3D, Vertices4D} from "./vertices.js";
-import {Faces3D, Faces4D} from "./faces.js";
+import {Vertices3D} from "./vertices.js";
+import {Faces3D} from "./faces.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
-import {Matrix4x4} from "../accessors/matrix.js";
 import {Bounds3D} from "./bounds.js";
 import Geometry from "../render/geometry.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
@@ -21,7 +20,7 @@ export default class Mesh {
 
         public readonly face_vertices: IFaceVertices = new FaceVerticesInt32().load(inputs.sanitize().position),
 
-        public readonly vertex_count: number = inputs.position.vertices[0].length,
+        public readonly vertex_count: number = inputs.position.vertex_count,
         public readonly vertex_faces: IVertexFaces = new VertexFacesInt32().load(face_vertices, vertex_count),
 
         public readonly face_count: number = face_vertices.length,
@@ -29,7 +28,7 @@ export default class Mesh {
     ) {
         options.sanitize(this.inputs);
 
-        this.data = new MeshData3D(face_vertices, options);
+        this.data = new MeshData3D(vertex_count, face_vertices, options);
     }
 
     get geometry_count(): number {
@@ -129,11 +128,12 @@ export default class Mesh {
 
 export class MeshData3D {
     constructor(
-        public face_vertices: IFaceVertices,
-        public mesh_options: MeshOptions,
+        readonly vertex_count: number,
+        readonly face_vertices: IFaceVertices,
+        readonly mesh_options: MeshOptions,
 
-        public readonly faces: Faces3D = new Faces3D(face_vertices, mesh_options),
-        public readonly vertices: Vertices3D = new Vertices3D(face_vertices, mesh_options)
+        readonly faces: Faces3D = new Faces3D(face_vertices, mesh_options),
+        readonly vertices: Vertices3D = new Vertices3D(vertex_count, face_vertices, mesh_options)
     ) {}
 }
 //

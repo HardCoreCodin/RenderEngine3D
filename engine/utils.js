@@ -12,7 +12,7 @@ export const wrapAngle = (theta) => {
 export function* zip(a, b, c) {
     const a_iterator = a[Symbol.iterator]();
     const b_iterator = b[Symbol.iterator]();
-    const c_iterator = c[Symbol.iterator]();
+    let c_iterator = c ? c[Symbol.iterator]() : null;
     let result;
     if (c)
         result = [null, null, null, 0];

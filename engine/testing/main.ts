@@ -3,149 +3,124 @@ import {FaceVerticesInt8} from "../lib/geometry/indices.js";
 import {VertexPositions3D} from "../lib/geometry/positions.js";
 
 import Program from "./gl/program.js";
-import {VertexBuffer} from "./gl/buffers.js";
-import {IUniform} from "./gl/types.js";
+import {IndexBuffer, VertexBuffer} from "./gl/buffers.js";
+import {IAttributeArrays, IAttributes, IUniform} from "./gl/types.js";
 import gl from "./gl/context.js";
+import {InputColors, InputPositions} from "../lib/geometry/inputs.js";
+import {VertexColors3D} from "../lib/geometry/colors.js";
 
-const positions = [
+const vertex_shader = document.scripts[0].innerText;
+const fragment_shader = document.scripts[1].innerText;
 
-    // Front
-    0.5, 0.5, 0.5,
-    0.5, -.5, 0.5,
-    -.5, 0.5, 0.5,
-    -.5, 0.5, 0.5,
-    0.5, -.5, 0.5,
-    -.5, -.5, 0.5,
+const input_positions = new InputPositions();
+const input_colors = new InputColors();
 
-    // Left
-    -.5, 0.5, 0.5,
-    -.5, -.5, 0.5,
-    -.5, 0.5, -.5,
-    -.5, 0.5, -.5,
-    -.5, -.5, 0.5,
-    -.5, -.5, -.5,
+// Top
+input_positions.pushVertex([-1, 1, -1]),
+input_positions.pushVertex([-1, 1,  1]),
+input_positions.pushVertex([1,  1,  1]),
+input_positions.pushVertex([1,  1, -1]),
 
-    // Back
-    -.5, 0.5, -.5,
-    -.5, -.5, -.5,
-    0.5, 0.5, -.5,
-    0.5, 0.5, -.5,
-    -.5, -.5, -.5,
-    0.5, -.5, -.5,
+// Left
+input_positions.pushVertex([-1,  1,  1]);
+input_positions.pushVertex([-1, -1,  1]);
+input_positions.pushVertex([-1, -1, -1]);
+input_positions.pushVertex([-1,  1, -1]);
 
-    // Right
-    0.5, 0.5, -.5,
-    0.5, -.5, -.5,
-    0.5, 0.5, 0.5,
-    0.5, 0.5, 0.5,
-    0.5, -.5, 0.5,
-    0.5, -.5, -.5,
+// Right
+input_positions.pushVertex([1,  1,  1]);
+input_positions.pushVertex([1, -1,  1]);
+input_positions.pushVertex([1, -1, -1]);
+input_positions.pushVertex([1,  1, -1]);
 
-    // Top
-    0.5, 0.5, 0.5,
-    0.5, 0.5, -.5,
-    -.5, 0.5, 0.5,
-    -.5, 0.5, 0.5,
-    0.5, 0.5, -.5,
-    -.5, 0.5, -.5,
+// Front
+input_positions.pushVertex([ 1,  1, 1]);
+input_positions.pushVertex([ 1, -1, 1]);
+input_positions.pushVertex([-1, -1, 1]);
+input_positions.pushVertex([-1,  1, 1]);
 
-    // Bottom
-    0.5, -.5, 0.5,
-    0.5, -.5, -.5,
-    -.5, -.5, 0.5,
-    -.5, -.5, 0.5,
-    0.5, -.5, -.5,
-    -.5, -.5, -.5
-];
+// Back
+input_positions.pushVertex([ 1,  1, -1]);
+input_positions.pushVertex([ 1, -1, -1]);
+input_positions.pushVertex([-1, -1, -1]);
+input_positions.pushVertex([-1,  1, -1]);
 
-const position_component_count = 3;
-const vertex_count = positions.length / position_component_count;
-const face_count = vertex_count / 3;
+// Bottom
+input_positions.pushVertex([-1, -1, -1]);
+input_positions.pushVertex([-1, -1,  1]);
+input_positions.pushVertex([ 1, -1,  1]);
+input_positions.pushVertex([ 1, -1, -1]);
 
-const indices = new FaceVerticesInt8( positions.length / position_component_count);
-const position_attribute = new VertexPositions3D(indices, false);
+// Top
+input_positions.pushFace([0,  1,  2]);
+input_positions.pushFace([0,  2,  3]);
 
-let v1_index = 0;
-let v2_index = 1;
-let v3_index = 2;
+// Left
+input_positions.pushFace([5,  4,  6]);
+input_positions.pushFace([6,  4,  7]);
 
-let c1_index = 0;
-let c2_index = 1;
-let c3_index = 2;
+// Right
+input_positions.pushFace([8,  9,  10]);
+input_positions.pushFace([8,  10, 11]);
 
-for (let face = 0; face < 12; face++) {
-    indices.arrays[0][face] = v1_index;
-    indices.arrays[1][face] = v2_index;
-    indices.arrays[2][face] = v3_index;
+// Front
+input_positions.pushFace([13, 12, 14]);
+input_positions.pushFace([15, 14, 12]);
 
-    position_attribute.arrays[0][v1_index] = positions[c1_index];
-    position_attribute.arrays[1][v1_index] = positions[c2_index];
-    position_attribute.arrays[2][v1_index] = positions[c3_index];
-    c1_index += 3;
-    c2_index += 3;
-    c3_index += 3;
+// Back
+input_positions.pushFace([16, 17, 18]);
+input_positions.pushFace([16, 18, 19]);
 
-    position_attribute.arrays[0][v2_index] = positions[c1_index];
-    position_attribute.arrays[1][v2_index] = positions[c2_index];
-    position_attribute.arrays[2][v2_index] = positions[c3_index];
-    c1_index += 3;
-    c2_index += 3;
-    c3_index += 3;
+// Bottom
+input_positions.pushFace([21, 20, 22]);
+input_positions.pushFace([22, 20, 23]);
 
-    position_attribute.arrays[0][v3_index] = positions[c1_index];
-    position_attribute.arrays[1][v3_index] = positions[c2_index];
-    position_attribute.arrays[2][v3_index] = positions[c3_index];
-    c1_index += 3;
-    c2_index += 3;
-    c3_index += 3;
+// Top
+input_colors.pushVertex([0.5, 0.5, 0.5]);
+input_colors.pushVertex([0.5, 0.5, 0.5]);
+input_colors.pushVertex([0.5, 0.5, 0.5]);
+input_colors.pushVertex([0.5, 0.5, 0.5]); 
 
-    v1_index += 3;
-    v2_index += 3;
-    v3_index += 3;
-}
+// Left
+input_colors.pushVertex([0.75, 0.25, 0.5]);
+input_colors.pushVertex([0.75, 0.25, 0.5]);
+input_colors.pushVertex([0.75, 0.25, 0.5]);
+input_colors.pushVertex([0.75, 0.25, 0.5]); 
 
-type Color = [
-    number,
-    number,
-    number
-];
-const color_component_copunt = 3;
+// Right
+input_colors.pushVertex([0.25, 0.25, 0.75]);
+input_colors.pushVertex([0.25, 0.25, 0.75]);
+input_colors.pushVertex([0.25, 0.25, 0.75]);
+input_colors.pushVertex([0.25, 0.25, 0.75]); 
 
-const getRandomColor = (): Color => [
-    Math.random(),
-    Math.random(),
-    Math.random()
-];
+// Front
+input_colors.pushVertex([1, 0, 0.15]);
+input_colors.pushVertex([1, 0, 0.15]);
+input_colors.pushVertex([1, 0, 0.15]);
+input_colors.pushVertex([1, 0, 0.15]); 
 
-let colors = [];
-let color: Color;
-let vertex: number;
-const quad_count = face_count / 2;
-const vertices_per_quad = 6;
-for (let quad = 0; quad < quad_count; quad++) {
-    color = getRandomColor();
-    for (vertex = 0; vertex < vertices_per_quad; vertex++) {
-        colors.push(...color);
-    }
-}
+// Back
+input_colors.pushVertex([0, 1, 0.15]);
+input_colors.pushVertex([0, 1, 0.15]);
+input_colors.pushVertex([0, 1, 0.15]);
+input_colors.pushVertex([0, 1, 0.15]); 
 
-const buffer_array = new Float32Array(positions.length + colors.length);
-const buffer_positions_array = buffer_array.subarray(0, positions.length);
-const buffer_color_array = buffer_array.subarray(positions.length);
+// Bottom
+input_colors.pushVertex([0.5, 0.5, 1]);
+input_colors.pushVertex([0.5, 0.5, 1]);
+input_colors.pushVertex([0.5, 0.5, 1]);
+input_colors.pushVertex([0.5, 0.5, 1]);
 
-buffer_color_array.set(colors);
-position_attribute.toArray(buffer_positions_array);
+input_colors.faces_vertices = input_positions.faces_vertices;
 
-const vertex_buffer = new VertexBuffer(buffer_array, vertex_count, [
-    ['position', position_component_count],
-    ['color', color_component_copunt]
-]);
+const face_vertices = new FaceVerticesInt8().load(input_positions);
+const positions = new VertexPositions3D(input_positions.vertex_count, face_vertices).load(input_positions);
+const colors = new VertexColors3D(positions.vertex_count, face_vertices).load(input_colors);
 
-const program = new Program(
-    document.scripts[0].innerText,
-    document.scripts[1].innerText,
-    vertex_buffer
-);
+const attributes: IAttributeArrays = {position: positions.toArray(), color: colors.toArray()};
+const index_buffer = new IndexBuffer(face_vertices.length, face_vertices.toArray());
+const vertex_buffer = new VertexBuffer(positions.length, attributes);
+const program = new Program(vertex_shader, fragment_shader, vertex_buffer, index_buffer);
 
 const matrix_uniform: IUniform = program.uniforms.matrix;
 
@@ -165,14 +140,12 @@ function animate() {
     matrix.mat3.rotateAroundX(angle);
     matrix.mat3.rotateAroundZ(angle);
     matrix.toArray(matrix_array);
+    matrix_uniform.load(matrix_array);
 
     gl.clearColor(0.75, 0.85, 0.8, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     program.draw();
-
-    matrix_uniform.use(matrix_array);
-
 }
 
 animate();

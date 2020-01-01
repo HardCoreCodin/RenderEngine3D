@@ -35,9 +35,10 @@ export class VertexNormals3D
         return this;
     }
 
-    load(input: InputNormals): void {
+    load(input: InputNormals): this {
         super.load(input);
         this.normalize();
+        return this;
     }
 
     matmul(matrix: Matrix3x3, out?: this): this {
@@ -76,9 +77,10 @@ export class VertexNormals4D
         return this;
     }
 
-    load(input: InputNormals): void {
+    load(input: InputNormals): this {
         super.load(input);
         this.normalize();
+        return this;
     }
 
     matmul(matrix: Matrix4x4, out?: this): this {

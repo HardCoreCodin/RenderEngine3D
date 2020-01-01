@@ -43,6 +43,14 @@ export class InputAttribute implements IInputAttribute {
         }
     }
 
+    get vertex_count(): number {
+        return this.vertices[0].length;
+    }
+
+    get face_count(): number {
+        return this.faces_vertices[0].length;
+    }
+
     triangulate(): this {
         if (this.face_type === FACE_TYPE.TRIANGLE)
             return;

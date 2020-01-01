@@ -12,9 +12,7 @@ import {
     VECTOR_3D_ALLOCATOR,
     VECTOR_4D_ALLOCATOR
 } from "../memory/allocators.js";
-import {ICrossedDirection, IPosition, IVector3D} from "../_interfaces/vectors.js";
 import {IFacePositions, IVertexPositions3D, IVertexPositions4D} from "../_interfaces/attributes.js";
-import {Vector} from "../accessors/vector.js";
 import {IAccessorConstructor} from "../_interfaces/accessors.js";
 import {AnyConstructor} from "../../types.js";
 
@@ -27,7 +25,7 @@ export class PositionTriangle3D extends Triangle<Position3D> {
     computeNormal(normal: Direction3D): void {
         this.vertices[0].to(this.vertices[1], d1_3D);
         this.vertices[0].to(this.vertices[2], d2_3D);
-        d1_3D.cross(d2_3D).normalized(normal);
+        d1_3D.cross(d2_3D).normalize(normal);
     }
 }
 
@@ -50,11 +48,13 @@ export class VertexPositions3D
     protected _getVectorConstructor(): IAccessorConstructor<Position3D> {return Position3D}
     protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
 
-    load(input_attribute: InputPositions): void {
+    load(input_attribute: InputPositions): this {
         this._is_shared = true;
         this.arrays[0].set(input_attribute.vertices[0]);
         this.arrays[1].set(input_attribute.vertices[1]);
         this.arrays[2].set(input_attribute.vertices[2]);
+
+        return this;
     }
 
     matmul(matrix: Matrix3x3, out?: this): this {
@@ -96,11 +96,13 @@ export class VertexPositions4D
     protected _getVectorConstructor(): IAccessorConstructor<Position4D> {return Position4D}
     protected _getAllocator(): Float32Allocator4D {return VECTOR_4D_ALLOCATOR}
 
-    load(input_attribute: InputPositions): void {
+    load(input_attribute: InputPositions): this {
         this.arrays[0].set(input_attribute.vertices[0]);
         this.arrays[1].set(input_attribute.vertices[1]);
         this.arrays[2].set(input_attribute.vertices[2]);
         this.arrays[3].fill(1);
+
+        return this;
     }
 
     matmul(matrix: Matrix4x4, out?: this): this {

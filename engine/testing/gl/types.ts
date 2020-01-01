@@ -8,32 +8,32 @@ export type TypedArrayConstructor<T> = {
 }
 
 export interface IAttribute {
-    readonly component_count: GLint;
-    location?: GLuint;
+    type: GLenum;
+    location: GLuint;
+    count: GLint;
+    normalized: GLboolean;
+    stride: GLsizei;
+    offset: GLintptr;
 }
 
 export interface IUniform {
-    readonly location: WebGLUniformLocation;
     readonly type: GLenum;
-
-    use(value: TypedArray, transpose?: GLboolean): void;
+    readonly location: WebGLUniformLocation;
+    load(data: TypedArray, transpose?: GLboolean): void;
 }
 
 export type IUniforms = {[key: string]: IUniform}
-export type IAttributes =  {[key: string]: IAttribute};
-export type IAttributeLocations =  {[key: string]: GLint};
+export type IAttributes = {[key: string]: IAttribute};
+export type IAttributeLocations = {[key: string]: GLint};
+export type IAttributeArrays = {[name: string]: TypedArray};
 
-export interface IBuffer<ArrayType extends TypedArray = TypedArray> {
-    readonly type: GLenum;
-    readonly usage: GLenum;
-    readonly data_type: GLenum;
-    readonly count: number;
-
+export interface IBuffer {
+    readonly buffer_type: GLenum;
+    load(data: BufferSource, count: number, usage?: GLenum)
+    draw(mode?: GLenum): void;
     bind(): void;
 }
 
 export interface IVertexBuffer extends IBuffer {
     readonly attributes: IAttributes;
-    readonly attribute_size: number;
-    readonly attribute_order: string[];
 }

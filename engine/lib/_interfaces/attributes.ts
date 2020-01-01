@@ -29,6 +29,9 @@ export interface IInputAttribute {
     vertices?: number[][];
     faces_vertices?: FaceInputs;
 
+    readonly face_count: number;
+    readonly vertex_count: number;
+
     triangulate(): void;
     getValue(value: number | string, is_index: boolean): number;
     checkInputSize(input_size: number, is_index: boolean): void;
@@ -43,6 +46,8 @@ export interface IInputUVs extends IInputAttribute {id: ATTRIBUTE.uv}
 
 export interface IAttribute<AccessorType extends IAccessor = IAccessor> extends IBuffer
 {
+    readonly face_vertices: IFaceVertices,
+    readonly face_count: number,
     current: AccessorType;
     Vector: IAccessorConstructor<AccessorType>;
     [Symbol.iterator](): Generator<AccessorType>;
@@ -75,6 +80,7 @@ export interface IColorAttribute<Color extends IColor = IColor>
 export interface IVertexAttribute<VectorType extends IVector = IVector>
     extends IAttribute<VectorType>
 {
+    readonly vertex_count: number,
     readonly is_shared: boolean;
     readonly triangles: Generator<ITriangle<VectorType>>;
     current_triangle: ITriangle<VectorType>;
@@ -86,7 +92,7 @@ export interface ILoadableVertexAttribute<
     InputAttributeType extends IInputAttribute = IInputAttribute>
     extends IVertexAttribute<VectorType>
 {
-    load(input: InputAttributeType): void;
+    load(input: InputAttributeType): this;
 }
 
 export interface IPullableVertexAttribute<
@@ -189,9 +195,10 @@ export interface IFaceColors<Color extends IColor = IColor>
 {}
 
 export type VertexAttributeConstructor<VertexAttribute extends IVertexAttribute> = new (
-        _face_vertices: IFaceVertices,
+        vertex_count: number,
+        face_vertices: IFaceVertices,
         is_shared?: number | boolean,
-        _face_count?: number
+        face_count?: number
     ) => VertexAttribute;
 
 export type IVertexPositionsConstructor<

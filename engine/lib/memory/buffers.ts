@@ -34,6 +34,23 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
 
         yield this._values;
     }
+
+    toArray(array?: ArrayType): ArrayType {
+        const num_components = this.arrays.length;
+
+        if (array === undefined)
+            array = new this.allocator.ArrayConstructor(num_components * this.length);
+
+        for (const [component, values] of this.arrays.entries()) {
+            let index = component;
+            for (const value of values) {
+                array[index] = value;
+                index += num_components;
+            }
+        }
+
+        return array;
+    }
 }
 
 export abstract class FloatBuffer extends Buffer<Float32Array> implements IBuffer {

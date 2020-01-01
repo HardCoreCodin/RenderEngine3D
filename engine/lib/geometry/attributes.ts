@@ -28,9 +28,9 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
     current: AccessorType;
 
     constructor(
-        protected _face_vertices: IFaceVertices,
-        protected _face_count: number = _face_vertices.length,
-        length = _face_count,
+        readonly face_vertices: IFaceVertices,
+        readonly face_count: number = face_vertices.length,
+        length?: number,
         arrays?: Arrays
     ) {
         super(length, arrays);
@@ -70,11 +70,11 @@ export abstract class FaceAttribute<
             vertex_index_3: number;
 
         for (const [face_component, vertex_component] of zip(this.arrays, input.arrays)) {
-            for (face_index = 0; face_index < this._face_count; face_index++) {
+            for (face_index = 0; face_index < this.face_count; face_index++) {
                 if (input.is_shared) {
-                    vertex_index_1 = this._face_vertices.arrays[0][face_index];
-                    vertex_index_2 = this._face_vertices.arrays[1][face_index];
-                    vertex_index_3 = this._face_vertices.arrays[2][face_index];
+                    vertex_index_1 = this.face_vertices.arrays[0][face_index];
+                    vertex_index_2 = this.face_vertices.arrays[1][face_index];
+                    vertex_index_3 = this.face_vertices.arrays[2][face_index];
                 } else
                     vertex_index_1 =
                         vertex_index_2 =
@@ -109,12 +109,13 @@ export abstract class VertexAttribute<
     current_triangle: TriangleType;
 
     constructor(
-        public readonly face_vertices: IFaceVertices,
+        readonly vertex_count: number,
+        readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        public readonly face_count: number = face_vertices.length,
+        readonly face_count: number = face_vertices.length,
         arrays?: Arrays
     ) {
-        super(face_vertices, face_count, is_shared ? face_count : face_count * 3, arrays);
+        super(face_vertices, face_count, is_shared ? vertex_count : face_count * 3, arrays);
         this._is_shared = !!is_shared;
     }
 
@@ -161,19 +162,6 @@ export abstract class VertexAttribute<
     get triangles(): Generator<TriangleType> {
         return this._iterTriangles();
     }
-
-    toArray(array: Float32Array = new Float32Array(this.arrays.length * this.arrays[0].length)): Float32Array {
-        const num_components = this.arrays.length;
-        for (const [component, values] of this.arrays.entries()) {
-            let index = component;
-            for (const value of values) {
-                array[index] = value;
-                index += num_components;
-            }
-        }
-
-        return array;
-    }
 }
 
 export abstract class LoadableVertexAttribute<
@@ -208,11 +196,13 @@ export abstract class LoadableVertexAttribute<
         }
     }
 
-    load(input: InputAttributeType): void {
+    load(input: InputAttributeType): this {
         if (this._is_shared)
             this._loadShared(input);
         else
             this._loadUnshared(input);
+
+        return this;
     }
 }
 

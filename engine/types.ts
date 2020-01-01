@@ -4,7 +4,7 @@ export type IntArray = Uint32Array|Uint16Array|Uint32Array;
 export const FloatArray = Float32Array;
 export type FloatArray = Float32Array;
 
-export type TypedArray = ArrayLike<number> & {
+export type TypedArray = ArrayLike<number> & Iterable<number> & {[i: number]: number} & {
     BYTES_PER_ELEMENT: number;
     buffer: ArrayBuffer,
     set(array: ArrayLike<number>, offset?: number): void;

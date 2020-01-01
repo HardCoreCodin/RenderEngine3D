@@ -1,91 +1,137 @@
 import gl from "./context.js";
-import {IAttribute, IAttributes, IBuffer, IVertexBuffer, TypedArray, TypedArrayConstructor} from "./types.js";
+import {
+    IAttribute,
+    IAttributeArrays,
+    IAttributes,
+    IBuffer,
+    IVertexBuffer,
+    TypedArray,
+    TypedArrayConstructor
+} from "./types.js";
 
-export default class Buffer<ArrayType extends TypedArray = TypedArray>
-    implements IBuffer<ArrayType>
+abstract class Buffer
+    implements IBuffer
 {
-    readonly data_type: GLenum;
-    protected readonly _buffer: WebGLBuffer;
+    protected readonly _buffer: WebGLBuffer = gl.createBuffer();
 
-    constructor(
-        readonly data: ArrayType,
-        readonly count: number,
-        readonly type: GLenum,
-        readonly usage: GLenum
-    ) {
-        this._buffer = gl.createBuffer();
-        if (data instanceof Float32Array) this.data_type = gl.FLOAT;
-        else if (data instanceof Int8Array) this.data_type = gl.BYTE;
-        else if (data instanceof Int16Array) this.data_type = gl.SHORT;
-        else if (data instanceof Int32Array) this.data_type = gl.INT;
-        else if (data instanceof Uint8Array) this.data_type = gl.UNSIGNED_BYTE;
-        else if (data instanceof Uint16Array) this.data_type = gl.UNSIGNED_SHORT;
-        else if (data instanceof Uint32Array) this.data_type = gl.UNSIGNED_INT;
+    abstract draw(): void;
+    abstract readonly buffer_type: GLenum;
 
-        gl.bindBuffer(type, this._buffer);
-        gl.bufferData(type, data as BufferSource, usage);
-        gl.bindBuffer(type, null);
+    protected constructor(
+        protected readonly _count: number
+    ) {}
+
+    protected _getDataType(data: BufferSource): GLenum {
+        if (data instanceof Float32Array) return gl.FLOAT;
+        if (data instanceof Int8Array) return gl.BYTE;
+        if (data instanceof Int16Array) return gl.SHORT;
+        if (data instanceof Int32Array) return  gl.INT;
+        if (data instanceof Uint8Array) return  gl.UNSIGNED_BYTE;
+        if (data instanceof Uint16Array) return  gl.UNSIGNED_SHORT;
+        if (data instanceof Uint32Array) return  gl.UNSIGNED_INT;
+
+        throw `Unsupported data type for ${data}`;
+    }
+
+    load(data: BufferSource, usage: GLenum = gl.STATIC_DRAW) {
+        gl.bindBuffer(this.buffer_type, this._buffer);
+        gl.bufferData(this.buffer_type, data, usage);
+        gl.bindBuffer(this.buffer_type,null);
     }
 
     bind(): void {
-        gl.bindBuffer(this.type, this._buffer);
+        gl.bindBuffer(this.buffer_type, this._buffer);
     }
 }
 
-export class IndexBuffer<ArrayType extends TypedArray = TypedArray>
-    extends Buffer<ArrayType>
-{
+export class IndexBuffer extends Buffer {
+    readonly buffer_type = gl.ELEMENT_ARRAY_BUFFER;
+    protected _data_type: GLenum;
+
     constructor(
-        data: ArrayType,
-        index_count: number,
+        face_count: number,
+        data: BufferSource,
         usage: GLenum = gl.STATIC_DRAW
     ) {
-        super(data, index_count, gl.ELEMENT_ARRAY_BUFFER, usage);
+        super(face_count * 3);
+        this._data_type = this._getDataType(data);
+        this.load(data, usage);
+    }
+
+    draw(mode: GLenum = gl.TRIANGLES): void {
+        this.bind();
+        gl.drawElements(mode, this._count, this._data_type, 0);
     }
 }
 
-export class VertexBuffer<ArrayType extends TypedArray = TypedArray>
-    extends Buffer<ArrayType>
-    implements IVertexBuffer
-{
+export class VertexBuffer extends Buffer implements IVertexBuffer {
+    readonly buffer_type = gl.ARRAY_BUFFER;
     readonly attributes: IAttributes = {};
-    readonly attribute_size: number;
-    readonly attribute_order: string[] = [];
+    protected readonly _attribute_names: string[];
+
+    draw(mode: GLenum = gl.TRIANGLES): void {
+        this.bind();
+        gl.drawArrays(mode, 0, this._count);
+    }
 
     constructor(
-        data: ArrayType,
         vertex_count: number,
-        spec: [string, number][],
+        attribute_arrays: IAttributeArrays,
         usage: GLenum = gl.STATIC_DRAW
     ) {
-        super(data, vertex_count, gl.ARRAY_BUFFER, usage);
+        super(vertex_count);
 
-        this.attribute_size = vertex_count * (data.constructor as TypedArrayConstructor<ArrayType>).BYTES_PER_ELEMENT;
-        for (const [attribute_name, component_count] of spec) {
-            this.attribute_order.push(attribute_name);
-            this.attributes[attribute_name] = {component_count: component_count};
+        this._attribute_names = Object.keys(attribute_arrays);
+        let array: TypedArray = attribute_arrays[this._attribute_names[0]];
+        const ArrayConstructor = array.constructor as TypedArrayConstructor<typeof array>;
+        const type = this._getDataType(array);
+
+        let length = 0;
+        const arrays = [];
+        for (const attribute_name of this._attribute_names) {
+            array = attribute_arrays[attribute_name];
+            arrays.push(array);
+            length += array.length;
         }
+
+        const data = new ArrayConstructor(length);
+        let offset = 0;
+        let start = 0;
+        let i = 0;
+        for ([i, array] of arrays.entries()) {
+            data.set(array, start);
+
+            this.attributes[this._attribute_names[i]] = {
+                location: 0,
+                count: array.length / vertex_count,
+                type: type,
+                normalized: false,
+                stride: 0,
+                offset: offset
+            };
+
+            start += array.length;
+            offset += array.byteLength
+        }
+
+        this.load(data, usage);
     }
 
     bind(): void {
         super.bind();
 
         let attribute: IAttribute;
-        let offset = 0;
-        for (const attribute_name of this.attribute_order) {
+        for (const attribute_name of this._attribute_names) {
             attribute = this.attributes[attribute_name];
-
             gl.enableVertexAttribArray(attribute.location);
             gl.vertexAttribPointer(
                 attribute.location,
-                attribute.component_count,
-                this.data_type,
-                false,
-                0,
-                offset
+                attribute.count,
+                attribute.type,
+                attribute.normalized,
+                attribute.stride,
+                attribute.offset
             );
-
-            offset += attribute.component_count * this.attribute_size
         }
     }
 }

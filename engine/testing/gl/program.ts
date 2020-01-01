@@ -62,6 +62,8 @@ export default class Program {
         gl.deleteShader(vertex_shader);
         gl.deleteShader(fragment_shader);
 
+        gl.useProgram(this._program);
+
         let i, count: number;
         let info: WebGLActiveInfo;
 
@@ -96,12 +98,10 @@ export default class Program {
 
     draw(mode: GLenum = gl.TRIANGLES): void {
         gl.useProgram(this._program);
-        this.vertex_buffer.bind();
-
         if (this.index_buffer) {
-            this.index_buffer.bind();
-            gl.drawElements(mode, this.index_buffer.count, this.index_buffer.data_type, 0);
+            this.vertex_buffer.bind();
+            this.index_buffer.draw();
         } else
-            gl.drawArrays(mode, 0, this.vertex_buffer.count);
+            this.vertex_buffer.draw();
     }
 }

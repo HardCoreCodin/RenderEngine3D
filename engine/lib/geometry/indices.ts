@@ -56,7 +56,8 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
     implements IFaceVertices
 {
     load(inputs: InputPositions): this {
-        this.init(inputs.vertices[0].length);
+        if (this.length !== inputs.face_count)
+            this.init(inputs.face_count);
 
         this.arrays[0].set(inputs.faces_vertices[0]);
         this.arrays[1].set(inputs.faces_vertices[1]);
