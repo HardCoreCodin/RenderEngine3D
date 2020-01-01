@@ -1,13 +1,13 @@
 import {mat4} from "../lib/accessors/matrix.js";
 import {FaceVerticesInt8} from "../lib/geometry/indices.js";
-import {VertexPositions3D} from "../lib/geometry/positions.js";
+import {VertexPositions3D, VertexPositions4D} from "../lib/geometry/positions.js";
 
 import Program from "./gl/program.js";
 import {IndexBuffer, VertexBuffer} from "./gl/buffers.js";
 import {IAttributeArrays, IAttributes, IUniform} from "./gl/types.js";
 import gl from "./gl/context.js";
 import {InputColors, InputPositions} from "../lib/geometry/inputs.js";
-import {VertexColors3D} from "../lib/geometry/colors.js";
+import {VertexColors3D, VertexColors4D} from "../lib/geometry/colors.js";
 
 const vertex_shader = document.scripts[0].innerText;
 const fragment_shader = document.scripts[1].innerText;
@@ -113,13 +113,15 @@ input_colors.pushVertex([0.5, 0.5, 1]);
 
 input_colors.faces_vertices = input_positions.faces_vertices;
 
+const vertex_count = input_positions.vertex_count;
 const face_vertices = new FaceVerticesInt8().load(input_positions);
-const positions = new VertexPositions3D(input_positions.vertex_count, face_vertices).load(input_positions);
-const colors = new VertexColors3D(positions.vertex_count, face_vertices).load(input_colors);
-
-const attributes: IAttributeArrays = {position: positions.toArray(), color: colors.toArray()};
+const positions = new VertexPositions3D(vertex_count, face_vertices).load(input_positions);
+const colors = new VertexColors3D(vertex_count, face_vertices).load(input_colors);
+const color = colors.toArray();
+const position = new Float32Array(vertex_count*4);
+const attributes: IAttributeArrays = {position, color};
 const index_buffer = new IndexBuffer(face_vertices.length, face_vertices.toArray());
-const vertex_buffer = new VertexBuffer(positions.length, attributes);
+const vertex_buffer = new VertexBuffer(positions.length, attributes, gl.DYNAMIC_DRAW);
 const program = new Program(vertex_shader, fragment_shader, vertex_buffer, index_buffer);
 
 const matrix_uniform: IUniform = program.uniforms.matrix;
@@ -127,20 +129,22 @@ const matrix_uniform: IUniform = program.uniforms.matrix;
 gl.enable(gl.DEPTH_TEST);
 
 const angle = Math.PI/2 / 70;
-const matrix_array = new Float32Array(16);
 const matrix = mat4().setToIdentity();
 matrix.translation.x = .2;
 matrix.translation.y = .5;
 matrix.scaleBy(.25);
 
+const transformed_positions = new VertexPositions4D(vertex_count, face_vertices);
 
 function animate() {
     requestAnimationFrame(animate);
 
     matrix.mat3.rotateAroundX(angle);
     matrix.mat3.rotateAroundZ(angle);
-    matrix.toArray(matrix_array);
-    matrix_uniform.load(matrix_array);
+    positions.mat4mul(matrix, transformed_positions);
+    transformed_positions.toArray(position);
+    vertex_buffer.buffer_data.set(position);
+    vertex_buffer.load(vertex_buffer.buffer_data, gl.DYNAMIC_DRAW);
 
     gl.clearColor(0.75, 0.85, 0.8, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

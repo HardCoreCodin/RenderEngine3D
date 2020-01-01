@@ -66,6 +66,7 @@ export class IndexBuffer extends Buffer {
 
 export class VertexBuffer extends Buffer implements IVertexBuffer {
     readonly buffer_type = gl.ARRAY_BUFFER;
+    readonly buffer_data: TypedArray;
     readonly attributes: IAttributes = {};
     protected readonly _attribute_names: string[];
 
@@ -94,12 +95,12 @@ export class VertexBuffer extends Buffer implements IVertexBuffer {
             length += array.length;
         }
 
-        const data = new ArrayConstructor(length);
+        this.buffer_data = new ArrayConstructor(length);
         let offset = 0;
         let start = 0;
         let i = 0;
         for ([i, array] of arrays.entries()) {
-            data.set(array, start);
+            this.buffer_data.set(array, start);
 
             this.attributes[this._attribute_names[i]] = {
                 location: 0,
@@ -114,7 +115,7 @@ export class VertexBuffer extends Buffer implements IVertexBuffer {
             offset += array.byteLength
         }
 
-        this.load(data, usage);
+        this.load(this.buffer_data, usage);
     }
 
     bind(): void {
