@@ -1,83 +1,107 @@
 import gl from "./context.js";
+import {IAttributeLocations, IUniforms} from "./types.js";
+import Uniform from "./uniform.js";
+import {IndexBuffer, VertexBuffer} from "./buffers.js";
 
 export default class Program {
-    protected _program: WebGLProgram;
-    protected _linking_error: string;
-    protected _validation_error: string;
+    readonly uniforms: IUniforms = {};
+    readonly link_error: string;
+    readonly validation_error: string;
+    readonly vertex_shader_error: string;
+    readonly fragment_shader_error: string;
 
-    protected _attribute_count: number;
-    protected _attribute_info: WebGLActiveInfo;
-    protected _attributes = new Map<string, number>();
+    protected _vertex_buffer: VertexBuffer;
+    protected readonly _attribute_locations: IAttributeLocations = {};
 
-    protected _uniform_count: number;
-    protected _uniform_info: WebGLActiveInfo;
-    protected _uniforms = new Map<string, WebGLUniformLocation>();
+    constructor(
+        readonly vertex_shader_code: string,
+        readonly fragment_shader_code: string,
+        vertex_buffer?: VertexBuffer,
+        public index_buffer?: IndexBuffer,
+        protected readonly _program = gl.createProgram()
+    ) {
+        const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertex_shader, vertex_shader_code);
+        gl.compileShader(vertex_shader);
+        if (!gl.getShaderParameter(vertex_shader, gl.COMPILE_STATUS)) {
+            this.vertex_shader_error = gl.getShaderInfoLog(vertex_shader);
+            console.error('ERROR compiling vertex shader!', this.vertex_shader_error);
+            gl.deleteShader(vertex_shader);
+            return;
+        }
 
-    constructor(vertex_shader?: WebGLShader, fragment_shader?: WebGLShader) {
-        if (vertex_shader && fragment_shader)
-            this.use(vertex_shader, fragment_shader);
+        const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragment_shader, fragment_shader_code);
+        gl.compileShader(fragment_shader);
+        if (!gl.getShaderParameter(fragment_shader, gl.COMPILE_STATUS)) {
+            this.fragment_shader_error = gl.getShaderInfoLog(fragment_shader);
+            console.error('ERROR compiling fragment shader!', this.fragment_shader_error);
+            gl.deleteShader(fragment_shader);
+            return;
+        }
+
+        gl.attachShader(_program, vertex_shader);
+        gl.attachShader(_program, fragment_shader);
+        gl.linkProgram(_program);
+        if (!gl.getProgramParameter(_program, gl.LINK_STATUS)) {
+            this.link_error = gl.getProgramInfoLog(_program);
+            console.error('ERROR linking program!', this.link_error);
+            gl.deleteProgram(_program);
+            return;
+        }
+
+        gl.validateProgram(_program);
+        if (!gl.getProgramParameter(_program, gl.VALIDATE_STATUS)) {
+            this.validation_error = gl.getProgramInfoLog(_program);
+            console.error('ERROR validating program!', this.validation_error);
+            gl.deleteProgram(_program);
+            return;
+        }
+
+        // The shaders are already compiled into the probram at this point:
+        gl.deleteShader(vertex_shader);
+        gl.deleteShader(fragment_shader);
+
+        let i, count: number;
+        let info: WebGLActiveInfo;
+
+        count = gl.getProgramParameter(_program, gl.ACTIVE_UNIFORMS);
+        for (i = 0; i < count; ++i) {
+            info = gl.getActiveUniform(_program, i);
+            if (info)
+                this.uniforms[info.name] = new Uniform(gl.getUniformLocation(_program, info.name), info.type);
+            else
+                break;
+        }
+
+        for (let i = 0; i < gl.getProgramParameter(this._program, gl.ACTIVE_ATTRIBUTES); ++i) {
+            info = gl.getActiveAttrib(this._program, i);
+            if (info)
+                this._attribute_locations[info.name] = gl.getAttribLocation(this._program, info.name);
+            else
+                break;
+        }
+
+        if (vertex_buffer)
+            this.vertex_buffer = vertex_buffer;
     }
 
+    get vertex_buffer(): VertexBuffer {return this._vertex_buffer}
+    set vertex_buffer(vertex_buffer: VertexBuffer) {
+        this._vertex_buffer = vertex_buffer;
 
-    get program(): WebGLProgram {return this._program}
-    get uniforms(): Map<string, WebGLUniformLocation> {return this._uniforms}
-    get vertex_attributes(): Map<string, number> {return this._attributes}
+        for (const attribute in this._attribute_locations)
+            vertex_buffer.attributes[attribute].location = this._attribute_locations[attribute];
+    }
 
-    get linking_error(): string {return this._linking_error}
-    get validation_error(): string {return this._validation_error}
+    draw(mode: GLenum = gl.TRIANGLES): void {
+        gl.useProgram(this._program);
+        this.vertex_buffer.bind();
 
-    get uniform_count(): number {return this._uniform_count}
-    get uniform_info(): WebGLActiveInfo {return this._uniform_info}
-
-    get attribute_count(): number {return this._attribute_count}
-    get attribute_info(): WebGLActiveInfo {return this._attribute_info}
-
-    use(vertex_shader: WebGLShader, fragment_shader: WebGLShader) {
-        this._program = gl.createProgram();
-
-        gl.attachShader(this._program, vertex_shader);
-        gl.attachShader(this._program, fragment_shader);
-        gl.linkProgram(this._program);
-        if (gl.getProgramParameter(this._program, gl.LINK_STATUS)) {
-            gl.validateProgram(this._program);
-            if (gl.getProgramParameter(this._program, gl.VALIDATE_STATUS)) {
-                this._uniform_count = gl.getProgramParameter( this._program, gl.ACTIVE_UNIFORMS );
-                this._attribute_count = gl.getProgramParameter(this._program, gl.ACTIVE_ATTRIBUTES);
-
-                let i: number;
-                for (i = 0; i < this._uniform_count; ++i) {
-                    this._uniform_info = gl.getActiveUniform(this._program, i);
-                    if (this._uniform_info)
-                        this._uniforms[this._uniform_info.name] = gl.getUniformLocation(
-                            this._program,
-                            this._uniform_info.name
-                        );
-                    else
-                        break;
-                }
-
-                for (i = 0; i < this._attribute_count; ++i) {
-                    this._attribute_info = gl.getActiveAttrib(this._program, i);
-                    if (this._attribute_info)
-                        this._attributes[this._attribute_info.name] = gl.getAttribLocation(
-                            this._program,
-                            this._attribute_info.name
-                        );
-                    else
-                        break;
-                }
-
-                gl.useProgram(this._program);
-                gl.enable(gl.DEPTH_TEST);
-            } else {
-                this._validation_error = gl.getProgramInfoLog(this._program);
-                console.error('ERROR validating program!', this._validation_error);
-                gl.deleteProgram(this._program);
-            }
-        } else {
-            this._linking_error = gl.getProgramInfoLog(this._program);
-            console.error('ERROR linking program!', this._linking_error);
-            gl.deleteProgram(this._program);
-        }
+        if (this.index_buffer) {
+            this.index_buffer.bind();
+            gl.drawElements(mode, this.index_buffer.count, this.index_buffer.data_type, 0);
+        } else
+            gl.drawArrays(mode, 0, this.vertex_buffer.count);
     }
 }
