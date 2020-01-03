@@ -27,7 +27,7 @@ export default class Program {
             this.vertex_shader_error = gl.getShaderInfoLog(vertex_shader);
             console.error('ERROR compiling vertex shader!', this.vertex_shader_error);
             gl.deleteShader(vertex_shader);
-            return;
+            throw this.vertex_shader_error;
         }
 
         const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -36,8 +36,9 @@ export default class Program {
         if (!gl.getShaderParameter(fragment_shader, gl.COMPILE_STATUS)) {
             this.fragment_shader_error = gl.getShaderInfoLog(fragment_shader);
             console.error('ERROR compiling fragment shader!', this.fragment_shader_error);
+            gl.deleteShader(vertex_shader);
             gl.deleteShader(fragment_shader);
-            return;
+            throw this.fragment_shader_error;
         }
 
         gl.attachShader(_program, vertex_shader);
@@ -46,16 +47,20 @@ export default class Program {
         if (!gl.getProgramParameter(_program, gl.LINK_STATUS)) {
             this.link_error = gl.getProgramInfoLog(_program);
             console.error('ERROR linking program!', this.link_error);
+            gl.deleteShader(vertex_shader);
+            gl.deleteShader(fragment_shader);
             gl.deleteProgram(_program);
-            return;
+            throw this.link_error;
         }
 
         gl.validateProgram(_program);
         if (!gl.getProgramParameter(_program, gl.VALIDATE_STATUS)) {
             this.validation_error = gl.getProgramInfoLog(_program);
             console.error('ERROR validating program!', this.validation_error);
+            gl.deleteShader(vertex_shader);
+            gl.deleteShader(fragment_shader);
             gl.deleteProgram(_program);
-            return;
+            throw this.validation_error;
         }
 
         // The shaders are already compiled into the probram at this point:
