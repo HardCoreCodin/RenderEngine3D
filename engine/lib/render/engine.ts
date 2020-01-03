@@ -4,35 +4,28 @@ import Scene from "../scene_graph/scene.js";
 import {IController} from "../_interfaces/input.js";
 import {FPSController} from "../input/controllers.js";
 import Viewport from "./viewport.js";
-import RenderPipeline from "./pipelines.js";
 
 export default class RenderEngine {
-    private readonly screen: Screen;
-
+    private _active_viewport: Viewport;
     private frame_time = 1000 / 60;
     private last_timestamp = 0;
     private delta_time = 0;
 
-    private _controller: IController;
-    private _active_viewport: Viewport;
-
     constructor(
         private readonly canvas: HTMLCanvasElement,
-        public readonly scene: Scene,
+        public readonly scene: Scene = new Scene(),
         camera: Camera = scene.cameras.length ? scene.cameras[0] : scene.addCamera(),
-        private render_pipeline = new RenderPipeline(scene)
-    ) {
-        this.screen = new Screen(camera, canvas);
-        this._controller = new FPSController(canvas, camera);
-    }
+        private _controller: IController = new FPSController(canvas, camera),
+        private readonly screen: Screen = new Screen(camera, canvas)
+    ) {}
 
     get controller(): IController {
         return this._controller;
     }
 
     set controller(controller: IController) {
-        controller.camera = this._active_viewport.camera;
         this._controller = controller;
+        controller.camera = this._active_viewport.camera;
     }
 
     get active_viewport(): Viewport {
@@ -52,8 +45,12 @@ export default class RenderEngine {
         this._active_viewport.camera_hase_moved_or_rotated = this._controller.direction_changed || this._controller.position_changed;
         this._controller.direction_changed = this._controller.position_changed = false;
 
-        this.scene.refreshWorldMatrix(); // update world-matrices for all dynamic nodes in the scene
-        this.screen.refresh(this.render_pipeline); // Refresh viewports, screen sizes and camera matrices
+        // update world-matrices for all dynamic nodes in the scene
+        for (const node of this.scene.children)
+            node.refreshWorldMatrix();
+
+        // Refresh viewports, screen sizes and camera matrices
+        this.screen.refresh();
 
         requestAnimationFrame(this.update);
     };

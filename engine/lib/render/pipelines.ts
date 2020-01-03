@@ -1,16 +1,14 @@
-import Scene from "../scene_graph/scene.js";
-import Viewport from "./viewport.js";
-import {clipFaces, clipSharedAttribute, clipUnsharedAttribute} from "../math/rendering/clipping.js";
-import {Matrix4x4} from "../accessors/matrix.js";
-import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
-import {cullFaces, cullVertices} from "../math/rendering/culling.js";
-import {CLIP, CULL} from "../../constants.js";
 import Geometry from "./geometry.js";
-import {MeshShader} from "./materials.js";
-import {VertexPositions4D} from "../geometry/positions.js";
-import {cube_face_vertices} from "../geometry/cube.js";
 import Mesh from "../geometry/mesh.js";
-import {Float4, T2, T3} from "../../types.js";
+import {MeshShader} from "./shaders/mesh/base.js";
+import Viewport from "./viewport.js";
+import {VertexPositions4D} from "../geometry/positions.js";
+import {Matrix4x4} from "../accessors/matrix.js";
+import {cullFaces, cullVertices} from "../math/rendering/culling.js";
+import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
+import {cube_face_vertices} from "../geometry/cube.js";
+import {CLIP} from "../../constants.js";
+import {T3} from "../../types.js";
 
 export default class RenderPipeline {
     cull_back_faces: boolean = false;
@@ -25,18 +23,12 @@ export default class RenderPipeline {
     protected face_flags: Uint8Array;
 
     protected readonly clip_space_vertex_positions = new VertexPositions4D(cube_face_vertices);
+    protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
-    constructor(
-        public scene: Scene,
-        protected geometries = scene.geometries,
-
-        protected readonly model_to_clip: Matrix4x4 = new Matrix4x4()
-    ){}
-
-    protected _updateClippingBuffers(): void {
+    protected _updateClippingBuffers(geometries: Geometry[]): void {
         let max_face_count = 0;
         let max_vertex_count = 0;
-        for (const geometry of this.geometries) {
+        for (const geometry of geometries) {
             if (geometry.is_renderable) {
                 if (geometry.mesh.face_count > max_face_count)
                     max_face_count = geometry.mesh.face_count;
@@ -68,16 +60,17 @@ export default class RenderPipeline {
     }
 
     render(viewport: Viewport): void {
-        if (!this.geometries.length)
+        const scene = viewport.camera.scene;
+        const geometries = scene.geometries;
+        if (geometries.length)
+            this._updateClippingBuffers(geometries);
+        else
             return;
-
-        this._updateClippingBuffers();
-
-        let geometry: Geometry;
-        let geometries: Geometry[];
 
         let mesh: Mesh;
         let mesh_shader: MeshShader;
+        let mesh_geometry: Geometry;
+        let mesh_geometries: Geometry[];
 
         const n = viewport.camera.frustum.near;
         const world_to_clip = viewport.world_to_clip;
@@ -99,19 +92,19 @@ export default class RenderPipeline {
         let vc, fc, result: number;
         const pz = viewport.camera.translation.z;
 
-        for (const material of this.scene.materials) {
+        for (const material of scene.materials) {
             mesh_shader = material.mesh_shader;
 
-            for ([mesh, geometries] of material.mesh_geometries.entries()) {
+            for ([mesh, mesh_geometries] of material.mesh_geometries.entries()) {
                 fv = mesh.face_vertices.arrays;
                 vc = mesh.vertex_count;
                 fc = mesh.face_count;
 
                 mesh_shader.bindMesh(mesh);
 
-                for (geometry of geometries) if (geometry.is_renderable) {
+                for (mesh_geometry of mesh_geometries) if (mesh_geometry.is_renderable) {
                     // Prepare a matrix for converting from model space to clip space:
-                    geometry.model_to_world.times(world_to_clip, model_to_clip);
+                    mesh_geometry.model_to_world.mul(world_to_clip, model_to_clip);
 
                     // Bind the inputs and outputs for the mesh shader, and execute it.
                     // Skip this geometry if it returns a CULL flag (0):

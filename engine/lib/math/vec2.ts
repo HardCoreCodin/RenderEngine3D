@@ -253,6 +253,31 @@ const dot = (
     Xa[a] * Xb[b] +
     Ya[a] * Yb[b];
 
+const reflect = (
+    a: number, [Xa, Ya]: Float2,
+    b: number, [Xb, Yb]: Float2,
+    o: number, [Xo, Yo]: Float2
+): void => {
+    t_n = Xa[a] * Xb[b] +
+          Ya[a] * Yb[b];
+    t_n += t_n;
+
+    Xo[o] = Xb[b] * t_n - Xa[a];
+    Yo[o] = Yb[b] * t_n - Ya[a];
+};
+
+const reflect_in_place = (
+    a: number, [Xa, Ya]: Float2,
+    b: number, [Xb, Yb]: Float2
+): void => {
+    t_n = Xa[a] * Xb[b] +
+          Ya[a] * Yb[b];
+    t_n += t_n;
+
+    Xa[a] = Xb[b] * t_n - Xa[a];
+    Ya[a] = Yb[b] * t_n - Ya[a];
+};
+
 const matrix_multiply = (
     a: number, [Xa, Ya]: Float2,
     m: number, [
@@ -345,6 +370,9 @@ export const direction2DFunctions: IDirectionFunctionSet = {
 
     normalize,
     normalize_in_place,
+
+    reflect,
+    reflect_in_place,
 
     dot
 };

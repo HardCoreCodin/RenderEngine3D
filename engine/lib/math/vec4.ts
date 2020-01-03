@@ -1,13 +1,15 @@
-import {DIM, PRECISION_DIGITS} from "../../constants.js";
+import {PRECISION_DIGITS} from "../../constants.js";
 import {
-    ICrossDirectionFunctionSet, IDirectionAttribute3DFunctionSet, IDirectionAttribute4DFunctionSet,
+    IVectorFunctionSet,
     IPositionFunctionSet,
     ITransformableAttributeFunctionSet,
     ITransformableVectorFunctionSet,
-    IVectorFunctionSet
+    ICrossDirectionFunctionSet,
+    IDirectionAttribute4DFunctionSet
 } from "../_interfaces/functions.js";
 import {Float16, Float4} from "../../types.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
+import {cross, cross_in_place, reflect, reflect_in_place} from "./vec3.js";
 
 let t_x,
     t_y,
@@ -335,29 +337,6 @@ const dot = (
     Za[a] * Zb[b] +
     Wa[a] * Wb[b];
 
-const cross = (
-    a: number, [Xa, Ya, Za, Wa]: Float4,
-    b: number, [Xb, Yb, Zb, Wb]: Float4,
-    o: number, [Xo, Yo, Zo, Wo]: Float4
-) : void => {
-    Xo[o] = Ya[a]*Zb[b] - Za[a]*Yb[b];
-    Yo[o] = Za[a]*Xb[b] - Xa[a]*Zb[b];
-    Zo[o] = Xa[a]*Yb[b] - Ya[a]*Xb[b];
-};
-
-const cross_in_place = (
-    a: number, [Xa, Ya, Za, Wa]: Float4,
-    b: number, [Xb, Yb, Zb, Wb]: Float4
-) : void => {
-    t_x = Xa[a];
-    t_y = Ya[a];
-    t_z = Za[a];
-
-    Xa[a] = t_y*Zb[b] - t_z*Yb[b];
-    Ya[a] = t_z*Xb[b] - t_x*Zb[b];
-    Za[a] = t_x*Yb[b] - t_y*Xb[b];
-};
-
 const matrix_multiply = (
     a: number, [Xa, Ya, Za, Wa]: Float4,
     m: number, [
@@ -504,7 +483,11 @@ export const direction4DFunctions: ICrossDirectionFunctionSet = {
     normalize,
     normalize_in_place,
 
+    reflect,
+    reflect_in_place,
+
     dot,
+
     cross,
     cross_in_place
 };

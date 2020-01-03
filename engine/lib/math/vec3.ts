@@ -1,12 +1,10 @@
 import {Float16, Float3, Float4, Float9} from "../../types.js";
-import {DIM, PRECISION_DIGITS} from "../../constants.js";
+import {PRECISION_DIGITS} from "../../constants.js";
 import {
-    ICrossDirectionFunctionSet,
     IDirection3DFunctionSet,
     IDirectionAttribute3DFunctionSet,
     IPosition3DFunctionSet,
     IPositionAttribute3DFunctionSet,
-    IPositionFunctionSet,
     ITransformableAttributeFunctionSet,
     ITransformableVectorFunctionSet,
     IVectorFunctionSet
@@ -303,7 +301,36 @@ const dot = (
     Ya[a] * Yb[b] +
     Za[a] * Zb[b];
 
-const cross = (
+export const reflect = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number, [Xb, Yb, Zb]: Float3,
+    o: number, [Xo, Yo, Zo]: Float3
+): void => {
+    t_n = Xa[a] * Xb[b] +
+          Ya[a] * Yb[b] +
+          Za[a] * Zb[b];
+    t_n += t_n;
+
+    Xo[o] = Xb[b] * t_n - Xa[a];
+    Yo[o] = Yb[b] * t_n - Ya[a];
+    Zo[o] = Zb[b] * t_n - Za[a];
+};
+
+export const reflect_in_place = (
+    a: number, [Xa, Ya, Za]: Float3,
+    b: number, [Xb, Yb, Zb]: Float3
+): void => {
+    t_n = Xa[a] * Xb[b] +
+          Ya[a] * Yb[b] +
+          Za[a] * Zb[b];
+    t_n += t_n;
+
+    Xa[a] = Xb[b] * t_n - Xa[a];
+    Ya[a] = Yb[b] * t_n - Ya[a];
+    Za[a] = Zb[b] * t_n - Za[a];
+};
+
+export const cross = (
     a: number, [Xa, Ya, Za]: Float3,
     b: number, [Xb, Yb, Zb]: Float3,
     o: number, [Xo, Yo, Zo]: Float3
@@ -313,7 +340,7 @@ const cross = (
     Zo[o] = Xa[a]*Yb[b] - Ya[a]*Xb[b];
 };
 
-const cross_in_place = (
+export const cross_in_place = (
     a: number, [Xa, Ya, Za]: Float3,
     b: number, [Xb, Yb, Zb]: Float3
 ) : void => {
@@ -578,6 +605,9 @@ export const direction3DFunctions: IDirection3DFunctionSet = {
 
     normalize,
     normalize_in_place,
+
+    reflect,
+    reflect_in_place,
 
     dot,
 

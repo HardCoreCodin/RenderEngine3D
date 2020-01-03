@@ -66,7 +66,7 @@ export default class Node3D
     refreshWorldMatrix(recurse: boolean = true, include_static: boolean = false): void {
         if (this instanceof Node3D && (include_static || !this.is_static)) {
             if (this.parent instanceof Node3D)
-                this.transform.matrix.times(this.parent.model_to_world, this.model_to_world);
+                this.transform.matrix.mul(this.parent.model_to_world, this.model_to_world);
             else
                 this.model_to_world.setFrom(this.transform.matrix);
 

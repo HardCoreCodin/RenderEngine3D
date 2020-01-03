@@ -1,12 +1,11 @@
 import Screen from "./lib/render/screen.js";
-import Camera, { cam } from "./lib/render/camera.js";
-import Triangle4D, { tri } from "./primitives/triangle.js";
-import FPSController, { fps } from "./input.js";
+import { cam } from "./lib/render/camera.js";
+import { tri } from "./primitives/triangle.js";
+import { fps } from "./input.js";
 import { mat4x4 } from "./math/mat4x4.js";
 import { dir4D } from "./math/vec4.js";
 import { rgb } from "./math/vec3.js";
 import { rend } from "./objects/renderable.js";
-import Transform from "./lib/scene_graph/transform.js";
 export default class Engine3D {
     constructor(canvas, meshes) {
         this.canvas = canvas;
@@ -34,12 +33,6 @@ export default class Engine3D {
             requestAnimationFrame(this.draw);
         };
         this.screen = new Screen(canvas);
-        // Compute allocator sizes:
-        this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
-        for (const mesh of meshes)
-            this.allocator_sizes.add(mesh.sizes).add(Transform.SIZE);
-        // Allocate memory:
-        this.allocators = this.allocator_sizes.allocate();
         // Load...
         for (const mesh of meshes)
             this.mesh_renderers.push(rend(mesh.load(this.allocators), this.allocators));
@@ -242,9 +235,4 @@ export default class Engine3D {
         }
     }
 }
-Engine3D.SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
-    mat4x4: 4,
-    vec4D: 3,
-    vec3D: 1
-});
 //# sourceMappingURL=engine.js.map

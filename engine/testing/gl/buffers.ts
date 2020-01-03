@@ -12,16 +12,18 @@ import {
 abstract class Buffer
     implements IBuffer
 {
+    buffer_data: TypedArray;
     protected readonly _buffer: WebGLBuffer = gl.createBuffer();
 
     abstract draw(): void;
     abstract readonly buffer_type: GLenum;
 
     protected constructor(
-        protected readonly _count: number
+        protected readonly _count: number,
+        protected readonly _usage: GLenum = gl.STATIC_DRAW
     ) {}
 
-    protected _getDataType(data: BufferSource): GLenum {
+    protected _getDataType(data: TypedArray): GLenum {
         if (data instanceof Float32Array) return gl.FLOAT;
         if (data instanceof Int8Array) return gl.BYTE;
         if (data instanceof Int16Array) return gl.SHORT;
@@ -33,7 +35,8 @@ abstract class Buffer
         throw `Unsupported data type for ${data}`;
     }
 
-    load(data: BufferSource, usage: GLenum = gl.STATIC_DRAW) {
+    load(data: TypedArray = this.buffer_data, usage: GLenum = this._usage) {
+        this.buffer_data = data;
         gl.bindBuffer(this.buffer_type, this._buffer);
         gl.bufferData(this.buffer_type, data, usage);
         gl.bindBuffer(this.buffer_type,null);
@@ -50,7 +53,7 @@ export class IndexBuffer extends Buffer {
 
     constructor(
         face_count: number,
-        data: BufferSource,
+        data: TypedArray,
         usage: GLenum = gl.STATIC_DRAW
     ) {
         super(face_count * 3);
@@ -66,7 +69,6 @@ export class IndexBuffer extends Buffer {
 
 export class VertexBuffer extends Buffer implements IVertexBuffer {
     readonly buffer_type = gl.ARRAY_BUFFER;
-    readonly buffer_data: TypedArray;
     readonly attributes: IAttributes = {};
     protected readonly _attribute_names: string[];
 
@@ -80,7 +82,7 @@ export class VertexBuffer extends Buffer implements IVertexBuffer {
         attribute_arrays: IAttributeArrays,
         usage: GLenum = gl.STATIC_DRAW
     ) {
-        super(vertex_count);
+        super(vertex_count, usage);
 
         this._attribute_names = Object.keys(attribute_arrays);
         let array: TypedArray = attribute_arrays[this._attribute_names[0]];
@@ -96,26 +98,26 @@ export class VertexBuffer extends Buffer implements IVertexBuffer {
         }
 
         this.buffer_data = new ArrayConstructor(length);
+
+        const normalized = false;
+        const location = 0;
+        const stride = 0;
+
+        let count: number;
         let offset = 0;
         let start = 0;
         let i = 0;
         for ([i, array] of arrays.entries()) {
             this.buffer_data.set(array, start);
+            count = array.length / vertex_count;
 
-            this.attributes[this._attribute_names[i]] = {
-                location: 0,
-                count: array.length / vertex_count,
-                type: type,
-                normalized: false,
-                stride: 0,
-                offset: offset
-            };
+            this.attributes[this._attribute_names[i]] = {location, count, type, normalized, stride, offset, start};
 
             start += array.length;
             offset += array.byteLength
         }
 
-        this.load(this.buffer_data, usage);
+        this.load();
     }
 
     bind(): void {

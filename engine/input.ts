@@ -133,7 +133,7 @@ export default class FPSController
             if (pressed.yaw_left ||
                 pressed.yaw_right) {
 
-                this.camera.transform.rotation.rotateAroundY(
+                this.camera.transform.matrix.rotateAroundY(
                     pressed.yaw_left ?
                         this.rotation_amount :
                         -this.rotation_amount
@@ -143,7 +143,7 @@ export default class FPSController
             if (pressed.pitch_up ||
                 pressed.pitch_down) {
 
-                this.camera.transform.rotation.rotateAroundX(
+                this.camera.transform.matrix.rotateAroundX(
                     pressed.pitch_up ?
                         -this.rotation_amount :
                         this.rotation_amount
@@ -164,7 +164,7 @@ export default class FPSController
             if (pressed.forward ||
                 pressed.backwards) {
 
-                this.forward_direction.times(this.movement_amount, this.forward_movement);
+                this.forward_direction.mul(this.movement_amount, this.forward_movement);
 
                 if (pressed.forward)
                     this.camera.transform.matrix.translation.add(this.forward_movement);
@@ -175,7 +175,7 @@ export default class FPSController
             if (pressed.right ||
                 pressed.left) {
 
-                this.right_direction.times(this.movement_amount, this.right_movement);
+                this.right_direction.mul(this.movement_amount, this.right_movement);
 
                 if (pressed.right)
                     this.camera.transform.matrix.translation.add(this.right_movement);

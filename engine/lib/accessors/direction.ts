@@ -61,6 +61,25 @@ export abstract class Direction<MatrixType extends Matrix>
 
         return this;
     }
+
+    reflect(other: this, out?: this): this {
+        if (out && !out.is(this)) {
+            this._.reflect(
+                this.id, this.arrays,
+                other.id, other.arrays,
+                out.id, out.arrays
+            );
+
+            return out;
+        }
+
+        this._.reflect_in_place(
+            this.id, this.arrays,
+            other.id, other.arrays
+        );
+
+        return this;
+    }
 }
 
 export abstract class CrossedDirection<MatrixType extends Matrix>

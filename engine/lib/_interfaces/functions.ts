@@ -182,6 +182,9 @@ export interface IDirectionFunctionSet
     normalize(a: number, []: Arrays, o: number, []: Arrays): void;
     normalize_in_place(a: number, []: Arrays): void;
 
+    reflect(a: number, []: Arrays, b: number, []: Arrays, o: number, []: Arrays): void;
+    reflect_in_place(a: number, []: Arrays, b: number, []: Arrays): void;
+
     dot(a: number, []: Arrays, b: number, []: Arrays): number;
 }
 

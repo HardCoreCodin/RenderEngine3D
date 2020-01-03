@@ -14,6 +14,7 @@ export interface IAttribute {
     normalized: GLboolean;
     stride: GLsizei;
     offset: GLintptr;
+    start: number;
 }
 
 export interface IUniform {

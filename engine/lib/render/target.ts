@@ -1,33 +1,20 @@
-import {DIM} from "../../constants.js";
 import {Buffer} from "../memory/buffers.js";
-import {RENDER_TARGET_ALLOCATOR} from "../memory/allocators.js";
+import {Int32Allocator1D, RENDER_TARGET_ALLOCATOR} from "../memory/allocators.js";
 import {IRectangle} from "../_interfaces/render.js";
 
 
-export default class RenderTarget
-    extends Buffer<Uint32Array, DIM._1D>
+export default class RenderTarget extends Buffer<Uint32Array>
 {
-    dim = DIM._1D as DIM._1D;
-
-    readonly allocator = RENDER_TARGET_ALLOCATOR;
+    constructor(public size: IRectangle) {super()}
+    protected _getAllocator(): Int32Allocator1D {return RENDER_TARGET_ALLOCATOR}
     private pixels: Uint32Array;
 
-    constructor(
-        public size: IRectangle,
-        pixels?: Uint32Array
-    ) {
-        super();
-        this.reset(pixels);
-    }
+    get length() {return this.size.width * this.size.height * 4}
 
-    get length() {
-        return this.size.width * this.size.height * 4;
-    }
-
-    reset(pixels?: Uint32Array) {
-        if (pixels) {
-            this.pixels = pixels;
-        } else {
+    reset(image?: ImageData) {
+        if (image)
+            this.pixels = new Uint32Array(image.data.buffer);
+        else {
             this.init(this.length);
             this.pixels = this.arrays[0];
         }

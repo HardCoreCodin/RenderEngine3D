@@ -6,19 +6,12 @@ import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
 import {dir4D, Direction4D} from "./math/vec4.js";
 import {rgb, RGB} from "./math/vec3.js";
 import {Allocators} from "./lib/allocators/float.js";
-import {trans} from "./objects/transform.js";
 import MeshRenderer, {rend} from "./objects/renderable.js";
 import {BufferSizes} from "./buffer.js";
 import Mesh from "./lib/geometry/mesh.js";
 import Transform from "./lib/scene_graph/transform.js";
 
 export default class Engine3D {
-    static SIZE = Camera.SIZE.addedWith(FPSController.SIZE).add({
-        mat4x4: 4,
-        vec4D: 3,
-        vec3D: 1
-    });
-
     private readonly screen: Screen;
     private readonly camera: Camera;
     private readonly fps_controller: FPSController;
@@ -60,14 +53,6 @@ export default class Engine3D {
         public readonly meshes: Mesh[]
     ) {
         this.screen = new Screen(canvas);
-
-        // Compute allocator sizes:
-        this.allocator_sizes = Triangle4D.SIZE().times(4).add(Engine3D.SIZE);
-        for (const mesh of meshes)
-            this.allocator_sizes.add(mesh.sizes).add(Transform.SIZE);
-
-        // Allocate memory:
-        this.allocators = this.allocator_sizes.allocate();
 
         // Load...
         for (const mesh of meshes)

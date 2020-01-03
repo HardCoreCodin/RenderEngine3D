@@ -96,12 +96,15 @@ export default class Program {
             vertex_buffer.attributes[attribute].location = this._attribute_locations[attribute];
     }
 
-    draw(mode: GLenum = gl.TRIANGLES): void {
+    use(): void {
         gl.useProgram(this._program);
+    }
+
+    draw(mode: GLenum = gl.TRIANGLES): void {
         if (this.index_buffer) {
             this.vertex_buffer.bind();
-            this.index_buffer.draw();
+            this.index_buffer.draw(mode);
         } else
-            this.vertex_buffer.draw();
+            this.vertex_buffer.draw(mode);
     }
 }
