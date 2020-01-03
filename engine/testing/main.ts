@@ -2,22 +2,22 @@ import {mat4} from "../lib/accessors/matrix.js";
 import {VertexPositions4D} from "../lib/geometry/positions.js";
 
 import Program from "./gl/program.js";
-import {IndexBuffer, VertexBuffer} from "./gl/buffers.js";
-import {IAttributeArrays, IUniform} from "./gl/types.js";
+import {IndexBuffer, VertexArray, VertexBuffer} from "./gl/buffers.js";
+import {IUniform} from "./gl/types.js";
 import gl, {canvas} from "./gl/context.js";
 import {colors, face_count, face_vertices, positions, vertex_count} from "./data.js";
 
 gl.enable(gl.DEPTH_TEST);
 
-let transform_on_GPU = false;
+let transform_on_CPU = false;
 document.onkeydown = (key_event): void => {
     if (key_event.which === 40) {
-        if (transform_on_GPU) {
-            transform_on_GPU = false;
-            console.log('Trasnfromation switched to: CPU');
-        } else {
-            transform_on_GPU = true;
+        if (transform_on_CPU) {
+            transform_on_CPU = false;
             console.log('Trasnfromation switched to: GPU');
+        } else {
+            transform_on_CPU = true;
+            console.log('Trasnfromation switched to: CPU');
         }
     }
 };
@@ -25,19 +25,20 @@ document.onkeydown = (key_event): void => {
 const fragment_shader   = document.scripts[0].innerText;
 const vertex_shader     = document.scripts[1].innerText;
 const vertex_shader_CPU = document.scripts[2].innerText;
+const program = new Program(vertex_shader, fragment_shader);
+const program_CPU = new Program(vertex_shader_CPU, fragment_shader);
 
 const color = colors.toArray();
 const position = positions.toArray();
-const attributes: IAttributeArrays = {position, color};
-const vertex_buffer = new VertexBuffer(vertex_count, attributes);
-const index_buffer = new IndexBuffer(face_count, face_vertices.toArray());
-const program = new Program(vertex_shader, fragment_shader, vertex_buffer, index_buffer);
+
+const index_buffer = new IndexBuffer(face_vertices.toArray());
+const vertex_array = new VertexArray(vertex_count, program.locations, {color, position});
 
 const positions_CPU = new Float32Array(vertex_count * 4);
-const attributes_CPU: IAttributeArrays = {color, position: positions_CPU};
-const vertex_buffer_CPU = new VertexBuffer(vertex_count, attributes_CPU, gl.DYNAMIC_DRAW);
-const program_CPU = new Program(vertex_shader_CPU, fragment_shader, vertex_buffer_CPU, index_buffer);
-const positions_CPU_start = vertex_buffer_CPU.attributes.position.start;
+const vertex_array_CPU = new VertexArray(vertex_count, program.locations, {
+    color: vertex_array.attributes.color,
+    position: positions_CPU
+});
 
 const angle = Math.PI/2 / 70;
 const matrix = mat4().setToIdentity();
@@ -74,22 +75,22 @@ function animate() {
     matrix.mat3.rotateAroundX(angle);
     matrix.mat3.rotateAroundZ(angle);
 
-    if (transform_on_GPU) {
+    if (transform_on_CPU) {
+        program_CPU.use();
+
+        positions.mat4mul(matrix, transformed_positions).toArray(positions_CPU);
+        vertex_array_CPU.attributes.position.load(positions_CPU);
+
+        vertex_array_CPU.bind();
+        index_buffer.draw();
+    } else {
         program.use();
 
         matrix.toArray(matrix_array);
         matrix_uniform.load(matrix_array);
 
-        program.draw();
-    } else {
-        program_CPU.use();
-
-        positions.mat4mul(matrix, transformed_positions);
-        transformed_positions.toArray(positions_CPU);
-        vertex_buffer_CPU.buffer_data.set(positions_CPU, positions_CPU_start);
-        vertex_buffer_CPU.load();
-
-        program_CPU.draw();
+        vertex_array.bind();
+        index_buffer.draw();
     }
 }
 

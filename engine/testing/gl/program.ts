@@ -1,7 +1,6 @@
 import gl from "./context.js";
 import {IAttributeLocations, IUniforms} from "./types.js";
 import Uniform from "./uniform.js";
-import {IndexBuffer, VertexBuffer} from "./buffers.js";
 
 export default class Program {
     readonly uniforms: IUniforms = {};
@@ -9,15 +8,15 @@ export default class Program {
     readonly validation_error: string;
     readonly vertex_shader_error: string;
     readonly fragment_shader_error: string;
+    protected readonly _locations: IAttributeLocations = {};
 
-    protected _vertex_buffer: VertexBuffer;
-    protected readonly _attribute_locations: IAttributeLocations = {};
+    get locations(): IAttributeLocations {return this._locations}
+    use(): void {gl.useProgram(this._program)}
+    delete(): void {gl.deleteProgram(this._program)}
 
     constructor(
         readonly vertex_shader_code: string,
         readonly fragment_shader_code: string,
-        vertex_buffer?: VertexBuffer,
-        public index_buffer?: IndexBuffer,
         protected readonly _program = gl.createProgram()
     ) {
         const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
@@ -84,32 +83,9 @@ export default class Program {
         for (let i = 0; i < gl.getProgramParameter(this._program, gl.ACTIVE_ATTRIBUTES); ++i) {
             info = gl.getActiveAttrib(this._program, i);
             if (info)
-                this._attribute_locations[info.name] = gl.getAttribLocation(this._program, info.name);
+                this._locations[info.name] = gl.getAttribLocation(this._program, info.name);
             else
                 break;
         }
-
-        if (vertex_buffer)
-            this.vertex_buffer = vertex_buffer;
-    }
-
-    get vertex_buffer(): VertexBuffer {return this._vertex_buffer}
-    set vertex_buffer(vertex_buffer: VertexBuffer) {
-        this._vertex_buffer = vertex_buffer;
-
-        for (const attribute in this._attribute_locations)
-            vertex_buffer.attributes[attribute].location = this._attribute_locations[attribute];
-    }
-
-    use(): void {
-        gl.useProgram(this._program);
-    }
-
-    draw(mode: GLenum = gl.TRIANGLES): void {
-        if (this.index_buffer) {
-            this.vertex_buffer.bind();
-            this.index_buffer.draw(mode);
-        } else
-            this.vertex_buffer.draw(mode);
     }
 }
