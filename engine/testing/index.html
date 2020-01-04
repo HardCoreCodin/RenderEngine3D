@@ -6,40 +6,32 @@
     <title>WebGL Tutorial #6</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <script type="application/fragmentShader">#version 300 es
-        precision mediump float;
-
-        in vec3 vColor;
-        out vec4 color;
-
-        void main() {
-            color = vec4(vColor, 1);
-        }
-    </script>
     <script type="application/vertexShader">#version 300 es
         in vec3 position;
-        in vec3 color;
-        out vec3 vColor;
+        in vec2 uv;
+        out vec2 f_uv;
         uniform mat4 matrix;
 
         void main() {
-            vColor = color;
+            f_uv = uv;
             gl_Position = matrix * vec4(position, 1.0);
         }
     </script>
-    <script type="application/vertexShader">#version 300 es
-        in vec4 position;
-        in vec3 color;
-        out vec3 vColor;
+    <script type="application/fragmentShader">#version 300 es
+        precision mediump float;
+
+        in vec2 f_uv;
+        out vec4 color;
+        uniform sampler2D sampler;
 
         void main() {
-            vColor = color;
-            gl_Position = position;
+            color = texture(sampler, f_uv);
         }
     </script>
     <script src="main.js" type="module" defer></script>
 </head>
 <body>
 <canvas width="800" height="600"></canvas>
+<img src="crate.png">
 </body>
 </html>

@@ -130,7 +130,7 @@ export abstract class VertexAttribute<
 
         this.Triangle = this._getTriangleConstructor();
         this.current_triangle = new this.Triangle();
-        this.current_triangle.vertices = this._current_face_vertex_vectors;
+        this.current_triangle.vertex_positions = this._current_face_vertex_vectors;
     }
 
     get is_shared(): boolean {

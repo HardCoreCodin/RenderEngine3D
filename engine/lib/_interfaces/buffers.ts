@@ -6,7 +6,7 @@ export interface IBuffer<ArrayType extends TypedArray = Float32Array>
     allocator: IAllocator<ArrayType>;
     length: number;
     arrays: ArrayType[];
-
+    toArray(array?: ArrayType): ArrayType;
     init(length: number): void;
     values(): Generator<number[]>;
 }

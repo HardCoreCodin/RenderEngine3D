@@ -1,4 +1,4 @@
-import {cube_face_vertices} from "./cube.js";
+import {cube_face_vertices, cube_vertex_count} from "./cube.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {Position3D, Position4D} from "../accessors/position.js";
 
@@ -24,7 +24,7 @@ abstract class Bounds {
 
 export class Bounds3D extends Bounds {
     constructor(
-        public readonly vertex_positions = new VertexPositions3D(cube_face_vertices),
+        public readonly vertex_positions = new VertexPositions3D(cube_vertex_count, cube_face_vertices),
         public readonly min = new Position3D(0, vertex_positions.arrays),
         public readonly max = new Position3D(6, vertex_positions.arrays)
     ) {
@@ -34,7 +34,7 @@ export class Bounds3D extends Bounds {
 
 export class Bounds4D extends Bounds {
     constructor(
-        public readonly vertex_positions = new VertexPositions4D(cube_face_vertices),
+        public readonly vertex_positions = new VertexPositions4D(cube_vertex_count, cube_face_vertices),
         public readonly min = new Position4D(0, vertex_positions.arrays),
         public readonly max = new Position4D(6, vertex_positions.arrays)
     ) {
