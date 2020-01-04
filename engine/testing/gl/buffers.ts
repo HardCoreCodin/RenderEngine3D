@@ -180,6 +180,7 @@ export class Texture {
 
         gl.bindTexture(this._type, this._id);
 
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texParameteri(this._type, gl.TEXTURE_WRAP_S, wrap_u);
         gl.texParameteri(this._type, gl.TEXTURE_WRAP_T, wrap_v);
 

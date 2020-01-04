@@ -1,37 +1,38 @@
 <!DOCTYPE <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>WebGL Tutorial #6</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <script type="application/vertexShader">#version 300 es
-        in vec3 position;
-        in vec2 uv;
-        out vec2 f_uv;
-        uniform mat4 matrix;
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" media="screen" href="main.css">
+    </head>
+    <body>
+        <canvas width="800" height="600"></canvas>
+        <img src="SusanTexture.png">
+    </body>
+    <footer>
+        <script type="application/vertexShader">#version 300 es
+            in vec3 position;
+            in vec2 uv;
+            out vec2 f_uv;
+            uniform mat4 matrix;
 
-        void main() {
-            f_uv = uv;
-            gl_Position = matrix * vec4(position, 1.0);
-        }
-    </script>
-    <script type="application/fragmentShader">#version 300 es
-        precision mediump float;
+            void main() {
+                f_uv = uv;
+                gl_Position = matrix * vec4(position, 1.0);
+            }
+        </script>
+        <script type="application/fragmentShader">#version 300 es
+            precision mediump float;
 
-        in vec2 f_uv;
-        out vec4 color;
-        uniform sampler2D sampler;
+            in vec2 f_uv;
+            out vec4 color;
+            uniform sampler2D sampler;
 
-        void main() {
-            color = texture(sampler, f_uv);
-        }
-    </script>
-    <script src="main.js" type="module" defer></script>
-</head>
-<body>
-<canvas width="800" height="600"></canvas>
-<img src="crate.png">
-</body>
+            void main() {
+                color = texture(sampler, f_uv);
+            }
+        </script>
+        <script src="main.js" type="module"></script>
+    </footer>
 </html>

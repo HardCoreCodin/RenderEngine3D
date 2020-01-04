@@ -4,10 +4,10 @@ import Program from "./gl/program.js";
 import {IndexBuffer, Texture, VertexArray} from "./gl/buffers.js";
 import {IUniform} from "./gl/types.js";
 import gl, {canvas} from "./gl/context.js";
-// import susan_json from "./susan.js";
-import {indices, position, uv, vertex_count} from "./data.js";
+import susan_json from "./susan.js";
+// import {indices, position, uv, vertex_count} from "./data.js";
 
-// const susan = JSON.parse(susan_json);
+const susan = JSON.parse(susan_json);
 
 let old_width: number;
 let old_height: number;
@@ -33,10 +33,10 @@ matrix.scaleBy(.25);
 const matrix_uniform: IUniform = program.uniforms.matrix;
 const matrix_array = new Float32Array(16);
 
-// const position = susan.meshes[0].vertices;
-// const indices = [].concat.apply([], susan.meshes[0].faces);
-// const uv = susan.meshes[0].texturecoords[0];
-// const vertex_count = position.length / 3;
+const position = new Float32Array(susan.meshes[0].vertices);
+const indices = new Uint32Array([].concat.apply([], susan.meshes[0].faces));
+const uv = new Float32Array(susan.meshes[0].texturecoords[0]);
+const vertex_count = position.length / 3;
 
 const index_buffer = new IndexBuffer(indices);
 const vertex_array = new VertexArray(vertex_count, program.locations, {uv, position});
