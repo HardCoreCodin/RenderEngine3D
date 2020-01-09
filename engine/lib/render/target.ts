@@ -5,20 +5,11 @@ import {IRectangle} from "../_interfaces/render.js";
 
 export default class RenderTarget extends Buffer<Uint32Array>
 {
-    constructor(public size: IRectangle) {super()}
+    constructor(protected _size: IRectangle) {super()}
     protected _getAllocator(): Int32Allocator1D {return RENDER_TARGET_ALLOCATOR}
-    private pixels: Uint32Array;
 
-    get length() {return this.size.width * this.size.height * 4}
-
-    reset(image?: ImageData) {
-        if (image)
-            this.pixels = new Uint32Array(image.data.buffer);
-        else {
-            this.init(this.length);
-            this.pixels = this.arrays[0];
-        }
-    }
+    get width(): number {return this._size.width}
+    get height(): number {return this._size.height}
 
     putPixel(
         x: number,
@@ -29,7 +20,7 @@ export default class RenderTarget extends Buffer<Uint32Array>
         b: number,
         a: number
     ) {
-        this.pixels[y * this.size.width + x] =
+        this.arrays[0][y * this._size.width + x] =
             ((a * 255) << 24) |    // alpha
             ((b * 255) << 16) |    // blue
             ((g * 255) <<  8) |    // green

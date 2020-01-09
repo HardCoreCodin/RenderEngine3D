@@ -7,8 +7,10 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
     protected abstract _getAllocator(): IAllocator<ArrayType>;
     readonly allocator: IAllocator<ArrayType>;
     protected _values: number[];
+    protected _length: number;
 
-    length: number;
+    get length(): number {return this._length}
+
     arrays: ArrayType[];
 
     constructor(
@@ -16,12 +18,12 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
         arrays?: ArrayType[]
     ) {
         this.allocator = this._getAllocator();
-        if (length !== undefined)
+        if (length)
             this.init(length, arrays);
     }
 
     init(length: number, arrays?: ArrayType[]): this {
-        this.length = length;
+        this._length = length;
         this.arrays = arrays || this.allocator.allocateBuffer(length);
         this._values = Array<number>(this.allocator.dim);
 
@@ -39,7 +41,7 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
         const num_components = this.arrays.length;
 
         if (array === undefined)
-            array = new this.allocator.ArrayConstructor(num_components * this.length);
+            array = new this.allocator.ArrayConstructor(num_components * this._length);
 
         for (const [component, values] of this.arrays.entries()) {
             let index = component;

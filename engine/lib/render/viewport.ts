@@ -1,59 +1,87 @@
 import Camera from "./camera.js";
 import RenderTarget from "./target.js";
-import RenderPipeline from "./pipelines.js";
 import {mat3, mat4} from "../accessors/matrix.js";
-import {IVector2D} from "../_interfaces/vectors.js";
-import {IRectangle, IViewport} from "../_interfaces/render.js";
+import {IColor, IVector2D} from "../_interfaces/vectors.js";
+import {IRectangle, IRenderPipeline, IViewport} from "../_interfaces/render.js";
+import RenderPipeline from "./pipelines.js";
 
-export default class Viewport implements IViewport {
+export abstract class BaseViewport<Context extends RenderingContext> implements IViewport<Context> {
     readonly world_to_view = mat4();
     readonly world_to_clip = mat4();
-    readonly ndc_to_screen = mat3();
 
-    image: ImageData;
-    aspect_ratio: number;
-    aspect_ratio_has_changed: boolean = false;
-    size_has_changed: boolean = false;
-    camera_hase_moved_or_rotated: boolean = false;
-    render_pipeline: RenderPipeline = new RenderPipeline();
+    camera_has_moved_or_rotated: boolean = false;
+    abstract render_pipeline: IRenderPipeline<Context>;
 
     constructor(
+        protected readonly _context: Context,
         public camera: Camera,
-        readonly context: CanvasRenderingContext2D,
-        readonly size: IRectangle,
-        readonly position: IVector2D = {x: 0, y: 0},
-        readonly render_target = new RenderTarget(size)
+        protected readonly _size: IRectangle,
+        protected readonly _position: IVector2D = {x: 0, y: 0}
     ) {
-        this.reset(size.width, size.height, position.x, position.y);
+        this.reset(_size.width, _size.height, _position.x, _position.y);
     }
 
-    get width(): number {return this.size.width}
-    get height(): number {return this.size.height}
+    get width(): number {return this._size.width}
+    get height(): number {return this._size.height}
+    get x(): number {return this._position.x}
+    get y(): number {return this._position.y}
+
+    refresh() {
+        if (this.camera_has_moved_or_rotated) {
+            this.camera.transform.matrix.invert(this.world_to_view);
+            this.world_to_view.mul(this.camera.projection_matrix, this.world_to_clip);
+            this.camera_has_moved_or_rotated = false;
+        }
+
+        this.render_pipeline.render(this);
+    }
+
+    scale(x: number, y: number): void {
+        this.reset(
+            this._size.width * x,
+            this._size.height * y,
+            this._position.x * x,
+            this._position.y * y
+        );
+    }
 
     reset(width: number, height: number, x: number, y: number): void {
-        this.setSize(width, height);
-        this.position.x = x;
-        this.position.y = y;
-        this.image = this.context.getImageData(x, y, width, height);
-        this.render_target.reset(this.image);
+        this._size.width = width;
+        this._size.height = height;
+        this._position.x = x;
+        this._position.y = y;
+
+        this.camera.aspect_ratio = width / height;
+    }
+}
+
+export default class Viewport extends BaseViewport<CanvasRenderingContext2D> {
+    readonly ndc_to_screen = mat3();
+    private _image: ImageData;
+
+    render_pipeline = new RenderPipeline();
+
+    constructor(
+        context: CanvasRenderingContext2D,
+        camera: Camera,
+        size: IRectangle,
+        position: IVector2D = {x: 0, y: 0},
+        readonly render_target = new RenderTarget(size)
+    ) {
+        super(context, camera, size, position);
+        this._resetRenderTarget();
     }
 
     refresh() {
-        if (this.aspect_ratio_has_changed ||
-            this.camera.frustum.has_changed) {
-            this.camera.updateProjectionMatrix();
-            this.aspect_ratio_has_changed = this.camera.frustum.has_changed = false;
-        }
+        super.refresh();
+        this._context.putImageData(this._image, this._position.x, this._position.y);
+    }
 
-        if (this.camera_hase_moved_or_rotated) {
-            this.camera.transform.matrix.invert(this.world_to_view);
-            this.world_to_view.mul(this.camera.projection_matrix, this.world_to_clip);
-            this.camera_hase_moved_or_rotated = false;
-        }
-
-        if (this.size_has_changed) {
-            const half_width = this.size.width >> 1;
-            const half_height = this.size.height >> 1;
+    reset(width: number, height: number, x: number, y: number): void {
+        const resized = width !== this._size.width || height !== this._size.height;
+        if (resized) {
+            const half_width = width >> 1;
+            const half_height = height >> 1;
 
             // Scale the normalized screen to the pixel size:
             // (from normalized size of -1->1 horizontally and vertically, so from width and height of 2)
@@ -67,26 +95,48 @@ export default class Viewport implements IViewport {
             this.ndc_to_screen.translation.y = half_height;
 
             // this.depth_buffer = new Float32Array(this.screen.width * this.screen.height);
-
-            this.size_has_changed = false;
         }
 
-        this.render_pipeline.render(this);
+        if (resized || x !== this._position.x || y !== this._position.y) {
+            super.reset(width, height, x, y);
+            this._resetRenderTarget();
+        }
     }
 
-    setSize(width: number, height: number) {
-        if (width === this.size.width &&
-            height === this.size.height)
-            return;
+    private _resetRenderTarget(): void {
+        this._image = this._context.getImageData(
+            this._position.x,
+            this._position.y,
 
-        this.size_has_changed = true;
-
-        const new_aspect_ratio = width / height;
-        this.aspect_ratio_has_changed = new_aspect_ratio !== this.aspect_ratio;
-        this.aspect_ratio = new_aspect_ratio;
+            this._size.width,
+            this._size.height
+        );
+        this.render_target.arrays[0] = new Uint32Array(this._image.data.buffer);
     }
 
-    clear() {
-        this.context.clearRect(this.position.x, this.position.y, this.size.width, this.size.height);
+    drawTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
+        this._context.beginPath();
+
+        this._context.moveTo(v1.x, v1.y);
+        this._context.lineTo(v2.x, v2.y);
+        this._context.lineTo(v3.x, v3.y);
+        // this.context.lineTo(v1.x, v1.y);
+        this._context.closePath();
+
+        this._context.strokeStyle = `${color}`;
+        this._context.stroke();
+    }
+
+    fillTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
+        this._context.beginPath();
+
+        this._context.moveTo(v1.x, v1.y);
+        this._context.lineTo(v2.x, v2.y);
+        this._context.lineTo(v3.x, v3.y);
+
+        this._context.closePath();
+
+        this._context.fillStyle = `${color}`;
+        this._context.fill();
     }
 }

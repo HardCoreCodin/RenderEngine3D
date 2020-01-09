@@ -153,6 +153,7 @@ export class VertexArray {
 
 export class Texture {
     private readonly _id: WebGLVertexArrayObject;
+    private _slot: number = -1;
 
     constructor(
         data: HTMLImageElement,
@@ -177,7 +178,6 @@ export class Texture {
         min_filter: GLenum = gl.LINEAR,
         mag_filter: GLenum = min_filter
     ) {
-
         gl.bindTexture(this._type, this._id);
 
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -192,9 +192,12 @@ export class Texture {
         gl.bindTexture(this._type, null);
     }
 
-    bind(slot: GLenum = gl.TEXTURE0): void {
+    get slot() {return this._slot}
+
+    bind(slot: GLenum = 0): void {
+        this._slot = slot;
+        gl.activeTexture(gl.TEXTURE0 + this._slot);
         gl.bindTexture(this._type, this._id);
-        gl.activeTexture(slot);
     }
     unbind(): void {gl.bindTexture(this._type, null)}
 }

@@ -3,7 +3,7 @@ export type TypedArray = Float32Array|Int32Array|Int16Array|Int8Array|Uint32Arra
 export interface IUniform {
     readonly type: GLenum;
     readonly location: WebGLUniformLocation;
-    load(data: TypedArray, transpose?: GLboolean): void;
+    load(data: TypedArray|number|boolean, transpose?: GLboolean): void;
 }
 
 export type IUniforms = {[name: string]: IUniform}

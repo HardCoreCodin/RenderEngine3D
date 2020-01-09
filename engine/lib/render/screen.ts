@@ -1,100 +1,103 @@
 import Camera from "./camera.js";
 import Viewport from "./viewport.js";
-import {IRectangle} from "../_interfaces/render.js";
-import {IColor, IVector2D} from "../_interfaces/vectors.js";
+import {IVector2D} from "../_interfaces/vectors.js";
+import {IRectangle, IScreen, IViewport} from "../_interfaces/render.js";
+import {IController} from "../_interfaces/input.js";
 
 
-export default class Screen {
-    private readonly _viewports: Viewport[] = [];
+export abstract class BaseScreen<
+    Context extends RenderingContext,
+    ViewportType extends IViewport<Context>>
+    implements IScreen<CanvasRenderingContext2D,  ViewportType>
+{
+    protected abstract _createContext(): Context;
+    protected abstract _createViewport(camera: Camera, size: IRectangle, position?: IVector2D): ViewportType;
+    abstract clear(): void;
+
+    protected _active_viewport: ViewportType;
+    protected readonly _viewports: ViewportType[] = [];
+    protected readonly _context: Context;
+
+    protected _prior_width = 0;
+    protected _prior_height = 0;
 
     constructor(
         camera: Camera,
-        private readonly canvas: HTMLCanvasElement,
-        private readonly context = canvas.getContext('2d'),
-        private readonly size: IRectangle = {width: 1, height: 1}
+        public controller: IController,
+        protected readonly _canvas: HTMLCanvasElement,
+        protected readonly _size: IRectangle = {width: 1, height: 1}
     ) {
-        this.updateSize();
+        this._context = this._createContext();
         this.addViewport(camera);
     }
 
     refresh() {
-        if (this.size.width !== this.canvas.clientWidth ||
-            this.size.height !== this.canvas.clientHeight)
-            this.updateSize();
+        const width = this._canvas.clientWidth;
+        const height = this._canvas.clientHeight;
+        if (width !== this._prior_width ||
+            height !== this._prior_height) {
+            this._prior_width = width;
+            this._prior_height = height;
+            this.resize(width, height);
+        }
+
+        this.clear();
 
         for (const viewport of this._viewports)
             viewport.refresh();
     }
 
-    updateSize() {
-        let w = this.size.width;
-        let h = this.size.height;
-
-        this.size.width = this.canvas.clientWidth;
-        this.size.height = this.canvas.clientHeight;
-
-        w *= this.size.width;
-        h *= this.size.height;
+    resize(width: number, height: number): void {
+        const width_scale = width / this._size.width;
+        const height_scale = height / this._size.height;
 
         for (const vp of this._viewports)
-            vp.reset(w/vp.width, h/vp.height, w/vp.position.x,h/vp.position.y);
+            vp.scale(width_scale, height_scale);
+
+        this._size.width = width;
+        this._size.height = height;
     }
 
-    get viewports(): Generator<Viewport> {
-        return this._iterViewports();
+    get viewports(): Generator<ViewportType> {return this._iterViewports()}
+    private *_iterViewports(): Generator<ViewportType> {
+        for (const viewport of this._viewports)
+            yield viewport;
     }
 
     addViewport(
         camera: Camera,
-        size: IRectangle = this.size,
+        size: IRectangle = this._size,
         position: IVector2D = {
             x: 0,
             y: 0
         }
-    ): Viewport {
-        const viewport = new Viewport(camera, this.context, size, position);
+    ): ViewportType {
+        const viewport = this._createViewport(camera, size, position);
         this._viewports.push(viewport);
         return viewport;
     }
 
-    draw() {
-        for (const vp of this._viewports)
-            this.context.putImageData(vp.image, vp.position.x, vp.position.y);
+    get active_viewport(): ViewportType {
+        return this._active_viewport;
+    }
+
+    set active_viewport(viewport: ViewportType) {
+        this._active_viewport = viewport;
+        this.controller.camera = viewport.camera;
+    }
+}
+
+export default class Screen extends BaseScreen<CanvasRenderingContext2D, Viewport> {
+    protected _createContext(): CanvasRenderingContext2D {
+        return this._canvas.getContext('2d');
+    }
+
+    protected _createViewport(camera: Camera, size: IRectangle, position?: IVector2D): Viewport {
+        return new Viewport(this._context, camera, size, position);
     }
 
     clear() {
-        for (const viewport of this._viewports)
-            viewport.clear();
-    }
-
-    drawTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
-        this.context.beginPath();
-
-        this.context.moveTo(v1.x, v1.y);
-        this.context.lineTo(v2.x, v2.y);
-        this.context.lineTo(v3.x, v3.y);
-        // this.context.lineTo(v1.x, v1.y);
-        this.context.closePath();
-
-        this.context.strokeStyle = `${color}`;
-        this.context.stroke();
-    }
-
-    fillTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
-        this.context.beginPath();
-
-        this.context.moveTo(v1.x, v1.y);
-        this.context.lineTo(v2.x, v2.y);
-        this.context.lineTo(v3.x, v3.y);
-
-        this.context.closePath();
-
-        this.context.fillStyle = `${color}`;
-        this.context.fill();
-    }
-
-    private *_iterViewports(): Generator<Viewport> {
-        for (const viewport of this._viewports)
-            yield viewport;
+        this._context.clearRect(0, 0, this._size.width, this._size.height);
     }
 }
+

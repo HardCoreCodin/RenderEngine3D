@@ -1,16 +1,26 @@
 import Geometry from "./geometry.js";
 import Mesh from "../geometry/mesh.js";
 import {MeshShader} from "./shaders/mesh/base.js";
-import Viewport from "./viewport.js";
 import {VertexPositions4D} from "../geometry/positions.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {cullFaces, cullVertices} from "../math/rendering/culling.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {cube_face_vertices} from "../geometry/cube.js";
 import {CLIP} from "../../constants.js";
-import {T3} from "../../types.js";
+import {T3, T4} from "../../types.js";
+import {IRenderPipeline, IViewport} from "../_interfaces/render.js";
+import Viewport from "./viewport.js";
 
-export default class RenderPipeline {
+
+export abstract class BaseRenderPipeline<
+    Context extends RenderingContext,
+    ViewportType extends IViewport<Context> = IViewport<Context>>
+    implements IRenderPipeline<Context, ViewportType>
+{
+    abstract render(viewport: ViewportType): void;
+}
+
+export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D, Viewport> {
     cull_back_faces: boolean = false;
 
     protected current_max_face_count: number = 0;
@@ -22,7 +32,7 @@ export default class RenderPipeline {
     protected vertex_flags: Uint8Array;
     protected face_flags: Uint8Array;
 
-    protected readonly clip_space_vertex_positions = new VertexPositions4D(cube_face_vertices);
+    protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
     protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
     protected _updateClippingBuffers(geometries: Geometry[]): void {
@@ -42,7 +52,7 @@ export default class RenderPipeline {
             this.current_max_face_count = max_face_count;
 
             this.face_flags = new Uint8Array(max_face_count);
-            this.clip_space_vertex_positions.arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count);
+            this.clip_space_vertex_positions.arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count) as T4<Float32Array>;
 
             this.src_trg_numbers = new Uint8Array(max_face_count);
 
@@ -59,7 +69,7 @@ export default class RenderPipeline {
         }
     }
 
-    render(viewport: Viewport): void {
+    render(viewport:  Viewport): void {
         const scene = viewport.camera.scene;
         const geometries = scene.geometries;
         if (geometries.length)
@@ -68,11 +78,11 @@ export default class RenderPipeline {
             return;
 
         let mesh: Mesh;
-        let mesh_shader: MeshShader;
+        // let mesh_shader: MeshShader;
         let mesh_geometry: Geometry;
         let mesh_geometries: Geometry[];
 
-        const n = viewport.camera.frustum.near;
+        const n = viewport.camera.near;
         const world_to_clip = viewport.world_to_clip;
         const model_to_clip = this.model_to_clip;
         const clip_positions = this.clip_space_vertex_positions;
@@ -90,17 +100,17 @@ export default class RenderPipeline {
         let fv: T3<Uint8Array|Uint16Array|Uint32Array>;
         let v1, v2, v3: Uint8Array|Uint16Array|Uint32Array;
         let vc, fc, result: number;
-        const pz = viewport.camera.translation.z;
+        const pz = viewport.camera.projection_matrix.translation.z;
 
         for (const material of scene.materials) {
-            mesh_shader = material.mesh_shader;
+            // mesh_shader = material.mesh_shader;
 
             for ([mesh, mesh_geometries] of material.mesh_geometries.entries()) {
-                fv = mesh.face_vertices.arrays;
+                // fv = mesh.face_vertices.arrays;
                 vc = mesh.vertex_count;
                 fc = mesh.face_count;
 
-                mesh_shader.bindMesh(mesh);
+                // mesh_shader.bindMesh(mesh);
 
                 for (mesh_geometry of mesh_geometries) if (mesh_geometry.is_renderable) {
                     // Prepare a matrix for converting from model space to clip space:
@@ -108,19 +118,19 @@ export default class RenderPipeline {
 
                     // Bind the inputs and outputs for the mesh shader, and execute it.
                     // Skip this geometry if it returns a CULL flag (0):
-                    if (mesh_shader.bindInputs(model_to_clip).bindOutputs(clip_positions).shade()) {
-                        // The mesh shader did not cull this geometry.
-                        // Cull the vertices against the view frustum:
-                        if (cullVertices(cp, vf, vc)) {
-                            // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
-                            // Check it's faces as well and check for clipping cases:
-                            result = cullFaces(cp, fv, fc, ff, vf, cc, cbf, pz);
-                            if (result) {
-                                if (result === CLIP) {
-
-                                }
-                            }
-                        }
+                    // if (mesh_shader.bindInputs(model_to_clip).bindOutputs(clip_positions).shade()) {
+                    //     // The mesh shader did not cull this geometry.
+                    //     // Cull the vertices against the view frustum:
+                    //     if (cullVertices(cp, vf, vc)) {
+                    //         // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
+                    //         // Check it's faces as well and check for clipping cases:
+                    //         result = cullFaces(cp, fv, fc, ff, vf, cc, cbf, pz);
+                    //         if (result) {
+                    //             if (result === CLIP) {
+                    //
+                    //             }
+                    //         }
+                    //     }
                         //
                         // for (vertex_attribute of this.material.vertex_attributes) {
                         //     if (vertex_attribute.is_shared)
@@ -154,8 +164,7 @@ export default class RenderPipeline {
                         //     ...
                         //     this.clipper.clipAttr(this.in_vertex_attribute_n, out_vertex_attribute_n);
                         // }
-                    }
-
+                    // }
                 }
             }
         }
