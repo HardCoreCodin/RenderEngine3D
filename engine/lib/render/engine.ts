@@ -2,29 +2,47 @@ import Camera from "./camera.js";
 import Screen from "./screen.js";
 import Scene from "../scene_graph/scene.js";
 import {FPSController} from "../input/controllers.js";
+import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
-import {IRenderEngine, IScreen} from "../_interfaces/render.js";
+import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
+import Viewport from "./viewport.js";
+import RenderPipeline from "./pipelines.js";
 
-export abstract class BaseRenderEngine<ScreenType extends IScreen> implements IRenderEngine<ScreenType> {
-    protected abstract _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): ScreenType;
-    protected abstract _createDefaultController(canvas: HTMLCanvasElement, camera: Camera): IController;
+export abstract class BaseRenderEngine<
+    Context extends RenderingContext,
+    RenderPipelineType extends IRenderPipeline<Context>,
+    ViewportType extends IViewport<Context, RenderPipelineType>,
+    ScreenType extends IScreen<Context, RenderPipelineType, ViewportType>,
+    SceneType extends IScene>
+    implements IRenderEngine<Context, RenderPipelineType, ViewportType, ScreenType, SceneType>
+{
+    protected abstract _createDefaultScene(): SceneType;
+    protected abstract _createDefaultScreen(canvas: HTMLCanvasElement, camera: ICamera): ScreenType;
+    protected abstract _createDefaultController(canvas: HTMLCanvasElement, camera: ICamera): IController;
 
+    readonly scene: SceneType;
     readonly screen: ScreenType;
-    protected _controller: IController;
 
+    protected _controller: IController;
     protected _frame_time = 1000 / 60;
     protected _last_timestamp = 0;
     protected _delta_time = 0;
 
     protected constructor(
         canvas: HTMLCanvasElement,
-        readonly scene: Scene = new Scene(),
-        camera: Camera = scene.camera_count ? scene.cameras[0] : scene.addCamera(),
+        scene?: SceneType,
+        camera?: ICamera,
         controller?: IController,
         screen?: ScreenType
     ) {
+        camera = camera || this._getDefaultCamera();
+        this.scene = scene || this._createDefaultScene();
         this.screen = screen || this._createDefaultScreen(canvas, camera);
         this._controller = controller || this._createDefaultController(canvas, camera);
+    }
+
+    protected _getDefaultCamera(): ICamera {
+        return this.scene.cameras.size ? this.scene.cameras[0] : this.scene.addCamera();
     }
 
     get controller(): IController {
@@ -58,15 +76,28 @@ export abstract class BaseRenderEngine<ScreenType extends IScreen> implements IR
     }
 }
 
-export abstract class RenderEngineFPS<ScreenType extends IScreen> extends BaseRenderEngine<ScreenType> {
-    protected _createDefaultController(canvas: HTMLCanvasElement, camera: Camera): FPSController {
+export abstract class RenderEngineFPS<
+    Context extends RenderingContext,
+    RenderPipelineType extends IRenderPipeline<Context>,
+    ViewportType extends IViewport<Context, RenderPipelineType>,
+    ScreenType extends IScreen<Context, RenderPipelineType, ViewportType>,
+    SceneType extends IScene>
+    extends BaseRenderEngine<Context, RenderPipelineType, ViewportType, ScreenType, SceneType>
+{
+    protected _createDefaultController(canvas: HTMLCanvasElement, camera: ICamera): FPSController {
         return new FPSController(canvas, camera);
     }
 }
 
-export default class RenderEngine extends RenderEngineFPS<Screen> {
+export default class RenderEngine
+    extends RenderEngineFPS<CanvasRenderingContext2D, RenderPipeline, Viewport, Screen, Scene>
+{
     protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): Screen {
         return new Screen(camera, this._controller, canvas);
+    }
+
+    protected _createDefaultScene(): Scene {
+        return new Scene();
     }
 }
 

@@ -1,8 +1,8 @@
-import Scene from "./scene.js";
 import Parent from "./parent.js";
+import BaseScene from "./scene.js";
 import Transform from "./transform.js";
 import {Matrix4x4} from "../accessors/matrix.js";
-import {INode3D, IParent} from "../_interfaces/nodes.js";
+import {INode3D, IParent, IScene} from "../_interfaces/nodes.js";
 
 export default class Node3D extends Parent implements INode3D
 {
@@ -13,15 +13,10 @@ export default class Node3D extends Parent implements INode3D
     protected _parent: IParent;
 
     constructor(
-        readonly scene: Scene,
+        readonly scene: IScene,
     ) {
         super();
-        scene.addNode(this);
         this._parent = scene;
-    }
-
-    delete(): void {
-        this.scene.removeNode(this);
     }
 
     get is_root(): boolean {
@@ -50,7 +45,7 @@ export default class Node3D extends Parent implements INode3D
     }
 
     set parent(parent: IParent) {
-        if (!(parent instanceof Node3D || parent instanceof Scene)) throw `Invalid parent ${parent}!`;
+        if (!(parent instanceof Node3D || parent instanceof BaseScene)) throw `Invalid parent ${parent}!`;
         if (Object.is(parent, this)) throw `Can not parent ${this} to itself!`;
         if (Object.is(parent, this._parent)) return;
 
@@ -78,6 +73,5 @@ export default class Node3D extends Parent implements INode3D
                 child.refreshWorldMatrix(true, include_static);
     }
 
-    postWorldMatrixRefresh(): void {
-    }
+    postWorldMatrixRefresh(): void {}
 }

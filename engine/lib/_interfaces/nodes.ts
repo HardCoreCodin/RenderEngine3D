@@ -19,32 +19,19 @@ export interface INode3D extends IParent {
     parent: IParent;
     transform: ITransform;
 
-    delete(): void;
     unparent(): void;
     postWorldMatrixRefresh(): void;
     refreshWorldMatrix(recurse?: boolean, include_static?: boolean): void;
 }
 
-export interface IScene {
-    readonly node_count: number;
-    readonly camera_count: number;
-    readonly material_count: number;
-
-    readonly nodes: Generator<INode3D>;
-    readonly cameras: Generator<ICamera>;
-    readonly materials: Generator<IMaterial>;
+export interface IScene
+    extends IParent
+{
+    readonly cameras: Set<ICamera>;
+    readonly materials: Set<IMaterial>;
     readonly mesh_geometries: IMeshGeometries;
 
-    hasMaterial(material: IMaterial): boolean;
-    addMaterial(material: IMaterial): typeof material;
-    removeMaterial(material: IMaterial): typeof material;
-
-    hasNode(node: INode3D): boolean;
-    addNode(node: INode3D): typeof node;
-    removeNode(node: INode3D): typeof node;
-
-    hasCamera(camera: ICamera): boolean;
-    addCamera(camera: ICamera): typeof camera;
-    removeCamera(camera: ICamera): typeof camera;
+    addCamera(): ICamera;
+    addMaterial(...args: any[]): IMaterial;
 }
 

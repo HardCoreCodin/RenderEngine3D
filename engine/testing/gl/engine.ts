@@ -6,7 +6,7 @@ import Scene from "../../lib/scene_graph/scene.js";
 import Camera from "../../lib/render/camera.js";
 import {Matrix4x4} from "../../lib/accessors/matrix.js";
 import {BaseScreen} from "../../lib/render/screen.js";
-import {BaseMaterial} from "../../lib/render/materials.js";
+import Material from "../../lib/render/materials.js";
 import {BaseViewport} from "../../lib/render/viewport.js";
 import {BaseRenderPipeline} from "../../lib/render/pipelines.js";
 import {RenderEngineFPS} from "../../lib/render/engine.js";
@@ -30,10 +30,10 @@ class GLMeshBuffers {
 }
 
 
-export class GLMaterial extends BaseMaterial {
+export class GLMaterial extends Material {
     constructor(
         context: WebGL2RenderingContext,
-        scene: Scene,
+        scene: GLScene,
         vertex_shader: string,
         fragment_shader: string,
         readonly program = new GLProgram(context, vertex_shader, fragment_shader)
@@ -50,7 +50,7 @@ export class GLMaterial extends BaseMaterial {
     }
 }
 
-export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext, GLViewport> {
+export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext> {
     protected readonly _mesh_buffers = new Map<Mesh, GLMeshBuffers>();
 
     render(viewport: GLViewport): void {
@@ -69,14 +69,14 @@ export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext,
     }
 
     on_mesh_removed(mesh: Mesh) {
-        const buffers = this._mesh_buffers.get(mesh);
-        buffers.delete();
+        this._mesh_buffers.get(mesh).delete();
+        this._mesh_buffers.delete(mesh);
     }
 }
 
 let DEFAILT_RENDER_PIPELINE: GLRenderPipeline;
 
-export class GLViewport extends BaseViewport<WebGL2RenderingContext> {
+export class GLViewport extends BaseViewport<WebGL2RenderingContext, GLRenderPipeline, GLScreen> {
     protected _getDefaultRenderPipeline(context: WebGL2RenderingContext): GLRenderPipeline {
         if (!DEFAILT_RENDER_PIPELINE)
             DEFAILT_RENDER_PIPELINE = new GLRenderPipeline(context);
@@ -96,7 +96,7 @@ export class GLViewport extends BaseViewport<WebGL2RenderingContext> {
     }
 }
 
-export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLViewport> {
+export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLRenderPipeline, GLViewport> {
     protected _createContext(): WebGL2RenderingContext {
         gl = this._canvas.getContext('webgl2');
 
@@ -117,7 +117,24 @@ export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLViewport> {
     }
 }
 
-export default class GLRenderEngine extends RenderEngineFPS<GLScreen> {
+export class GLCamera extends Camera {
+
+}
+
+export class GLScene extends Scene {
+    protected _createCamera(): GLCamera {return new GLCamera(this)}
+    protected _createMaterial(
+        scene: Scene,
+        vertex_shader: string,
+        fragment_shader: string,
+    ): GLMaterial {
+        return new GLMaterial(this._context, this, scene, vertex_shader, fragment_shader);
+    }
+}
+
+export default class GLRenderEngine
+    extends RenderEngineFPS<WebGL2RenderingContext, GLRenderPipeline, GLViewport, GLScreen, GLScene>
+{
     protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): GLScreen {
         return new GLScreen(camera, this._controller, canvas);
     }

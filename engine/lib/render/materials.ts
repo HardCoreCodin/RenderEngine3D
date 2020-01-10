@@ -1,23 +1,24 @@
-import {MeshGeometries} from "./geometry.js";
 import Mesh from "../geometry/mesh.js";
-import Scene from "../scene_graph/scene.js";
 import {Matrix4x4} from "../accessors/matrix.js";
+import {MeshGeometries} from "./geometry.js";
+import {IScene} from "../_interfaces/nodes.js";
 import {IMaterial} from "../_interfaces/render.js";
 
-export abstract class BaseMaterial implements IMaterial {
+export default class Material implements IMaterial {
     static LAST_ID = 0;
 
-    abstract prepareMeshForDrawing(mesh: Mesh): void;
-    abstract drawMesh(mesh: Mesh, matrix: Matrix4x4);
+    prepareMeshForDrawing(mesh: Mesh): void {};
+    drawMesh(mesh: Mesh, matrix: Matrix4x4): void {};
 
-    protected constructor(
-        readonly scene: Scene,
-        readonly id: number = BaseMaterial.LAST_ID++,
-        readonly mesh_geometries = new MeshGeometries(scene)
-    ) {}
+    readonly id: number;
+    readonly mesh_geometries: MeshGeometries;
+
+    constructor(readonly scene: IScene) {
+        this.id = Material.LAST_ID++;
+        scene.materials.add(this);
+        this.mesh_geometries = new MeshGeometries(scene);
+    }
 }
-
-
 
 export class PixelShader {
 

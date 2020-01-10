@@ -8,11 +8,12 @@ import RenderPipeline from "./pipelines.js";
 
 export abstract class BaseViewport<
     Context extends RenderingContext,
-    ScreenType extends IScreen<Context> = IScreen<Context>>
+    RenderPipelineType extends IRenderPipeline<Context>,
+    ScreenType extends IScreen<Context, RenderPipelineType>>
     implements IViewport<Context>
 {
-    protected abstract _getDefaultRenderPipeline(context: Context): IRenderPipeline;
-    protected _render_pipeline: IRenderPipeline;
+    protected abstract _getDefaultRenderPipeline(context: Context): RenderPipelineType;
+    protected _render_pipeline: RenderPipelineType;
 
     readonly world_to_view = mat4();
     readonly world_to_clip = mat4();
@@ -24,7 +25,7 @@ export abstract class BaseViewport<
         public camera: Camera,
         protected readonly _size: IRectangle,
         protected readonly _position: IVector2D = {x: 0, y: 0},
-        render_pipeline?: IRenderPipeline,
+        render_pipeline?: RenderPipelineType,
         protected readonly _context: Context = _screen.context as Context,
     ) {
         this.reset(_size.width, _size.height, _position.x, _position.y);
@@ -37,8 +38,8 @@ export abstract class BaseViewport<
     get x(): number {return this._position.x}
     get y(): number {return this._position.y}
 
-    get render_pipeline(): IRenderPipeline {return this._render_pipeline}
-    set render_pipeline(render_pipeline: IRenderPipeline) {
+    get render_pipeline(): RenderPipelineType {return this._render_pipeline}
+    set render_pipeline(render_pipeline: RenderPipelineType) {
         this._render_pipeline = render_pipeline;
         this._screen.registerViewport(this);
     }
@@ -74,7 +75,7 @@ export abstract class BaseViewport<
 
 let DEFAULT_RENDER_PIPELINE: RenderPipeline;
 
-export default class Viewport extends BaseViewport<CanvasRenderingContext2D> {
+export default class Viewport extends BaseViewport<CanvasRenderingContext2D, RenderPipeline, Screen> {
     readonly ndc_to_screen = mat3();
     private _image: ImageData;
 

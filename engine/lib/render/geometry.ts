@@ -1,9 +1,9 @@
 import Mesh from "../geometry/mesh.js";
-import Scene from "../scene_graph/scene.js";
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {IMaterial, IMeshCallback, IMeshGeometries} from "../_interfaces/render.js";
 import {IGeometry} from "../_interfaces/geometry.js";
+import {IScene} from "../_interfaces/nodes.js";
 
 
 export default class Geometry
@@ -14,13 +14,14 @@ export default class Geometry
     readonly world_to_model = new Matrix4x4();
 
     constructor(
-        readonly scene: Scene,
+        readonly scene: IScene,
         protected _mesh: Mesh,
         public is_rigid: boolean = true,
         public is_renderable: boolean = true,
         readonly id: number = Geometry.LAST_ID++
     ) {
         super(scene);
+        scene.mesh_geometries.addGeometry(this);
     }
 
     get mesh(): Mesh {
@@ -65,7 +66,7 @@ export class MeshGeometries implements IMeshGeometries {
     readonly on_mesh_added = new Set<IMeshCallback>();
     readonly on_mesh_removed= new Set<IMeshCallback>();
 
-    constructor(readonly scene: Scene) {}
+    constructor(readonly scene: IScene) {}
 
     protected readonly _map = new Map<Mesh, Set<Geometry>>();
 
@@ -79,10 +80,7 @@ export class MeshGeometries implements IMeshGeometries {
     }
 
     getGeometries(mesh: Mesh): Generator<Geometry> {return this._iterGeometries(mesh)}
-    getGeometryCount(mesh: Mesh): number {
-        const geometries = this._map.get(mesh);
-        return geometries ? geometries.size : 0;
-    }
+    getGeometryCount(mesh: Mesh): number {return this._map.has(mesh) ? this._map.get(mesh).size : 0}
 
     addGeometry(mesh: Mesh): Geometry;
     addGeometry(geometry: Geometry): Geometry;

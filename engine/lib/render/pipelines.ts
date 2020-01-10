@@ -12,14 +12,13 @@ import {IRenderPipeline, IViewport} from "../_interfaces/render.js";
 import Viewport from "./viewport.js";
 import Scene from "../scene_graph/scene.js";
 import {IGeometry, IMesh} from "../_interfaces/geometry.js";
+import {IScene} from "../_interfaces/nodes.js";
 
 
-export abstract class BaseRenderPipeline<
-    Context extends RenderingContext = RenderingContext,
-    ViewportType extends IViewport<Context> = IViewport<Context>>
-    implements IRenderPipeline<Context, ViewportType>
+export abstract class BaseRenderPipeline<Context extends RenderingContext>
+    implements IRenderPipeline<Context>
 {
-    abstract render(viewport: ViewportType): void;
+    abstract render(viewport: IViewport<Context>): void;
 
     constructor(readonly context: Context) {}
 
@@ -27,7 +26,7 @@ export abstract class BaseRenderPipeline<
     on_mesh_removed(mesh: IMesh) {}
 }
 
-export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D, Viewport> {
+export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D> {
     cull_back_faces: boolean = false;
 
     protected current_max_face_count: number = 0;
@@ -42,7 +41,7 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
     protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
     protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
-    protected _updateClippingBuffers(scene: Scene): void {
+    protected _updateClippingBuffers(scene: IScene): void {
         let max_face_count = 0;
         let max_vertex_count = 0;
 

@@ -3,6 +3,7 @@ import {dir3, Direction3D} from "../accessors/direction.js";
 import {IVector2D} from "../_interfaces/vectors.js";
 import {IController, IKeys} from "../_interfaces/input.js";
 import {KEY_CODES} from "../../constants.js";
+import {ICamera} from "../_interfaces/render.js";
 
 abstract class Controller
     implements IController
@@ -42,7 +43,7 @@ abstract class Controller
 
     constructor(
         readonly canvas: HTMLCanvasElement,
-        public camera: Camera,
+        public camera: ICamera,
 
         public movement_speed: number = 0.1,
         public rotation_speed: number = 0.01,

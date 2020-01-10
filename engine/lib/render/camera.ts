@@ -1,9 +1,9 @@
-import Scene from "../scene_graph/scene.js";
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {Position3D} from "../accessors/position.js";
-import {DEGREES_TO_RADIANS_FACTOR, RADIANS_TO_DEGREES_FACTOR} from "../../constants.js";
+import {IScene} from "../_interfaces/nodes.js";
 import {ICamera} from "../_interfaces/render.js";
+import {DEGREES_TO_RADIANS_FACTOR, RADIANS_TO_DEGREES_FACTOR} from "../../constants.js";
 
 
 export default class Camera extends Node3D implements ICamera {
@@ -20,9 +20,9 @@ export default class Camera extends Node3D implements ICamera {
     private _aspect_ratio: number = 1;
     private _zoom: number = 1;
 
-    constructor(readonly scene: Scene) {
+    constructor(readonly scene: IScene) {
         super(scene);
-
+        scene.cameras.add(this);
         this._scale = new Position3D(
             this.projection_matrix.id,
             [
