@@ -1,14 +1,15 @@
 import {cube_face_vertices, cube_vertex_count} from "./cube.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {Position3D, Position4D} from "../accessors/position.js";
+import {IBounds, IBounds3D, IBounds4D} from "../_interfaces/geometry.js";
 
 
-abstract class Bounds {
-    readonly abstract vertex_positions: VertexPositions3D|VertexPositions4D;
-    readonly abstract min: Position3D|Position4D;
-    readonly abstract max: Position3D|Position4D;
+abstract class Bounds implements IBounds {
+    abstract readonly vertex_positions: VertexPositions3D | VertexPositions4D;
+    abstract readonly min: Position3D | Position4D;
+    abstract readonly max: Position3D | Position4D;
 
-    load(source_positions: VertexPositions3D|VertexPositions4D) {
+    load(source_positions: VertexPositions3D | VertexPositions4D) {
         const [x, y, z] = this.vertex_positions.arrays;
 
         x[0] = x[3] = x[4] = x[7] = Math.min.apply(Math, source_positions[0]);
@@ -22,21 +23,21 @@ abstract class Bounds {
     }
 }
 
-export class Bounds3D extends Bounds {
+export class Bounds3D extends Bounds implements IBounds3D {
     constructor(
-        public readonly vertex_positions = new VertexPositions3D(cube_vertex_count, cube_face_vertices),
-        public readonly min = new Position3D(0, vertex_positions.arrays),
-        public readonly max = new Position3D(6, vertex_positions.arrays)
+        readonly vertex_positions = new VertexPositions3D(cube_vertex_count, cube_face_vertices),
+        readonly min = new Position3D(0, vertex_positions.arrays),
+        readonly max = new Position3D(6, vertex_positions.arrays)
     ) {
         super();
     }
 }
 
-export class Bounds4D extends Bounds {
+export class Bounds4D extends Bounds implements IBounds4D {
     constructor(
-        public readonly vertex_positions = new VertexPositions4D(cube_vertex_count, cube_face_vertices),
-        public readonly min = new Position4D(0, vertex_positions.arrays),
-        public readonly max = new Position4D(6, vertex_positions.arrays)
+        readonly vertex_positions = new VertexPositions4D(cube_vertex_count, cube_face_vertices),
+        readonly min = new Position4D(0, vertex_positions.arrays),
+        readonly max = new Position4D(6, vertex_positions.arrays)
     ) {
         super();
     }

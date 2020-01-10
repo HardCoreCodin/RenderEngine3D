@@ -1,36 +1,41 @@
-import {MeshOptions} from "./options.js";
 import {ATTRIBUTE} from "../../constants.js";
+import {Matrix4x4} from "../accessors/matrix.js";
+import {VertexPositions3D, VertexPositions4D} from "./positions.js";
+import {VertexNormals3D, VertexNormals4D} from "./normals.js";
+import {VertexColors3D, VertexColors4D} from "./colors.js";
+import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
+import {IMeshOptions} from "../_interfaces/geometry.js";
 import {
     IVertexColors,
     IVertexColorsConstructor,
     IVertexNormals,
     IVertexNormalsConstructor,
     IVertexPositions,
-    IVertexPositionsConstructor, IVertexUVs, IVertexUVsConstructor
+    IVertexPositionsConstructor,
+    IVertexUVs,
+    IVertexUVsConstructor,
+    IVertices,
+    IVertices3D,
+    IVertices4D
 } from "../_interfaces/attributes.js";
-import {Matrix4x4} from "../accessors/matrix.js";
-import {VertexPositions3D, VertexPositions4D} from "./positions.js";
-import {VertexNormals3D, VertexNormals4D} from "./normals.js";
-import {VertexColors3D, VertexColors4D} from "./colors.js";
-import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 
 
-export class Vertices {
-    protected readonly VertexPositions: IVertexPositionsConstructor;
-    protected readonly VertexNormals: IVertexNormalsConstructor;
-    protected readonly VertexColors: IVertexColorsConstructor;
-    protected readonly VertexUVs: IVertexUVsConstructor;
+export class Vertices implements IVertices {
+    readonly VertexPositions: IVertexPositionsConstructor;
+    readonly VertexNormals: IVertexNormalsConstructor;
+    readonly VertexColors: IVertexColorsConstructor;
+    readonly VertexUVs: IVertexUVsConstructor;
 
     readonly positions: IVertexPositions;
-    readonly normals: IVertexNormals|null;
-    readonly colors: IVertexColors|null;
-    readonly uvs: IVertexUVs|null;
+    readonly normals: IVertexNormals | null;
+    readonly colors: IVertexColors | null;
+    readonly uvs: IVertexUVs | null;
 
     constructor(
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
-        readonly mesh_options: MeshOptions,
+        readonly mesh_options: IMeshOptions,
 
         positions?: IVertexPositions,
         normals?: IVertexNormals,
@@ -68,11 +73,11 @@ export class Vertices {
     }
 }
 
-export class Vertices3D extends Vertices {
-    protected readonly VertexPositions = VertexPositions3D;
-    protected readonly VertexNormals = VertexNormals3D;
-    protected readonly VertexColors = VertexColors3D;
-    protected readonly VertexUVs = VertexUVs2D;
+export class Vertices3D extends Vertices implements IVertices3D {
+    readonly VertexPositions = VertexPositions3D;
+    readonly VertexNormals = VertexNormals3D;
+    readonly VertexColors = VertexColors3D;
+    readonly VertexUVs = VertexUVs2D;
 
     readonly positions: VertexPositions3D;
     readonly normals: VertexNormals3D;
@@ -80,11 +85,11 @@ export class Vertices3D extends Vertices {
     readonly uvs: VertexUVs2D;
 }
 
-export class Vertices4D extends Vertices {
-    protected readonly VertexPositions = VertexPositions4D;
-    protected readonly VertexNormals = VertexNormals4D;
-    protected readonly VertexColors = VertexColors4D;
-    protected readonly VertexUVs = VertexUVs3D;
+export class Vertices4D extends Vertices implements IVertices4D {
+    readonly VertexPositions = VertexPositions4D;
+    readonly VertexNormals = VertexNormals4D;
+    readonly VertexColors = VertexColors4D;
+    readonly VertexUVs = VertexUVs3D;
 
     readonly positions: VertexPositions4D;
     readonly normals: VertexNormals4D;

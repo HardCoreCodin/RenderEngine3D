@@ -123,7 +123,7 @@ abstract class Controller
             if (this.key_pressed.forward ||
                 this.key_pressed.backwards) {
 
-                this.forward_direction.times(this.movement_amount, this.forward_movement);
+                this.forward_direction.mul(this.movement_amount, this.forward_movement);
 
                 if (this.key_pressed.forward)
                     this.camera.transform.translation.add(this.forward_movement);
@@ -134,7 +134,7 @@ abstract class Controller
             if (this.key_pressed.right ||
                 this.key_pressed.left) {
 
-                this.camera.transform.matrix.x_axis.times(this.movement_amount, this.right_movement);
+                this.camera.transform.matrix.x_axis.mul(this.movement_amount, this.right_movement);
 
                 if (this.key_pressed.right)
                     this.camera.transform.translation.add(this.right_movement);

@@ -1,20 +1,21 @@
 import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
 import {IVector2D, IVector3D} from "../_interfaces/vectors.js";
+import {IEulerRotation, IScale, ITransform} from "../_interfaces/transform.js";
 
 
-export default class Transform {
+export default class Transform implements ITransform {
     constructor(
-        public readonly matrix: Matrix4x4 = new Matrix4x4(),
-        public readonly translation = matrix.translation,
-        public readonly rotation = new EulerRotation(matrix.mat3),
-        public readonly scale = new Scale(matrix.mat3)
+        readonly matrix: Matrix4x4 = new Matrix4x4(),
+        readonly translation = matrix.translation,
+        readonly rotation = new EulerRotation(matrix.mat3),
+        readonly scale = new Scale(matrix.mat3)
     ) {
         matrix.setToIdentity();
     }
 }
 
-export class EulerRotation {
-    public computeEagerly = true;
+export class EulerRotation implements IEulerRotation {
+    computeEagerly = true;
 
     constructor(
         // Overall rotation matrix:
@@ -28,17 +29,9 @@ export class EulerRotation {
         _rotation_matrix.setToIdentity();
     }
 
-    get x(): number {
-        return this._x_angle;
-    }
-
-    get y(): number {
-        return this._y_angle;
-    }
-
-    get z(): number {
-        return this._z_angle;
-    }
+    get x(): number {return this._x_angle}
+    get y(): number {return this._y_angle}
+    get z(): number {return this._z_angle}
 
     set x(x: number) {
         this._x_angle = x;
@@ -87,7 +80,7 @@ export class EulerRotation {
             this.computeMatrix();
     }
 
-    public computeMatrix(): void {
+    computeMatrix(): void {
         this._rotation_matrix.transpose();
         this._matrix.mul(this._rotation_matrix);
 
@@ -99,8 +92,8 @@ export class EulerRotation {
     }
 }
 
-export class Scale {
-    public applyEagerly = true;
+export class Scale implements IScale {
+    applyEagerly = true;
 
     constructor(
         protected readonly _matrix: Matrix3x3 = new Matrix3x3(),
@@ -113,17 +106,9 @@ export class Scale {
         protected _z_scale: number = 0
     ) {}
 
-    get x(): number {
-        return this._x_scale;
-    }
-
-    get y(): number {
-        return this._y_scale;
-    }
-
-    get z(): number {
-        return this._z_scale;
-    }
+    get x(): number {return this._x_scale}
+    get y(): number {return this._y_scale}
+    get z(): number {return this._z_scale}
 
     set x(x: number) {
         this._x_scale = x;
@@ -172,7 +157,7 @@ export class Scale {
             this.apply();
     }
 
-    public apply(): void {
+    apply(): void {
         if (this._x_scale &&
             this._x_scale !== 1 &&
             this._x_scale !== this._prior_x_scale

@@ -1,13 +1,14 @@
-import {ATTRIBUTE, DIM, FACE_TYPE} from "../../constants.js";
-import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
 import {num2, num3, num4} from "../../factories.js";
+import {ATTRIBUTE, DIM, FACE_TYPE} from "../../constants.js";
 import {
     IInputAttribute,
     IInputColors,
     IInputNormals,
     IInputPositions,
-    IInputUVs
+    IInputUVs,
+    IMeshInputs
 } from "../_interfaces/attributes.js";
+import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
 
 export class InputAttribute implements IInputAttribute {
     readonly dim: DIM = DIM._3D;
@@ -142,14 +143,14 @@ export class InputUVs extends InputAttribute implements IInputUVs {
     readonly dim = DIM._2D
 }
 
-export class MeshInputs {
+export class MeshInputs implements IMeshInputs {
     constructor(
         public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
-        public readonly included: ATTRIBUTE = ATTRIBUTE.position,
-        public readonly position: InputPositions = new InputPositions(face_type),
-        public readonly normal: InputNormals = new InputNormals(face_type),
-        public readonly color: InputColors = new InputColors(face_type),
-        public readonly uv: InputUVs = new InputUVs(face_type)
+        readonly included: ATTRIBUTE = ATTRIBUTE.position,
+        readonly position: InputPositions = new InputPositions(face_type),
+        readonly normal: InputNormals = new InputNormals(face_type),
+        readonly color: InputColors = new InputColors(face_type),
+        readonly uv: InputUVs = new InputUVs(face_type)
     ) {}
 
     sanitize(): this {

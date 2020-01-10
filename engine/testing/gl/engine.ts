@@ -9,7 +9,14 @@ import {IVector2D} from "../../lib/_interfaces/vectors.js";
 
 export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext, GLViewport> {
     render(viewport: GLViewport): void {
+        for (const material of viewport.camera.scene.materials) {
+            for (const mesh of material.meshes) {
+                material.prepareMeshForDrawing(mesh);
 
+                for (const geometry of material.getGeometries(mesh))
+                    material.drawMesh(mesh, geometry)
+            }
+        }
     }
 }
 

@@ -1,13 +1,23 @@
 import {ATTRIBUTE, DIM, FACE_TYPE} from "../../constants.js";
+import {IMeshOptions} from "./geometry.js";
+import {IMatrix, IMatrix3x3, IMatrix4x4} from "./matrix.js";
+import {IAccessor, IAccessorConstructor} from "./accessors.js";
 import {IBuffer, IFaceVertices, IVertexFaces} from "./buffers.js";
 import {AnyConstructor, FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
 import {
     IColor,
-    IDirection, IDirection3D, IDirection4D,
+    IColor3D,
+    IColor4D,
+    IDirection,
+    IDirection3D,
+    IDirection4D,
     IPosition,
-    IPosition3D, IPosition4D,
+    IPosition3D,
+    IPosition4D,
     ITransformableVector,
     IUV,
+    IUV2D,
+    IUV3D,
     IVector,
 } from "./vectors.js";
 import {
@@ -16,8 +26,12 @@ import {
     IPositionAttribute3DFunctionSet,
     ITransformableAttributeFunctionSet
 } from "./functions.js";
-import {IMatrix, IMatrix3x3, IMatrix4x4} from "./matrix.js";
-import {IAccessor, IAccessorConstructor} from "./accessors.js";
+import {FacePositions3D, VertexPositions3D} from "../geometry/positions.js";
+import {FaceNormals3D} from "../geometry/normals.js";
+import {FaceColors3D} from "../geometry/colors.js";
+import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
+import {Faces4D} from "../geometry/faces.js";
+import {Direction3D} from "../accessors/direction.js";
 
 export interface ITriangle<VectorType extends IVector> {
     vertices: [VectorType, VectorType, VectorType]
@@ -162,9 +176,14 @@ export interface IVertexColors<
         IColorAttribute<Color>,
         IPullableVertexAttribute<Color, IInputColors, FaceColors> {}
 
+export interface IVertexColors3D extends IVertexColors<IColor3D> {}
+export interface IVertexColors4D extends IVertexColors<IColor4D> {}
+
 export interface IVertexUVs<UV extends IUV = IUV>
-    extends ILoadableVertexAttribute<UV, IInputUVs>
-{}
+    extends ILoadableVertexAttribute<UV, IInputUVs> {}
+
+export interface IVertexUVs2D extends IVertexUVs<IUV2D> {}
+export interface IVertexUVs3D extends IVertexUVs<IUV3D> {}
 
 export interface IFaceAttribute<
     VectorType extends IVector = IVector,
@@ -182,17 +201,23 @@ export interface IFacePositions<
         IPositionAttribute<MatrixType, Position>,
         IFaceAttribute<Position, VertexPositions> {}
 
+export interface IFacePositions3D extends IFacePositions<IMatrix3x3, IPosition3D, IVertexPositions3D> {}
+export interface IFacePositions4D extends IFacePositions<IMatrix4x4, IPosition4D, IVertexPositions4D> {}
 
 export interface IFaceNormals<
     MatrixType extends IMatrix = IMatrix,
     Direction extends IDirection<MatrixType> = IDirection<MatrixType>,
     VertexPositions extends IVertexPositions<MatrixType, IPosition<MatrixType>> = IVertexPositions<MatrixType, IPosition<MatrixType>>>
-    extends INormalAttribute<MatrixType, Direction>, IFaceAttribute<Direction, VertexPositions>
-{}
+    extends INormalAttribute<MatrixType, Direction>, IFaceAttribute<Direction, VertexPositions> {}
+
+export interface IFaceNormals3D extends IFaceNormals<IMatrix3x3, IDirection3D, IVertexPositions3D> {}
+export interface IFaceNormals4D extends IFaceNormals<IMatrix4x4, IDirection4D, IVertexPositions4D> {}
 
 export interface IFaceColors<Color extends IColor = IColor>
-    extends IColorAttribute<Color>, IFaceAttribute<Color>
-{}
+    extends IColorAttribute<Color>, IFaceAttribute<Color>{}
+
+export interface IFaceColors3D extends IFaceColors<IColor3D> {}
+export interface IFaceColors4D extends IFaceColors<IColor4D> {}
 
 export type VertexAttributeConstructor<VertexAttribute extends IVertexAttribute> = new (
         vertex_count: number,
@@ -230,3 +255,94 @@ export type IFaceColorsConstructor<
     Color extends IColor = IColor,
     VertexColors extends IVertexColors<Color> = IVertexColors<Color>
     > = FaceAttributeConstructor<IFaceColors<Color>>;
+
+export interface IVertices {
+    readonly vertex_count: number;
+    readonly face_vertices: IFaceVertices;
+    readonly mesh_options: IMeshOptions;
+
+    VertexPositions: IVertexPositionsConstructor;
+    VertexNormals: IVertexNormalsConstructor;
+    VertexColors: IVertexColorsConstructor;
+    VertexUVs: IVertexUVsConstructor;
+
+    positions: IVertexPositions;
+    normals: IVertexNormals | null;
+    colors: IVertexColors | null;
+    uvs: IVertexUVs | null;
+}
+
+export interface IVertices3D extends IVertices {
+    VertexPositions: IVertexPositionsConstructor<IMatrix3x3, IPosition3D>;
+    VertexNormals: IVertexNormalsConstructor<IMatrix3x3, IDirection3D>;
+    VertexColors: IVertexColorsConstructor<IColor3D>;
+    VertexUVs: IVertexUVsConstructor<IUV2D>;
+
+    positions: IVertexPositions3D;
+    normals: IVertexNormals3D;
+    colors: IVertexColors3D;
+    uvs: IVertexUVs2D;
+}
+
+export interface IVertices4D extends IVertices {
+    VertexPositions: VertexAttributeConstructor<IVertexPositions4D>;
+    VertexNormals: VertexAttributeConstructor<IVertexNormals4D>;
+    VertexColors: VertexAttributeConstructor<IVertexColors4D>;
+    VertexUVs: VertexAttributeConstructor<IVertexUVs3D>;
+
+    positions: IVertexPositions4D;
+    normals: IVertexNormals4D;
+    colors: IVertexColors4D;
+    uvs: IVertexUVs3D;
+
+    mul(matrix: IMatrix4x4, out?: this): this;
+}
+
+export interface IFaces {
+    FacePositions: IFacePositionsConstructor;
+    FaceNormals: IFaceNormalsConstructor;
+    FaceColors: IFaceColorsConstructor;
+
+    positions: IFacePositions | null;
+    normals: IFaceNormals | null;
+    colors: IFaceColors | null;
+
+    face_vertices: IFaceVertices;
+    mesh_options: IMeshOptions;
+}
+
+export interface IFaces3D extends IFaces {
+    FacePositions: FaceAttributeConstructor<IFacePositions3D>;
+    FaceNormals: FaceAttributeConstructor<IFaceNormals3D>;
+    FaceColors: FaceAttributeConstructor<IFaceColors3D>;
+
+    positions: IFacePositions3D;
+    normals: IFaceNormals3D;
+    colors: IFaceColors3D;
+
+    matmul(matrix: IMatrix3x3, out?: this): this;
+    mat4mul(matrix: IMatrix4x4, out: IFaces4D): IFaces4D;
+}
+
+export interface IFaces4D extends IFaces {
+    FacePositions: FaceAttributeConstructor<IFacePositions4D>;
+    FaceNormals: FaceAttributeConstructor<IFaceNormals4D>;
+    FaceColors: FaceAttributeConstructor<IFaceColors4D>;
+
+    positions: IFacePositions4D;
+    normals: IFaceNormals4D;
+    colors: IFaceColors4D;
+
+    matmul(matrix: IMatrix4x4, out?: this): this;
+}
+
+export interface IMeshInputs {
+    face_type: FACE_TYPE;
+    readonly included: ATTRIBUTE;
+    readonly position: IInputPositions;
+    readonly normal: IInputNormals;
+    readonly color: IInputColors;
+    readonly uv: IInputUVs;
+
+    sanitize(): this;
+}

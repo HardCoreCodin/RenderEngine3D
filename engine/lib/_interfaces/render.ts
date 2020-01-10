@@ -1,7 +1,6 @@
-import {IScene} from "./nodes.js";
+import {IGeometry, IMesh, IScene} from "./nodes.js";
 import {IVector2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
-import Scene from "../scene_graph/scene.js";
 import {IController} from "./input.js";
 
 export interface IRectangle
@@ -66,11 +65,30 @@ export interface IScreen<
 }
 
 export interface IRenderEngine<ScreenType extends IScreen> {
-    readonly scene: Scene;
+    readonly scene: IScene;
 
     screen: ScreenType;
     controller: IController;
 
     start(): void;
     update(timestamp): void;
+}
+
+export interface IMaterial {
+    readonly id: number;
+    readonly scene: IScene;
+    readonly meshes: Generator<IMesh>;
+    readonly mesh_count: number;
+
+    hasMesh(mesh: IMesh): boolean;
+    hasGeometry(geometry: IGeometry): boolean;
+
+    getGeometryCount(mesh: IMesh): number;
+    getGeometries(mesh: IMesh): Generator<IGeometry>;
+
+    addGeometry(geometry: IGeometry): void;
+    removeGeometry(geometry: IGeometry): void;
+
+    prepareMeshForDrawing(mesh: IMesh): void;
+    drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }

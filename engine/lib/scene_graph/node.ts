@@ -1,27 +1,27 @@
 import Scene from "./scene.js";
+import Parent from "./parent.js";
 import Transform from "./transform.js";
-import {INode3D, IParent} from "../_interfaces/nodes.js";
 import {Matrix4x4} from "../accessors/matrix.js";
+import {INode3D, IParent} from "../_interfaces/nodes.js";
 
-export default class Node3D
-    implements INode3D
+export default class Node3D extends Parent implements INode3D
 {
     readonly transform = new Transform();
     readonly model_to_world = new Matrix4x4();
 
     protected _is_static = false;
     protected _parent: IParent;
-    readonly children: INode3D[];
 
     constructor(
-        public readonly scene: Scene,
+        readonly scene: Scene,
     ) {
-        scene._addNode(this);
+        super();
+        scene.addNode(this);
         this._parent = scene;
     }
 
     delete(): void {
-        this.scene._removeNode(this);
+        this.scene.removeNode(this);
     }
 
     get is_root(): boolean {
@@ -54,9 +54,9 @@ export default class Node3D
         if (Object.is(parent, this)) throw `Can not parent ${this} to itself!`;
         if (Object.is(parent, this._parent)) return;
 
-        this._parent.children.splice(this._parent.children.indexOf(this), 1);
+        this._parent.removeChild(this);
         this._parent = parent;
-        parent.children.push(this);
+        parent.addChild(this);
     }
 
     unparent(): void {
@@ -73,10 +73,11 @@ export default class Node3D
             this.postWorldMatrixRefresh();
         }
 
-        if (recurse && this.children.length)
+        if (recurse && this.child_count)
             for (const child of this.children)
                 child.refreshWorldMatrix(true, include_static);
     }
 
-    postWorldMatrixRefresh(): void {}
+    postWorldMatrixRefresh(): void {
+    }
 }

@@ -1,5 +1,9 @@
 import {MeshOptions} from "./options.js";
 import {ATTRIBUTE} from "../../constants.js";
+import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
+import {FacePositions3D, FacePositions4D} from "./positions.js";
+import {FaceNormals3D, FaceNormals4D} from "./normals.js";
+import {FaceColors3D, FaceColors4D} from "./colors.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {
     IFaceColors,
@@ -7,22 +11,19 @@ import {
     IFaceNormals,
     IFaceNormalsConstructor,
     IFacePositions,
-    IFacePositionsConstructor
+    IFacePositionsConstructor,
+    IFaces,
+    IFaces3D, IFaces4D
 } from "../_interfaces/attributes.js";
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
-import {FacePositions3D, FacePositions4D} from "./positions.js";
-import {FaceNormals3D, FaceNormals4D} from "./normals.js";
-import {FaceColors3D, FaceColors4D} from "./colors.js";
 
-class Faces
-{
-    protected readonly FacePositions: IFacePositionsConstructor;
-    protected readonly FaceNormals: IFaceNormalsConstructor;
-    protected readonly FaceColors: IFaceColorsConstructor;
+class Faces implements IFaces {
+    readonly FacePositions: IFacePositionsConstructor;
+    readonly FaceNormals: IFaceNormalsConstructor;
+    readonly FaceColors: IFaceColorsConstructor;
 
-    readonly positions: IFacePositions|null;
-    readonly normals: IFaceNormals|null;
-    readonly colors: IFaceColors|null;
+    readonly positions: IFacePositions | null;
+    readonly normals: IFaceNormals | null;
+    readonly colors: IFaceColors | null;
 
     constructor(
         public face_vertices: IFaceVertices,
@@ -39,11 +40,10 @@ class Faces
     }
 }
 
-export class Faces3D extends Faces
-{
-    protected readonly FacePositions = FacePositions3D;
-    protected readonly FaceNormals = FaceNormals3D;
-    protected readonly FaceColors = FaceColors3D;
+export class Faces3D extends Faces implements IFaces3D {
+    readonly FacePositions = FacePositions3D;
+    readonly FaceNormals = FaceNormals3D;
+    readonly FaceColors = FaceColors3D;
 
     readonly positions: FacePositions3D;
     readonly normals: FaceNormals3D;
@@ -71,11 +71,10 @@ export class Faces3D extends Faces
     }
 }
 
-export class Faces4D extends Faces
-{
-    protected readonly FacePositions = FacePositions4D;
-    protected readonly FaceNormals = FaceNormals4D;
-    protected readonly FaceColors = FaceColors4D;
+export class Faces4D extends Faces implements IFaces4D {
+    readonly FacePositions = FacePositions4D;
+    readonly FaceNormals = FaceNormals4D;
+    readonly FaceColors = FaceColors4D;
 
     readonly positions: FacePositions4D;
     readonly normals: FaceNormals4D;
