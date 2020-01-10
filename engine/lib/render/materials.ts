@@ -1,4 +1,4 @@
-import Geometry from "./geometry.js";
+import {MeshGeometries} from "./geometry.js";
 import Mesh from "../geometry/mesh.js";
 import Scene from "../scene_graph/scene.js";
 import {Matrix4x4} from "../accessors/matrix.js";
@@ -10,62 +10,11 @@ export abstract class BaseMaterial implements IMaterial {
     abstract prepareMeshForDrawing(mesh: Mesh): void;
     abstract drawMesh(mesh: Mesh, matrix: Matrix4x4);
 
-    protected readonly _mesh_geometries = new Map<Mesh, Set<Geometry>>();
-
     protected constructor(
         readonly scene: Scene,
-        readonly id: number = BaseMaterial.LAST_ID++
+        readonly id: number = BaseMaterial.LAST_ID++,
+        readonly mesh_geometries = new MeshGeometries(scene)
     ) {}
-
-    get meshes(): Generator<Mesh> {return this._iterMeshes()}
-    get mesh_count(): number {return this._mesh_geometries.size}
-
-    hasMesh(mesh: Mesh): boolean {return this._mesh_geometries.has(mesh)}
-    hasGeometry(geometry: Geometry): boolean {
-        const geometries = this._mesh_geometries.get(geometry.mesh);
-        return geometries ? geometries.has(geometry) : false;
-    }
-
-    getGeometries(mesh: Mesh): Generator<Geometry> {return this._iterGeometries(mesh)}
-    getGeometryCount(mesh: Mesh): number {
-        const geometries = this._mesh_geometries.get(mesh);
-        return geometries ? geometries.size : 0;
-    }
-
-    addGeometry(geometry: Geometry) {
-        let geometries = this._mesh_geometries.get(geometry.mesh);
-        if (geometries) {
-            if (!geometries.has(geometry))
-                geometries.add(geometry);
-        } else {
-            geometries = new Set<Geometry>();
-            geometries.add(geometry);
-            this._mesh_geometries.set(geometry.mesh, geometries);
-        }
-    }
-
-    removeGeometry(geometry: Geometry) {
-        const geometries = this._mesh_geometries.get(geometry.mesh);
-        if (geometries && geometries.has(geometry)) {
-            if (geometries.size === 1) {
-                if (this._mesh_geometries.size === 1)
-                    this.scene.removeMaterial(this);
-                this._mesh_geometries.delete(geometry.mesh);
-            } else
-                geometries.delete(geometry);
-        }
-    }
-
-    protected *_iterGeometries(mesh: Mesh): Generator<Geometry> {
-        if (this._mesh_geometries.has(mesh))
-            for (const geometry of this._mesh_geometries.get(mesh))
-                yield geometry
-    }
-
-    protected *_iterMeshes(): Generator<Mesh> {
-        for (const mesh of this._mesh_geometries.keys())
-            yield mesh;
-    }
 }
 
 

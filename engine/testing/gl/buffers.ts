@@ -1,35 +1,26 @@
-import gl from "./context.js";
-import {IAttributeLocations, TypedArray} from "./types.js";
+// import gl from "./context.js";
+import {IGLAttributeInputs, IGLAttributeLocations, IGLAttributes, IGLBuffer, TypedArray} from "./types.js";
 
-interface IBuffer {
-    readonly count: number;
-    readonly length: number;
-    readonly component_count: number;
-    readonly usage: GLenum;
-    readonly data_type: number;
+let gl: WebGL2RenderingContext;
 
-    load(data: TypedArray, usage?: GLenum): void;
-    draw(): void;
-    bind(): void;
-    unbind(): void;
-}
+abstract class GLBuffer implements IGLBuffer {
+    abstract draw(mode?: GLenum): void;
 
-abstract class Buffer implements IBuffer {
     protected readonly _id: WebGLBuffer;
     protected _data_type: GLenum;
     protected _length: number;
     protected _component_count: number;
 
-    abstract draw(): void;
-
     protected constructor(
-        data: TypedArray,
+        readonly _contex: WebGL2RenderingContext,
         readonly _type: GLenum,
         readonly _count: number,
-        readonly usage: GLenum = gl.STATIC_DRAW,
+        data?: TypedArray,
+        readonly usage: GLenum = _contex.STATIC_DRAW
     ) {
-        this._id = gl.createBuffer();
-        this.load(data, usage);
+        this._id = _contex.createBuffer();
+        if (data)
+            this.load(data, usage);
     }
 
     load(data: TypedArray, usage: GLenum = this.usage) {
@@ -58,88 +49,115 @@ abstract class Buffer implements IBuffer {
     get length(): number {return this._length}
     get component_count(): number {return this._component_count}
     get data_type(): GLenum {return this._data_type}
-    bind(): void {gl.bindBuffer(this._type, this._id)}
-    unbind(): void {gl.bindBuffer(this._type, null)}
+
+    bind(): void {this._contex.bindBuffer(this._type, this._id)}
+    unbind(): void {this._contex.bindBuffer(this._type, null)}
+    delete(): void {this._contex.deleteBuffer(this._id)}
 }
 
-export class ArrayBuffer extends Buffer {
+export class GLArrayBuffer extends GLBuffer {
     protected constructor(
-        data: TypedArray,
+        contex: WebGL2RenderingContext,
         count: number,
-        usage: GLenum = gl.STATIC_DRAW,
+        data?: TypedArray,
+        usage: GLenum = contex.STATIC_DRAW,
     ) {
-        super(data, gl.ARRAY_BUFFER, count, usage);
+        super(contex, contex.ARRAY_BUFFER, count, data, usage);
     }
 
-    draw(mode: GLenum = gl.TRIANGLES): void {
+    draw(mode: GLenum = this._contex.TRIANGLES): void {
+        gl = this._contex;
         gl.bindBuffer(this._type, this._id);
         gl.drawArrays(mode, 0, this._count);
         gl.bindBuffer(this._type, null);
     }
 }
 
-export class ElementArrayBuffer extends Buffer {
+export class GLElementArrayBuffer extends GLBuffer {
     protected constructor(
-        data: TypedArray,
+        contex: WebGL2RenderingContext,
         count: number,
-        usage: GLenum = gl.STATIC_DRAW,
+        data?: TypedArray,
+        usage: GLenum = contex.STATIC_DRAW,
     ) {
-        super(data, gl.ELEMENT_ARRAY_BUFFER, count, usage);
+        super(contex, contex.ELEMENT_ARRAY_BUFFER, count, data, usage);
     }
 
-    draw(mode: GLenum = gl.TRIANGLES): void {
+    draw(mode: GLenum = this._contex.TRIANGLES): void {
+        gl = this._contex;
         gl.bindBuffer(this._type, this._id);
         gl.drawElements(mode, this._length, this._data_type, 0);
         gl.bindBuffer(this._type, null);
     }
 }
 
-export class IndexBuffer extends ElementArrayBuffer {
+export class GLIndexBuffer extends GLElementArrayBuffer {
     constructor(
-        indices: TypedArray,
-        usage: GLenum = gl.STATIC_DRAW
+        contex: WebGL2RenderingContext,
+        indices?: TypedArray,
+        usage: GLenum = contex.STATIC_DRAW
     ) {
-        super(indices, indices.length, usage);
+        super(contex, indices.length, indices, usage);
     }
 }
 
-export class VertexBuffer extends ArrayBuffer {
+export class GLVertexBuffer extends GLArrayBuffer {
     constructor(
-        vertices: TypedArray,
+        contex: WebGL2RenderingContext,
         vertex_count: number,
-        usage: GLenum = gl.STATIC_DRAW
+        vertices?: TypedArray,
+        usage: GLenum = contex.STATIC_DRAW
     ) {
-        super(vertices, vertex_count, usage);
+        super(contex, vertex_count, vertices, usage);
     }
 }
 
-export class VertexArray {
+export class GLVertexArray {
     private readonly _id: WebGLVertexArrayObject;
-    readonly attributes: {[name: string]: IBuffer} = {};
+    readonly attributes: IGLAttributes = {};
 
     constructor(
-        vertex_count: number,
-        locations: IAttributeLocations,
-        attributes: {[name: string]: TypedArray|IBuffer} = {}
+        readonly _contex: WebGL2RenderingContext,
+        readonly vertex_count: number,
+        attributes?: IGLAttributeInputs,
+        locations?: IGLAttributeLocations
     ) {
-        this._id = gl.createVertexArray();
+        this._id = _contex.createVertexArray();
+
+        if (attributes) {
+            this.load(attributes);
+            if (locations)
+                this.bindToLocations(locations);
+        }
+    }
+
+    load(attributes: IGLAttributeInputs): void {
+        let attribute: TypedArray|IGLBuffer;
+
+        for (const name of Object.keys(attributes)) {
+            attribute = attributes[name];
+            this.attributes[name] = attribute instanceof GLVertexBuffer ?
+                attribute :
+                new GLVertexBuffer(this._contex, this.vertex_count, attribute as TypedArray);
+        }
+    }
+
+    bindToLocations(locations: IGLAttributeLocations): void {
+        gl = this._contex;
+
         gl.bindVertexArray(this._id);
 
         let location: GLuint;
-        let buffer: IBuffer;
-        let attribute: TypedArray|IBuffer;
+        let attribute: IGLBuffer;
 
         for (const name of Object.keys(locations)) {
             location = locations[name];
-            attribute = attributes[name];
+            attribute = this.attributes[name];
             if (attribute) {
-                buffer = this.attributes[name] = attribute instanceof VertexBuffer ? attribute :
-                    new VertexBuffer(attribute as TypedArray, vertex_count);
-
-                buffer.bind();
+                attribute.bind();
                 gl.enableVertexAttribArray(location);
-                gl.vertexAttribPointer(location, buffer.component_count, buffer.data_type, false, 0, 0);
-                buffer.unbind();
+                gl.vertexAttribPointer(location, attribute.component_count, attribute.data_type, false, 0, 0);
+                attribute.unbind();
             } else
                 throw `Missing data for attribute ${name}!`;
         }
@@ -147,26 +165,29 @@ export class VertexArray {
         gl.bindVertexArray(null);
     }
 
-    bind(): void {gl.bindVertexArray(this._id)}
-    unbind(): void {gl.bindVertexArray(null)}
+    bind(): void {this._contex.bindVertexArray(this._id)}
+    unbind(): void {this._contex.bindVertexArray(null)}
+    delete(): void {this._contex.deleteVertexArray(this._id)}
 }
 
-export class Texture {
+export class GLTexture {
     private readonly _id: WebGLVertexArrayObject;
     private _slot: number = -1;
 
     constructor(
-        data: HTMLImageElement,
-        protected _type: GLenum = gl.TEXTURE_2D,
+        readonly _contex: WebGL2RenderingContext,
+        data?: HTMLImageElement,
+        protected _type: GLenum = _contex.TEXTURE_2D,
 
-        wrap_u: GLenum = gl.CLAMP_TO_EDGE,
+        wrap_u: GLenum = _contex.CLAMP_TO_EDGE,
         wrap_v: GLenum = wrap_u,
 
-        min_filter: GLenum = gl.LINEAR,
+        min_filter: GLenum = _contex.LINEAR,
         mag_filter: GLenum = min_filter
     ) {
-        this._id = gl.createTexture();
-        this.load(data, wrap_u, wrap_v, min_filter, mag_filter);
+        this._id = _contex.createTexture();
+        if (data)
+            this.load(data, wrap_u, wrap_v, min_filter, mag_filter);
     }
 
     load(
@@ -178,6 +199,8 @@ export class Texture {
         min_filter: GLenum = gl.LINEAR,
         mag_filter: GLenum = min_filter
     ) {
+        gl = this._contex;
+
         gl.bindTexture(this._type, this._id);
 
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -196,8 +219,11 @@ export class Texture {
 
     bind(slot: GLenum = 0): void {
         this._slot = slot;
+        gl  = this._contex;
         gl.activeTexture(gl.TEXTURE0 + this._slot);
         gl.bindTexture(this._type, this._id);
     }
-    unbind(): void {gl.bindTexture(this._type, null)}
+
+    unbind(): void {this._contex.bindTexture(this._type, null)}
+    delete(): void {this._contex.deleteTexture(this._id)}
 }

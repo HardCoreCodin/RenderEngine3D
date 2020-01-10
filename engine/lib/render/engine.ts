@@ -19,7 +19,7 @@ export abstract class BaseRenderEngine<ScreenType extends IScreen> implements IR
     protected constructor(
         canvas: HTMLCanvasElement,
         readonly scene: Scene = new Scene(),
-        camera: Camera = scene.cameras.length ? scene.cameras[0] : scene.addCamera(),
+        camera: Camera = scene.camera_count ? scene.cameras[0] : scene.addCamera(),
         controller?: IController,
         screen?: ScreenType
     ) {

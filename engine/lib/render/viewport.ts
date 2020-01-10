@@ -1,30 +1,47 @@
+import Screen from "./screen.js";
 import Camera from "./camera.js";
 import RenderTarget from "./target.js";
 import {mat3, mat4} from "../accessors/matrix.js";
 import {IColor, IVector2D} from "../_interfaces/vectors.js";
-import {IRectangle, IRenderPipeline, IViewport} from "../_interfaces/render.js";
+import {IRectangle, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import RenderPipeline from "./pipelines.js";
 
-export abstract class BaseViewport<Context extends RenderingContext> implements IViewport<Context> {
+export abstract class BaseViewport<
+    Context extends RenderingContext,
+    ScreenType extends IScreen<Context> = IScreen<Context>>
+    implements IViewport<Context>
+{
+    protected abstract _getDefaultRenderPipeline(context: Context): IRenderPipeline;
+    protected _render_pipeline: IRenderPipeline;
+
     readonly world_to_view = mat4();
     readonly world_to_clip = mat4();
 
     camera_has_moved_or_rotated: boolean = false;
-    abstract render_pipeline: IRenderPipeline<Context>;
 
     constructor(
-        protected readonly _context: Context,
+        protected readonly _screen: ScreenType,
         public camera: Camera,
         protected readonly _size: IRectangle,
-        protected readonly _position: IVector2D = {x: 0, y: 0}
+        protected readonly _position: IVector2D = {x: 0, y: 0},
+        render_pipeline?: IRenderPipeline,
+        protected readonly _context: Context = _screen.context as Context,
     ) {
         this.reset(_size.width, _size.height, _position.x, _position.y);
+        this.render_pipeline = render_pipeline || this._getDefaultRenderPipeline(_context);
     }
 
     get width(): number {return this._size.width}
     get height(): number {return this._size.height}
+
     get x(): number {return this._position.x}
     get y(): number {return this._position.y}
+
+    get render_pipeline(): IRenderPipeline {return this._render_pipeline}
+    set render_pipeline(render_pipeline: IRenderPipeline) {
+        this._render_pipeline = render_pipeline;
+        this._screen.registerViewport(this);
+    }
 
     refresh() {
         if (this.camera_has_moved_or_rotated) {
@@ -55,20 +72,27 @@ export abstract class BaseViewport<Context extends RenderingContext> implements 
     }
 }
 
+let DEFAULT_RENDER_PIPELINE: RenderPipeline;
+
 export default class Viewport extends BaseViewport<CanvasRenderingContext2D> {
     readonly ndc_to_screen = mat3();
     private _image: ImageData;
 
-    render_pipeline = new RenderPipeline();
+    protected _getDefaultRenderPipeline(context: CanvasRenderingContext2D): RenderPipeline {
+        if (!DEFAULT_RENDER_PIPELINE)
+            DEFAULT_RENDER_PIPELINE = new RenderPipeline(context);
+
+        return DEFAULT_RENDER_PIPELINE;
+    }
 
     constructor(
-        context: CanvasRenderingContext2D,
+        screen: Screen,
         camera: Camera,
         size: IRectangle,
         position: IVector2D = {x: 0, y: 0},
         readonly render_target = new RenderTarget(size)
     ) {
-        super(context, camera, size, position);
+        super(screen, camera, size, position);
         this._resetRenderTarget();
     }
 

@@ -1,8 +1,11 @@
-import {IUniform, TypedArray} from "./types.js";
-import gl from "./context.js";
+import {IGLUniform, TypedArray} from "./types.js";
+// import gl from "./context.js";
 
-export default class Uniform implements IUniform {
+let gl: WebGL2RenderingContext;
+
+export default class GLUniform implements IGLUniform {
     constructor (
+        readonly _contex: WebGL2RenderingContext,
         readonly location: WebGLUniformLocation,
         readonly type: GLenum
     ) {}
@@ -18,6 +21,8 @@ export default class Uniform implements IUniform {
     }
 
     load(data: TypedArray|number|boolean, transpose: GLboolean = false): void {
+        gl = this._contex;
+
         if (typeof data === "boolean") {
             if (this.type === gl.BOOL)
                 gl.uniform1i(this.location, data ? 1 : 0);

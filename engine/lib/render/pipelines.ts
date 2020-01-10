@@ -1,4 +1,4 @@
-import Geometry from "./geometry.js";
+import Geometry, {MeshGeometries} from "./geometry.js";
 import Mesh from "../geometry/mesh.js";
 import {MeshShader} from "./shaders/mesh/base.js";
 import {VertexPositions4D} from "../geometry/positions.js";
@@ -10,14 +10,21 @@ import {CLIP} from "../../constants.js";
 import {T3, T4} from "../../types.js";
 import {IRenderPipeline, IViewport} from "../_interfaces/render.js";
 import Viewport from "./viewport.js";
+import Scene from "../scene_graph/scene.js";
+import {IGeometry, IMesh} from "../_interfaces/geometry.js";
 
 
 export abstract class BaseRenderPipeline<
-    Context extends RenderingContext,
+    Context extends RenderingContext = RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>>
     implements IRenderPipeline<Context, ViewportType>
 {
     abstract render(viewport: ViewportType): void;
+
+    constructor(readonly context: Context) {}
+
+    on_mesh_added(mesh: IMesh) {}
+    on_mesh_removed(mesh: IMesh) {}
 }
 
 export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D, Viewport> {
@@ -35,16 +42,19 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
     protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
     protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
-    protected _updateClippingBuffers(geometries: Geometry[]): void {
+    protected _updateClippingBuffers(scene: Scene): void {
         let max_face_count = 0;
         let max_vertex_count = 0;
-        for (const geometry of geometries) {
-            if (geometry.is_renderable) {
-                if (geometry.mesh.face_count > max_face_count)
-                    max_face_count = geometry.mesh.face_count;
 
-                if (geometry.mesh.vertex_count> max_vertex_count)
-                    max_vertex_count = geometry.mesh.vertex_count;
+        for (const mesh of scene.mesh_geometries.meshes) {
+            for (const geometry of scene.mesh_geometries.getGeometries(mesh)) {
+                if (geometry.is_renderable) {
+                    if (geometry.mesh.face_count > max_face_count)
+                        max_face_count = geometry.mesh.face_count;
+
+                    if (geometry.mesh.vertex_count> max_vertex_count)
+                        max_vertex_count = geometry.mesh.vertex_count;
+                }
             }
         }
 
@@ -69,18 +79,17 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
         }
     }
 
-    render(viewport:  Viewport): void {
+    render(viewport: Viewport): void {
         const scene = viewport.camera.scene;
-        const geometries = scene.geometries;
-        if (geometries.length)
-            this._updateClippingBuffers(geometries);
-        else
+        if (!scene.mesh_geometries.mesh_count)
             return;
 
-        let mesh: Mesh;
+        this._updateClippingBuffers(scene);
+
+        let mesh: IMesh;
         // let mesh_shader: MeshShader;
-        let mesh_geometry: Geometry;
-        let mesh_geometries: Geometry[];
+        let mesh_geometry: IGeometry;
+        let mesh_geometries: Set<Geometry>;
 
         const n = viewport.camera.near;
         const world_to_clip = viewport.world_to_clip;
@@ -105,14 +114,14 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
         for (const material of scene.materials) {
             // mesh_shader = material.mesh_shader;
 
-            for ([mesh, mesh_geometries] of material.mesh_geometries.entries()) {
+            for (mesh of material.mesh_geometries.meshes) {
                 // fv = mesh.face_vertices.arrays;
                 vc = mesh.vertex_count;
                 fc = mesh.face_count;
 
                 // mesh_shader.bindMesh(mesh);
 
-                for (mesh_geometry of mesh_geometries) if (mesh_geometry.is_renderable) {
+                for (mesh_geometry of material.mesh_geometries.getGeometries(mesh)) if (mesh_geometry.is_renderable) {
                     // Prepare a matrix for converting from model space to clip space:
                     mesh_geometry.model_to_world.mul(world_to_clip, model_to_clip);
 

@@ -1,24 +1,29 @@
-import gl from "./context.js";
-import {IAttributeLocations, IUniforms} from "./types.js";
-import Uniform from "./uniform.js";
+// import gl from "./context.js";
+import {IGLAttributeLocations, IGLUniforms} from "./types.js";
+import GLUniform from "./uniform.js";
 
-export default class Program {
-    readonly uniforms: IUniforms = {};
+let gl: WebGL2RenderingContext;
+
+export default class GLProgram {
+    readonly uniforms: IGLUniforms = {};
     readonly link_error: string;
     readonly validation_error: string;
     readonly vertex_shader_error: string;
     readonly fragment_shader_error: string;
-    protected readonly _locations: IAttributeLocations = {};
 
-    get locations(): IAttributeLocations {return this._locations}
-    use(): void {gl.useProgram(this._program)}
-    delete(): void {gl.deleteProgram(this._program)}
+    protected readonly _id: WebGLProgram;
+    protected readonly _locations: IGLAttributeLocations = {};
+
+    get locations(): IGLAttributeLocations {return this._locations}
 
     constructor(
+        readonly _contex: WebGL2RenderingContext,
         readonly vertex_shader_code: string,
-        readonly fragment_shader_code: string,
-        protected readonly _program = gl.createProgram()
+        readonly fragment_shader_code: string
     ) {
+        gl = _contex;
+        const program = this._id = gl.createProgram();
+
         const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertex_shader, vertex_shader_code);
         gl.compileShader(vertex_shader);
@@ -40,25 +45,25 @@ export default class Program {
             throw this.fragment_shader_error;
         }
 
-        gl.attachShader(_program, vertex_shader);
-        gl.attachShader(_program, fragment_shader);
-        gl.linkProgram(_program);
-        if (!gl.getProgramParameter(_program, gl.LINK_STATUS)) {
-            this.link_error = gl.getProgramInfoLog(_program);
+        gl.attachShader(program, vertex_shader);
+        gl.attachShader(program, fragment_shader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            this.link_error = gl.getProgramInfoLog(program);
             console.error('ERROR linking program!', this.link_error);
             gl.deleteShader(vertex_shader);
             gl.deleteShader(fragment_shader);
-            gl.deleteProgram(_program);
+            gl.deleteProgram(program);
             throw this.link_error;
         }
 
-        gl.validateProgram(_program);
-        if (!gl.getProgramParameter(_program, gl.VALIDATE_STATUS)) {
-            this.validation_error = gl.getProgramInfoLog(_program);
+        gl.validateProgram(program);
+        if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+            this.validation_error = gl.getProgramInfoLog(program);
             console.error('ERROR validating program!', this.validation_error);
             gl.deleteShader(vertex_shader);
             gl.deleteShader(fragment_shader);
-            gl.deleteProgram(_program);
+            gl.deleteProgram(program);
             throw this.validation_error;
         }
 
@@ -66,26 +71,29 @@ export default class Program {
         gl.deleteShader(vertex_shader);
         gl.deleteShader(fragment_shader);
 
-        gl.useProgram(this._program);
+        gl.useProgram(this._id);
 
         let i, count: number;
         let info: WebGLActiveInfo;
 
-        count = gl.getProgramParameter(_program, gl.ACTIVE_UNIFORMS);
+        count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
         for (i = 0; i < count; ++i) {
-            info = gl.getActiveUniform(_program, i);
+            info = gl.getActiveUniform(program, i);
             if (info)
-                this.uniforms[info.name] = new Uniform(gl.getUniformLocation(_program, info.name), info.type);
+                this.uniforms[info.name] = new GLUniform(gl, gl.getUniformLocation(program, info.name), info.type);
             else
                 break;
         }
 
-        for (let i = 0; i < gl.getProgramParameter(this._program, gl.ACTIVE_ATTRIBUTES); ++i) {
-            info = gl.getActiveAttrib(this._program, i);
+        for (let i = 0; i < gl.getProgramParameter(this._id, gl.ACTIVE_ATTRIBUTES); ++i) {
+            info = gl.getActiveAttrib(this._id, i);
             if (info)
-                this._locations[info.name] = gl.getAttribLocation(this._program, info.name);
+                this._locations[info.name] = gl.getAttribLocation(this._id, info.name);
             else
                 break;
         }
     }
+
+    use(): void {this._contex.useProgram(this._id)}
+    delete(): void {this._contex.deleteProgram(this._id)}
 }

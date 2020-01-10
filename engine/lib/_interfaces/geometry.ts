@@ -1,4 +1,4 @@
-import {IScene} from "./nodes.js";
+import {INode3D, IScene} from "./nodes.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IMaterial} from "./render.js";
 import {IPosition3D, IPosition4D} from "./vectors.js";
@@ -40,14 +40,6 @@ export interface IBounds4D extends IBounds {
     readonly max: IPosition4D;
 }
 
-export interface IMeshData3D {
-    readonly vertex_count: number;
-    readonly face_vertices: IFaceVertices;
-    readonly mesh_options: IMeshOptions;
-    readonly faces: IFaces3D;
-    readonly vertices: IVertices3D;
-}
-
 export interface IMesh {
     readonly face_count: number;
     readonly vertex_count: number;
@@ -56,14 +48,13 @@ export interface IMesh {
     readonly vertex_arrays: Float32Array[];
 
     bbox: IBounds3D;
-    data: IMeshData3D;
     inputs: IMeshInputs;
     options: IMeshOptions;
 
     load(): this;
 }
 
-export interface IGeometry {
+export interface IGeometry extends INode3D {
     readonly id: number;
     readonly scene: IScene;
     readonly world_to_model: IMatrix4x4;

@@ -1,7 +1,6 @@
 import {IMatrix4x4} from "./matrix.js";
 import {ITransform} from "./transform.js";
-import {IGeometry, IMesh} from "./geometry.js";
-import {ICamera, IMaterial} from "./render.js";
+import {ICamera, IMaterial, IMeshGeometries} from "./render.js";
 
 export interface IParent {
     readonly child_count: number;
@@ -23,33 +22,29 @@ export interface INode3D extends IParent {
     delete(): void;
     unparent(): void;
     postWorldMatrixRefresh(): void;
-    refreshWorldMatrix(recurse: boolean, include_static: boolean): void;
+    refreshWorldMatrix(recurse?: boolean, include_static?: boolean): void;
 }
 
 export interface IScene {
     readonly node_count: number;
-    readonly geometry_count: number;
+    readonly camera_count: number;
     readonly material_count: number;
 
     readonly nodes: Generator<INode3D>;
-    readonly geometries: Generator<IGeometry>;
+    readonly cameras: Generator<ICamera>;
     readonly materials: Generator<IMaterial>;
-
-    hasGeometry(geometry: IGeometry): boolean;
-    addGeometry(mesh: IMesh): IGeometry;
-    addGeometry(geometry: IGeometry): IGeometry;
-    addGeometry(mesh_or_geometry: IGeometry | IMesh): IGeometry;
-    removeGeometry(geometry: IGeometry): void;
+    readonly mesh_geometries: IMeshGeometries;
 
     hasMaterial(material: IMaterial): boolean;
-    addMaterial(material: IMaterial): void;
-    removeMaterial(material: IMaterial): void;
+    addMaterial(material: IMaterial): typeof material;
+    removeMaterial(material: IMaterial): typeof material;
 
     hasNode(node: INode3D): boolean;
-    addNode(node: INode3D): void;
-    removeNode(node: INode3D): void;
+    addNode(node: INode3D): typeof node;
+    removeNode(node: INode3D): typeof node;
 
-    addCamera(camera: ICamera): ICamera;
-    removeCamera(camera: ICamera): void;
+    hasCamera(camera: ICamera): boolean;
+    addCamera(camera: ICamera): typeof camera;
+    removeCamera(camera: ICamera): typeof camera;
 }
 

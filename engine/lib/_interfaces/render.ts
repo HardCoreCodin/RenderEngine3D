@@ -1,7 +1,8 @@
-import {IGeometry, IMesh, IScene} from "./nodes.js";
+import {IScene} from "./nodes.js";
 import {IVector2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
+import {IGeometry, IMesh} from "./geometry.js";
 
 export interface IRectangle
 {
@@ -23,9 +24,9 @@ export interface ICamera {
     updateProjectionMatrix(): void;
 }
 
-export interface IViewport<Context extends RenderingContext> {
+export interface IViewport<Context extends RenderingContext = RenderingContext> {
     camera_has_moved_or_rotated: boolean;
-    render_pipeline: IRenderPipeline<Context>;
+    render_pipeline: IRenderPipeline;
 
     camera: ICamera
 
@@ -43,13 +44,14 @@ export interface IViewport<Context extends RenderingContext> {
 }
 
 export interface IRenderPipeline<
-    Context extends RenderingContext,
+    Context extends RenderingContext = RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>>
 {
+    readonly context: Context;
     render(viewport: ViewportType): void;
+    on_mesh_added(mesh: IMesh): void;
+    on_mesh_removed(mesh: IMesh): void;
 }
-
-
 
 export interface IScreen<
     Context extends RenderingContext = RenderingContext,
@@ -57,11 +59,19 @@ export interface IScreen<
 {
     controller: IController,
     active_viewport: ViewportType;
+
+    readonly context: Context,
     readonly viewports: Generator<ViewportType>;
+
     clear(): void;
     refresh(): void;
     resize(width: number, height: number): void;
+
     addViewport(camera: ICamera, size?: IRectangle, position?: IVector2D): ViewportType;
+    removeViewport(viewport: ViewportType): void;
+
+    registerViewport(viewport: ViewportType): void;
+    unregisterViewport(viewport: ViewportType): void;
 }
 
 export interface IRenderEngine<ScreenType extends IScreen> {
@@ -77,8 +87,20 @@ export interface IRenderEngine<ScreenType extends IScreen> {
 export interface IMaterial {
     readonly id: number;
     readonly scene: IScene;
+    readonly mesh_geometries: IMeshGeometries;
+
+    prepareMeshForDrawing(mesh: IMesh): void;
+    drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
+}
+
+export type IMeshCallback = (mesh: IMesh) => void;
+
+export interface IMeshGeometries {
+    readonly scene: IScene;
     readonly meshes: Generator<IMesh>;
     readonly mesh_count: number;
+    readonly on_mesh_added: Set<IMeshCallback>;
+    readonly on_mesh_removed: Set<IMeshCallback>;
 
     hasMesh(mesh: IMesh): boolean;
     hasGeometry(geometry: IGeometry): boolean;
@@ -86,9 +108,8 @@ export interface IMaterial {
     getGeometryCount(mesh: IMesh): number;
     getGeometries(mesh: IMesh): Generator<IGeometry>;
 
-    addGeometry(geometry: IGeometry): void;
+    addGeometry(mesh: IMesh): IGeometry;
+    addGeometry(geometry: IGeometry): IGeometry;
+    addGeometry(mesh_or_geometry: IGeometry | IMesh): IGeometry;
     removeGeometry(geometry: IGeometry): void;
-
-    prepareMeshForDrawing(mesh: IMesh): void;
-    drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }

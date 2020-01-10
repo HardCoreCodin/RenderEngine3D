@@ -4,10 +4,11 @@ export class BaseScreen {
         this.controller = controller;
         this._canvas = _canvas;
         this._size = _size;
-        this._viewports = [];
+        this._viewports = new Set();
+        this._render_pipelines = new Map();
         this._prior_width = 0;
         this._prior_height = 0;
-        this._context = this._createContext();
+        this.context = this._createContext();
         this.addViewport(camera);
     }
     refresh() {
@@ -36,13 +37,49 @@ export class BaseScreen {
         for (const viewport of this._viewports)
             yield viewport;
     }
+    registerViewport(viewport) {
+        const render_pipeline = viewport.render_pipeline;
+        let viewports;
+        if (this._render_pipelines.has(render_pipeline))
+            viewports = this._render_pipelines.get(render_pipeline);
+        else {
+            const mesh_geometries = viewport.camera.scene.mesh_geometries;
+            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added);
+            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed);
+            viewports = new Set();
+            this._render_pipelines.set(render_pipeline, viewports);
+        }
+        if (!viewports.has(viewport))
+            viewports.add(viewport);
+    }
+    unregisterViewport(viewport) {
+        const render_pipeline = viewport.render_pipeline;
+        if (this._render_pipelines.has(render_pipeline)) {
+            const viewports = this._render_pipelines.get(render_pipeline);
+            if (viewports.size === 1) {
+                const mesh_geometries = viewport.camera.scene.mesh_geometries;
+                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added);
+                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed);
+                this._render_pipelines.delete(render_pipeline);
+            }
+            else
+                viewports.delete(viewport);
+        }
+    }
     addViewport(camera, size = this._size, position = {
         x: 0,
         y: 0
     }) {
         const viewport = this._createViewport(camera, size, position);
-        this._viewports.push(viewport);
+        this._viewports.add(viewport);
+        this.registerViewport(viewport);
         return viewport;
+    }
+    removeViewport(viewport) {
+        if (!this._viewports.has(viewport))
+            return;
+        this.unregisterViewport(viewport);
+        this._viewports.delete(viewport);
     }
     get active_viewport() {
         return this._active_viewport;
@@ -57,10 +94,10 @@ export default class Screen extends BaseScreen {
         return this._canvas.getContext('2d');
     }
     _createViewport(camera, size, position) {
-        return new Viewport(this._context, camera, size, position);
+        return new Viewport(this, camera, size, position);
     }
     clear() {
-        this._context.clearRect(0, 0, this._size.width, this._size.height);
+        this.context.clearRect(0, 0, this._size.width, this._size.height);
     }
 }
 //# sourceMappingURL=screen.js.map
