@@ -1,6 +1,6 @@
 import Geometry, {MeshGeometries} from "./geometry.js";
 import Mesh from "../geometry/mesh.js";
-import {MeshShader} from "./shaders/mesh/base.js";
+// import {MeshShader} from "./shaders/mesh/base.js";
 import {VertexPositions4D} from "../geometry/positions.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {cullFaces, cullVertices} from "../math/rendering/culling.js";

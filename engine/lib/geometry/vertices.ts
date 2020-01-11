@@ -5,96 +5,95 @@ import {VertexNormals3D, VertexNormals4D} from "./normals.js";
 import {VertexColors3D, VertexColors4D} from "./colors.js";
 import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
-import {IMeshOptions} from "../_interfaces/geometry.js";
 import {
     IVertexColors,
-    IVertexColorsConstructor,
     IVertexNormals,
-    IVertexNormalsConstructor,
     IVertexPositions,
-    IVertexPositionsConstructor,
     IVertexUVs,
-    IVertexUVsConstructor,
     IVertices,
     IVertices3D,
     IVertices4D
 } from "../_interfaces/attributes.js";
 
 
-export class Vertices implements IVertices {
-    readonly VertexPositions: IVertexPositionsConstructor;
-    readonly VertexNormals: IVertexNormalsConstructor;
-    readonly VertexColors: IVertexColorsConstructor;
-    readonly VertexUVs: IVertexUVsConstructor;
+export abstract class Vertices implements IVertices {
+    protected abstract _createPositions(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexPositions;
+    protected abstract _createNormals(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexNormals;
+    protected abstract _createColors(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexColors;
+    protected abstract _createUVs(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexUVs;
 
-    readonly positions: IVertexPositions;
-    readonly normals: IVertexNormals | null;
-    readonly colors: IVertexColors | null;
-    readonly uvs: IVertexUVs | null;
+    positions: IVertexPositions;
+    normals: IVertexNormals | null;
+    colors: IVertexColors | null;
+    uvs: IVertexUVs | null;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        readonly mesh_options: IMeshOptions,
+    init(
+        indices: IFaceVertices,
+        include: ATTRIBUTE,
+        share: ATTRIBUTE,
+        count: number,
 
         positions?: IVertexPositions,
         normals?: IVertexNormals,
         colors?: IVertexColors,
         uvs?: IVertexUVs,
-    ) {
-        const included = mesh_options.vertex_attributes;
+    ): void {
+        this.positions = positions || this._createPositions(count, indices, share);
+        this.normals = include & ATTRIBUTE.normal ?
+            normals || this._createNormals(count, indices, share) : null;
 
-        this.positions = positions || new this.VertexPositions(
-            vertex_count,
-            face_vertices,
-            mesh_options.share & ATTRIBUTE.position
-        );
+        this.colors = include & ATTRIBUTE.color ?
+            colors || this._createColors(count, indices, share) : null;
 
-        this.normals = included & ATTRIBUTE.normal ?
-            normals || new this.VertexNormals(
-                vertex_count,
-                face_vertices,
-            mesh_options.share & ATTRIBUTE.normal
-            ) : null;
-
-        this.colors = included & ATTRIBUTE.color ?
-            colors || new this.VertexColors(
-                vertex_count,
-                face_vertices,
-            mesh_options.share & ATTRIBUTE.color
-            ) : null;
-
-        this.uvs = included & ATTRIBUTE.uv ?
-            uvs || new this.VertexUVs(
-                vertex_count,
-                face_vertices,
-            mesh_options.share & ATTRIBUTE.color
-            ) : null;
+        this.uvs = include & ATTRIBUTE.uv ?
+            uvs || this._createUVs(count, indices, share) : null;
     }
 }
 
 export class Vertices3D extends Vertices implements IVertices3D {
-    readonly VertexPositions = VertexPositions3D;
-    readonly VertexNormals = VertexNormals3D;
-    readonly VertexColors = VertexColors3D;
-    readonly VertexUVs = VertexUVs2D;
+    positions: VertexPositions3D;
+    normals: VertexNormals3D;
+    colors: VertexColors3D;
+    uvs: VertexUVs2D;
 
-    readonly positions: VertexPositions3D;
-    readonly normals: VertexNormals3D;
-    readonly colors: VertexColors3D;
-    readonly uvs: VertexUVs2D;
+    protected _createPositions(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexPositions3D {
+        return new VertexPositions3D(count, indices,share & ATTRIBUTE.position);
+    }
+
+    protected _createNormals(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexNormals3D {
+        return new VertexNormals3D(count, indices,share & ATTRIBUTE.normal);
+    }
+
+    protected _createColors(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexColors3D {
+        return new VertexColors3D(count, indices,share & ATTRIBUTE.color);
+    }
+
+    protected _createUVs(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexUVs2D {
+        return new VertexUVs2D(count, indices,share & ATTRIBUTE.uv);
+    }
 }
 
 export class Vertices4D extends Vertices implements IVertices4D {
-    readonly VertexPositions = VertexPositions4D;
-    readonly VertexNormals = VertexNormals4D;
-    readonly VertexColors = VertexColors4D;
-    readonly VertexUVs = VertexUVs3D;
+    positions: VertexPositions4D;
+    normals: VertexNormals4D;
+    colors: VertexColors4D;
+    uvs: VertexUVs3D;
 
-    readonly positions: VertexPositions4D;
-    readonly normals: VertexNormals4D;
-    readonly colors: VertexColors4D;
-    readonly uvs: VertexUVs3D;
+    protected _createPositions(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexPositions4D {
+        return new VertexPositions4D(count, indices,share & ATTRIBUTE.position);
+    }
+
+    protected _createNormals(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexNormals4D {
+        return new VertexNormals4D(count, indices,share & ATTRIBUTE.normal);
+    }
+
+    protected _createColors(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexColors4D {
+        return new VertexColors4D(count, indices,share & ATTRIBUTE.color);
+    }
+
+    protected _createUVs(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexUVs3D {
+        return new VertexUVs3D(count, indices,share & ATTRIBUTE.uv);
+    }
 
     mul(matrix: Matrix4x4, out?: this): this {
         if (out) {

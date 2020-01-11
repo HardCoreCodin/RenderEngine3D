@@ -38,8 +38,13 @@ const defaults = new MeshOptions(0,
     true
 );
 
-const CubeMesh = (options: MeshOptions = defaults): Mesh => new Mesh(
-    inputs, options, cube_face_vertices, cube_vertex_count, cube_vertex_faces
+const CubeMesh = (
+    options: MeshOptions = defaults
+): Mesh => new Mesh(
+    inputs,
+    options,
+    cube_face_vertices,
+    cube_vertex_faces
 );
 
 export default CubeMesh;

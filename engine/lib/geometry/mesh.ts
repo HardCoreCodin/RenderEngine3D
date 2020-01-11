@@ -5,33 +5,41 @@ import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
 import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {IMesh} from "../_interfaces/geometry.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {IMeshCallback} from "../_interfaces/render.js";
 
 export default class Mesh implements IMesh {
-    readonly faces: Faces3D;
-    readonly vertices: Vertices3D;
+    readonly faces = new Faces3D();
+    readonly vertices = new Vertices3D();
     readonly bbox = new Bounds3D();
     readonly on_mesh_loaded = new Set<IMeshCallback>();
 
-    constructor(
-        public inputs: MeshInputs,
-        public options: MeshOptions = new MeshOptions(),
-        readonly face_vertices: IFaceVertices = new FaceVerticesInt32().load(inputs.sanitize().position),
-        readonly vertex_count: number = inputs.position.vertex_count,
-        readonly vertex_faces: IVertexFaces = new VertexFacesInt32().load(face_vertices, vertex_count),
-        readonly face_count: number = face_vertices.length,
-        readonly vertex_arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(face_count * 2)
-    ) {
-        options.sanitize(this.inputs);
+    readonly face_count: number;
+    readonly vertex_count: number;
 
-        this.faces = new Faces3D(face_vertices, options);
-        this.vertices = new Vertices3D(vertex_count, face_vertices, options);
+    readonly face_vertices: IFaceVertices;
+    readonly vertex_faces: IVertexFaces;
+
+    constructor(
+        readonly inputs: MeshInputs,
+        readonly options: MeshOptions = new MeshOptions(),
+        face_vertices?: IFaceVertices,
+        vertex_faces?: IVertexFaces
+    ) {
+        inputs.sanitize();
+
+        this.vertex_count = inputs.position.vertex_count;
+        this.face_vertices = face_vertices || new FaceVerticesInt32().load(inputs.position);
+        this.face_count = this.face_vertices.length;
+        this.vertex_faces = vertex_faces || new VertexFacesInt32().load(this.face_vertices, this.vertex_count);
     }
 
     load(): this {
+        this.options.sanitize(this.inputs);
+        this.faces.init(this.face_vertices, this.options.face_attributes);
+        this.vertices.init(this.face_vertices, this.options.vertex_attributes, this.options.share, this.vertex_count);
+
         this.vertices.positions.load(this.inputs.position);
         this.bbox.load(this.vertices.positions);
 

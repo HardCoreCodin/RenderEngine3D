@@ -1,4 +1,3 @@
-import {MeshOptions} from "./options.js";
 import {ATTRIBUTE} from "../../constants.js";
 import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
 import {FacePositions3D, FacePositions4D} from "./positions.js";
@@ -7,44 +6,36 @@ import {FaceColors3D, FaceColors4D} from "./colors.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 import {
     IFaceColors,
-    IFaceColorsConstructor,
     IFaceNormals,
-    IFaceNormalsConstructor,
     IFacePositions,
-    IFacePositionsConstructor,
     IFaces,
     IFaces3D, IFaces4D
 } from "../_interfaces/attributes.js";
 
-class Faces implements IFaces {
-    readonly FacePositions: IFacePositionsConstructor;
-    readonly FaceNormals: IFaceNormalsConstructor;
-    readonly FaceColors: IFaceColorsConstructor;
+abstract class Faces implements IFaces {
+    protected abstract _createPositions(face_vertices: IFaceVertices): IFacePositions;
+    protected abstract _createNormals(face_vertices: IFaceVertices): IFaceNormals;
+    protected abstract _createColors(face_vertices: IFaceVertices): IFaceColors;
 
-    readonly positions: IFacePositions | null;
-    readonly normals: IFaceNormals | null;
-    readonly colors: IFaceColors | null;
+    positions: IFacePositions | null;
+    normals: IFaceNormals | null;
+    colors: IFaceColors | null;
 
-    constructor(
-        public face_vertices: IFaceVertices,
-        public mesh_options: MeshOptions,
+    init(
+        face_vertices: IFaceVertices,
+        include: ATTRIBUTE,
 
         positions?: IFacePositions,
         normals?: IFaceNormals,
         colors?: IFaceColors
-    ) {
-        const included = mesh_options.face_attributes;
-        this.positions = included & ATTRIBUTE.position ? positions || new this.FacePositions(face_vertices) : null;
-        this.normals = included & ATTRIBUTE.normal ? normals || new this.FaceNormals(face_vertices) : null;
-        this.colors = included & ATTRIBUTE.color ? colors || new this.FaceColors(face_vertices) : null;
+    ): void {
+        this.positions = include & ATTRIBUTE.position ? positions || this._createPositions(face_vertices): null;
+        this.normals = include & ATTRIBUTE.normal ? normals || this._createNormals(face_vertices) : null;
+        this.colors = include & ATTRIBUTE.color ? colors || this._createColors(face_vertices) : null;
     }
 }
 
 export class Faces3D extends Faces implements IFaces3D {
-    readonly FacePositions = FacePositions3D;
-    readonly FaceNormals = FaceNormals3D;
-    readonly FaceColors = FaceColors3D;
-
     readonly positions: FacePositions3D;
     readonly normals: FaceNormals3D;
     readonly colors: FaceColors3D;
@@ -69,13 +60,21 @@ export class Faces3D extends Faces implements IFaces3D {
 
         return out;
     }
+
+    protected _createPositions(face_vertices: IFaceVertices): FacePositions3D {
+        return new FacePositions3D(face_vertices);
+    }
+
+    protected _createNormals(face_vertices: IFaceVertices): FaceNormals3D {
+        return new FaceNormals3D(face_vertices);
+    }
+
+    protected _createColors(face_vertices: IFaceVertices): FaceColors3D {
+        return new FaceColors3D(face_vertices);
+    }
 }
 
 export class Faces4D extends Faces implements IFaces4D {
-    readonly FacePositions = FacePositions4D;
-    readonly FaceNormals = FaceNormals4D;
-    readonly FaceColors = FaceColors4D;
-
     readonly positions: FacePositions4D;
     readonly normals: FaceNormals4D;
     readonly colors: FaceColors4D;
@@ -92,5 +91,17 @@ export class Faces4D extends Faces implements IFaces4D {
         this.normals!.matmul(matrix);
 
         return this;
+    }
+
+    protected _createPositions(face_vertices: IFaceVertices): FacePositions4D {
+        return new FacePositions4D(face_vertices);
+    }
+
+    protected _createNormals(face_vertices: IFaceVertices): FaceNormals4D {
+        return new FaceNormals4D(face_vertices);
+    }
+
+    protected _createColors(face_vertices: IFaceVertices): FaceColors4D {
+        return new FaceColors4D(face_vertices);
     }
 }

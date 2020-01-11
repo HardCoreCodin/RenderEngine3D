@@ -41,11 +41,13 @@ export interface IBounds4D extends IBounds {
 }
 
 export interface IMesh {
+    faces: IFaces3D;
+    vertices: IVertices3D;
+
     readonly face_count: number;
     readonly vertex_count: number;
     readonly vertex_faces: IVertexFaces;
     readonly face_vertices: IFaceVertices;
-    readonly vertex_arrays: Float32Array[];
     readonly on_mesh_loaded: Set<IMeshCallback>;
 
     bbox: IBounds3D;

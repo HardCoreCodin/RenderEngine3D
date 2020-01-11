@@ -26,6 +26,6 @@ export const cube_face_vertices = new FaceVerticesInt8().load(inputs.position);
 export const cube_vertex_faces = new VertexFacesInt8().load(cube_face_vertices, cube_vertex_count);
 // Mesh options:
 const defaults = new MeshOptions(0, 1 /* NO_VERTEX__GENERATE_FACE */, 1 /* NO_VERTEX__GENERATE_FACE */, true);
-const CubeMesh = (options = defaults) => new Mesh(inputs, options, cube_face_vertices, cube_vertex_count, cube_vertex_faces);
+const CubeMesh = (options = defaults) => new Mesh(inputs, options, cube_face_vertices, cube_vertex_faces);
 export default CubeMesh;
 //# sourceMappingURL=cube.js.map

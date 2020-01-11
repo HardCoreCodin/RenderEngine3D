@@ -63,14 +63,14 @@ export class InputAttribute implements IInputAttribute {
 
         v1.length = v2.length = v3.length = triangle_count;
 
-        let doubled, shifteed: number;
-        for (let quad_id = quad_count - 1; quad_id; quad_id--) {
+        let doubled, shifted: number;
+        for (let quad_id = quad_count - 1; quad_id > 0; quad_id--) {
             doubled = quad_id + quad_id;
-            shifteed = doubled - 1;
+            shifted = doubled - 1;
 
-            v1.copyWithin(quad_id, shifteed, shifteed);
-            v2.copyWithin(quad_id, shifteed, shifteed);
-            v3.copyWithin(quad_id, shifteed, shifteed);
+            v1.copyWithin(quad_id, shifted, shifted);
+            v2.copyWithin(quad_id, shifted, shifted);
+            v3.copyWithin(quad_id, shifted, shifted);
 
             v1[doubled] = v1[quad_id];
             v2[doubled] = v3[quad_id];

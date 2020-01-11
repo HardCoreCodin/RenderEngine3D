@@ -6,7 +6,6 @@ import {
 } from "./functions.js";
 import {IMathAccessor} from "./accessors.js";
 import {IDirection3D, IPosition2D, IPosition3D, IVector, IVector3D} from "./vectors.js";
-import {Vector} from "../accessors/vector.js";
 
 export interface IMatrix extends IMathAccessor
 {
