@@ -1,6 +1,6 @@
 import {INode3D, IScene} from "./nodes.js";
 import {IMatrix4x4} from "./matrix.js";
-import {IMaterial} from "./render.js";
+import {IMaterial, IMeshCallback} from "./render.js";
 import {IPosition3D, IPosition4D} from "./vectors.js";
 import {IFaceVertices, IVertexFaces} from "./buffers.js";
 import {IFaces3D, IMeshInputs, IVertexPositions3D, IVertexPositions4D, IVertices3D} from "./attributes.js";
@@ -46,6 +46,7 @@ export interface IMesh {
     readonly vertex_faces: IVertexFaces;
     readonly face_vertices: IFaceVertices;
     readonly vertex_arrays: Float32Array[];
+    readonly on_mesh_loaded: Set<IMeshCallback>;
 
     bbox: IBounds3D;
     inputs: IMeshInputs;
@@ -54,7 +55,7 @@ export interface IMesh {
     load(): this;
 }
 
-export interface IGeometry extends INode3D {
+export interface IGeometry<Context extends RenderingContext = RenderingContext> extends INode3D {
     readonly id: number;
     readonly scene: IScene;
     readonly world_to_model: IMatrix4x4;
@@ -63,7 +64,7 @@ export interface IGeometry extends INode3D {
     is_renderable: boolean;
 
     mesh: IMesh;
-    material: IMaterial;
+    material: IMaterial<Context>;
 
     postWorldMatrixRefresh(): void;
 }

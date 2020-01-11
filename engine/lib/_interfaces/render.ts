@@ -17,6 +17,7 @@ export interface ICamera extends INode3D {
     zoom: number;
     depth_factor: number;
     focal_length: number;
+    aspect_ratio: number;
 
     readonly scene: IScene;
     readonly projection_matrix: IMatrix4x4;
@@ -24,14 +25,21 @@ export interface ICamera extends INode3D {
     updateProjectionMatrix(): void;
 }
 
-export interface IMaterial {
+export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
+
+export interface IMaterial<Context extends RenderingContext> {
     readonly id: number;
-    readonly scene: IScene;
+    readonly scene: IScene<Context>;
     readonly mesh_geometries: IMeshGeometries;
 
-    prepareMeshForDrawing(mesh: IMesh): void;
+    prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context>): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
+
+export type MaterialConstructor<
+    Context extends RenderingContext,
+    Instance extends IMaterial<Context> = IMaterial<Context>
+    > = new (scene: IScene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
 
@@ -63,11 +71,12 @@ export interface IRenderPipeline<Context extends RenderingContext>
 }
 
 export interface IViewport<
-    Context extends RenderingContext,
+    Context extends RenderingContext = RenderingContext,
+    SceneType extends IScene<Context> = IScene<Context>,
+    CameraType extends ICamera = ICamera,
     RenderPipelineType extends IRenderPipeline<Context> = IRenderPipeline<Context>>
 {
-    camera: ICamera
-    camera_has_moved_or_rotated: boolean;
+    camera: CameraType
     render_pipeline: RenderPipelineType;
 
     readonly width: number;
@@ -75,6 +84,7 @@ export interface IViewport<
     readonly x: number;
     readonly y: number;
 
+    readonly scene: SceneType;
     readonly world_to_view: IMatrix4x4;
     readonly world_to_clip: IMatrix4x4;
 
@@ -86,20 +96,24 @@ export interface IViewport<
 
 export interface IScreen<
     Context extends RenderingContext,
+    SceneType extends IScene<Context>,
+    CameraType extends ICamera,
     RenderPipelineType extends IRenderPipeline<Context>,
-    ViewportType extends IViewport<Context, RenderPipelineType> = IViewport<Context, RenderPipelineType>>
+    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType
+        > = IViewport<Context, SceneType, CameraType, RenderPipelineType>>
 {
-    controller: IController,
+    scene: SceneType;
+    context: Context;
+    controller: IController;
     active_viewport: ViewportType;
 
-    readonly context: Context,
     readonly viewports: Generator<ViewportType>;
 
     clear(): void;
     refresh(): void;
     resize(width: number, height: number): void;
 
-    addViewport(camera: ICamera, size?: IRectangle, position?: IVector2D): ViewportType;
+    addViewport(camera: CameraType, size?: IRectangle, position?: IVector2D): ViewportType;
     removeViewport(viewport: ViewportType): void;
 
     registerViewport(viewport: ViewportType): void;
@@ -108,11 +122,13 @@ export interface IScreen<
 
 export interface IRenderEngine<
     Context extends RenderingContext,
+    SceneType extends IScene<Context>,
+    CameraType extends ICamera,
     RenderPipelineType extends IRenderPipeline<Context>,
-    ViewportType extends IViewport<Context, RenderPipelineType>,
-    ScreenType extends IScreen<Context, RenderPipelineType, ViewportType>,
-    SceneType extends IScene>
+    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
+    ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
 {
+    readonly context: Context;
     readonly scene: SceneType;
 
     screen: ScreenType;

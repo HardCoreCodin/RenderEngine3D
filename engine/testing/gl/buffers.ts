@@ -161,13 +161,15 @@ export class GLVertexArray {
             } else
                 throw `Missing data for attribute ${name}!`;
         }
-
-        gl.bindVertexArray(null);
     }
 
     bind(): void {this._contex.bindVertexArray(this._id)}
     unbind(): void {this._contex.bindVertexArray(null)}
-    delete(): void {this._contex.deleteVertexArray(this._id)}
+
+    delete(): void {
+        for (const attribute of Object.values(this.attributes)) attribute.delete();
+        this._contex.deleteVertexArray(this._id);
+    }
 }
 
 export class GLTexture {

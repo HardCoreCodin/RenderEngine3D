@@ -11,6 +11,10 @@ export type IGLAttributes = {[name: string]: IGLBuffer }
 export type IGLAttributeInputs = {[name: string]: TypedArray|IGLBuffer}
 export type IGLAttributeLocations = {[name: string]: GLint};
 
+export interface IGLBaseUniforms extends IGLUniforms {
+    mvp: IGLUniform;
+}
+
 export interface IGLBuffer {
     readonly usage: GLenum;
     readonly count: number;

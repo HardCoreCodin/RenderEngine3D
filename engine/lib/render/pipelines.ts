@@ -18,12 +18,14 @@ import {IScene} from "../_interfaces/nodes.js";
 export abstract class BaseRenderPipeline<Context extends RenderingContext>
     implements IRenderPipeline<Context>
 {
+    protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
     abstract render(viewport: IViewport<Context>): void;
 
     constructor(readonly context: Context) {}
 
-    on_mesh_added(mesh: IMesh) {}
-    on_mesh_removed(mesh: IMesh) {}
+    on_mesh_loaded(mesh: IMesh) {}
+    on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded)}
+    on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded)}
 }
 
 export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D> {
@@ -39,7 +41,7 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
     protected face_flags: Uint8Array;
 
     protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
-    protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
+
 
     protected _updateClippingBuffers(scene: IScene): void {
         let max_face_count = 0;

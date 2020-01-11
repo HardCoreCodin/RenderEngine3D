@@ -1,9 +1,10 @@
-import Camera from "../render/camera.js";
 import {dir3, Direction3D} from "../accessors/direction.js";
-import {IVector2D} from "../_interfaces/vectors.js";
+import {IPosition3D, IVector2D} from "../_interfaces/vectors.js";
 import {IController, IKeys} from "../_interfaces/input.js";
 import {KEY_CODES} from "../../constants.js";
-import {ICamera} from "../_interfaces/render.js";
+import {IViewport} from "../_interfaces/render.js";
+import {IEulerRotation} from "../_interfaces/transform.js";
+import {IMatrix4x4} from "../_interfaces/matrix.js";
 
 abstract class Controller
     implements IController
@@ -40,23 +41,40 @@ abstract class Controller
     protected readonly right_movement = dir3();
     protected readonly _forward_direction = dir3();
 
+    protected _viewport: IViewport;
+    protected _rotation: IEulerRotation;
+    protected _translation: IPosition3D;
+    protected _camera_matrix: IMatrix4x4;
+    protected _projection_matrix: IMatrix4x4;
+    protected _world_to_view: IMatrix4x4;
+    protected _world_to_clip: IMatrix4x4;
 
     constructor(
-        readonly canvas: HTMLCanvasElement,
-        public camera: ICamera,
-
+        viewport: IViewport,
+        public canvas: HTMLCanvasElement,
         public movement_speed: number = 0.1,
         public rotation_speed: number = 0.01,
         public mouse_sensitivity: number = 0.1
     ) {
+        this.viewport = viewport;
         canvas.onmousemove = this._on_mousemove;
         document.onkeydown = this._on_keydown;
         document.onkeyup = this._on_keyup;
     }
 
+    get viewport(): IViewport {return this._viewport}
+    set viewport(viewport: IViewport) {
+        this._rotation = viewport.camera.transform.rotation;
+        this._translation = viewport.camera.transform.translation;
+        this._camera_matrix = viewport.camera.transform.matrix;
+        this._projection_matrix = viewport.camera.projection_matrix;
+        this._world_to_view = viewport.world_to_view;
+        this._world_to_clip = viewport.world_to_clip;
+    }
+
     get forward_direction(): Direction3D {
-        this._forward_direction.x = this.camera.transform.matrix.z_axis.x;
-        this._forward_direction.z = this.camera.transform.matrix.z_axis.z;
+        this._forward_direction.x = this._camera_matrix.z_axis.x;
+        this._forward_direction.z = this._camera_matrix.z_axis.z;
         this._forward_direction.normalize();
 
         return this._forward_direction;
@@ -96,18 +114,18 @@ abstract class Controller
                 this.key_pressed.yaw_right) {
 
                 if (this.key_pressed.yaw_left)
-                    this.camera.transform.rotation.y += this.rotation_amount;
+                    this._rotation.y += this.rotation_amount;
                 else
-                    this.camera.transform.rotation.y -= this.rotation_amount;
+                    this._rotation.y -= this.rotation_amount;
             }
 
             if (this.key_pressed.pitch_up ||
                 this.key_pressed.pitch_down) {
 
                 if (this.key_pressed.pitch_up)
-                    this.camera.transform.rotation.x -= this.rotation_amount;
+                    this._rotation.x -= this.rotation_amount;
                 else
-                    this.camera.transform.rotation.x += this.rotation_amount;
+                    this._rotation.x += this.rotation_amount;
             }
         }
 
@@ -127,46 +145,53 @@ abstract class Controller
                 this.forward_direction.mul(this.movement_amount, this.forward_movement);
 
                 if (this.key_pressed.forward)
-                    this.camera.transform.translation.add(this.forward_movement);
+                    this._translation.add(this.forward_movement);
                 else
-                    this.camera.transform.translation.sub(this.forward_movement);
+                    this._translation.sub(this.forward_movement);
             }
 
             if (this.key_pressed.right ||
                 this.key_pressed.left) {
 
-                this.camera.transform.matrix.x_axis.mul(this.movement_amount, this.right_movement);
+                this._camera_matrix.x_axis.mul(this.movement_amount, this.right_movement);
 
                 if (this.key_pressed.right)
-                    this.camera.transform.translation.add(this.right_movement);
+                    this._translation.add(this.right_movement);
                 else
-                    this.camera.transform.translation.sub(this.right_movement);
+                    this._translation.sub(this.right_movement);
             }
 
             if (this.key_pressed.up ||
                 this.key_pressed.down) {
 
                 if (this.key_pressed.up)
-                    this.camera.transform.translation.y += this.movement_amount;
+                    this._translation.y += this.movement_amount;
                 else
-                    this.camera.transform.translation.y -= this.movement_amount;
+                    this._translation.y -= this.movement_amount;
             }
         }
 
         if (this.mouse_moved)
             this._updateFromMouse();
+
+
+        if (this.direction_changed || this.position_changed) {
+            this._camera_matrix.invert(this._world_to_view);
+            this._world_to_view.mul(this._projection_matrix, this._world_to_clip);
+            this.direction_changed = this.position_changed = false;
+        }
     }
 
     protected _updateFromMouse(): void {
         this.direction_changed = true;
         this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
 
-        this.camera.transform.rotation.x += this.rotation_amount * (
+        this._rotation.x += this.rotation_amount * (
             this.current_mouse_position.y -
             this.last_mouse_position.y
         );
 
-        this.camera.transform.rotation.y += this.rotation_amount * (
+        this._rotation.y += this.rotation_amount * (
             this.last_mouse_position.x -
             this.current_mouse_position.x
         );

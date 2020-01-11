@@ -2,21 +2,22 @@ import Camera from "./camera.js";
 import Viewport from "./viewport.js";
 import RenderPipeline from "./pipelines.js";
 import {IVector2D} from "../_interfaces/vectors.js";
-import {IRectangle, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
+import {ICamera, IRectangle, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {IController} from "../_interfaces/input.js";
+import {IScene} from "../_interfaces/nodes.js";
+import Scene from "../scene_graph/scene.js";
 
 
 export abstract class BaseScreen<
     Context extends RenderingContext,
+    SceneType extends IScene<Context>,
+    CameraType extends ICamera,
     RenderPipelineType extends IRenderPipeline<Context>,
-    ViewportType extends IViewport<Context, RenderPipelineType>>
-    implements IScreen<Context, RenderPipelineType, ViewportType>
+    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>>
+    implements IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>
 {
-    protected abstract _createContext(): Context;
-    protected abstract _createViewport(camera: Camera, size: IRectangle, position?: IVector2D): ViewportType;
+    protected abstract _createViewport(camera: CameraType, size: IRectangle, position?: IVector2D): ViewportType;
     abstract clear(): void;
-
-    readonly context: Context;
 
     protected readonly _viewports = new Set<ViewportType>();
     protected readonly _render_pipelines = new Map<RenderPipelineType, Set<ViewportType>>();
@@ -25,12 +26,13 @@ export abstract class BaseScreen<
     protected _prior_height = 0;
 
     constructor(
-        camera: Camera,
+        camera: CameraType,
+        public scene: SceneType,
+        public context: Context,
         public controller: IController,
         protected readonly _canvas: HTMLCanvasElement,
         protected readonly _size: IRectangle = {width: 1, height: 1}
     ) {
-        this.context = this._createContext();
         this.addViewport(camera);
     }
 
@@ -100,7 +102,7 @@ export abstract class BaseScreen<
     }
 
     addViewport(
-        camera: Camera,
+        camera: CameraType,
         size: IRectangle = this._size,
         position: IVector2D = {
             x: 0,
@@ -126,18 +128,13 @@ export abstract class BaseScreen<
     }
 
     set active_viewport(viewport: ViewportType) {
-        this._active_viewport = viewport;
-        this.controller.camera = viewport.camera;
+        this._active_viewport = this.controller.viewport = viewport;
     }
 }
 
-export default class Screen extends BaseScreen<CanvasRenderingContext2D, RenderPipeline, Viewport> {
-    protected _createContext(): CanvasRenderingContext2D {
-        return this._canvas.getContext('2d');
-    }
-
+export default class Screen extends BaseScreen<CanvasRenderingContext2D, Scene, Camera, RenderPipeline, Viewport> {
     protected _createViewport(camera: Camera, size: IRectangle, position?: IVector2D): Viewport {
-        return new Viewport(this, camera, size, position);
+        return new Viewport(camera, this, size, position);
     }
 
     clear() {

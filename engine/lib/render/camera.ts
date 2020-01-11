@@ -1,6 +1,5 @@
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
-import {Position3D} from "../accessors/position.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {ICamera} from "../_interfaces/render.js";
 import {DEGREES_TO_RADIANS_FACTOR, RADIANS_TO_DEGREES_FACTOR} from "../../constants.js";
@@ -9,28 +8,19 @@ import {DEGREES_TO_RADIANS_FACTOR, RADIANS_TO_DEGREES_FACTOR} from "../../consta
 export default class Camera extends Node3D implements ICamera {
     readonly projection_matrix = new Matrix4x4();
 
-    private readonly _scale: Position3D;
-    private _is_perspective: boolean = true;
-    private _near_clipping_plane_distance: number = 0.1;
-    private _far_clipping_plane_distance: number = 1000;
-    private _field_of_view_in_degrees: number = 90;
-    private _field_of_view_in_radians: number = 90 * DEGREES_TO_RADIANS_FACTOR;
-    private _depth_factor: number = 1;
-    private _focal_length: number = 1;
-    private _aspect_ratio: number = 1;
-    private _zoom: number = 1;
+    protected _is_perspective: boolean = true;
+    protected _near_clipping_plane_distance: number = 0.1;
+    protected _far_clipping_plane_distance: number = 1000;
+    protected _field_of_view_in_degrees: number = 90;
+    protected _field_of_view_in_radians: number = 90 * DEGREES_TO_RADIANS_FACTOR;
+    protected _depth_factor: number = 1;
+    protected _focal_length: number = 1;
+    protected _aspect_ratio: number = 1;
+    protected _zoom: number = 1;
 
     constructor(readonly scene: IScene) {
         super(scene);
         scene.cameras.add(this);
-        this._scale = new Position3D(
-            this.projection_matrix.id,
-            [
-                this.projection_matrix.x_axis.arrays[0],
-                this.projection_matrix.y_axis.arrays[1],
-                this.projection_matrix.z_axis.arrays[2],
-            ]
-        );
     }
 
     updateProjectionMatrix(): void {
@@ -38,16 +28,16 @@ export default class Camera extends Node3D implements ICamera {
         this.projection_matrix.setToIdentity();
 
         if (this._is_perspective) {
-            this._scale.x = this._zoom * this._focal_length;
-            this._scale.y = this._zoom * this._focal_length * this._aspect_ratio;
+            this.projection_matrix.x_axis.x = this.zoom * this.focal_length;
+            this.projection_matrix.y_axis.y = this.zoom * this.focal_length * this.aspect_ratio;
             this.projection_matrix.m34 = 1;
         } else {
-            this._scale.x = this._zoom;
-            this._scale.y = this._zoom * this._aspect_ratio;
+            this.projection_matrix.x_axis.x = this.zoom;
+            this.projection_matrix.y_axis.y = this.zoom * this.aspect_ratio;
         }
 
-        this._scale.z = this._depth_factor;
-        this.projection_matrix.translation.z = this._depth_factor * -this._near_clipping_plane_distance;
+        this.projection_matrix.z_axis.z      = this.depth_factor * this.far;
+        this.projection_matrix.translation.z = this.depth_factor * this.far * -this.near;
     }
 
     get is_perspective(): boolean {return this._is_perspective}
@@ -102,7 +92,7 @@ export default class Camera extends Node3D implements ICamera {
     private _setDepthFactor(near: number, far: number) {
         this._near_clipping_plane_distance = near;
         this._far_clipping_plane_distance = far;
-        this._depth_factor = far / (far - near);
+        this._depth_factor = 1 / (far - near);
         this.updateProjectionMatrix();
     }
 

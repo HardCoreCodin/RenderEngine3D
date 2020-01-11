@@ -1,4 +1,4 @@
-import {ICamera} from "./render.js";
+import {IViewport} from "./render.js";
 import {IDirection3D} from "./vectors.js";
 
 export interface IKeys {
@@ -19,10 +19,10 @@ export interface IKeys {
 }
 
 export interface IController {
-    readonly canvas: HTMLCanvasElement;
     readonly forward_direction: IDirection3D;
 
-    camera: ICamera;
+    viewport: IViewport;
+    canvas: HTMLCanvasElement;
 
     key_bindings: IKeys;
     key_pressed: IKeys;

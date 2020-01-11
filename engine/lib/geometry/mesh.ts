@@ -8,18 +8,18 @@ import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {IMesh} from "../_interfaces/geometry.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
-import {IAttribute} from "../_interfaces/attributes.js";
+import {IMeshCallback} from "../_interfaces/render.js";
 
 export default class Mesh implements IMesh {
     readonly faces: Faces3D;
     readonly vertices: Vertices3D;
     readonly bbox = new Bounds3D();
+    readonly on_mesh_loaded = new Set<IMeshCallback>();
 
     constructor(
         public inputs: MeshInputs,
         public options: MeshOptions = new MeshOptions(),
         readonly face_vertices: IFaceVertices = new FaceVerticesInt32().load(inputs.sanitize().position),
-        readonly attributes: Map<string, IAttribute> = new Map<string, IAttribute>(),
         readonly vertex_count: number = inputs.position.vertex_count,
         readonly vertex_faces: IVertexFaces = new VertexFacesInt32().load(face_vertices, vertex_count),
         readonly face_count: number = face_vertices.length,
@@ -29,16 +29,12 @@ export default class Mesh implements IMesh {
 
         this.faces = new Faces3D(face_vertices, options);
         this.vertices = new Vertices3D(vertex_count, face_vertices, options);
-
-        this.init();
-    }
-
-    init(): void {
-        this.vertices.positions.load(this.inputs.position);
-        this.bbox.load(this.vertices.positions);
     }
 
     load(): this {
+        this.vertices.positions.load(this.inputs.position);
+        this.bbox.load(this.vertices.positions);
+
         if (this.options.include_uvs)
             this.vertices.uvs.load(this.inputs.uv);
 
@@ -93,6 +89,10 @@ export default class Mesh implements IMesh {
                 this.vertices.colors.load(this.inputs.color);
                 this.faces.colors.pull(this.vertices.colors);
         }
+
+        if (this.on_mesh_loaded.size)
+            for (const mesh_loaded of this.on_mesh_loaded)
+                mesh_loaded(this);
 
         return this;
     }

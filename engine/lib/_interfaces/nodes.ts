@@ -1,6 +1,6 @@
 import {IMatrix4x4} from "./matrix.js";
 import {ITransform} from "./transform.js";
-import {ICamera, IMaterial, IMeshGeometries} from "./render.js";
+import {CameraConstructor, ICamera, IMaterial, IMeshGeometries, MaterialConstructor} from "./render.js";
 
 export interface IParent {
     readonly child_count: number;
@@ -24,14 +24,19 @@ export interface INode3D extends IParent {
     refreshWorldMatrix(recurse?: boolean, include_static?: boolean): void;
 }
 
-export interface IScene
+export interface IScene<
+    Context extends RenderingContext = RenderingContext,
+    CameraType extends ICamera = ICamera,
+    MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends IParent
 {
-    readonly cameras: Set<ICamera>;
-    readonly materials: Set<IMaterial>;
+    context: Context,
+
+    readonly cameras: Set<CameraType>;
+    readonly materials: Set<MaterialType>;
     readonly mesh_geometries: IMeshGeometries;
 
-    addCamera(): ICamera;
-    addMaterial(...args: any[]): IMaterial;
+    addCamera(CameraClass: CameraConstructor<CameraType>): CameraType;
+    addMaterial(MaterialClass: MaterialConstructor<Context, MaterialType>): MaterialType;
 }
 

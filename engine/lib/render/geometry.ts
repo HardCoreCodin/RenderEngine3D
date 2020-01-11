@@ -6,11 +6,11 @@ import {IGeometry} from "../_interfaces/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 
 
-export default class Geometry
-    extends Node3D implements IGeometry
+export default class Geometry<Context extends RenderingContext = RenderingContext>
+    extends Node3D implements IGeometry<Context>
 {
     static LAST_ID = 0;
-    protected _material: IMaterial;
+    protected _material: IMaterial<Context>;
     readonly world_to_model = new Matrix4x4();
 
     constructor(
@@ -28,11 +28,11 @@ export default class Geometry
         return this._mesh;
     }
 
-    get material(): IMaterial {
+    get material(): IMaterial<Context> {
         return this._material;
     }
 
-    set material(material: IMaterial) {
+    set material(material: IMaterial<Context>) {
         if (this._material) {
             if (Object.is(this._material, material))
                 return;

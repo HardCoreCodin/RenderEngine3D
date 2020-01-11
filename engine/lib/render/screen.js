@@ -1,6 +1,8 @@
 import Viewport from "./viewport.js";
 export class BaseScreen {
-    constructor(camera, controller, _canvas, _size = { width: 1, height: 1 }) {
+    constructor(camera, scene, context, controller, _canvas, _size = { width: 1, height: 1 }) {
+        this.scene = scene;
+        this.context = context;
         this.controller = controller;
         this._canvas = _canvas;
         this._size = _size;
@@ -8,7 +10,6 @@ export class BaseScreen {
         this._render_pipelines = new Map();
         this._prior_width = 0;
         this._prior_height = 0;
-        this.context = this._createContext();
         this.addViewport(camera);
     }
     refresh() {
@@ -85,16 +86,12 @@ export class BaseScreen {
         return this._active_viewport;
     }
     set active_viewport(viewport) {
-        this._active_viewport = viewport;
-        this.controller.camera = viewport.camera;
+        this._active_viewport = this.controller.viewport = viewport;
     }
 }
 export default class Screen extends BaseScreen {
-    _createContext() {
-        return this._canvas.getContext('2d');
-    }
     _createViewport(camera, size, position) {
-        return new Viewport(this, camera, size, position);
+        return new Viewport(camera, this, size, position);
     }
     clear() {
         this.context.clearRect(0, 0, this._size.width, this._size.height);

@@ -3,29 +3,32 @@ import Camera from "../render/camera.js";
 import Material from "../render/materials.js";
 import {MeshGeometries} from "../render/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
-import {ICamera, IMaterial} from "../_interfaces/render.js";
+import {CameraConstructor, ICamera, IMaterial, MaterialConstructor} from "../_interfaces/render.js";
 
-export abstract class BaseScene
+
+export class BaseScene<
+    Context extends RenderingContext,
+    CameraType extends ICamera,
+    MaterialType extends IMaterial<Context>>
     extends Parent
-    implements IScene
+    implements IScene<Context, CameraType, MaterialType>
 {
-    protected abstract _createCamera(): ICamera;
-    protected abstract _createMaterial(...args: any[]): IMaterial;
-
     readonly mesh_geometries: MeshGeometries;
-    readonly cameras = new Set<ICamera>();
-    readonly materials = new Set<IMaterial>();
+    readonly cameras = new Set<CameraType>();
+    readonly materials = new Set<MaterialType>();
 
-    constructor() {
+    constructor(public context: Context) {
         super();
         this.mesh_geometries = new MeshGeometries(this);
     }
 
-    addCamera(): ICamera {return this._createCamera()}
-    addMaterial(...args: any[]): IMaterial {return this._createMaterial(...args)}
+    addCamera(CameraClass: CameraConstructor<CameraType>): CameraType {
+        return new CameraClass(this)
+    }
+
+    addMaterial(MaterialClass: MaterialConstructor<Context, MaterialType>): MaterialType {
+        return new MaterialClass(this);
+    }
 }
 
-export default class Scene extends BaseScene {
-    protected _createCamera(): Camera {return new Camera(this)}
-    protected _createMaterial(...args: any[]): Material {return new Material(this)}
-}
+export default class Scene extends BaseScene<CanvasRenderingContext2D, Camera, Material> {}

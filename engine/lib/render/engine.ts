@@ -1,25 +1,29 @@
 import Camera from "./camera.js";
 import Screen from "./screen.js";
 import Scene from "../scene_graph/scene.js";
+import Viewport from "./viewport.js";
+import RenderPipeline from "./pipelines.js";
 import {FPSController} from "../input/controllers.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
-import Viewport from "./viewport.js";
-import RenderPipeline from "./pipelines.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
+    SceneType extends IScene<Context>,
+    CameraType extends ICamera,
     RenderPipelineType extends IRenderPipeline<Context>,
-    ViewportType extends IViewport<Context, RenderPipelineType>,
-    ScreenType extends IScreen<Context, RenderPipelineType, ViewportType>,
-    SceneType extends IScene>
-    implements IRenderEngine<Context, RenderPipelineType, ViewportType, ScreenType, SceneType>
+    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
+    ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
+    implements IRenderEngine<Context, SceneType, CameraType, RenderPipelineType, ViewportType, ScreenType>
 {
+    protected abstract _createContext(canvas: HTMLCanvasElement): Context;
+    protected abstract _createDefaultScreen(canvas: HTMLCanvasElement, camera: CameraType): ScreenType;
+    protected abstract _createDefaultController(canvas: HTMLCanvasElement, viewport: ViewportType): IController;
     protected abstract _createDefaultScene(): SceneType;
-    protected abstract _createDefaultScreen(canvas: HTMLCanvasElement, camera: ICamera): ScreenType;
-    protected abstract _createDefaultController(canvas: HTMLCanvasElement, camera: ICamera): IController;
+    protected abstract _getDefaultCamera(): CameraType;
 
+    readonly context: Context;
     readonly scene: SceneType;
     readonly screen: ScreenType;
 
@@ -31,18 +35,34 @@ export abstract class BaseRenderEngine<
     protected constructor(
         canvas: HTMLCanvasElement,
         scene?: SceneType,
-        camera?: ICamera,
+        camera?: CameraType,
         controller?: IController,
         screen?: ScreenType
     ) {
-        camera = camera || this._getDefaultCamera();
-        this.scene = scene || this._createDefaultScene();
-        this.screen = screen || this._createDefaultScreen(canvas, camera);
-        this._controller = controller || this._createDefaultController(canvas, camera);
-    }
+        this.context = this._createContext(canvas);
 
-    protected _getDefaultCamera(): ICamera {
-        return this.scene.cameras.size ? this.scene.cameras[0] : this.scene.addCamera();
+        if (scene) {
+            scene.context = this.context;
+            this.scene = scene;
+        } else
+            this.scene = this._createDefaultScene();
+
+        if (screen) {
+            screen.context = this.context;
+            this.screen = screen;
+        } else {
+            if (!camera)
+                camera = this._getDefaultCamera();
+
+            this.screen = this._createDefaultScreen(canvas, camera);
+        }
+
+        if (controller) {
+            controller.canvas = canvas;
+            controller.viewport = this.screen.active_viewport;
+            this._controller = controller;
+        } else
+            this._controller = this._createDefaultController(canvas, this.screen.active_viewport);
     }
 
     get controller(): IController {
@@ -51,16 +71,13 @@ export abstract class BaseRenderEngine<
 
     set controller(controller: IController) {
         this._controller = this.screen.controller = controller;
-        controller.camera = this.screen.active_viewport.camera;
+        controller.viewport = this.screen.active_viewport;
     }
 
     update(time: number): void {
         this._delta_time = (time - this._last_timestamp) / this._frame_time;
         this._last_timestamp = time;
         this._controller.update(this._delta_time);
-
-        this.screen.active_viewport.camera_has_moved_or_rotated = this._controller.direction_changed || this._controller.position_changed;
-        this._controller.direction_changed = this._controller.position_changed = false;
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this.scene.children)
@@ -76,28 +93,26 @@ export abstract class BaseRenderEngine<
     }
 }
 
-export abstract class RenderEngineFPS<
-    Context extends RenderingContext,
-    RenderPipelineType extends IRenderPipeline<Context>,
-    ViewportType extends IViewport<Context, RenderPipelineType>,
-    ScreenType extends IScreen<Context, RenderPipelineType, ViewportType>,
-    SceneType extends IScene>
-    extends BaseRenderEngine<Context, RenderPipelineType, ViewportType, ScreenType, SceneType>
-{
-    protected _createDefaultController(canvas: HTMLCanvasElement, camera: ICamera): FPSController {
-        return new FPSController(canvas, camera);
-    }
-}
-
 export default class RenderEngine
-    extends RenderEngineFPS<CanvasRenderingContext2D, RenderPipeline, Viewport, Screen, Scene>
+    extends BaseRenderEngine<CanvasRenderingContext2D, Scene, Camera, RenderPipeline, Viewport, Screen>
 {
+    protected _createContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+        return canvas.getContext('2d');
+    }
+
     protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): Screen {
-        return new Screen(camera, this._controller, canvas);
+        return new Screen(camera, this.scene, this.context, this._controller, canvas);
+    }
+
+    protected _createDefaultController(canvas: HTMLCanvasElement, viewport: IViewport): FPSController {
+        return new FPSController(viewport, canvas);
     }
 
     protected _createDefaultScene(): Scene {
-        return new Scene();
+        return new Scene(this.context);
+    }
+
+    protected _getDefaultCamera(): Camera {
+        return this.scene.cameras.size ? this.scene.cameras[0] : this.scene.addCamera(Camera);
     }
 }
-
