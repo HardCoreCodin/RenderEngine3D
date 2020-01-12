@@ -1,7 +1,7 @@
 import {IViewport} from "./render.js";
-import {IDirection3D} from "./vectors.js";
+import {IDirection3D, IVector2D} from "./vectors.js";
 
-export interface IKeys {
+export interface IControllerKeys {
     up: number;
     down: number;
 
@@ -20,16 +20,17 @@ export interface IKeys {
 
 export interface IController {
     readonly forward_direction: IDirection3D;
+    readonly key_bindings: IControllerKeys;
+    readonly key_pressed: IControllerKeys;
 
     viewport: IViewport;
     canvas: HTMLCanvasElement;
 
-    key_bindings: IKeys;
-    key_pressed: IKeys;
-
     position_changed: boolean;
     direction_changed: boolean;
 
+    mouse_moved: boolean;
+    mouse_movement: IVector2D;
     movement_speed: number;
     rotation_speed: number;
     mouse_sensitivity: number;

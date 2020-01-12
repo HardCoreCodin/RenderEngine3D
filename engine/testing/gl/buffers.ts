@@ -87,7 +87,7 @@ export class GLElementArrayBuffer extends GLBuffer {
         gl = this._contex;
         gl.bindBuffer(this._type, this._id);
         gl.drawElements(mode, this._length, this._data_type, 0);
-        gl.bindBuffer(this._type, null);
+        // gl.bindBuffer(this._type, null);
     }
 }
 

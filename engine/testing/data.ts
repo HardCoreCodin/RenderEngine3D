@@ -70,7 +70,7 @@ input_positions.pushFace([21, 20, 22]);
 input_positions.pushFace([22, 20, 23]);
 
 export const face_count = input_positions.face_count;
-const quad_count = face_count >> 1;
+const quad_count = face_count / 2;
 
 input_colors.pushVertex([0.5, 0.5, 0.5]); // Top
 input_colors.pushVertex([0.75, 0.25, 0.5]); // Left

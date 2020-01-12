@@ -7,6 +7,7 @@ import {FPSController} from "../input/controllers.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
+import {FULL_SCREEN_OPTIONS, KEY_CODES} from "../../constants.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
@@ -27,10 +28,32 @@ export abstract class BaseRenderEngine<
     protected _scene: SceneType;
     protected _screen: ScreenType;
 
+    protected _is_active: boolean = false;
+    protected _is_running: boolean = false;
+
     protected _controller: IController;
-    // protected _frame_time = 1000 / 60;
     protected _last_timestamp = 0;
     protected _delta_time = 0;
+
+    readonly key_pressed = {
+        esc: 0,
+        ctrl: 0,
+        space: 0
+    };
+
+    readonly key_bindings = {
+        esc: KEY_CODES.ESC,
+        ctrl: KEY_CODES.CTRL,
+        space: KEY_CODES.SPACE
+    };
+
+    protected readonly _events = [
+        'keyup',
+        'keydown',
+        'mousemove',
+        'click',
+        'pointerlockchange'
+    ];
 
     constructor(
         readonly canvas: HTMLCanvasElement,
@@ -43,7 +66,17 @@ export abstract class BaseRenderEngine<
         this.scene = scene || this._createDefaultScene();
         this.screen = screen || this._createDefaultScreen(canvas, camera || this._getDefaultCamera());
         this.controller = controller || this._createDefaultController(canvas, this.screen.active_viewport);
+
+        if (document.ontouchmove)
+            this._events.concat(
+                'touchmove',
+                'touchstart',
+                'touchend'
+            );
     }
+
+    get is_active(): boolean {return this._is_active}
+    get is_running(): boolean {return this._is_running}
 
     get scene(): SceneType {return this._scene}
     set scene(scene: SceneType) {
@@ -65,10 +98,23 @@ export abstract class BaseRenderEngine<
     }
 
     update(time: number): void {
-        // this._delta_time = (time - this._last_timestamp) / this._frame_time;
-        this._delta_time = this._last_timestamp ? (time - this._last_timestamp) : 0;
+        this._delta_time = time - this._last_timestamp;
         this._last_timestamp = time;
-        this._controller.update(this._delta_time);
+
+        // Note: Full screen API exists but stopped being supported(!!!)
+        // if (document.fullscreenEnabled) {
+        //     if (document.fullscreenElement) {
+        //         if (this.key_pressed.esc || (
+        //             this.key_pressed.ctrl &&
+        //             this.key_pressed.space)
+        //         ) document.exitFullscreen();
+        //     } else if (this.key_pressed.ctrl &&
+        //                this.key_pressed.space)
+        //         document.documentElement.requestFullscreen(FULL_SCREEN_OPTIONS);
+        // }
+
+        if (this._is_active)
+            this._controller.update(this._delta_time);
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this.scene.children)
@@ -77,10 +123,83 @@ export abstract class BaseRenderEngine<
         this.screen.refresh();
 
         requestAnimationFrame(this.update.bind(this));
-    };
+    }
+
+    protected _on_pointerlockchange(pointer_event: PointerEvent): void {
+        this._is_active = document.documentElement === document.pointerLockElement;
+    }
+
+    protected _on_mousemove(mouse_event: MouseEvent): void {
+        this._controller.mouse_movement.x += mouse_event.movementX;
+        this._controller.mouse_movement.y += mouse_event.movementY;
+        this._controller.mouse_moved = true;
+    }
+
+    protected _on_click() {
+        console.log(`Clicked while ${this._is_active ? '' : 'in'}active`);
+        if (!this._is_active) {
+            this._is_active = true;
+            this._controller.mouse_movement.x = 0;
+            this._controller.mouse_movement.y = 0;
+            console.log('Locaking...');
+            document.documentElement.requestPointerLock();
+        }
+    }
+
+    protected _on_keydown(key_event: KeyboardEvent): void {
+        for (const key of Object.keys(this.key_bindings))
+            if (this.key_bindings[key] === key_event.which)
+                this.key_pressed[key] = 1;
+
+        for (const key of Object.keys(this._controller.key_bindings))
+            if (this._controller.key_bindings[key] === key_event.which)
+                this._controller.key_pressed[key] = 1;
+    }
+
+    protected _on_keyup(key_event: KeyboardEvent): void {
+        for (const key of Object.keys(this.key_bindings))
+            if (this.key_bindings[key] === key_event.which)
+                this.key_pressed[key] = 0;
+
+        for (const key of Object.keys(this._controller.key_bindings))
+            if (this._controller.key_bindings[key] === key_event.which)
+                this._controller.key_pressed[key] = 0;
+    }
+
+    handleEvent(event: Event): void {
+        const handler = `_on_${event.type}`;
+        if (typeof this[handler] === 'function') {
+            event.preventDefault();
+            return this[handler](event);
+        }
+    }
+
+    protected _startListening() {
+        for (const event of this._events)
+            document.addEventListener(event, this, false);
+    }
+
+    protected _stopListening() {
+        for (const event of this._events)
+            document.removeEventListener(event, this, false);
+    }
 
     start() {
+        this._startListening();
+        this._is_running = true;
+
+        this.screen.active_viewport.camera.transform.matrix.invert(
+            this.screen.active_viewport.world_to_view
+        ).mul(this.screen.active_viewport.camera.projection_matrix,
+            this.screen.active_viewport.world_to_clip
+        );
+
         requestAnimationFrame(this.update.bind(this));
+    }
+
+    stop() {
+        this._stopListening();
+        this._is_running = false;
     }
 }
 

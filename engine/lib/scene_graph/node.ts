@@ -16,6 +16,7 @@ export default class Node3D extends Parent implements INode3D
     ) {
         super();
         this._parent = scene;
+        scene.addChild(this);
     }
 
     get is_root(): boolean {

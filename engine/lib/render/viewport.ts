@@ -109,8 +109,8 @@ export default class Viewport extends BaseViewport<CanvasRenderingContext2D, Sce
     reset(width: number, height: number, x: number, y: number): void {
         const resized = width !== this._size.width || height !== this._size.height;
         if (resized) {
-            const half_width = width >> 1;
-            const half_height = height >> 1;
+            const half_width = width / 2;
+            const half_height = height / 2;
 
             // Scale the normalized screen to the pixel size:
             // (from normalized size of -1->1 horizontally and vertically, so from width and height of 2)

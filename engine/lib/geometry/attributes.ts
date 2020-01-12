@@ -63,6 +63,14 @@ export abstract class FaceAttribute<
     extends Attribute<VectorType>
     implements IFaceAttribute<VectorType, VertexAttribute>
 {
+    constructor(
+        readonly face_vertices: IFaceVertices,
+        readonly face_count: number = face_vertices.length,
+        arrays?: Arrays
+    ) {
+        super(face_vertices, face_count, face_count, arrays);
+    }
+
     pull(input: VertexAttribute): void {
         let face_index,
             vertex_index_1,

@@ -1,19 +1,16 @@
 import {dir3, Direction3D} from "../accessors/direction.js";
 import {IPosition3D, IVector2D} from "../_interfaces/vectors.js";
-import {IController, IKeys} from "../_interfaces/input.js";
-import {KEY_CODES} from "../../constants.js";
-import {IViewport} from "../_interfaces/render.js";
+import {IController, IControllerKeys} from "../_interfaces/input.js";
+import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
+import {KEY_CODES} from "../../constants.js";
 
 abstract class Controller
     implements IController
 {
-    abstract key_bindings: IKeys;
-    readonly key_pressed: IKeys = {
-        up: 0,
-        down: 0,
-
+    abstract readonly key_bindings: IControllerKeys;
+    readonly key_pressed: IControllerKeys = {
         forward: 0,
         backwards: 0,
 
@@ -24,16 +21,19 @@ abstract class Controller
         yaw_left: 0,
 
         pitch_up: 0,
-        pitch_down: 0
+        pitch_down: 0,
+
+        up: 0,
+        down: 0,
     };
 
     position_changed: boolean = false;
     direction_changed: boolean = false;
 
-    protected mouse_moved: boolean = false;
-    protected current_mouse_position: IVector2D = {x: 0, y: 0};
-    protected last_mouse_position: IVector2D = {x: 0, y: 0};
+    delta_time_multiplier: number = 60 / 1000;
 
+    public mouse_moved: boolean = false;
+    public mouse_movement: IVector2D = {x: 0, y: 0};
     protected movement_amount: number;
     protected rotation_amount: number;
 
@@ -44,7 +44,8 @@ abstract class Controller
     protected _viewport: IViewport;
     protected _rotation: IEulerRotation;
     protected _translation: IPosition3D;
-    protected _camera_matrix: IMatrix4x4;
+    protected _matrix: IMatrix4x4;
+    protected _camera: ICamera;
     protected _projection_matrix: IMatrix4x4;
     protected _world_to_view: IMatrix4x4;
     protected _world_to_clip: IMatrix4x4;
@@ -57,48 +58,31 @@ abstract class Controller
         public mouse_sensitivity: number = 0.1
     ) {
         this.viewport = viewport;
-        canvas.onmousemove = this._on_mousemove.bind(this);
-        document.onkeydown = this._on_keydown.bind(this);
-        document.onkeyup = this._on_keyup.bind(this);
     }
 
     get viewport(): IViewport {return this._viewport}
     set viewport(viewport: IViewport) {
+        this._viewport = viewport;
+        this._camera = viewport.camera;
         this._rotation = viewport.camera.transform.rotation;
         this._translation = viewport.camera.transform.translation;
-        this._camera_matrix = viewport.camera.transform.matrix;
+        this._matrix = viewport.camera.transform.matrix;
         this._projection_matrix = viewport.camera.projection_matrix;
         this._world_to_view = viewport.world_to_view;
         this._world_to_clip = viewport.world_to_clip;
     }
 
     get forward_direction(): Direction3D {
-        this._forward_direction.x = this._camera_matrix.z_axis.x;
-        this._forward_direction.z = this._camera_matrix.z_axis.z;
+        this._forward_direction.x = this._matrix.z_axis.x;
+        this._forward_direction.z = this._matrix.z_axis.z;
         this._forward_direction.normalize();
 
         return this._forward_direction;
     }
 
-    protected _on_mousemove(mouse_event): void {
-        this.current_mouse_position.x = mouse_event.clientX - this.canvas.offsetLeft;
-        this.current_mouse_position.y = mouse_event.clientY - this.canvas.offsetTop;
-        this.mouse_moved = true;
-    }
-
-    protected _on_keydown(key_event): void {
-        for (const key in this.key_bindings)
-            if (this.key_bindings[key] === key_event.which)
-                this.key_pressed[key] = 0;
-    }
-
-    protected _on_keyup(key_event): void {
-        for (const key in this.key_bindings)
-            if (this.key_bindings[key] === key_event.which)
-                this.key_pressed[key] = 1;
-    }
-
     update(delta_time: number): void {
+        delta_time *= this.delta_time_multiplier;
+
         this.position_changed = false;
         this.direction_changed = false;
 
@@ -141,7 +125,6 @@ abstract class Controller
 
             if (this.key_pressed.forward ||
                 this.key_pressed.backwards) {
-
                 this.forward_direction.mul(this.movement_amount, this.forward_movement);
 
                 if (this.key_pressed.forward)
@@ -153,7 +136,7 @@ abstract class Controller
             if (this.key_pressed.right ||
                 this.key_pressed.left) {
 
-                this._camera_matrix.x_axis.mul(this.movement_amount, this.right_movement);
+                this._matrix.x_axis.mul(this.movement_amount, this.right_movement);
 
                 if (this.key_pressed.right)
                     this._translation.add(this.right_movement);
@@ -175,8 +158,8 @@ abstract class Controller
             this._updateFromMouse();
 
 
-        if (this.direction_changed || this.position_changed) {
-            this._camera_matrix.invert(this._world_to_view);
+        if (!this._camera.is_static || this.direction_changed || this.position_changed) {
+            this._matrix.invert(this._world_to_view);
             this._world_to_view.mul(this._projection_matrix, this._world_to_clip);
             this.direction_changed = this.position_changed = false;
         }
@@ -186,19 +169,10 @@ abstract class Controller
         this.direction_changed = true;
         this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
 
-        this._rotation.x += this.rotation_amount * (
-            this.current_mouse_position.y -
-            this.last_mouse_position.y
-        );
+        this._rotation.x += this.rotation_amount * this.mouse_movement.y;
+        this._rotation.y -= this.rotation_amount * this.mouse_movement.x;
 
-        this._rotation.y += this.rotation_amount * (
-            this.last_mouse_position.x -
-            this.current_mouse_position.x
-        );
-
-        this.last_mouse_position.x = this.current_mouse_position.x;
-        this.last_mouse_position.y = this.current_mouse_position.y;
-
+        this.mouse_movement.x = this.mouse_movement.y = 0;
         this.mouse_moved = false;
     }
 }
@@ -206,7 +180,7 @@ abstract class Controller
 export class FPSController
     extends Controller
 {
-    key_bindings = {
+    key_bindings: IControllerKeys = {
         forward: KEY_CODES.W,
         backwards: KEY_CODES.S,
 

@@ -9,11 +9,11 @@ export default class Camera extends Node3D implements ICamera {
     readonly projection_matrix = new Matrix4x4();
 
     protected _is_perspective: boolean = true;
-    protected _near_clipping_plane_distance: number = 0.1;
-    protected _far_clipping_plane_distance: number = 1000;
+    protected _near_clipping_plane_distance: number = 0.0001;
+    protected _far_clipping_plane_distance: number = 10000;
     protected _field_of_view_in_degrees: number = 90;
     protected _field_of_view_in_radians: number = 90 * DEGREES_TO_RADIANS_FACTOR;
-    protected _depth_factor: number = 1;
+    protected _depth_factor: number = 1 / (10000 - 0.0001);
     protected _focal_length: number = 1;
     protected _aspect_ratio: number = 1;
     protected _zoom: number = 1;
@@ -25,15 +25,17 @@ export default class Camera extends Node3D implements ICamera {
 
     updateProjectionMatrix(): void {
         // Update the matrix that converts from view space to clip space:
-        this.projection_matrix.setToIdentity();
-
+        // Update the matrix that converts from view space to clip space:
         if (this._is_perspective) {
             this.projection_matrix.x_axis.x = this.zoom * this.focal_length;
             this.projection_matrix.y_axis.y = this.zoom * this.focal_length * this.aspect_ratio;
             this.projection_matrix.m34 = 1;
+            this.projection_matrix.m44 = 0;
         } else {
             this.projection_matrix.x_axis.x = this.zoom;
             this.projection_matrix.y_axis.y = this.zoom * this.aspect_ratio;
+            this.projection_matrix.m34 = 0;
+            this.projection_matrix.m44 = 1;
         }
 
         this.projection_matrix.z_axis.z      = this.depth_factor * this.far;
@@ -61,7 +63,7 @@ export default class Camera extends Node3D implements ICamera {
 
         this._field_of_view_in_degrees = degrees;
         this._field_of_view_in_radians = degrees * DEGREES_TO_RADIANS_FACTOR;
-        this._focal_length = 1.0 / Math.tan(this._field_of_view_in_radians >> 1);
+        this._focal_length = 1.0 / Math.tan(this._field_of_view_in_radians / 2);
         this.updateProjectionMatrix();
     }
 
@@ -83,7 +85,7 @@ export default class Camera extends Node3D implements ICamera {
             return;
 
         this._focal_length = focal_length;
-        this._field_of_view_in_radians = Math.atan(1.0 / focal_length) >> 1;
+        this._field_of_view_in_radians = Math.atan(1.0 / focal_length) / 2;
         this._field_of_view_in_degrees = this._field_of_view_in_radians * RADIANS_TO_DEGREES_FACTOR;
         this.updateProjectionMatrix();
     }
