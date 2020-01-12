@@ -33,7 +33,7 @@ export abstract class BaseScreen<
         protected readonly _canvas: HTMLCanvasElement,
         protected readonly _size: IRectangle = {width: 1, height: 1}
     ) {
-        this.addViewport(camera);
+        this.active_viewport = this.addViewport(camera);
     }
 
     refresh() {
@@ -76,8 +76,8 @@ export abstract class BaseScreen<
             viewports = this._render_pipelines.get(render_pipeline);
         else {
             const mesh_geometries = viewport.camera.scene.mesh_geometries;
-            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added);
-            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed);
+            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added.bind(render_pipeline));
+            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed.bind(render_pipeline));
 
             viewports = new Set<ViewportType>();
             this._render_pipelines.set(render_pipeline, viewports);
@@ -93,8 +93,8 @@ export abstract class BaseScreen<
             const viewports = this._render_pipelines.get(render_pipeline);
             if (viewports.size === 1) {
                 const mesh_geometries = viewport.camera.scene.mesh_geometries;
-                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added);
-                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed);
+                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added.bind(render_pipeline));
+                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed.bind(render_pipeline));
                 this._render_pipelines.delete(render_pipeline);
             } else
                 viewports.delete(viewport);
@@ -128,7 +128,9 @@ export abstract class BaseScreen<
     }
 
     set active_viewport(viewport: ViewportType) {
-        this._active_viewport = this.controller.viewport = viewport;
+        this._active_viewport = viewport;
+        if (this.controller)
+            this.controller.viewport = viewport;
     }
 }
 

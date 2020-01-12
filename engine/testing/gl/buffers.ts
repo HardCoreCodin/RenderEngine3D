@@ -1,4 +1,3 @@
-// import gl from "./context.js";
 import {IGLAttributeInputs, IGLAttributeLocations, IGLAttributes, IGLBuffer, TypedArray} from "./types.js";
 
 let gl: WebGL2RenderingContext;
@@ -24,6 +23,7 @@ abstract class GLBuffer implements IGLBuffer {
     }
 
     load(data: TypedArray, usage: GLenum = this.usage) {
+        gl = this._contex;
         this._data_type = (
             data instanceof Float32Array ? gl.FLOAT :
             data instanceof Int8Array ? gl.BYTE :

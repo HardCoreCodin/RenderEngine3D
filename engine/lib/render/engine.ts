@@ -24,58 +24,49 @@ export abstract class BaseRenderEngine<
     protected abstract _getDefaultCamera(): CameraType;
 
     readonly context: Context;
-    readonly scene: SceneType;
-    readonly screen: ScreenType;
+    protected _scene: SceneType;
+    protected _screen: ScreenType;
 
     protected _controller: IController;
-    protected _frame_time = 1000 / 60;
+    // protected _frame_time = 1000 / 60;
     protected _last_timestamp = 0;
     protected _delta_time = 0;
 
-    protected constructor(
-        canvas: HTMLCanvasElement,
+    constructor(
+        readonly canvas: HTMLCanvasElement,
         scene?: SceneType,
         camera?: CameraType,
         controller?: IController,
         screen?: ScreenType
     ) {
         this.context = this._createContext(canvas);
-
-        if (scene) {
-            scene.context = this.context;
-            this.scene = scene;
-        } else
-            this.scene = this._createDefaultScene();
-
-        if (screen) {
-            screen.context = this.context;
-            this.screen = screen;
-        } else {
-            if (!camera)
-                camera = this._getDefaultCamera();
-
-            this.screen = this._createDefaultScreen(canvas, camera);
-        }
-
-        if (controller) {
-            controller.canvas = canvas;
-            controller.viewport = this.screen.active_viewport;
-            this._controller = controller;
-        } else
-            this._controller = this._createDefaultController(canvas, this.screen.active_viewport);
+        this.scene = scene || this._createDefaultScene();
+        this.screen = screen || this._createDefaultScreen(canvas, camera || this._getDefaultCamera());
+        this.controller = controller || this._createDefaultController(canvas, this.screen.active_viewport);
     }
 
-    get controller(): IController {
-        return this._controller;
+    get scene(): SceneType {return this._scene}
+    set scene(scene: SceneType) {
+        scene.context = this.context;
+        this._scene = scene;
     }
 
+    get screen(): ScreenType {return this._screen}
+    set screen(screen: ScreenType) {
+        screen.context = this.context;
+        this._screen = screen;
+    }
+
+    get controller(): IController {return this._controller}
     set controller(controller: IController) {
-        this._controller = this.screen.controller = controller;
+        controller.canvas = this.canvas;
         controller.viewport = this.screen.active_viewport;
+        this._controller = this.screen.controller = controller;
     }
 
     update(time: number): void {
-        this._delta_time = (time - this._last_timestamp) / this._frame_time;
+        // this._delta_time = (time - this._last_timestamp) / this._frame_time;
+        this._delta_time = this._last_timestamp ? (time - this._last_timestamp) : 0;
         this._last_timestamp = time;
         this._controller.update(this._delta_time);
 
@@ -85,11 +76,11 @@ export abstract class BaseRenderEngine<
 
         this.screen.refresh();
 
-        requestAnimationFrame(this.update);
+        requestAnimationFrame(this.update.bind(this));
     };
 
     start() {
-        requestAnimationFrame(this.update);
+        requestAnimationFrame(this.update.bind(this));
     }
 }
 

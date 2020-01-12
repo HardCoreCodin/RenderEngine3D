@@ -24,8 +24,8 @@ export abstract class BaseRenderPipeline<Context extends RenderingContext>
     constructor(readonly context: Context) {}
 
     on_mesh_loaded(mesh: IMesh) {}
-    on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded)}
-    on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded)}
+    on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded.bind(this))}
+    on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded.bind(this))}
 }
 
 export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D> {

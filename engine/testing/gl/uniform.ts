@@ -1,5 +1,4 @@
 import {IGLUniform, TypedArray} from "./types.js";
-// import gl from "./context.js";
 
 let gl: WebGL2RenderingContext;
 

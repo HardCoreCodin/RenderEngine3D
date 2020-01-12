@@ -10,7 +10,7 @@ export class BaseScreen {
         this._render_pipelines = new Map();
         this._prior_width = 0;
         this._prior_height = 0;
-        this.addViewport(camera);
+        this.active_viewport = this.addViewport(camera);
     }
     refresh() {
         const width = this._canvas.clientWidth;
@@ -45,8 +45,8 @@ export class BaseScreen {
             viewports = this._render_pipelines.get(render_pipeline);
         else {
             const mesh_geometries = viewport.camera.scene.mesh_geometries;
-            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added);
-            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed);
+            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added.bind(render_pipeline));
+            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed.bind(render_pipeline));
             viewports = new Set();
             this._render_pipelines.set(render_pipeline, viewports);
         }
@@ -59,8 +59,8 @@ export class BaseScreen {
             const viewports = this._render_pipelines.get(render_pipeline);
             if (viewports.size === 1) {
                 const mesh_geometries = viewport.camera.scene.mesh_geometries;
-                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added);
-                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed);
+                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added.bind(render_pipeline));
+                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed.bind(render_pipeline));
                 this._render_pipelines.delete(render_pipeline);
             }
             else
@@ -86,7 +86,9 @@ export class BaseScreen {
         return this._active_viewport;
     }
     set active_viewport(viewport) {
-        this._active_viewport = this.controller.viewport = viewport;
+        this._active_viewport = viewport;
+        if (this.controller)
+            this.controller.viewport = viewport;
     }
 }
 export default class Screen extends BaseScreen {

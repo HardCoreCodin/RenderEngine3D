@@ -57,9 +57,9 @@ abstract class Controller
         public mouse_sensitivity: number = 0.1
     ) {
         this.viewport = viewport;
-        canvas.onmousemove = this._on_mousemove;
-        document.onkeydown = this._on_keydown;
-        document.onkeyup = this._on_keyup;
+        canvas.onmousemove = this._on_mousemove.bind(this);
+        document.onkeydown = this._on_keydown.bind(this);
+        document.onkeyup = this._on_keyup.bind(this);
     }
 
     get viewport(): IViewport {return this._viewport}

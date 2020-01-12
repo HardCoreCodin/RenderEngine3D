@@ -1,4 +1,3 @@
-// import gl from "./context.js";
 import {IGLAttributeLocations, IGLUniforms} from "./types.js";
 import GLUniform from "./uniform.js";
 

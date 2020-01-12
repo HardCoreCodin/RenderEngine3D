@@ -16,7 +16,7 @@ export interface INode3D extends IParent {
     readonly model_to_world: IMatrix4x4;
     readonly is_root: boolean;
     is_static: boolean;
-    parent: IParent;
+    parent: INode3D|IScene;
     transform: ITransform;
 
     unparent(): void;

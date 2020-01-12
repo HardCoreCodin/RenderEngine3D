@@ -128,9 +128,10 @@ export interface IRenderEngine<
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
     ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
 {
+    readonly canvas: HTMLCanvasElement;
     readonly context: Context;
-    readonly scene: SceneType;
 
+    scene: SceneType;
     screen: ScreenType;
     controller: IController;
 
