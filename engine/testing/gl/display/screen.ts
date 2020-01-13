@@ -9,8 +9,17 @@ import {IVector2D} from "../../../lib/_interfaces/vectors.js";
 
 
 export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLScene, GLCamera, GLRenderPipeline, GLViewport> {
-    protected _createViewport(camera: GLCamera, size: IRectangle, position?: IVector2D): GLViewport {
-        return new GLViewport(camera, this, size, position);
+    protected _createDefaultRenderPipeline(context: WebGL2RenderingContext, scene: GLScene): GLRenderPipeline {
+        return new GLRenderPipeline(context, scene);
+    }
+
+    protected _createViewport(
+        camera: GLCamera,
+        render_pipeline: GLRenderPipeline,
+        size: IRectangle,
+        position: IVector2D
+    ): GLViewport {
+        return new GLViewport(camera, render_pipeline, this, size, position);
     }
 
     clear() {

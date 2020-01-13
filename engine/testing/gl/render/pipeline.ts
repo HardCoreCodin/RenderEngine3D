@@ -1,9 +1,10 @@
+import {GLScene} from "./engine.js";
 import {GLMeshBuffers} from "./mesh_buffers.js";
 import {GLViewport} from "../display/viewport.js";
 import {BaseRenderPipeline} from "../../../lib/render/pipelines.js";
 import {IMesh} from "../../../lib/_interfaces/geometry.js";
 
-export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext> {
+export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext, GLScene> {
     readonly mesh_buffers = new Map<IMesh, GLMeshBuffers>();
 
     render(viewport: GLViewport): void {

@@ -8,27 +8,46 @@ import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {cube_face_vertices} from "../geometry/cube.js";
 import {CLIP} from "../../constants.js";
 import {T3, T4} from "../../types.js";
-import {IRenderPipeline, IViewport} from "../_interfaces/render.js";
+import {IMeshCallback, IRenderPipeline, IViewport} from "../_interfaces/render.js";
 import Viewport from "./viewport.js";
 import Scene from "../scene_graph/scene.js";
 import {IGeometry, IMesh} from "../_interfaces/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 
 
-export abstract class BaseRenderPipeline<Context extends RenderingContext>
-    implements IRenderPipeline<Context>
+export abstract class BaseRenderPipeline<
+    Context extends RenderingContext,
+    SceneType extends IScene<Context>>
+    implements IRenderPipeline<Context, SceneType>
 {
-    protected readonly model_to_clip: Matrix4x4 = new Matrix4x4();
     abstract render(viewport: IViewport<Context>): void;
 
-    constructor(readonly context: Context) {}
+    readonly model_to_clip: Matrix4x4 = new Matrix4x4();
+
+    readonly on_mesh_loaded_callback: IMeshCallback;
+    readonly on_mesh_added_callback: IMeshCallback;
+    readonly on_mesh_removed_callback: IMeshCallback;
+
+    constructor(readonly context: Context, readonly scene: SceneType) {
+        this.on_mesh_loaded_callback = this.on_mesh_loaded.bind(this);
+        this.on_mesh_added_callback = this.on_mesh_added.bind(this);
+        this.on_mesh_removed_callback = this.on_mesh_removed.bind(this);
+
+        this.scene.mesh_geometries.on_mesh_added.add(this.on_mesh_added_callback);
+        this.scene.mesh_geometries.on_mesh_removed.add(this.on_mesh_removed_callback);
+    }
 
     on_mesh_loaded(mesh: IMesh) {}
-    on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded.bind(this))}
-    on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded.bind(this))}
+    on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded_callback)}
+    on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded_callback)}
+
+    delete(): void {
+        this.scene.mesh_geometries.on_mesh_added.delete(this.on_mesh_added_callback);
+        this.scene.mesh_geometries.on_mesh_removed.delete(this.on_mesh_removed_callback);
+    }
 }
 
-export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D> {
+export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D, Scene> {
     cull_back_faces: boolean = false;
 
     protected current_max_face_count: number = 0;
@@ -43,12 +62,12 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
     protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
 
 
-    protected _updateClippingBuffers(scene: IScene): void {
+    protected _updateClippingBuffers(): void {
         let max_face_count = 0;
         let max_vertex_count = 0;
 
-        for (const mesh of scene.mesh_geometries.meshes) {
-            for (const geometry of scene.mesh_geometries.getGeometries(mesh)) {
+        for (const mesh of this.scene.mesh_geometries.meshes) {
+            for (const geometry of this.scene.mesh_geometries.getGeometries(mesh)) {
                 if (geometry.is_renderable) {
                     if (geometry.mesh.face_count > max_face_count)
                         max_face_count = geometry.mesh.face_count;
@@ -81,11 +100,10 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
     }
 
     render(viewport: Viewport): void {
-        const scene = viewport.camera.scene;
-        if (!scene.mesh_geometries.mesh_count)
+        if (!this.scene.mesh_geometries.mesh_count)
             return;
 
-        this._updateClippingBuffers(scene);
+        this._updateClippingBuffers();
 
         let mesh: IMesh;
         // let mesh_shader: MeshShader;
@@ -112,7 +130,7 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
         let vc, fc, result: number;
         const pz = viewport.camera.projection_matrix.translation.z;
 
-        for (const material of scene.materials) {
+        for (const material of this.scene.materials) {
             // mesh_shader = material.mesh_shader;
 
             for (mesh of material.mesh_geometries.meshes) {

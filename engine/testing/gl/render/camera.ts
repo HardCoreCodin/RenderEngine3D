@@ -7,7 +7,7 @@ export class GLCamera extends Camera {
         super.updateProjectionMatrix();
 
         // GL clip-space has a depth-span of 2 (-1 to 1)
-        this.projection_matrix.z_axis.z      = -this.depth_factor * (this.far + this.near);
+        this.projection_matrix.z_axis.z     = -this.depth_factor * (this.far + this.near);
         this.projection_matrix.translation.z = this.depth_factor *  this.far * this.near * 2;
     }
 }

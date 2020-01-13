@@ -2,7 +2,7 @@ import Mesh from "../geometry/mesh.js";
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {IMaterial, IMeshCallback, IMeshGeometries} from "../_interfaces/render.js";
-import {IGeometry} from "../_interfaces/geometry.js";
+import {IGeometry, IMesh} from "../_interfaces/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 
 
@@ -15,7 +15,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
 
     constructor(
         readonly scene: IScene,
-        protected _mesh: Mesh,
+        protected _mesh: IMesh,
         public is_rigid: boolean = true,
         public is_renderable: boolean = true,
         readonly id: number = Geometry.LAST_ID++
@@ -24,7 +24,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
         scene.mesh_geometries.addGeometry(this);
     }
 
-    get mesh(): Mesh {
+    get mesh(): IMesh {
         return this._mesh;
     }
 
@@ -44,7 +44,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
         this._material = material;
     }
 
-    set mesh(mesh: Mesh) {
+    set mesh(mesh: IMesh) {
         if (Object.is(mesh, this._mesh))
             return;
 
@@ -68,23 +68,23 @@ export class MeshGeometries implements IMeshGeometries {
 
     constructor(readonly scene: IScene) {}
 
-    protected readonly _map = new Map<Mesh, Set<Geometry>>();
+    protected readonly _map = new Map<IMesh, Set<Geometry>>();
 
-    get meshes(): Generator<Mesh> {return this._iterMeshes()}
+    get meshes(): Generator<IMesh> {return this._iterMeshes()}
     get mesh_count(): number {return this._map.size}
 
-    hasMesh(mesh: Mesh): boolean {return this._map.has(mesh)}
+    hasMesh(mesh: IMesh): boolean {return this._map.has(mesh)}
     hasGeometry(geometry: Geometry): boolean {
         const geometries = this._map.get(geometry.mesh);
         return geometries ? geometries.has(geometry) : false;
     }
 
-    getGeometries(mesh: Mesh): Generator<Geometry> {return this._iterGeometries(mesh)}
-    getGeometryCount(mesh: Mesh): number {return this._map.has(mesh) ? this._map.get(mesh).size : 0}
+    getGeometries(mesh: IMesh): Generator<Geometry> {return this._iterGeometries(mesh)}
+    getGeometryCount(mesh: IMesh): number {return this._map.has(mesh) ? this._map.get(mesh).size : 0}
 
-    addGeometry(mesh: Mesh): Geometry;
+    addGeometry(mesh: IMesh): Geometry;
     addGeometry(geometry: Geometry): Geometry;
-    addGeometry(mesh_or_geometry: Geometry | Mesh): Geometry {
+    addGeometry(mesh_or_geometry: Geometry | IMesh): Geometry {
         const geometry = mesh_or_geometry instanceof Geometry ?
             mesh_or_geometry :
             new Geometry(this.scene, mesh_or_geometry);
@@ -121,13 +121,13 @@ export class MeshGeometries implements IMeshGeometries {
         }
     }
 
-    protected *_iterGeometries(mesh: Mesh): Generator<Geometry> {
+    protected *_iterGeometries(mesh: IMesh): Generator<Geometry> {
         if (this._map.has(mesh))
             for (const geometry of this._map.get(mesh))
                 yield geometry
     }
 
-    protected *_iterMeshes(): Generator<Mesh> {
+    protected *_iterMeshes(): Generator<IMesh> {
         for (const mesh of this._map.keys())
             yield mesh;
     }

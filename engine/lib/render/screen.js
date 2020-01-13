@@ -1,4 +1,5 @@
 import Viewport from "./viewport.js";
+import RenderPipeline from "./pipelines.js";
 export class BaseScreen {
     constructor(camera, scene, context, controller, _canvas, _size = { width: 1, height: 1 }) {
         this.scene = scene;
@@ -10,6 +11,7 @@ export class BaseScreen {
         this._render_pipelines = new Map();
         this._prior_width = 0;
         this._prior_height = 0;
+        this._default_render_pipeline = this._createDefaultRenderPipeline(context, scene);
         this.active_viewport = this.addViewport(camera);
     }
     refresh() {
@@ -39,28 +41,23 @@ export class BaseScreen {
             yield viewport;
     }
     registerViewport(viewport) {
+        if (!this._viewports.has(viewport))
+            throw `Can not register a foreign viewport!`;
         const render_pipeline = viewport.render_pipeline;
-        let viewports;
-        if (this._render_pipelines.has(render_pipeline))
-            viewports = this._render_pipelines.get(render_pipeline);
-        else {
-            const mesh_geometries = viewport.camera.scene.mesh_geometries;
-            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added.bind(render_pipeline));
-            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed.bind(render_pipeline));
-            viewports = new Set();
-            this._render_pipelines.set(render_pipeline, viewports);
-        }
+        if (!this._render_pipelines.has(render_pipeline))
+            this._render_pipelines.set(render_pipeline, new Set());
+        const viewports = this._render_pipelines.get(render_pipeline);
         if (!viewports.has(viewport))
             viewports.add(viewport);
     }
     unregisterViewport(viewport) {
+        if (!this._viewports.has(viewport))
+            throw `Can not unregister a foreign viewport!`;
         const render_pipeline = viewport.render_pipeline;
         if (this._render_pipelines.has(render_pipeline)) {
             const viewports = this._render_pipelines.get(render_pipeline);
             if (viewports.size === 1) {
-                const mesh_geometries = viewport.camera.scene.mesh_geometries;
-                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added.bind(render_pipeline));
-                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed.bind(render_pipeline));
+                render_pipeline.delete();
                 this._render_pipelines.delete(render_pipeline);
             }
             else
@@ -70,8 +67,8 @@ export class BaseScreen {
     addViewport(camera, size = this._size, position = {
         x: 0,
         y: 0
-    }) {
-        const viewport = this._createViewport(camera, size, position);
+    }, render_pipeline = this._default_render_pipeline) {
+        const viewport = this._createViewport(camera, render_pipeline, size, position);
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         return viewport;
@@ -92,8 +89,11 @@ export class BaseScreen {
     }
 }
 export default class Screen extends BaseScreen {
-    _createViewport(camera, size, position) {
-        return new Viewport(camera, this, size, position);
+    _createDefaultRenderPipeline(context, scene) {
+        return new RenderPipeline(context, scene);
+    }
+    _createViewport(camera, render_pipeline, size, position) {
+        return new Viewport(camera, render_pipeline, this, size, position);
     }
     clear() {
         this.context.clearRect(0, 0, this._size.width, this._size.height);

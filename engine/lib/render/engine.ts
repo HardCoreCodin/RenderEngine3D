@@ -7,13 +7,13 @@ import {FPSController} from "../input/controllers.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
-import {FULL_SCREEN_OPTIONS, KEY_CODES} from "../../constants.js";
+import {KEY_CODES} from "../../constants.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
     SceneType extends IScene<Context>,
     CameraType extends ICamera,
-    RenderPipelineType extends IRenderPipeline<Context>,
+    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
     ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
     implements IRenderEngine<Context, SceneType, CameraType, RenderPipelineType, ViewportType, ScreenType>
@@ -101,18 +101,6 @@ export abstract class BaseRenderEngine<
         this._delta_time = time - this._last_timestamp;
         this._last_timestamp = time;
 
-        // Note: Full screen API exists but stopped being supported(!!!)
-        // if (document.fullscreenEnabled) {
-        //     if (document.fullscreenElement) {
-        //         if (this.key_pressed.esc || (
-        //             this.key_pressed.ctrl &&
-        //             this.key_pressed.space)
-        //         ) document.exitFullscreen();
-        //     } else if (this.key_pressed.ctrl &&
-        //                this.key_pressed.space)
-        //         document.documentElement.requestFullscreen(FULL_SCREEN_OPTIONS);
-        // }
-
         if (this._is_active)
             this._controller.update(this._delta_time);
 
@@ -136,12 +124,10 @@ export abstract class BaseRenderEngine<
     }
 
     protected _on_click() {
-        console.log(`Clicked while ${this._is_active ? '' : 'in'}active`);
         if (!this._is_active) {
             this._is_active = true;
             this._controller.mouse_movement.x = 0;
             this._controller.mouse_movement.y = 0;
-            console.log('Locaking...');
             document.documentElement.requestPointerLock();
         }
     }
@@ -188,12 +174,11 @@ export abstract class BaseRenderEngine<
         this._startListening();
         this._is_running = true;
 
-        this.screen.active_viewport.camera.transform.matrix.invert(
-            this.screen.active_viewport.world_to_view
-        ).mul(this.screen.active_viewport.camera.projection_matrix,
-            this.screen.active_viewport.world_to_clip
-        );
-
+        // Engine starts "inactive" to input until user clicks on the canvas.
+        // Matrices are updated by the controller (which is inactive initially).
+        // Initialize matrices manually here once, to set their initial state:
+        this.screen.active_viewport.camera.updateProjectionMatrix();
+        this.screen.active_viewport.updateMatrices();
         requestAnimationFrame(this.update.bind(this));
     }
 

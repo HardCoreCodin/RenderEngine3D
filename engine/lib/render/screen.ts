@@ -1,26 +1,39 @@
 import Camera from "./camera.js";
 import Viewport from "./viewport.js";
 import RenderPipeline from "./pipelines.js";
-import {IVector2D} from "../_interfaces/vectors.js";
-import {ICamera, IRectangle, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
-import {IController} from "../_interfaces/input.js";
-import {IScene} from "../_interfaces/nodes.js";
 import Scene from "../scene_graph/scene.js";
+import {IScene} from "../_interfaces/nodes.js";
+import {IVector2D} from "../_interfaces/vectors.js";
+import {IController} from "../_interfaces/input.js";
+import {ICamera, IRectangle, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 
 
 export abstract class BaseScreen<
     Context extends RenderingContext,
     SceneType extends IScene<Context>,
     CameraType extends ICamera,
-    RenderPipelineType extends IRenderPipeline<Context>,
+    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>>
     implements IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>
 {
-    protected abstract _createViewport(camera: CameraType, size: IRectangle, position?: IVector2D): ViewportType;
+    protected abstract _createDefaultRenderPipeline(
+        context: Context,
+        scene: SceneType
+    ): RenderPipelineType;
+
+    protected abstract _createViewport(
+        camera: CameraType,
+        render_pipeline: RenderPipelineType,
+        size: IRectangle,
+        position: IVector2D
+    ): ViewportType;
+
     abstract clear(): void;
 
+    protected readonly _default_render_pipeline: RenderPipelineType;
     protected readonly _viewports = new Set<ViewportType>();
     protected readonly _render_pipelines = new Map<RenderPipelineType, Set<ViewportType>>();
+
     protected _active_viewport: ViewportType;
     protected _prior_width = 0;
     protected _prior_height = 0;
@@ -33,6 +46,7 @@ export abstract class BaseScreen<
         protected readonly _canvas: HTMLCanvasElement,
         protected readonly _size: IRectangle = {width: 1, height: 1}
     ) {
+        this._default_render_pipeline = this._createDefaultRenderPipeline(context, scene);
         this.active_viewport = this.addViewport(camera);
     }
 
@@ -70,31 +84,27 @@ export abstract class BaseScreen<
     }
 
     registerViewport(viewport: ViewportType): void {
+        if (!this._viewports.has(viewport))
+            throw `Can not register a foreign viewport!`;
+
         const render_pipeline = viewport.render_pipeline;
-        let viewports: Set<ViewportType>;
-        if (this._render_pipelines.has(render_pipeline))
-            viewports = this._render_pipelines.get(render_pipeline);
-        else {
-            const mesh_geometries = viewport.camera.scene.mesh_geometries;
-            mesh_geometries.on_mesh_added.add(render_pipeline.on_mesh_added.bind(render_pipeline));
-            mesh_geometries.on_mesh_removed.add(render_pipeline.on_mesh_removed.bind(render_pipeline));
+        if (!this._render_pipelines.has(render_pipeline))
+            this._render_pipelines.set(render_pipeline, new Set<ViewportType>());
 
-            viewports = new Set<ViewportType>();
-            this._render_pipelines.set(render_pipeline, viewports);
-        }
-
+        const viewports = this._render_pipelines.get(render_pipeline);
         if (!viewports.has(viewport))
             viewports.add(viewport);
     }
 
     unregisterViewport(viewport: ViewportType): void {
+        if (!this._viewports.has(viewport))
+            throw `Can not unregister a foreign viewport!`;
+
         const render_pipeline = viewport.render_pipeline;
         if (this._render_pipelines.has(render_pipeline)) {
             const viewports = this._render_pipelines.get(render_pipeline);
             if (viewports.size === 1) {
-                const mesh_geometries = viewport.camera.scene.mesh_geometries;
-                mesh_geometries.on_mesh_added.delete(render_pipeline.on_mesh_added.bind(render_pipeline));
-                mesh_geometries.on_mesh_removed.delete(render_pipeline.on_mesh_removed.bind(render_pipeline));
+                render_pipeline.delete();
                 this._render_pipelines.delete(render_pipeline);
             } else
                 viewports.delete(viewport);
@@ -107,9 +117,10 @@ export abstract class BaseScreen<
         position: IVector2D = {
             x: 0,
             y: 0
-        }
+        },
+        render_pipeline: RenderPipelineType = this._default_render_pipeline
     ): ViewportType {
-        const viewport = this._createViewport(camera, size, position);
+        const viewport = this._createViewport(camera, render_pipeline, size, position);
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         return viewport;
@@ -135,8 +146,17 @@ export abstract class BaseScreen<
 }
 
 export default class Screen extends BaseScreen<CanvasRenderingContext2D, Scene, Camera, RenderPipeline, Viewport> {
-    protected _createViewport(camera: Camera, size: IRectangle, position?: IVector2D): Viewport {
-        return new Viewport(camera, this, size, position);
+    protected _createDefaultRenderPipeline(context: CanvasRenderingContext2D, scene: Scene): RenderPipeline {
+        return new RenderPipeline(context, scene);
+    }
+
+    protected _createViewport(
+        camera: Camera,
+        render_pipeline: RenderPipeline,
+        size: IRectangle,
+        position: IVector2D
+    ): Viewport {
+        return new Viewport(camera, render_pipeline, this, size, position);
     }
 
     clear() {

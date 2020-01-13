@@ -47,8 +47,6 @@ abstract class Controller
     protected _matrix: IMatrix4x4;
     protected _camera: ICamera;
     protected _projection_matrix: IMatrix4x4;
-    protected _world_to_view: IMatrix4x4;
-    protected _world_to_clip: IMatrix4x4;
 
     constructor(
         viewport: IViewport,
@@ -68,8 +66,6 @@ abstract class Controller
         this._translation = viewport.camera.transform.translation;
         this._matrix = viewport.camera.transform.matrix;
         this._projection_matrix = viewport.camera.projection_matrix;
-        this._world_to_view = viewport.world_to_view;
-        this._world_to_clip = viewport.world_to_clip;
     }
 
     get forward_direction(): Direction3D {
@@ -159,8 +155,7 @@ abstract class Controller
 
 
         if (!this._camera.is_static || this.direction_changed || this.position_changed) {
-            this._matrix.invert(this._world_to_view);
-            this._world_to_view.mul(this._projection_matrix, this._world_to_clip);
+            this._viewport.updateMatrices();
             this.direction_changed = this.position_changed = false;
         }
     }

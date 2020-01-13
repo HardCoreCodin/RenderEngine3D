@@ -12,7 +12,7 @@ export class BaseMaterial<
 {
     static LAST_ID = 0;
 
-    prepareMeshForDrawing(mesh: Mesh, render_pipeline: IRenderPipeline<Context>): void {};
+    prepareMeshForDrawing(mesh: Mesh, render_pipeline: IRenderPipeline<Context, SceneType>): void {};
     drawMesh(mesh: Mesh, matrix: Matrix4x4): void {};
 
     readonly id: number;

@@ -5,7 +5,7 @@ import {IRectangle} from "../_interfaces/render.js";
 
 export default class RenderTarget extends Buffer<Uint32Array>
 {
-    constructor(protected _size: IRectangle) {super()}
+    constructor(protected readonly _size: IRectangle) {super()}
     protected _getAllocator(): Int32Allocator1D {return RENDER_TARGET_ALLOCATOR}
 
     get width(): number {return this._size.width}

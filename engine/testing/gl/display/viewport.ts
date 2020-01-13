@@ -7,13 +7,6 @@ import {BaseViewport} from "../../../lib/render/viewport.js";
 
 
 export class GLViewport extends BaseViewport<WebGL2RenderingContext, GLScene, GLCamera, GLRenderPipeline, GLScreen> {
-    protected _getDefaultRenderPipeline(context: WebGL2RenderingContext): GLRenderPipeline {
-        if (!DEFAULT_RENDER_PIPELINE)
-            DEFAULT_RENDER_PIPELINE = new GLRenderPipeline(context);
-
-        return DEFAULT_RENDER_PIPELINE;
-    }
-
     reset(width: number, height: number, x: number, y: number): void {
         if (width !== this._size.width ||
             height !== this._size.height ||
@@ -25,5 +18,3 @@ export class GLViewport extends BaseViewport<WebGL2RenderingContext, GLScene, GL
         }
     }
 }
-
-let DEFAULT_RENDER_PIPELINE: GLRenderPipeline;

@@ -27,12 +27,13 @@ export interface ICamera extends INode3D {
 
 export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
 
-export interface IMaterial<Context extends RenderingContext> {
+export interface IMaterial<
+    Context extends RenderingContext> {
     readonly id: number;
     readonly scene: IScene<Context>;
     readonly mesh_geometries: IMeshGeometries;
 
-    prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context>): void;
+    prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context, IScene<Context>>): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
 
@@ -62,19 +63,31 @@ export interface IMeshGeometries {
     removeGeometry(geometry: IGeometry): void;
 }
 
-export interface IRenderPipeline<Context extends RenderingContext>
+export interface IRenderPipeline<
+    Context extends RenderingContext,
+    SceneType extends IScene<Context>>
 {
+    readonly scene: SceneType,
     readonly context: Context;
+    readonly model_to_clip: IMatrix4x4;
+
+    delete(): void;
     render(viewport: IViewport<Context>): void;
+
     on_mesh_added(mesh: IMesh): void;
     on_mesh_removed(mesh: IMesh): void;
+    on_mesh_loaded(mesh: IMesh): void;
+
+    readonly on_mesh_loaded_callback: IMeshCallback;
+    readonly on_mesh_added_callback: IMeshCallback;
+    readonly on_mesh_removed_callback: IMeshCallback;
 }
 
 export interface IViewport<
     Context extends RenderingContext = RenderingContext,
     SceneType extends IScene<Context> = IScene<Context>,
     CameraType extends ICamera = ICamera,
-    RenderPipelineType extends IRenderPipeline<Context> = IRenderPipeline<Context>>
+    RenderPipelineType extends IRenderPipeline<Context, SceneType> = IRenderPipeline<Context, SceneType>>
 {
     camera: CameraType
     render_pipeline: RenderPipelineType;
@@ -89,6 +102,7 @@ export interface IViewport<
     readonly world_to_clip: IMatrix4x4;
 
     refresh(): void;
+    updateMatrices(): void;
     scale(x: number, y: number): void;
     reset(width: number, height: number, x: number, y: number): void;
 }
@@ -98,7 +112,7 @@ export interface IScreen<
     Context extends RenderingContext,
     SceneType extends IScene<Context>,
     CameraType extends ICamera,
-    RenderPipelineType extends IRenderPipeline<Context>,
+    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType
         > = IViewport<Context, SceneType, CameraType, RenderPipelineType>>
 {
@@ -130,7 +144,7 @@ export interface IRenderEngine<
     Context extends RenderingContext,
     SceneType extends IScene<Context>,
     CameraType extends ICamera,
-    RenderPipelineType extends IRenderPipeline<Context>,
+    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
     ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
 {
