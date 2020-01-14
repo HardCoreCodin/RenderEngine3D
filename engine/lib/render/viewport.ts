@@ -72,7 +72,7 @@ export abstract class BaseViewport<
 
         // this._ndc_position.x = this._screen.wi
 
-        this.camera.aspect_ratio = width / height;
+        this.camera.view_frustum.aspect_ratio = width / height;
         this.updateMatrices();
     }
 

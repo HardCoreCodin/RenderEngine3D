@@ -179,7 +179,7 @@ export abstract class BaseRenderEngine<
         // Engine starts "inactive" to input until user clicks on the canvas.
         // Matrices are updated by the controller (which is inactive initially).
         // Initialize matrices manually here once, to set their initial state:
-        this.screen.active_viewport.camera.updateProjectionMatrix();
+        this.screen.active_viewport.camera.projection_matrix.update();
         this.screen.active_viewport.updateMatrices();
         requestAnimationFrame(this.update.bind(this));
     }

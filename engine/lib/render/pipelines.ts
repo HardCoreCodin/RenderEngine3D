@@ -110,7 +110,7 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
         let mesh_geometry: IGeometry;
         let mesh_geometries: Set<Geometry>;
 
-        const n = viewport.camera.near;
+        const n = viewport.camera.view_frustum.near;
         const world_to_clip = viewport.world_to_clip;
         const model_to_clip = this.model_to_clip;
         const clip_positions = this.clip_space_vertex_positions;

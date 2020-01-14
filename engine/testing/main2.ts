@@ -12,8 +12,7 @@ g.canvas = document.querySelector('canvas');
 const engine = g.engine = new GLRenderEngine(g.canvas);
 const camera = g.c = engine.screen.active_viewport.camera;
 camera.is_static = false;
-camera.fov = 75;
-
+camera.lense.field_of_view_in_degrees = 75;
 camera.transform.translation.y = 1;
 
 

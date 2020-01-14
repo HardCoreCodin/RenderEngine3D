@@ -170,6 +170,28 @@ abstract class Controller
         this.direction_changed = true;
         this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
 
+        // Note:
+        // Y mouse movement are actually NEGATIVE when the mose is moved UP(!)
+        // This has to do with the 2D coordinate system of the canvas going top-to-bottom (with 0 on top).
+        //
+        // Also Note:
+        // Moving the mouse upwards, should actually rotate around the X axis(!)
+        // Angle values are consistent with 2D rotation on every axis individually:
+        // In other words, for each axis-rotation, looking at the axis being rotated
+        // from it's tip (positive-end) down, a POSITIVE angle increment would mean to
+        // rotate the axis COUNTER CLOCK-WISE (CCW).
+        //
+        // When the mouse is moved upwards the player is looking up so the camera should
+        // be orienting upwards. This means a counter-clockwise rotation around the X axis,
+        // looking at it from it's tip.
+        // This requires a positive increment to the rotation angle on the X axis.
+        // Because when the move moves up the increment values for Y are negative,
+        // to get a positive increment in such cases the x-rotation angle needs to be
+        // DECREMENTED by that negative-Y amount.
+        //
+        // Similarly, when the mouse is moved to the right, the player is looking to the right
+        // so the camera should be orienting CLOCK-WIZE (CW) around Y (Y is up) looking at Y from the top.
+        // A CW roation is a negative angle increment, so again the rotation value is DECREMENTED.
         this._rotation.x -= this.rotation_amount * this.mouse_movement.y;
         this._rotation.y -= this.rotation_amount * this.mouse_movement.x;
 

@@ -4,26 +4,38 @@ import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
 
-export interface IRectangle
-{
+export interface IRectangle {
     width: number,
     height: number
 }
 
-export interface ICamera extends INode3D {
-    fov: number;
-    far: number;
-    near: number;
+export interface ILense {
     zoom: number;
-
-    depth_factor: number;
     focal_length: number;
+    field_of_view_in_degrees: number;
+    field_of_view_in_radians: number;
+}
+
+export interface IViewFrustum {
     aspect_ratio: number;
+    near: number;
+    far: number;
+}
 
+export interface IProjectionMatrix extends  IMatrix4x4 {
+    readonly lense: ILense;
+    readonly view_frustum: IViewFrustum;
+
+    update(): void;
+}
+
+export interface ICamera extends INode3D {
+    readonly lense: ILense;
     readonly scene: IScene;
-    readonly projection_matrix: IMatrix4x4;
+    readonly view_frustum: IViewFrustum;
+    readonly projection_matrix: IProjectionMatrix;
 
-    updateProjectionMatrix(): void;
+    is_perspective: boolean;
 }
 
 export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
