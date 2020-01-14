@@ -651,44 +651,44 @@ const rotate_around_x = (
     // (t41 t42 t43 t44).(r11 r21 r31 r41) (t41 t42 t43 t44).(r12 r22 r32 r42) (t41 t42 t43 t44).(r13 r23 r33 r43) (t41 t42 t43 t44).(r14 r24 r34 r44)
     //
     // r11 r12 r13 r14   1   0     0   0
-    // r21 r22 r23 r24 = 0  cos   sin  0
-    // r31 r32 r33 r34   0  -sin  cos  0
+    // r21 r22 r23 r24 = 0  cos  -sin  0
+    // r31 r32 r33 r34   0  sin   cos  0
     // r41 r42 r44 r44   0   0     0   1
     //
-    // (t11 t12 t13 t14).(1 0 0 0) (t11 t12 t13 t14).(0 cos -sin 0) (t11 t12 t13 t14).(0 sin cos 0) (t11 t12 t13 t14).(0 0 0 1)
-    // (t21 t22 t23 t24).(1 0 0 0) (t21 t22 t23 t24).(0 cos -sin 0) (t21 t22 t23 t24).(0 sin cos 0) (t21 t22 t23 t24).(0 0 0 1)
-    // (t31 t32 t33 t34).(1 0 0 0) (t31 t32 t33 t34).(0 cos -sin 0) (t31 t32 t33 t34).(0 sin cos 0) (t31 t32 t33 t34).(0 0 0 1)
-    // (t41 t42 t43 t44).(1 0 0 0) (t41 t42 t43 t44).(0 cos -sin 0) (t41 t42 t43 t44).(0 sin cos 0) (t41 t42 t43 t44).(0 0 0 1)
+    // (t11 t12 t13 t14).(1 0 0 0) (t11 t12 t13 t14).(0 cos sin 0) (t11 t12 t13 t14).(0 -sin cos 0) (t11 t12 t13 t14).(0 0 0 1)
+    // (t21 t22 t23 t24).(1 0 0 0) (t21 t22 t23 t24).(0 cos sin 0) (t21 t22 t23 t24).(0 -sin cos 0) (t21 t22 t23 t24).(0 0 0 1)
+    // (t31 t32 t33 t34).(1 0 0 0) (t31 t32 t33 t34).(0 cos sin 0) (t31 t32 t33 t34).(0 -sin cos 0) (t31 t32 t33 t34).(0 0 0 1)
+    // (t41 t42 t43 t44).(1 0 0 0) (t41 t42 t43 t44).(0 cos sin 0) (t41 t42 t43 t44).(0 -sin cos 0) (t41 t42 t43 t44).(0 0 0 1)
     //
-    // (t11*1 + t12*0 + t13*0 + t14*0) (t11*0 + t12*cos + t13*-sin + t14*0) (t11*0 + t12*sin + t13*cos + t14*0) (t11*0 t12*0 t13*0 t14*1)
-    // (t21*1 + t22*0 + t23*0 + t24*0) (t21*0 + t22*cos + t23*-sin + t24*0) (t21*0 + t22*sin + t23*cos + t24*0) (t21*0 t22*0 t23*0 t24*1)
-    // (t31*1 + t32*0 + t33*0 + t34*0) (t31*0 + t32*cos + t33*-sin + t34*0) (t31*0 + t32*sin + t33*cos + t34*0) (t31*0 t32*0 t33*0 t34*1)
-    // (t41*1 + t42*0 + t43*0 + t44*0) (t41*0 + t42*cos + t43*-sin + t44*0) (t41*0 + t42*sin + t43*cos + t44*0) (t41*0 t42*0 t43*0 t44*1)
+    // (t11*1 + t12*0 + t13*0 + t14*0) (t11*0 + t12*cos + t13*sin + t14*0) (t11*0 + t12*-sin + t13*cos + t14*0) (t11*0 t12*0 t13*0 t14*1)
+    // (t21*1 + t22*0 + t23*0 + t24*0) (t21*0 + t22*cos + t23*sin + t24*0) (t21*0 + t22*-sin + t23*cos + t24*0) (t21*0 t22*0 t23*0 t24*1)
+    // (t31*1 + t32*0 + t33*0 + t34*0) (t31*0 + t32*cos + t33*sin + t34*0) (t31*0 + t32*-sin + t33*cos + t34*0) (t31*0 t32*0 t33*0 t34*1)
+    // (t41*1 + t42*0 + t43*0 + t44*0) (t41*0 + t42*cos + t43*sin + t44*0) (t41*0 + t42*-sin + t43*cos + t44*0) (t41*0 t42*0 t43*0 t44*1)
     //
-    // (t11 + 0 + 0 + 0) (0 + t12*cos - t13*sin + 0) (0 + t12*sin + t13*cos + 0) (0 + 0 + 0 + t14)
-    // (t21 + 0 + 0 + 0) (0 + t22*cos - t23*sin + 0) (0 + t22*sin + t23*cos + 0) (0 + 0 + 0 + t24)
-    // (t31 + 0 + 0 + 0) (0 + t32*cos - t33*sin + 0) (0 + t32*sin + t33*cos + 0) (0 + 0 + 0 + t34)
-    // (t41 + 0 + 0 + 0) (0 + t42*cos - t43*sin + 0) (0 + t42*sin + t43*cos + 0) (0 + 0 + 0 + t44)
+    // (t11 + 0 + 0 + 0) (0 + t12*cos + t13*sin + 0) (0 - t12*sin + t13*cos + 0) (0 + 0 + 0 + t14)
+    // (t21 + 0 + 0 + 0) (0 + t22*cos + t23*sin + 0) (0 - t22*sin + t23*cos + 0) (0 + 0 + 0 + t24)
+    // (t31 + 0 + 0 + 0) (0 + t32*cos + t33*sin + 0) (0 - t32*sin + t33*cos + 0) (0 + 0 + 0 + t34)
+    // (t41 + 0 + 0 + 0) (0 + t42*cos + t43*sin + 0) (0 - t42*sin + t43*cos + 0) (0 + 0 + 0 + t44)
     //
-    // (t11) (t12*cos - t13*sin) (t12*sin + t13*cos) (t14)
-    // (t21) (t22*cos - t23*sin) (t22*sin + t23*cos) (t24)
-    // (t31) (t32*cos - t33*sin) (t32*sin + t33*cos) (t34)
-    // (t41) (t42*cos - t43*sin) (t42*sin + t43*cos) (t44)
+    // (t11) (t12*cos + t13*sin) (t13*cos - t12*sin) (t14)
+    // (t21) (t22*cos + t23*sin) (t23*cos - t22*sin) (t24)
+    // (t31) (t32*cos + t33*sin) (t33*cos - t32*sin) (t34)
+    // (t41) (t42*cos + t43*sin) (t43*cos - t42*sin) (t44)
     //
-    // o11=t11  o12=(t12*cos - t13*sin)  o13=(t12*sin + t13*cos)  o14=t14
-    // o21=t21  o22=(t22*cos - t23*sin)  o23=(t22*sin + t23*cos)  o24=t24
-    // o31=t31  o32=(t32*cos - t33*sin)  o33=(t32*sin + t33*cos)  o34=t34
-    // o41=t41  o42=(t42*cos - t43*sin)  o43=(t42*sin + t43*cos)  o44=t44
+    // o11=t11  o12=(t13*sin + t12*cos)  o13=(t13*cos - t12*sin)  o14=t14
+    // o21=t21  o22=(t23*sin + t22*cos)  o23=(t23*cos - t22*sin)  o24=t24
+    // o31=t31  o32=(t33*sin + t32*cos)  o33=(t33*cos - t32*sin)  o34=t34
+    // o41=t41  o42=(t43*sin + t42*cos)  o43=(t43*cos - t42*sin)  o44=t44
     //
-    // o11 = t11  o12 = t12*cos - t13*sin  o13 = t12*sin + t13*cos  o14 = t14
-    // o21 = t21  o22 = t22*cos - t23*sin  o23 = t22*sin + t23*cos  o24 = t24
-    // o31 = t31  o32 = t32*cos - t33*sin  o33 = t32*sin + t33*cos  o34 = t34
-    // o41 = t41  o42 = t42*cos - t43*sin  o33 = t42*sin + t43*cos  o44 = t44
+    // o11 = t11  o12 = t13*sin + t12*cos  o13 = t13*cos - t12*sin  o14 = t14
+    // o21 = t21  o22 = t23*sin + t22*cos  o23 = t23*cos - t22*sin  o24 = t24
+    // o31 = t31  o32 = t33*sin + t32*cos  o33 = t33*cos - t32*sin  o34 = t34
+    // o41 = t41  o42 = t43*sin + t42*cos  o33 = t43*cos - t42*sin  o44 = t44
 
-    M11o[o] = M11a[a];  M12o[o] = M12a[a]*cos - M13a[a]*sin;  M13o[o] = M12a[a]*sin + M13a[a]*cos;  M14o[o] = M14a[a];
-    M21o[o] = M21a[a];  M22o[o] = M22a[a]*cos - M23a[a]*sin;  M23o[o] = M22a[a]*sin + M23a[a]*cos;  M24o[o] = M24a[a];
-    M31o[o] = M31a[a];  M32o[o] = M32a[a]*cos - M33a[a]*sin;  M33o[o] = M32a[a]*sin + M33a[a]*cos;  M34o[o] = M34a[a];
-    M41o[o] = M41a[a];  M42o[o] = M42a[a]*cos - M43a[a]*sin;  M43o[o] = M42a[a]*sin + M43a[a]*cos;  M44o[o] = M44a[a];
+    M11o[o] = M11a[a];  M12o[o] = M13a[a]*sin + M12a[a]*cos;  M13o[o] = M13a[a]*cos - M12a[a]*sin;  M14o[o] = M14a[a];
+    M21o[o] = M21a[a];  M22o[o] = M23a[a]*sin + M22a[a]*cos;  M23o[o] = M23a[a]*cos - M22a[a]*sin;  M24o[o] = M24a[a];
+    M31o[o] = M31a[a];  M32o[o] = M33a[a]*sin + M32a[a]*cos;  M33o[o] = M33a[a]*cos - M32a[a]*sin;  M34o[o] = M34a[a];
+    M41o[o] = M41a[a];  M42o[o] = M43a[a]*sin + M42a[a]*cos;  M43o[o] = M43a[a]*cos - M42a[a]*sin;  M44o[o] = M44a[a];
 };
 
 const rotate_around_x_in_place = (
@@ -713,49 +713,49 @@ const rotate_around_x_in_place = (
     // (t41 t42 t43 t44).(r11 r21 r31 r41) (t41 t42 t43 t44).(r12 r22 r32 r42) (t41 t42 t43 t44).(r13 r23 r33 r43) (t41 t42 t43 t44).(r14 r24 r34 r44)
     //
     // r11 r12 r13 r14   1   0     0   0
-    // r21 r22 r23 r24 = 0  cos   sin  0
-    // r31 r32 r33 r34   0  -sin  cos  0
+    // r21 r22 r23 r24 = 0  cos  -sin  0
+    // r31 r32 r33 r34   0  sin   cos  0
     // r41 r42 r44 r44   0   0     0   1
     //
-    // (t11 t12 t13 t14).(1 0 0 0) (t11 t12 t13 t14).(0 cos -sin 0) (t11 t12 t13 t14).(0 sin cos 0) (t11 t12 t13 t14).(0 0 0 1)
-    // (t21 t22 t23 t24).(1 0 0 0) (t21 t22 t23 t24).(0 cos -sin 0) (t21 t22 t23 t24).(0 sin cos 0) (t21 t22 t23 t24).(0 0 0 1)
-    // (t31 t32 t33 t34).(1 0 0 0) (t31 t32 t33 t34).(0 cos -sin 0) (t31 t32 t33 t34).(0 sin cos 0) (t31 t32 t33 t34).(0 0 0 1)
-    // (t41 t42 t43 t44).(1 0 0 0) (t41 t42 t43 t44).(0 cos -sin 0) (t41 t42 t43 t44).(0 sin cos 0) (t41 t42 t43 t44).(0 0 0 1)
+    // (t11 t12 t13 t14).(1 0 0 0) (t11 t12 t13 t14).(0 cos sin 0) (t11 t12 t13 t14).(0 -sin cos 0) (t11 t12 t13 t14).(0 0 0 1)
+    // (t21 t22 t23 t24).(1 0 0 0) (t21 t22 t23 t24).(0 cos sin 0) (t21 t22 t23 t24).(0 -sin cos 0) (t21 t22 t23 t24).(0 0 0 1)
+    // (t31 t32 t33 t34).(1 0 0 0) (t31 t32 t33 t34).(0 cos sin 0) (t31 t32 t33 t34).(0 -sin cos 0) (t31 t32 t33 t34).(0 0 0 1)
+    // (t41 t42 t43 t44).(1 0 0 0) (t41 t42 t43 t44).(0 cos sin 0) (t41 t42 t43 t44).(0 -sin cos 0) (t41 t42 t43 t44).(0 0 0 1)
     //
-    // (t11*1 + t12*0 + t13*0 + t14*0) (t11*0 + t12*cos + t13*-sin + t14*0) (t11*0 + t12*sin + t13*cos + t14*0) (t11*0 t12*0 t13*0 t14*1)
-    // (t21*1 + t22*0 + t23*0 + t24*0) (t21*0 + t22*cos + t23*-sin + t24*0) (t21*0 + t22*sin + t23*cos + t24*0) (t21*0 t22*0 t23*0 t24*1)
-    // (t31*1 + t32*0 + t33*0 + t34*0) (t31*0 + t32*cos + t33*-sin + t34*0) (t31*0 + t32*sin + t33*cos + t34*0) (t31*0 t32*0 t33*0 t34*1)
-    // (t41*1 + t42*0 + t43*0 + t44*0) (t41*0 + t42*cos + t43*-sin + t44*0) (t41*0 + t42*sin + t43*cos + t44*0) (t41*0 t42*0 t43*0 t44*1)
+    // (t11*1 + t12*0 + t13*0 + t14*0) (t11*0 + t12*cos + t13*sin + t14*0) (t11*0 - t12*sin + t13*cos + t14*0) (t11*0 t12*0 t13*0 t14*1)
+    // (t21*1 + t22*0 + t23*0 + t24*0) (t21*0 + t22*cos + t23*sin + t24*0) (t21*0 - t22*sin + t23*cos + t24*0) (t21*0 t22*0 t23*0 t24*1)
+    // (t31*1 + t32*0 + t33*0 + t34*0) (t31*0 + t32*cos + t33*sin + t34*0) (t31*0 - t32*sin + t33*cos + t34*0) (t31*0 t32*0 t33*0 t34*1)
+    // (t41*1 + t42*0 + t43*0 + t44*0) (t41*0 + t42*cos + t43*sin + t44*0) (t41*0 - t42*sin + t43*cos + t44*0) (t41*0 t42*0 t43*0 t44*1)
     //
-    // (t11 + 0 + 0 + 0) (0 + t12*cos - t13*sin + 0) (0 + t12*sin + t13*cos + 0) (0 + 0 + 0 + t14)
-    // (t21 + 0 + 0 + 0) (0 + t22*cos - t23*sin + 0) (0 + t22*sin + t23*cos + 0) (0 + 0 + 0 + t24)
-    // (t31 + 0 + 0 + 0) (0 + t32*cos - t33*sin + 0) (0 + t32*sin + t33*cos + 0) (0 + 0 + 0 + t34)
-    // (t41 + 0 + 0 + 0) (0 + t42*cos - t43*sin + 0) (0 + t42*sin + t43*cos + 0) (0 + 0 + 0 + t44)
+    // (t11 + 0 + 0 + 0) (0 + t12*cos + t13*sin + 0) (0 - t12*sin + t13*cos + 0) (0 + 0 + 0 + t14)
+    // (t21 + 0 + 0 + 0) (0 + t22*cos + t23*sin + 0) (0 - t22*sin + t23*cos + 0) (0 + 0 + 0 + t24)
+    // (t31 + 0 + 0 + 0) (0 + t32*cos + t33*sin + 0) (0 - t32*sin + t33*cos + 0) (0 + 0 + 0 + t34)
+    // (t41 + 0 + 0 + 0) (0 + t42*cos + t43*sin + 0) (0 - t42*sin + t43*cos + 0) (0 + 0 + 0 + t44)
     //
-    // (t11) (t12*cos - t13*sin) (t12*sin + t13*cos) (t14)
-    // (t21) (t22*cos - t23*sin) (t22*sin + t23*cos) (t24)
-    // (t31) (t32*cos - t33*sin) (t32*sin + t33*cos) (t34)
-    // (t41) (t42*cos - t43*sin) (t42*sin + t43*cos) (t44)
+    // (t11) (t12*cos + t13*sin) (t13*cos - t12*sin) (t14)
+    // (t21) (t22*cos + t23*sin) (t23*cos - t22*sin) (t24)
+    // (t31) (t32*cos + t33*sin) (t33*cos - t32*sin) (t34)
+    // (t41) (t42*cos + t43*sin) (t43*cos - t42*sin) (t44)
     //
-    // o11=t11  o12=(t12*cos - t13*sin)  o13=(t12*sin + t13*cos)  o14=t14
-    // o21=t21  o22=(t22*cos - t23*sin)  o23=(t22*sin + t23*cos)  o24=t24
-    // o31=t31  o32=(t32*cos - t33*sin)  o33=(t32*sin + t33*cos)  o34=t34
-    // o41=t41  o42=(t42*cos - t43*sin)  o43=(t42*sin + t43*cos)  o44=t44
+    // o11=t11  o12=(t12*cos + t13*sin)  o13=(t13*cos - t12*sin)  o14=t14
+    // o21=t21  o22=(t22*cos + t23*sin)  o23=(t23*cos - t22*sin)  o24=t24
+    // o31=t31  o32=(t32*cos + t33*sin)  o33=(t33*cos - t32*sin)  o34=t34
+    // o41=t41  o42=(t42*cos + t43*sin)  o43=(t43*cos - t42*sin)  o44=t44
     //
-    // o12 = t12*cos - t13*sin  o13 = t12*sin + t13*cos
-    // o22 = t22*cos - t23*sin  o23 = t22*sin + t23*cos
-    // o32 = t32*cos - t33*sin  o33 = t32*sin + t33*cos
-    // o42 = t42*cos - t43*sin  o33 = t42*sin + t43*cos
+    // o12 = t12*cos + t13*sin  o13 = t13*cos - t12*sin
+    // o22 = t22*cos + t23*sin  o23 = t23*cos - t22*sin
+    // o32 = t32*cos + t33*sin  o33 = t33*cos - t32*sin
+    // o42 = t42*cos + t43*sin  o33 = t43*cos - t42*sin
 
     t12 = M12a[a];  t13 = M13a[a];
     t22 = M22a[a];  t23 = M23a[a];
     t32 = M32a[a];  t33 = M33a[a];
     t42 = M42a[a];  t43 = M43a[a];
 
-    M12a[a] = t12*cos - t13*sin;  M13a[a] = t12*sin + t13*cos;
-    M22a[a] = t22*cos - t23*sin;  M23a[a] = t22*sin + t23*cos;
-    M32a[a] = t32*cos - t33*sin;  M33a[a] = t32*sin + t33*cos;
-    M42a[a] = t42*cos - t43*sin;  M43a[a] = t42*sin + t43*cos;
+    M12a[a] = t12*cos + t13*sin;  M13a[a] = t13*cos - t12*sin;
+    M22a[a] = t22*cos + t23*sin;  M23a[a] = t23*cos - t22*sin;
+    M32a[a] = t32*cos + t33*sin;  M33a[a] = t33*cos - t32*sin;
+    M42a[a] = t42*cos + t43*sin;  M43a[a] = t43*cos - t42*sin;
 };
 
 const rotate_around_y = (
@@ -922,45 +922,45 @@ const rotate_around_z = (
     // (t31 t32 t33 t34).(r11 r21 r31 r41) (t31 t32 t33 t34).(r12 r22 r32 r42) (t31 t32 t33 t34).(r13 r23 r33 r43) (t31 t32 t33 t34).(r14 r24 r34 r44)
     // (t41 t42 t43 t44).(r11 r21 r31 r41) (t41 t42 t43 t44).(r12 r22 r32 r42) (t41 t42 t43 t44).(r13 r23 r33 r43) (t41 t42 t43 t44).(r14 r24 r34 r44)
     //
-    // r11 r12 r13 r14     cos   sin  0  0
-    // r21 r22 r23 r24  =  -sin  cos  0  0
+    // r11 r12 r13 r14     cos  -sin  0  0
+    // r21 r22 r23 r24  =  sin   cos  0  0
     // r31 r32 r33 r34      0     0   1  0
     // r41 r42 r44 r44      0     0   0  1
     //
-    // (t11 t12 t13 r14).(cos -sin 0 0) (t11 t12 t13 r14).(sin cos 0 0) (t11 t12 t13 r14).(0 0 1 0) (t11 t12 t13 t14).(0 0 0 1)
-    // (t21 t22 t23 r24).(cos -sin 0 0) (t21 t22 t23 r24).(sin cos 0 0) (t21 t22 t23 r24).(0 0 1 0) (t21 t22 t23 t24).(0 0 0 1)
-    // (t31 t32 t33 r34).(cos -sin 0 0) (t31 t32 t33 r34).(sin cos 0 0) (t31 t32 t33 r34).(0 0 1 0) (t31 t32 t33 t34).(0 0 0 1)
-    // (t41 t42 t43 r44).(cos -sin 0 0) (t41 t42 t43 r44).(sin cos 0 0) (t41 t42 t43 r44).(0 0 1 0) (t41 t42 t43 t44).(0 0 0 1)
+    // (t11 t12 t13 r14).(cos sin 0 0) (t11 t12 t13 r14).(-sin cos 0 0) (t11 t12 t13 r14).(0 0 1 0) (t11 t12 t13 t14).(0 0 0 1)
+    // (t21 t22 t23 r24).(cos sin 0 0) (t21 t22 t23 r24).(-sin cos 0 0) (t21 t22 t23 r24).(0 0 1 0) (t21 t22 t23 t24).(0 0 0 1)
+    // (t31 t32 t33 r34).(cos sin 0 0) (t31 t32 t33 r34).(-sin cos 0 0) (t31 t32 t33 r34).(0 0 1 0) (t31 t32 t33 t34).(0 0 0 1)
+    // (t41 t42 t43 r44).(cos sin 0 0) (t41 t42 t43 r44).(-sin cos 0 0) (t41 t42 t43 r44).(0 0 1 0) (t41 t42 t43 t44).(0 0 0 1)
     //
-    // (t11*cos + t12*-sin + t13*0 + t14*0) (t11*sin + t12*cos + t13*0 + t14*0) (t11*0 + t12*0 + t13*1 + t14*0) (t11*0 t12*0 t13*0 t14*1)
-    // (t21*cos + t22*-sin + t23*0 + t24*0) (t21*sin + t22*cos + t23*0 + t24*0) (t21*0 + t22*0 + t23*1 + t24*0) (t21*0 t22*0 t23*0 t24*1)
-    // (t31*cos + t32*-sin + t33*0 + t34*0) (t31*sin + t32*cos + t33*0 + t34*0) (t31*0 + t32*0 + t33*1 + t34*0) (t31*0 t32*0 t33*0 t34*1)
-    // (t41*cos + t42*-sin + t43*0 + t44*0) (t41*sin + t42*cos + t43*0 + t44*0) (t41*0 + t42*0 + t43*1 + t44*0) (t41*0 t42*0 t43*0 t44*1)
+    // (t11*cos + t12*sin + t13*0 + t14*0) (t11*-sin + t12*cos + t13*0 + t14*0) (t11*0 + t12*0 + t13*1 + t14*0) (t11*0 t12*0 t13*0 t14*1)
+    // (t21*cos + t22*sin + t23*0 + t24*0) (t21*-sin + t22*cos + t23*0 + t24*0) (t21*0 + t22*0 + t23*1 + t24*0) (t21*0 t22*0 t23*0 t24*1)
+    // (t31*cos + t32*sin + t33*0 + t34*0) (t31*-sin + t32*cos + t33*0 + t34*0) (t31*0 + t32*0 + t33*1 + t34*0) (t31*0 t32*0 t33*0 t34*1)
+    // (t41*cos + t42*sin + t43*0 + t44*0) (t41*-sin + t42*cos + t43*0 + t44*0) (t41*0 + t42*0 + t43*1 + t44*0) (t41*0 t42*0 t43*0 t44*1)
     //
-    // (t11*cos + t12*-sin + 0 + 0) (t11*sin + t12*cos + 0 + 0) (0 + 0 + t13 + 0) (0 + 0 + 0 + t14)
-    // (t21*cos + t22*-sin + 0 + 0) (t21*sin + t22*cos + 0 + 0) (0 + 0 + t23 + 0) (0 + 0 + 0 + t24)
-    // (t31*cos + t32*-sin + 0 + 0) (t31*sin + t32*cos + 0 + 0) (0 + 0 + t33 + 0) (0 + 0 + 0 + t34)
-    // (t41*cos + t42*-sin + 0 + 0) (t41*sin + t42*cos + 0 + 0) (0 + 0 + t43 + 0) (0 + 0 + 0 + t44)
+    // (t11*cos + t12*sin + 0 + 0) (t11*-sin + t12*cos + 0 + 0) (0 + 0 + t13 + 0) (0 + 0 + 0 + t14)
+    // (t21*cos + t22*sin + 0 + 0) (t21*-sin + t22*cos + 0 + 0) (0 + 0 + t23 + 0) (0 + 0 + 0 + t24)
+    // (t31*cos + t32*sin + 0 + 0) (t31*-sin + t32*cos + 0 + 0) (0 + 0 + t33 + 0) (0 + 0 + 0 + t34)
+    // (t41*cos + t42*sin + 0 + 0) (t41*-sin + t42*cos + 0 + 0) (0 + 0 + t43 + 0) (0 + 0 + 0 + t44)
     //
-    // (t11*cos + t12*-sin) (t11*sin + t12*cos) (t13) (t14)
-    // (t21*cos + t22*-sin) (t21*sin + t22*cos) (t23) (t24)
-    // (t31*cos + t32*-sin) (t31*sin + t32*cos) (t33) (t34)
-    // (t41*cos + t42*-sin) (t41*sin + t42*cos) (t43) (t44)
+    // (t11*cos + t12*sin) (t11*-sin + t12*cos) (t13) (t14)
+    // (t21*cos + t22*sin) (t21*-sin + t22*cos) (t23) (t24)
+    // (t31*cos + t32*sin) (t31*-sin + t32*cos) (t33) (t34)
+    // (t41*cos + t42*sin) (t41*-sin + t42*cos) (t43) (t44)
     //
-    // o11=(t11*cos - t12*sin)  o12=(t11*sin + t12*cos)  o13=t13  o14=t14
-    // o21=(t21*cos - t22*sin)  o22=(t21*sin + t22*cos)  o23=t23  o24=t24
-    // o31=(t31*cos - t32*sin)  o32=(t31*sin + t32*cos)  o33=t33  o34=t34
-    // o41=(t41*cos - t42*sin)  o42=(t41*sin + t42*cos)  o43=t43  o44=t44
+    // o11=(t11*cos + t12*sin)  o12=(t12*cos - t11*sin)  o13=t13  o14=t14
+    // o21=(t21*cos + t22*sin)  o22=(t22*cos - t21*sin)  o23=t23  o24=t24
+    // o31=(t31*cos + t32*sin)  o32=(t32*cos - t31*sin)  o33=t33  o34=t34
+    // o41=(t41*cos + t42*sin)  o42=(t42*cos - t41*sin)  o43=t43  o44=t44
     //
-    // o11 = t11*cos - t12*sin  o12 = t11*sin + t12*cos  o13 = t13  o14 = t14
-    // o21 = t21*cos - t22*sin  o22 = t21*sin + t22*cos  o23 = t23  o24 = t24
-    // o31 = t31*cos - t32*sin  o32 = t31*sin + t32*cos  o33 = t33  o34 = t34
-    // o41 = t41*cos - t42*sin  o42 = t41*sin + t42*cos  o43 = t43  o44 = t44
+    // o11 = t11*cos + t12*sin  o12 = t12*cos -t11*sin  o13 = t13  o14 = t14
+    // o21 = t21*cos + t22*sin  o22 = t22*cos -t21*sin  o23 = t23  o24 = t24
+    // o31 = t31*cos + t32*sin  o32 = t32*cos -t31*sin  o33 = t33  o34 = t34
+    // o41 = t41*cos + t42*sin  o42 = t42*cos -t41*sin  o43 = t43  o44 = t44
 
-    M11o[o] = M11a[a]*cos - M12a[a]*sin;  M12o[o] = M11a[a]*sin + M12a[a]*cos;  M13o[o] = M13a[a];  M14o[o] = M14a[a];
-    M21o[o] = M21a[a]*cos - M22a[a]*sin;  M22o[o] = M21a[a]*sin + M22a[a]*cos;  M23o[o] = M23a[a];  M24o[o] = M24a[a];
-    M31o[o] = M31a[a]*cos - M32a[a]*sin;  M32o[o] = M31a[a]*sin + M32a[a]*cos;  M33o[o] = M33a[a];  M34o[o] = M34a[a];
-    M41o[o] = M41a[a]*cos - M42a[a]*sin;  M42o[o] = M41a[a]*sin + M42a[a]*cos;  M43o[o] = M43a[a];  M44o[o] = M44a[a];
+    M11o[o] = M11a[a]*cos + M12a[a]*sin;  M12o[o] = M12a[a]*cos - M11a[a]*sin;  M13o[o] = M13a[a];  M14o[o] = M14a[a];
+    M21o[o] = M21a[a]*cos + M22a[a]*sin;  M22o[o] = M22a[a]*cos - M21a[a]*sin;  M23o[o] = M23a[a];  M24o[o] = M24a[a];
+    M31o[o] = M31a[a]*cos + M32a[a]*sin;  M32o[o] = M32a[a]*cos - M31a[a]*sin;  M33o[o] = M33a[a];  M34o[o] = M34a[a];
+    M41o[o] = M41a[a]*cos + M42a[a]*sin;  M42o[o] = M42a[a]*cos - M41a[a]*sin;  M43o[o] = M43a[a];  M44o[o] = M44a[a];
 };
 
 const rotate_around_z_in_place = (
@@ -984,50 +984,50 @@ const rotate_around_z_in_place = (
     // (t31 t32 t33 t34).(r11 r21 r31 r41) (t31 t32 t33 t34).(r12 r22 r32 r42) (t31 t32 t33 t34).(r13 r23 r33 r43) (t31 t32 t33 t34).(r14 r24 r34 r44)
     // (t41 t42 t43 t44).(r11 r21 r31 r41) (t41 t42 t43 t44).(r12 r22 r32 r42) (t41 t42 t43 t44).(r13 r23 r33 r43) (t41 t42 t43 t44).(r14 r24 r34 r44)
     //
-    // r11 r12 r13 r14     cos   sin  0  0
-    // r21 r22 r23 r24  =  -sin  cos  0  0
+    // r11 r12 r13 r14     cos  -sin  0  0
+    // r21 r22 r23 r24  =  sin   cos  0  0
     // r31 r32 r33 r34      0     0   1  0
     // r41 r42 r44 r44      0     0   0  1
     //
-    // (t11 t12 t13 r14).(cos -sin 0 0) (t11 t12 t13 r14).(sin cos 0 0) (t11 t12 t13 r14).(0 0 1 0) (t11 t12 t13 t14).(0 0 0 1)
-    // (t21 t22 t23 r24).(cos -sin 0 0) (t21 t22 t23 r24).(sin cos 0 0) (t21 t22 t23 r24).(0 0 1 0) (t21 t22 t23 t24).(0 0 0 1)
-    // (t31 t32 t33 r34).(cos -sin 0 0) (t31 t32 t33 r34).(sin cos 0 0) (t31 t32 t33 r34).(0 0 1 0) (t31 t32 t33 t34).(0 0 0 1)
-    // (t41 t42 t43 r44).(cos -sin 0 0) (t41 t42 t43 r44).(sin cos 0 0) (t41 t42 t43 r44).(0 0 1 0) (t41 t42 t43 t44).(0 0 0 1)
+    // (t11 t12 t13 r14).(cos sin 0 0) (t11 t12 t13 r14).(-sin cos 0 0) (t11 t12 t13 r14).(0 0 1 0) (t11 t12 t13 t14).(0 0 0 1)
+    // (t21 t22 t23 r24).(cos sin 0 0) (t21 t22 t23 r24).(-sin cos 0 0) (t21 t22 t23 r24).(0 0 1 0) (t21 t22 t23 t24).(0 0 0 1)
+    // (t31 t32 t33 r34).(cos sin 0 0) (t31 t32 t33 r34).(-sin cos 0 0) (t31 t32 t33 r34).(0 0 1 0) (t31 t32 t33 t34).(0 0 0 1)
+    // (t41 t42 t43 r44).(cos sin 0 0) (t41 t42 t43 r44).(-sin cos 0 0) (t41 t42 t43 r44).(0 0 1 0) (t41 t42 t43 t44).(0 0 0 1)
     //
-    // (t11*cos + t12*-sin + t13*0 + t14*0) (t11*sin + t12*cos + t13*0 + t14*0) (t11*0 + t12*0 + t13*1 + t14*0) (t11*0 t12*0 t13*0 t14*1)
-    // (t21*cos + t22*-sin + t23*0 + t24*0) (t21*sin + t22*cos + t23*0 + t24*0) (t21*0 + t22*0 + t23*1 + t24*0) (t21*0 t22*0 t23*0 t24*1)
-    // (t31*cos + t32*-sin + t33*0 + t34*0) (t31*sin + t32*cos + t33*0 + t34*0) (t31*0 + t32*0 + t33*1 + t34*0) (t31*0 t32*0 t33*0 t34*1)
-    // (t41*cos + t42*-sin + t43*0 + t44*0) (t41*sin + t42*cos + t43*0 + t44*0) (t41*0 + t42*0 + t43*1 + t44*0) (t41*0 t42*0 t43*0 t44*1)
+    // (t11*cos + t12*sin + t13*0 + t14*0) (t11*-sin + t12*cos + t13*0 + t14*0) (t11*0 + t12*0 + t13*1 + t14*0) (t11*0 t12*0 t13*0 t14*1)
+    // (t21*cos + t22*sin + t23*0 + t24*0) (t21*-sin + t22*cos + t23*0 + t24*0) (t21*0 + t22*0 + t23*1 + t24*0) (t21*0 t22*0 t23*0 t24*1)
+    // (t31*cos + t32*sin + t33*0 + t34*0) (t31*-sin + t32*cos + t33*0 + t34*0) (t31*0 + t32*0 + t33*1 + t34*0) (t31*0 t32*0 t33*0 t34*1)
+    // (t41*cos + t42*sin + t43*0 + t44*0) (t41*-sin + t42*cos + t43*0 + t44*0) (t41*0 + t42*0 + t43*1 + t44*0) (t41*0 t42*0 t43*0 t44*1)
     //
-    // (t11*cos + t12*-sin + 0 + 0) (t11*sin + t12*cos + 0 + 0) (0 + 0 + t13 + 0) (0 + 0 + 0 + t14)
-    // (t21*cos + t22*-sin + 0 + 0) (t21*sin + t22*cos + 0 + 0) (0 + 0 + t23 + 0) (0 + 0 + 0 + t24)
-    // (t31*cos + t32*-sin + 0 + 0) (t31*sin + t32*cos + 0 + 0) (0 + 0 + t33 + 0) (0 + 0 + 0 + t34)
-    // (t41*cos + t42*-sin + 0 + 0) (t41*sin + t42*cos + 0 + 0) (0 + 0 + t43 + 0) (0 + 0 + 0 + t44)
+    // (t11*cos + t12*sin + 0 + 0) (t11*-sin + t12*cos + 0 + 0) (0 + 0 + t13 + 0) (0 + 0 + 0 + t14)
+    // (t21*cos + t22*sin + 0 + 0) (t21*-sin + t22*cos + 0 + 0) (0 + 0 + t23 + 0) (0 + 0 + 0 + t24)
+    // (t31*cos + t32*sin + 0 + 0) (t31*-sin + t32*cos + 0 + 0) (0 + 0 + t33 + 0) (0 + 0 + 0 + t34)
+    // (t41*cos + t42*sin + 0 + 0) (t41*-sin + t42*cos + 0 + 0) (0 + 0 + t43 + 0) (0 + 0 + 0 + t44)
     //
-    // (t11*cos - t12*sin) (t11*sin + t12*cos) (t13) (t14)
-    // (t21*cos - t22*sin) (t21*sin + t22*cos) (t23) (t24)
-    // (t31*cos - t32*sin) (t31*sin + t32*cos) (t33) (t34)
-    // (t41*cos - t42*sin) (t41*sin + t42*cos) (t43) (t44)
+    // (t11*cos + t12*sin) (t11*-sin + t12*cos) (t13) (t14)
+    // (t21*cos + t22*sin) (t21*-sin + t22*cos) (t23) (t24)
+    // (t31*cos + t32*sin) (t31*-sin + t32*cos) (t33) (t34)
+    // (t41*cos + t42*sin) (t41*-sin + t42*cos) (t43) (t44)
     //
-    // o11=(t11*cos - t12*sin)  o12=(t11*sin + t12*cos)  o13=t13  o14=t14
-    // o21=(t21*cos - t22*sin)  o22=(t21*sin + t22*cos)  o23=t23  o24=t24
-    // o31=(t31*cos - t32*sin)  o32=(t31*sin + t32*cos)  o33=t33  o34=t34
-    // o41=(t41*cos - t42*sin)  o42=(t41*sin + t42*cos)  o43=t43  o44=t44
+    // o11=(t11*cos + t12*sin)  o12=(t11*-sin + t12*cos)  o13=t13  o14=t14
+    // o21=(t21*cos + t22*sin)  o22=(t21*-sin + t22*cos)  o23=t23  o24=t24
+    // o31=(t31*cos + t32*sin)  o32=(t31*-sin + t32*cos)  o33=t33  o34=t34
+    // o41=(t41*cos + t42*sin)  o42=(t41*-sin + t42*cos)  o43=t43  o44=t44
     //
-    // o11 = t11*cos - t12*sin  o12 = t11*sin + t12*cos
-    // o21 = t21*cos - t22*sin  o22 = t21*sin + t22*cos
-    // o31 = t31*cos - t32*sin  o32 = t31*sin + t32*cos
-    // o41 = t41*cos - t42*sin  o42 = t41*sin + t42*cos
+    // o11 = t11*cos + t12*sin  o12 = t12*cos - t11*sin
+    // o21 = t21*cos + t22*sin  o22 = t22*cos - t21*sin
+    // o31 = t31*cos + t32*sin  o32 = t32*cos - t31*sin
+    // o41 = t41*cos + t42*sin  o42 = t42*cos - t41*sin
 
     t11 = M11a[a];  t12 = M12a[a];
     t21 = M21a[a];  t22 = M22a[a];
     t31 = M31a[a];  t32 = M32a[a];
     t41 = M41a[a];  t42 = M42a[a];
 
-    M11a[a] = t11*cos - t12*sin;  M12a[a] = t11*sin + t12*cos;
-    M21a[a] = t21*cos - t22*sin;  M22a[a] = t21*sin + t22*cos;
-    M31a[a] = t31*cos - t32*sin;  M32a[a] = t31*sin + t32*cos;
-    M31a[a] = t41*cos - t42*sin;  M42a[a] = t41*sin + t42*cos;
+    M11a[a] = t11*cos + t12*sin;  M12a[a] = t12*cos - t11*sin;
+    M21a[a] = t21*cos + t22*sin;  M22a[a] = t22*cos - t21*sin;
+    M31a[a] = t31*cos + t32*sin;  M32a[a] = t32*cos - t31*sin;
+    M31a[a] = t41*cos + t42*sin;  M42a[a] = t42*cos - t41*sin;
 };
 
 export const matrix4x4Functions: IMatrixRotationFunctionSet = {

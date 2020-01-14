@@ -433,7 +433,7 @@ const rotate = (
     // o21 = t21*cos - t22*sin  o22 = t21*sin + t22*cos
 
     M11o[o] = M11a[a]*cos - M12a[a]*sin;  M12o[o] = M11a[a]*sin + M12a[a]*cos;
-    M21o[o] = M21a[a]*cos + M22a[a]*sin;  M22o[o] = M21a[a]*sin + M22a[a]*cos;
+    M21o[o] = M21a[a]*cos - M22a[a]*sin;  M22o[o] = M21a[a]*sin + M22a[a]*cos;
 };
 
 const rotate_in_place = (
@@ -476,7 +476,7 @@ const rotate_in_place = (
     t12 = M12a[a];  t22 = M22a[a];
 
     M11a[a] = t11 * cos - t12 * sin;   M12a[a] = t11 * sin + t12 * cos;
-    M21a[a] = t21 * cos + t22 * sin;   M22a[a] = t21 * sin + t22 * cos;
+    M21a[a] = t21 * cos - t22 * sin;   M22a[a] = t21 * sin + t22 * cos;
 };
 
 export const matrix2x2Functions: IMatrix2x2FunctionSet = {

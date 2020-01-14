@@ -4,10 +4,10 @@ import Scene from "../scene_graph/scene.js";
 import Viewport from "./viewport.js";
 import RenderPipeline from "./pipelines.js";
 import {FPSController} from "../input/controllers.js";
+import {KEY_CODES} from "../../constants.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
-import {KEY_CODES} from "../../constants.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
@@ -103,6 +103,8 @@ export abstract class BaseRenderEngine<
 
         if (this._is_active)
             this._controller.update(this._delta_time);
+        else if (!this.screen.active_viewport.camera.is_static)
+            this.screen.active_viewport.updateMatrices();
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this.scene.children)

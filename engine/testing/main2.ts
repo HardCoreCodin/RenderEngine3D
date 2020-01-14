@@ -13,7 +13,10 @@ const engine = g.engine = new GLRenderEngine(g.canvas);
 const camera = g.c = engine.screen.active_viewport.camera;
 camera.is_static = false;
 camera.fov = 75;
-camera.transform.translation.z = -10;
+
+camera.transform.translation.y = 1;
+
+
 
 g.mesh_options = new MeshOptions(1, 0,0, true);
 g.mesh_inputs = new MeshInputs(FACE_TYPE.TRIANGLE, ATTRIBUTE.position|ATTRIBUTE.uv);
@@ -47,9 +50,20 @@ g.input_uvs = g.mesh_inputs.uv;
     for (const face of g.susan.faces)
         g.input_positions.pushFace(face);
 
-    g.mesh = g.mesh = new Mesh(g.mesh_inputs, g.mesh_options).load();
-    g.geometry = g.engine.scene.mesh_geometries.addGeometry(g.mesh);
-    g.geometry.material = g.engine.scene.addMaterial(GLMaterial);
+    g.mesh = new Mesh(g.mesh_inputs, g.mesh_options).load();
+    // g.geometry = g.engine.scene.mesh_geometries.addGeometry(g.mesh);
+    // g.geometry.material = g.engine.scene.addMaterial(GLMaterial);
+
+    for (let i=0; i < 10; i++)
+        for (let j=0; j< 10; j++) {
+            let geo = g.engine.scene.mesh_geometries.addGeometry(g.mesh);
+            geo.material = g.engine.scene.addMaterial(GLMaterial);
+
+            geo.transform.translation.x = i - 5;
+            geo.transform.translation.z = j - 5;
+            geo.transform.scale.x = geo.transform.scale.y = geo.transform.scale.z = 0.1
+        }
+
 
     g.engine.start();
 })();

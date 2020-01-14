@@ -27,7 +27,6 @@ export abstract class BaseViewport<
         protected readonly _position: IVector2D = {x: 0, y: 0},
         protected readonly _context: Context = _screen.context as Context,
     ) {
-        this._screen.registerViewport(this);
         this.reset(_size.width, _size.height, _position.x, _position.y);
     }
 
@@ -70,6 +69,8 @@ export abstract class BaseViewport<
         this._size.height = height;
         this._position.x = x;
         this._position.y = y;
+
+        // this._ndc_position.x = this._screen.wi
 
         this.camera.aspect_ratio = width / height;
         this.updateMatrices();

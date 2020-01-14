@@ -4,7 +4,7 @@ import {IController, IControllerKeys} from "../_interfaces/input.js";
 import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
-import {KEY_CODES} from "../../constants.js";
+import {KEY_CODES, RADIANS_TO_DEGREES_FACTOR} from "../../constants.js";
 
 abstract class Controller
     implements IController
@@ -52,10 +52,16 @@ abstract class Controller
         viewport: IViewport,
         public canvas: HTMLCanvasElement,
         public movement_speed: number = 0.1,
-        public rotation_speed: number = 0.01,
+        protected _rotation_speed: number = 0.01,
         public mouse_sensitivity: number = 0.1
     ) {
         this.viewport = viewport;
+    }
+
+    get rotation_speed(): number {
+        return this._camera.transform.rotation.angles_in_degrees ?
+            this._rotation_speed * RADIANS_TO_DEGREES_FACTOR :
+            this._rotation_speed;
     }
 
     get viewport(): IViewport {return this._viewport}
@@ -164,7 +170,7 @@ abstract class Controller
         this.direction_changed = true;
         this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
 
-        this._rotation.x += this.rotation_amount * this.mouse_movement.y;
+        this._rotation.x -= this.rotation_amount * this.mouse_movement.y;
         this._rotation.y -= this.rotation_amount * this.mouse_movement.x;
 
         this.mouse_movement.x = this.mouse_movement.y = 0;

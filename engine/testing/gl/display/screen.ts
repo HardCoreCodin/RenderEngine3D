@@ -13,6 +13,12 @@ export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLScene, GLCame
         return new GLRenderPipeline(context, scene);
     }
 
+    resize(width: number, height: number): void {
+        super.resize(width, height);
+        this.context.canvas.width  = width;
+        this.context.canvas.height = height;
+    }
+
     protected _createViewport(
         camera: GLCamera,
         render_pipeline: GLRenderPipeline,

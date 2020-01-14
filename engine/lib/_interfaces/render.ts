@@ -15,6 +15,7 @@ export interface ICamera extends INode3D {
     far: number;
     near: number;
     zoom: number;
+
     depth_factor: number;
     focal_length: number;
     aspect_ratio: number;
