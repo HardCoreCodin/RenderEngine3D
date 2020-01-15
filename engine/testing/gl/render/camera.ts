@@ -7,18 +7,26 @@ import {IProjectionMatrix,} from "../../../lib/_interfaces/render.js";
 
 export class GLPerspectiveProjectionMatrix extends PerspectiveProjectionMatrix {
     // Override DX-style projection matrix formulation with GL-style one:
-    _updateZ(): void {
+    updateZ(): void {
         // GL clip-space has a depth-span of 2 (-1 to 1)
-        this.scale.z       = (    this.view_frustum.far + this.view_frustum.near) * this.view_frustum.one_over_depth_span;
-        this.translation.z = -2 * this.view_frustum.far * this.view_frustum.near  * this.view_frustum.one_over_depth_span;
+        n = this.view_frustum.near;
+        f = this.view_frustum.far;
+        d = this.view_frustum.one_over_depth_span;
+
+        this.scale.z       =     (f + n) * d;
+        this.translation.z = -2 * f * n  * d;
     }
 }
 
 export class GLOrthographicProjectionMatrix extends OrthographicProjectionMatrix {
     // Override DX-style projection matrix formulation with GL-style one:
-    _updateZ(): void {
-        this.scale.z =  -2 * this.view_frustum.one_over_depth_span;
-        this.translation.z = this.view_frustum.one_over_depth_span * (this.view_frustum.far + this.view_frustum.near) ;
+    updateZ(): void {
+        n = this.view_frustum.near;
+        f = this.view_frustum.far;
+        d = this.view_frustum.one_over_depth_span;
+
+        this.scale.z =  -2 * d;
+        this.translation.z = d * (f + n) ;
     }
 }
 
@@ -31,3 +39,5 @@ export class GLCamera extends Camera {
     }
 
 }
+
+let n, f, d;

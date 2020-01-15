@@ -33,10 +33,7 @@ export default class Camera extends Node3D implements ICamera {
         this._perspective_projection_matrix = this._getPerspectiveProjectionMatrix();
         this._orthographic_projection_matrix = this._getOrthographicProjectionMatrix();
 
-        this._projection_matrix = is_perspective ?
-            this._perspective_projection_matrix :
-            this._orthographic_projection_matrix;
-        this._projection_matrix.update();
+        this.is_perspective = is_perspective;
     }
 
     protected _getPerspectiveProjectionMatrix(): IProjectionMatrix {
@@ -57,9 +54,6 @@ export default class Camera extends Node3D implements ICamera {
 
     get is_perspective(): boolean {return this._is_perspective}
     set is_perspective(is_perspective: boolean) {
-        if (is_perspective === this._is_perspective)
-            return;
-
         this._is_perspective = is_perspective;
         this._projection_matrix = is_perspective ?
             this._perspective_projection_matrix :
@@ -87,7 +81,7 @@ export class Lense implements ILense {
             zoom = MIN_ZOOM;
 
         this._zoom = zoom;
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateXY();
     }
 
     get fov(): number {
@@ -104,7 +98,7 @@ export class Lense implements ILense {
 
         this._field_of_view = radians;
         this._focal_length = 1.0 / Math.tan(this._field_of_view / 2);
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateXY();
     }
 
     get focal_length(): number {
@@ -120,7 +114,7 @@ export class Lense implements ILense {
 
         this._focal_length = focal_length;
         this._field_of_view = Math.atan(1.0 / focal_length) / 2;
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateXY();
     }
 }
 
@@ -146,7 +140,7 @@ export class ViewFrustum implements IViewFrustum {
 
         this._far_clipping_plane_distance = far;
         this._one_over_depth_span = 1.0 / (far - this._near_clipping_plane_distance);
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateZ();
     }
 
     get near(): number {return this._near_clipping_plane_distance}
@@ -156,7 +150,7 @@ export class ViewFrustum implements IViewFrustum {
 
         this._near_clipping_plane_distance = near;
         this._one_over_depth_span = 1.0 / (this._far_clipping_plane_distance - near);
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateZ();
     }
 
     get aspect_ratio(): number {return this._aspect_ratio}
@@ -165,13 +159,13 @@ export class ViewFrustum implements IViewFrustum {
             return;
 
         this._aspect_ratio = aspect_ratio;
-        this._camera.projection_matrix.update();
+        this._camera.projection_matrix.updateXY();
     }
 }
 
 export abstract class ProjectionMatrix extends Matrix4x4 implements IProjectionMatrix {
-    protected abstract _updateW(): void;
-    protected abstract _updateXY(): void;
+    abstract updateW(): void;
+    abstract updateXY(): void;
 
     constructor(
         readonly lense: ILense,
@@ -181,28 +175,32 @@ export abstract class ProjectionMatrix extends Matrix4x4 implements IProjectionM
     ) {
         super(id, arrays);
         this.setToIdentity();
-        this._updateW();
+        this.updateW();
     }
 
     // Update the matrix that converts from view space to clip space:
     update(): void {
-        this._updateXY();
-        this._updateZ();
+        this.updateXY();
+        this.updateZ();
     }
 
-    protected _updateZ(): void {
-        this.scale.z        =   this.view_frustum.far * this.view_frustum.one_over_depth_span;
-        this.translation.z *= -this.view_frustum.near * this.view_frustum.one_over_depth_span;
+    updateZ(): void {
+        n = this.view_frustum.near;
+        f = this.view_frustum.far;
+        d = this.view_frustum.one_over_depth_span;
+
+        this.scale.z        =  f * d;
+        this.translation.z *= -n * d;
     }
 }
 
 export class PerspectiveProjectionMatrix extends ProjectionMatrix {
-    protected _updateW(): void {
+    updateW(): void {
         this.m34 = 1;
         this.m44 = 0;
     }
 
-    protected _updateXY(): void {
+    updateXY(): void {
         this.x_axis.x = this.lense.focal_length * this.lense.zoom;
         this.y_axis.y = this.lense.focal_length * this.lense.zoom * this.view_frustum.aspect_ratio;
     }
@@ -210,13 +208,15 @@ export class PerspectiveProjectionMatrix extends ProjectionMatrix {
 
 
 export class OrthographicProjectionMatrix extends ProjectionMatrix {
-    protected _updateW(): void {
+    updateW(): void {
         this.m34 = 0;
         this.m44 = 1;
     }
 
-    protected _updateXY(): void {
+    updateXY(): void {
         this.x_axis.x = this.lense.zoom;
         this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
     }
 }
+
+let n, f, d;

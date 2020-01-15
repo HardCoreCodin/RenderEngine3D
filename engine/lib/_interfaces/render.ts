@@ -28,6 +28,9 @@ export interface IProjectionMatrix extends  IMatrix4x4 {
     readonly view_frustum: IViewFrustum;
 
     update(): void;
+    updateZ(): void;
+    updateW(): void;
+    updateXY(): void;
 }
 
 export interface ICamera extends INode3D {
@@ -165,8 +168,8 @@ export interface IRenderEngine<
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
 
-    readonly key_bindings: IRenderEngineKeys;
-    readonly key_pressed: IRenderEngineKeys;
+    readonly keys: IRenderEngineKeys;
+    readonly pressed: IRenderEngineKeys;
 
     scene: SceneType;
     screen: ScreenType;

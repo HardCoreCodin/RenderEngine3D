@@ -24,6 +24,8 @@ export abstract class BaseRenderEngine<
     protected abstract _createDefaultScene(): SceneType;
     protected abstract _getDefaultCamera(): CameraType;
 
+    protected readonly _update_callback: FrameRequestCallback;
+
     readonly context: Context;
     protected _scene: SceneType;
     protected _screen: ScreenType;
@@ -35,13 +37,13 @@ export abstract class BaseRenderEngine<
     protected _last_timestamp = 0;
     protected _delta_time = 0;
 
-    readonly key_pressed = {
+    readonly pressed = {
         esc: 0,
         ctrl: 0,
         space: 0
     };
 
-    readonly key_bindings = {
+    readonly keys = {
         esc: KEY_CODES.ESC,
         ctrl: KEY_CODES.CTRL,
         space: KEY_CODES.SPACE
@@ -50,8 +52,12 @@ export abstract class BaseRenderEngine<
     protected readonly _events = [
         'keyup',
         'keydown',
+        'mouseup',
+        'mousedown',
         'mousemove',
+        'wheel',
         'click',
+        'dblclick',
         'pointerlockchange'
     ];
 
@@ -66,13 +72,13 @@ export abstract class BaseRenderEngine<
         this.scene = scene || this._createDefaultScene();
         this.screen = screen || this._createDefaultScreen(canvas, camera || this._getDefaultCamera());
         this.controller = controller || this._createDefaultController(canvas, this.screen.active_viewport);
-
         if (document.ontouchmove)
             this._events.concat(
                 'touchmove',
                 'touchstart',
                 'touchend'
             );
+        this._update_callback = this.update.bind(this)
     }
 
     get is_active(): boolean {return this._is_active}
@@ -112,54 +118,71 @@ export abstract class BaseRenderEngine<
 
         this.screen.refresh();
 
-        requestAnimationFrame(this.update.bind(this));
+        requestAnimationFrame(this._update_callback);
     }
 
     protected _on_pointerlockchange(pointer_event: PointerEvent): void {
-        this._is_active = document.documentElement === document.pointerLockElement;
+        this._is_active = this.canvas === document.pointerLockElement;
     }
 
     protected _on_mousemove(mouse_event: MouseEvent): void {
+        this._controller.mouse_moved = true;
         this._controller.mouse_movement.x += mouse_event.movementX;
         this._controller.mouse_movement.y += mouse_event.movementY;
-        this._controller.mouse_moved = true;
     }
 
-    protected _on_click() {
-        if (!this._is_active) {
-            this._is_active = true;
-            this._controller.mouse_movement.x = 0;
-            this._controller.mouse_movement.y = 0;
-            document.documentElement.requestPointerLock();
-        }
+    protected _on_wheel(wheel_event: WheelEvent): void {
+        this._controller.mouse_wheel = wheel_event.deltaY;
+        this._controller.mouse_wheel_moved = true;
+    }
+
+    protected _on_dblclick(): void {
+        this._is_active = !this._is_active;
+        this._controller.mouse_double_clicked = this._is_active;
+        if (this._is_active)
+            this.canvas.requestPointerLock();
+        else
+            document.exitPointerLock();
+    }
+
+    protected _on_click(): void {
+        this._controller.mouse_clicked = true;
+    }
+
+    protected _on_mousedown(mouse_event: MouseEvent): void {
+        this._controller.mouse_down = mouse_event.which;
+    }
+
+    protected _on_mouseup(mouse_event: MouseEvent): void {
+        this._controller.mouse_up = mouse_event.which;
     }
 
     protected _on_keydown(key_event: KeyboardEvent): void {
-        for (const key of Object.keys(this.key_bindings))
-            if (this.key_bindings[key] === key_event.which)
-                this.key_pressed[key] = 1;
+        this._controller.key_pressed = true;
 
-        for (const key of Object.keys(this._controller.key_bindings))
-            if (this._controller.key_bindings[key] === key_event.which)
-                this._controller.key_pressed[key] = 1;
+        for (const key of Object.keys(this.keys))
+            if (this.keys[key] === key_event.which)
+                this.pressed[key] = 1;
+
+        for (const key of Object.keys(this._controller.keys))
+            if (this._controller.keys[key] === key_event.which)
+                this._controller.pressed[key] = 1;
     }
 
     protected _on_keyup(key_event: KeyboardEvent): void {
-        for (const key of Object.keys(this.key_bindings))
-            if (this.key_bindings[key] === key_event.which)
-                this.key_pressed[key] = 0;
+        for (const key of Object.keys(this.keys))
+            if (this.keys[key] === key_event.which)
+                this.pressed[key] = 0;
 
-        for (const key of Object.keys(this._controller.key_bindings))
-            if (this._controller.key_bindings[key] === key_event.which)
-                this._controller.key_pressed[key] = 0;
+        for (const key of Object.keys(this._controller.keys))
+            if (this._controller.keys[key] === key_event.which)
+                this._controller.pressed[key] = 0;
     }
 
     handleEvent(event: Event): void {
         const handler = `_on_${event.type}`;
-        if (typeof this[handler] === 'function') {
-            event.preventDefault();
+        if (typeof this[handler] === 'function')
             return this[handler](event);
-        }
     }
 
     protected _startListening() {
@@ -181,7 +204,8 @@ export abstract class BaseRenderEngine<
         // Initialize matrices manually here once, to set their initial state:
         this.screen.active_viewport.camera.projection_matrix.update();
         this.screen.active_viewport.updateMatrices();
-        requestAnimationFrame(this.update.bind(this));
+
+        requestAnimationFrame(this._update_callback);
     }
 
     stop() {
