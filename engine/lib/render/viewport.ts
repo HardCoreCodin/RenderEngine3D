@@ -70,8 +70,6 @@ export abstract class BaseViewport<
         this._position.x = x;
         this._position.y = y;
 
-        // this._ndc_position.x = this._screen.wi
-
         this.camera.view_frustum.aspect_ratio = width / height;
         this.updateMatrices();
     }
@@ -100,9 +98,9 @@ export default class Viewport extends BaseViewport<CanvasRenderingContext2D, Sce
             const half_height = height / 2;
 
             // Scale the normalized screen to the pixel size:
-            // (from normalized size of -1->1 horizontally and vertically, so from width and height of 2)
-            this.ndc_to_screen.x_axis.x = half_width;
-            this.ndc_to_screen.x_axis.y = -half_height;
+            // (from normalized size of -1->1 horizontally and vertically having a width and height of 2)
+            this.ndc_to_screen.scale.x = half_width;
+            this.ndc_to_screen.scale.y = -half_height;
             // Note: HTML5 Canvas element has a coordinate system that goes top-to-bottom vertically.
 
             // Move the screen up and to the right appropriately,

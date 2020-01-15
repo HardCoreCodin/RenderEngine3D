@@ -7,24 +7,16 @@ import {BaseViewport} from "../../../lib/render/viewport.js";
 
 
 export class GLViewport extends BaseViewport<WebGL2RenderingContext, GLScene, GLCamera, GLRenderPipeline, GLScreen> {
-    refresh() {
-        this._context.viewport(
-            this._position.x,
-            this._position.y,
-            this._size.width,
-            this._size.height
-        );
-        super.refresh();
+    reset(width: number, height: number, x: number, y: number): void {
+        if (width !== this._size.width ||
+            height !== this._size.height ||
+            x !== this._position.x ||
+            y !== this._position.y
+        ) {
+            super.reset(width, height, x, y);
+            this._context.canvas.width = width;
+            this._context.canvas.height = height;
+            this._context.viewport(x, y, width, height);
+        }
     }
-
-    // reset(width: number, height: number, x: number, y: number): void {
-    //     if (width !== this._size.width ||
-    //         height !== this._size.height ||
-    //         x !== this._position.x ||
-    //         y !== this._position.y
-    //     ) {
-    //         super.reset(width, height, x, y);
-    //         this._context.viewport(x, y, width, height);
-    //     }
-    // }
 }
