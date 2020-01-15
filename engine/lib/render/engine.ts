@@ -8,6 +8,7 @@ import {KEY_CODES} from "../../constants.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
+import {non_zero} from "../../utils.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
@@ -37,12 +38,7 @@ export abstract class BaseRenderEngine<
     protected _last_timestamp = 0;
     protected _delta_time = 0;
 
-    readonly pressed = {
-        esc: 0,
-        ctrl: 0,
-        space: 0
-    };
-
+    readonly pressed = new Uint8Array(256);
     readonly keys = {
         esc: KEY_CODES.ESC,
         ctrl: KEY_CODES.CTRL,
@@ -162,27 +158,33 @@ export abstract class BaseRenderEngine<
 
         for (const key of Object.keys(this.keys))
             if (this.keys[key] === key_event.which)
-                this.pressed[key] = 1;
+                this.pressed[key_event.which] = 1;
 
         for (const key of Object.keys(this._controller.keys))
             if (this._controller.keys[key] === key_event.which)
-                this._controller.pressed[key] = 1;
+                this._controller.pressed[key_event.which] = 1;
     }
 
     protected _on_keyup(key_event: KeyboardEvent): void {
         for (const key of Object.keys(this.keys))
             if (this.keys[key] === key_event.which)
-                this.pressed[key] = 0;
+                this.pressed[key_event.which] = 0;
 
         for (const key of Object.keys(this._controller.keys))
             if (this._controller.keys[key] === key_event.which)
-                this._controller.pressed[key] = 0;
+                this._controller.pressed[key_event.which] = 0;
+
+        if (!this._controller.pressed.some(non_zero))
+            this._controller.key_pressed = false;
     }
 
     handleEvent(event: Event): void {
         const handler = `_on_${event.type}`;
-        if (typeof this[handler] === 'function')
+        if (typeof this[handler] === 'function') {
+            if (event.type !== 'wheel')
+                event.preventDefault();
             return this[handler](event);
+        }
     }
 
     protected _startListening() {

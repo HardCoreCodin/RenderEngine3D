@@ -169,7 +169,7 @@ export interface IRenderEngine<
     readonly context: Context;
 
     readonly keys: IRenderEngineKeys;
-    readonly pressed: IRenderEngineKeys;
+    readonly pressed: Uint8Array;
 
     scene: SceneType;
     screen: ScreenType;

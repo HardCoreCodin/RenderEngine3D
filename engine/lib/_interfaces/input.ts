@@ -27,7 +27,7 @@ export interface IController {
 
     key_pressed: boolean;
     readonly keys: IControllerKeys;
-    readonly pressed: IControllerKeys;
+    readonly pressed: Uint8Array;
 
     mouse_up: number;
     mouse_down: number;
@@ -38,6 +38,7 @@ export interface IController {
     mouse_wheel: number;
     mouse_wheel_moved: boolean;
     mouse_sensitivity: number;
+    mouse_wheel_sensitivity: number;
 
     movement_speed: number;
     rotation_speed: number;

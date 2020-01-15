@@ -1,6 +1,8 @@
 import {TypedArray} from "./types.js";
 import {PIE, TWO_PIE} from "./constants.js";
 
+export const non_zero = _ => _ !== 0;
+
 const memcpy = (
     from_array: TypedArray,
     to_array: TypedArray,

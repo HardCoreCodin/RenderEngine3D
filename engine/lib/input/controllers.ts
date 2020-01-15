@@ -4,34 +4,24 @@ import {IController, IControllerKeys} from "../_interfaces/input.js";
 import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
-import {DEFAULT_MOUSE_SENSITIVITY, DEFAULT_MOVEMENT_SPEED, DEFAULT_ROTATION_SPEED, KEY_CODES} from "../../constants.js";
+import {
+    DEFAULT_MOUSE_SENSITIVITY,
+    DEFAULT_MOUSE_WHEEL_SENSITIVITY,
+    DEFAULT_MOVEMENT_SPEED,
+    DEFAULT_ROTATION_SPEED,
+    KEY_CODES, MOUSE_BUTTON
+} from "../../constants.js";
 
 abstract class Controller
     implements IController
 {
     abstract readonly keys: IControllerKeys;
-    readonly pressed: IControllerKeys = {
-        forward: 0,
-        backwards: 0,
-
-        right: 0,
-        left: 0,
-
-        yaw_right: 0,
-        yaw_left: 0,
-
-        pitch_up: 0,
-        pitch_down: 0,
-
-        up: 0,
-        down: 0,
-    };
+    readonly pressed = new Uint8Array(256);
 
     position_changed: boolean = false;
     direction_changed: boolean = false;
 
     public key_pressed: boolean = false;
-
     public mouse_clicked: boolean = false;
     public mouse_double_clicked: boolean = false;
 
@@ -60,7 +50,8 @@ abstract class Controller
         public canvas: HTMLCanvasElement,
         public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
         public rotation_speed: number = DEFAULT_ROTATION_SPEED,
-        public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY
+        public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY,
+        public mouse_wheel_sensitivity: number = DEFAULT_MOUSE_WHEEL_SENSITIVITY
     ) {
         this.viewport = viewport;
     }
@@ -122,49 +113,48 @@ export class FPSController
         down: KEY_CODES.F,
     };
 
-
     protected _updateFromKeyboard(delta_time: number): void {
-        if (this.pressed.yaw_left ||
-            this.pressed.yaw_right ||
-            this.pressed.pitch_up ||
-            this.pressed.pitch_down) {
+        if (this.pressed[this.keys.yaw_left] ||
+            this.pressed[this.keys.yaw_right] ||
+            this.pressed[this.keys.pitch_up] ||
+            this.pressed[this.keys.pitch_down]) {
 
             this.direction_changed = true;
             this.rotation_amount = this.rotation_speed * delta_time;
 
-            if (this.pressed.yaw_left ||
-                this.pressed.yaw_right) {
+            if (this.pressed[this.keys.yaw_left] ||
+                this.pressed[this.keys.yaw_right]) {
 
-                if (this.pressed.yaw_left)
+                if (this.pressed[this.keys.yaw_left])
                     this._rotation.y += this.rotation_amount;
                 else
                     this._rotation.y -= this.rotation_amount;
             }
 
-            if (this.pressed.pitch_up ||
-                this.pressed.pitch_down) {
+            if (this.pressed[this.keys.pitch_up] ||
+                this.pressed[this.keys.pitch_down]) {
 
-                if (this.pressed.pitch_up)
+                if (this.pressed[this.keys.pitch_up])
                     this._rotation.x += this.rotation_amount;
                 else
                     this._rotation.x -= this.rotation_amount;
             }
         }
 
-        if (this.pressed.forward ||
-            this.pressed.backwards ||
-            this.pressed.right ||
-            this.pressed.left ||
-            this.pressed.up ||
-            this.pressed.down) {
+        if (this.pressed[this.keys.forward] ||
+            this.pressed[this.keys.backwards] ||
+            this.pressed[this.keys.right] ||
+            this.pressed[this.keys.left] ||
+            this.pressed[this.keys.up] ||
+            this.pressed[this.keys.down]) {
 
             this.position_changed = true;
             this.movement_amount = this.movement_speed * delta_time;
 
             if (this._camera.is_perspective) {
-                if (this.pressed.forward ||
-                    this.pressed.backwards) {
-                    if (this.pressed.forward) {
+                if (this.pressed[this.keys.forward] ||
+                    this.pressed[this.keys.backwards]) {
+                    if (this.pressed[this.keys.forward]) {
                         this._translation.x += this._matrix.z_axis.x * this.movement_amount;
                         this._translation.z += this._matrix.z_axis.z * this.movement_amount;
                     } else {
@@ -174,28 +164,26 @@ export class FPSController
                 }
             }
 
-            if (this.pressed.right ||
-                this.pressed.left) {
+            if (this.pressed[this.keys.right] ||
+                this.pressed[this.keys.left]) {
 
                 this._matrix.x_axis.mul(this.movement_amount, this.right_movement);
 
-                if (this.pressed.right)
+                if (this.pressed[this.keys.right])
                     this._translation.add(this.right_movement);
                 else
                     this._translation.sub(this.right_movement);
             }
 
-            if (this.pressed.up ||
-                this.pressed.down) {
+            if (this.pressed[this.keys.up] ||
+                this.pressed[this.keys.down]) {
 
-                if (this.pressed.up)
+                if (this.pressed[this.keys.up])
                     this._translation.y += this.movement_amount;
                 else
                     this._translation.y -= this.movement_amount;
             }
         }
-
-        this.key_pressed = false;
     }
 
     protected _updateFromMouse(delta_time: number): void {
@@ -234,6 +222,7 @@ export class FPSController
 
         if (this.mouse_wheel_moved) {
             console.log(this.mouse_wheel);
+            this._camera.lense.zoom -= this.mouse_wheel * this.mouse_wheel_sensitivity;
             this.mouse_wheel_moved = false;
         }
 
@@ -243,12 +232,20 @@ export class FPSController
         }
 
         if (this.mouse_down) {
-            console.log(`Mouse down: ${this.mouse_down === 1 ? 'left' : this.mouse_down === 2 ? 'middle' : 'right'}`);
+            console.log(`Mouse down: ${
+                this.mouse_down === MOUSE_BUTTON.LEFT ? 'left' : 
+                    this.mouse_down === MOUSE_BUTTON.MIDDLE  ? 'middle' : 'right'}`);
+
+            if (this.mouse_down === MOUSE_BUTTON.MIDDLE)
+                this._camera.is_perspective = !this._camera.is_perspective;
+
             this.mouse_down = 0;
         }
 
         if (this.mouse_up) {
-            console.log(`Mouse up: ${this.mouse_up === 1 ? 'left' : this.mouse_up === 2 ? 'middle' : 'right'}`);
+            console.log(`Mouse up: ${
+                this.mouse_up === MOUSE_BUTTON.LEFT  ? 'left' : 
+                    this.mouse_up === MOUSE_BUTTON.MIDDLE ? 'middle' : 'right'}`);
             this.mouse_up = 0;
         }
     }

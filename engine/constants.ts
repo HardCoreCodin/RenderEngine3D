@@ -98,6 +98,12 @@ export enum KEY_CODES {
     ESC = 27
 }
 
+export enum MOUSE_BUTTON {
+    LEFT = 1,
+    MIDDLE = 2,
+    RIGHT = 3
+}
+
 export const MAX_FOV = TWO_PIE - 0.1;
 export const MIN_FOCAL_LENGTH = 0.1;
 export const MIN_ZOOM = 0.1;
@@ -110,6 +116,7 @@ export const DEFAULT_FOCAL_LENGTH = 1;
 export const DEFAULT_MOVEMENT_SPEED = 0.006;
 export const DEFAULT_ROTATION_SPEED = 0.002;
 export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
+export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 1 / 1000;
 
 export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 10000;
 export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;

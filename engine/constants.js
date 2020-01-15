@@ -36,6 +36,12 @@ export var KEY_CODES;
     KEY_CODES[KEY_CODES["CTRL"] = 17] = "CTRL";
     KEY_CODES[KEY_CODES["ESC"] = 27] = "ESC";
 })(KEY_CODES || (KEY_CODES = {}));
+export var MOUSE_BUTTON;
+(function (MOUSE_BUTTON) {
+    MOUSE_BUTTON[MOUSE_BUTTON["LEFT"] = 1] = "LEFT";
+    MOUSE_BUTTON[MOUSE_BUTTON["MIDDLE"] = 2] = "MIDDLE";
+    MOUSE_BUTTON[MOUSE_BUTTON["RIGHT"] = 3] = "RIGHT";
+})(MOUSE_BUTTON || (MOUSE_BUTTON = {}));
 export const MAX_FOV = TWO_PIE - 0.1;
 export const MIN_FOCAL_LENGTH = 0.1;
 export const MIN_ZOOM = 0.1;
@@ -46,6 +52,7 @@ export const DEFAULT_FOCAL_LENGTH = 1;
 export const DEFAULT_MOVEMENT_SPEED = 0.006;
 export const DEFAULT_ROTATION_SPEED = 0.002;
 export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
+export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 1 / 1000;
 export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 10000;
 export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;
 //# sourceMappingURL=constants.js.map

@@ -1,4 +1,5 @@
 import { PIE, TWO_PIE } from "./constants.js";
+export const non_zero = _ => _ !== 0;
 const memcpy = (from_array, to_array, amount, from_offset = 0, to_offset = 0) => new Uint8Array(to_array.buffer, to_offset, amount).set(new Uint8Array(from_array.buffer, from_offset, amount));
 let modded;
 export const wrapAngle = (theta) => {
