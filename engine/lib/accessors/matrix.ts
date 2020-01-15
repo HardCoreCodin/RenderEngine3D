@@ -57,6 +57,7 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     protected abstract _getFunctionSet(): IMatrixRotationFunctionSet;
 
     readonly abstract translation: Position3D;
+    readonly abstract scale: Direction3D;
     readonly abstract x_axis: Direction3D;
     readonly abstract y_axis: Direction3D;
     readonly abstract z_axis: Direction3D;
@@ -330,6 +331,7 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
     readonly mat2: Matrix2x2;
     readonly translation2D: Position2D;
     readonly translation: Position3D;
+    readonly scale: Direction3D;
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
     readonly z_axis: Direction3D;
@@ -345,6 +347,8 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
         ]);
         this.translation2D = new Position2D(this.id, [this.arrays[6], this.arrays[7]]);
         this.translation = new Position3D(this.id, [this.arrays[6], this.arrays[7], this.arrays[8]]);
+        this.scale = new Direction3D(this.id, [this.arrays[0], this.arrays[4], this.arrays[8]]);
+
         this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
         this.y_axis = new Direction3D(this.id, [this.arrays[3], this.arrays[4], this.arrays[5]]);
         this.z_axis = new Direction3D(this.id, [this.arrays[6], this.arrays[7], this.arrays[8]]);
@@ -433,6 +437,8 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
     arrays: Float16;
     readonly mat3: Matrix3x3;
     readonly translation: Position3D;
+    readonly scale: Direction3D;
+
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
     readonly z_axis: Direction3D;
@@ -445,6 +451,7 @@ export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
         this.z_axis = new Direction3D(this.id, [this.arrays[8], this.arrays[9], this.arrays[10]]);
 
         this.translation = new Position3D(this.id, [this.arrays[12], this.arrays[13], this.arrays[14]]);
+        this.scale = new Direction3D(this.id, [this.arrays[0], this.arrays[5], this.arrays[10]]);
         this.mat3 = new Matrix3x3(this.id, [
             this.arrays[0], this.arrays[1], this.arrays[2],
             this.arrays[4], this.arrays[5], this.arrays[6],

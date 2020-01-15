@@ -21,6 +21,8 @@ export interface IRotationMatrix extends IMatrix
     readonly _: IMatrixRotationFunctionSet;
 
     readonly translation: IPosition3D;
+    readonly scale: IDirection3D;
+
     readonly x_axis: IDirection3D;
     readonly y_axis: IDirection3D;
     readonly z_axis: IDirection3D;

@@ -1,10 +1,10 @@
-import {dir3, Direction3D} from "../accessors/direction.js";
+import {dir3} from "../accessors/direction.js";
 import {IPosition3D, IVector2D} from "../_interfaces/vectors.js";
 import {IController, IControllerKeys} from "../_interfaces/input.js";
 import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
-import {KEY_CODES, RADIANS_TO_DEGREES_FACTOR} from "../../constants.js";
+import {DEFAULT_MOUSE_SENSITIVITY, DEFAULT_MOVEMENT_SPEED, DEFAULT_ROTATION_SPEED, KEY_CODES} from "../../constants.js";
 
 abstract class Controller
     implements IController
@@ -30,16 +30,11 @@ abstract class Controller
     position_changed: boolean = false;
     direction_changed: boolean = false;
 
-    delta_time_multiplier: number = 60 / 1000;
-
     public mouse_moved: boolean = false;
     public mouse_movement: IVector2D = {x: 0, y: 0};
     protected movement_amount: number;
     protected rotation_amount: number;
-
-    protected readonly forward_movement = dir3();
     protected readonly right_movement = dir3();
-    protected readonly _forward_direction = dir3();
 
     protected _viewport: IViewport;
     protected _rotation: IEulerRotation;
@@ -51,17 +46,11 @@ abstract class Controller
     constructor(
         viewport: IViewport,
         public canvas: HTMLCanvasElement,
-        public movement_speed: number = 0.1,
-        protected _rotation_speed: number = 0.01,
-        public mouse_sensitivity: number = 0.1
+        public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
+        public rotation_speed: number = DEFAULT_ROTATION_SPEED,
+        public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY
     ) {
         this.viewport = viewport;
-    }
-
-    get rotation_speed(): number {
-        return this._camera.transform.rotation.angles_in_degrees ?
-            this._rotation_speed * RADIANS_TO_DEGREES_FACTOR :
-            this._rotation_speed;
     }
 
     get viewport(): IViewport {return this._viewport}
@@ -74,17 +63,7 @@ abstract class Controller
         this._projection_matrix = viewport.camera.projection_matrix;
     }
 
-    get forward_direction(): Direction3D {
-        this._forward_direction.x = this._matrix.z_axis.x;
-        this._forward_direction.z = this._matrix.z_axis.z;
-        this._forward_direction.normalize();
-
-        return this._forward_direction;
-    }
-
     update(delta_time: number): void {
-        delta_time *= this.delta_time_multiplier;
-
         this.position_changed = false;
         this.direction_changed = false;
 
@@ -109,9 +88,9 @@ abstract class Controller
                 this.key_pressed.pitch_down) {
 
                 if (this.key_pressed.pitch_up)
-                    this._rotation.x -= this.rotation_amount;
-                else
                     this._rotation.x += this.rotation_amount;
+                else
+                    this._rotation.x -= this.rotation_amount;
             }
         }
 
@@ -125,14 +104,17 @@ abstract class Controller
             this.position_changed = true;
             this.movement_amount = this.movement_speed * delta_time;
 
-            if (this.key_pressed.forward ||
-                this.key_pressed.backwards) {
-                this.forward_direction.mul(this.movement_amount, this.forward_movement);
-
-                if (this.key_pressed.forward)
-                    this._translation.add(this.forward_movement);
-                else
-                    this._translation.sub(this.forward_movement);
+            if (this._camera.is_perspective) {
+                if (this.key_pressed.forward ||
+                    this.key_pressed.backwards) {
+                    if (this.key_pressed.forward) {
+                        this._translation.x += this._matrix.z_axis.x * this.movement_amount;
+                        this._translation.z += this._matrix.z_axis.z * this.movement_amount;
+                    } else {
+                        this._translation.x -= this._matrix.z_axis.x * this.movement_amount;
+                        this._translation.z -= this._matrix.z_axis.z * this.movement_amount;
+                    }
+                }
             }
 
             if (this.key_pressed.right ||
@@ -158,7 +140,6 @@ abstract class Controller
 
         if (this.mouse_moved)
             this._updateFromMouse();
-
 
         if (!this._camera.is_static || this.direction_changed || this.position_changed) {
             this._viewport.updateMatrices();

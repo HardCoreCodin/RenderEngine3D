@@ -25,9 +25,7 @@ export class EulerRotation implements IEulerRotation {
 
         protected _x_angle: number = 0,
         protected _y_angle: number = 0,
-        protected _z_angle: number = 0,
-
-        public angles_in_degrees = true
+        protected _z_angle: number = 0
     ) {
         _rotation_matrix.setToIdentity();
     }
@@ -87,15 +85,9 @@ export class EulerRotation implements IEulerRotation {
         this._rotation_matrix.transpose();
         this._matrix.mul(this._rotation_matrix);
 
-        if (this.angles_in_degrees) {
-            this._rotation_matrix.setRotationAroundZ(this._z_angle*DEGREES_TO_RADIANS_FACTOR, true); // Roll
-            this._rotation_matrix.rotateAroundX(this._x_angle*DEGREES_TO_RADIANS_FACTOR); // Pitch
-            this._rotation_matrix.rotateAroundY(this._y_angle*DEGREES_TO_RADIANS_FACTOR); // Yaw
-        } else {
-            this._rotation_matrix.setRotationAroundZ(this._z_angle, true); // Roll
-            this._rotation_matrix.rotateAroundX(this._x_angle); // Pitch
-            this._rotation_matrix.rotateAroundY(this._y_angle); // Yaw
-        }
+        this._rotation_matrix.setRotationAroundZ(this._z_angle, true); // Roll
+        this._rotation_matrix.rotateAroundX(this._x_angle); // Pitch
+        this._rotation_matrix.rotateAroundY(this._y_angle); // Yaw
 
         this._matrix.mul(this._rotation_matrix);
     }

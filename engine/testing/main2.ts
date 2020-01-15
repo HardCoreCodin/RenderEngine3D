@@ -1,6 +1,6 @@
 import Mesh from "../lib/geometry/mesh.js";
 import {MeshInputs} from "../lib/geometry/inputs.js";
-import {ATTRIBUTE, FACE_TYPE} from "../constants.js";
+import {ATTRIBUTE, FACE_TYPE, DEGREES_TO_RADIANS_FACTOR} from "../constants.js";
 import {MeshOptions} from "../lib/geometry/options.js";
 import {GLRenderEngine} from "./gl/render/engine.js";
 import {GLMaterial} from "./gl/materials/base.js";
@@ -12,7 +12,7 @@ g.canvas = document.querySelector('canvas');
 const engine = g.engine = new GLRenderEngine(g.canvas);
 const camera = g.c = engine.screen.active_viewport.camera;
 camera.is_static = false;
-camera.lense.field_of_view_in_degrees = 75;
+camera.lense.fov = 75 * DEGREES_TO_RADIANS_FACTOR;
 camera.transform.translation.y = 1;
 
 

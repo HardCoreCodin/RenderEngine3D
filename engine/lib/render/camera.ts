@@ -3,7 +3,15 @@ import {Matrix4x4} from "../accessors/matrix.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {Float16} from "../../types.js";
 import {ICamera, ILense, IProjectionMatrix, IViewFrustum} from "../_interfaces/render.js";
-import {DEGREES_TO_RADIANS_FACTOR, RADIANS_TO_DEGREES_FACTOR, TWO_PIE} from "../../constants.js";
+import {
+    MAX_FOV,
+    MIN_FOV,
+    MIN_ZOOM,
+    MIN_FOCAL_LENGTH,
+    DEFAULT_FOV,
+    DEFAULT_ZOOM,
+    DEFAULT_FOCAL_LENGTH, DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE, DEFAULT_FAR_CLIPPING_PLANE_DISTANCE
+} from "../../constants.js";
 
 
 export default class Camera extends Node3D implements ICamera {
@@ -61,10 +69,9 @@ export default class Camera extends Node3D implements ICamera {
 }
 
 export class Lense implements ILense {
-    protected _zoom: number = 1;
-    protected _focal_length: number = 1;
-    protected _field_of_view_in_degrees: number = 90;
-    protected _field_of_view_in_radians: number = 90 * DEGREES_TO_RADIANS_FACTOR;
+    protected _zoom: number = DEFAULT_ZOOM;
+    protected _focal_length: number = DEFAULT_FOCAL_LENGTH;
+    protected _field_of_view: number = DEFAULT_FOV;
 
     constructor(protected _camera: ICamera) {}
 
@@ -76,47 +83,27 @@ export class Lense implements ILense {
         if (zoom === this._zoom)
             return;
 
-        if (zoom < 0.1)
-            zoom = 0.1;
+        if (zoom < MIN_ZOOM)
+            zoom = MIN_ZOOM;
 
         this._zoom = zoom;
         this._camera.projection_matrix.update();
     }
 
-    get field_of_view_in_radians(): number {
-        return this._field_of_view_in_radians
+    get fov(): number {
+        return this._field_of_view
     }
-    set field_of_view_in_radians(radians: number) {
-        if (radians === this._field_of_view_in_radians)
+    set fov(radians: number) {
+        if (radians === this._field_of_view)
             return;
 
-        if (radians > TWO_PIE - 0.1)
-            radians = TWO_PIE - 0.1;
-        if (radians < 0.1)
-            radians = 0.1;
+        if (radians > MAX_FOV)
+            radians = MAX_FOV;
+        if (radians < MIN_FOV)
+            radians = MIN_FOV;
 
-        this._field_of_view_in_radians = radians;
-        this._field_of_view_in_degrees = radians * RADIANS_TO_DEGREES_FACTOR;
-        this._focal_length = 1.0 / Math.tan(this._field_of_view_in_radians / 2);
-        this._camera.projection_matrix.update();
-    }
-
-    get field_of_view_in_degrees(): number {
-        return this._field_of_view_in_degrees
-    }
-
-    set field_of_view_in_degrees(degrees: number) {
-        if (degrees === this._field_of_view_in_degrees)
-            return;
-
-        if (degrees > 179)
-            degrees = 179;
-        if (degrees < 1)
-            degrees = 1;
-
-        this._field_of_view_in_degrees = degrees;
-        this._field_of_view_in_radians = degrees * DEGREES_TO_RADIANS_FACTOR;
-        this._focal_length = 1.0 / Math.tan(this._field_of_view_in_radians / 2);
+        this._field_of_view = radians;
+        this._focal_length = 1.0 / Math.tan(this._field_of_view / 2);
         this._camera.projection_matrix.update();
     }
 
@@ -128,29 +115,37 @@ export class Lense implements ILense {
         if (focal_length === this._focal_length)
             return;
 
-        if (focal_length < 0.1)
-            focal_length = 0.1;
+        if (focal_length < MIN_FOCAL_LENGTH)
+            focal_length = MIN_FOCAL_LENGTH;
 
         this._focal_length = focal_length;
-        this._field_of_view_in_radians = Math.atan(1.0 / focal_length) / 2;
-        this._field_of_view_in_degrees = this._field_of_view_in_radians * RADIANS_TO_DEGREES_FACTOR;
+        this._field_of_view = Math.atan(1.0 / focal_length) / 2;
         this._camera.projection_matrix.update();
     }
 }
 
 export class ViewFrustum implements IViewFrustum {
     protected _aspect_ratio: number = 1;
-    protected _near_clipping_plane_distance: number = 0.0001;
-    protected _far_clipping_plane_distance: number = 10000;
+    protected _near_clipping_plane_distance: number = DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE;
+    protected _far_clipping_plane_distance: number = DEFAULT_FAR_CLIPPING_PLANE_DISTANCE;
+    protected _one_over_depth_span: number;
 
-    constructor(protected _camera: ICamera) {}
+    constructor(
+        protected _camera: ICamera
+    ) {
+        this._one_over_depth_span = 1.0 / (
+            this._far_clipping_plane_distance - this._near_clipping_plane_distance
+        );
+    }
 
+    get one_over_depth_span(): number {return this._one_over_depth_span}
     get far(): number {return this._far_clipping_plane_distance}
     set far(far: number) {
         if (far === this._far_clipping_plane_distance)
             return;
 
         this._far_clipping_plane_distance = far;
+        this._one_over_depth_span = 1.0 / (far - this._near_clipping_plane_distance);
         this._camera.projection_matrix.update();
     }
 
@@ -160,6 +155,7 @@ export class ViewFrustum implements IViewFrustum {
             return;
 
         this._near_clipping_plane_distance = near;
+        this._one_over_depth_span = 1.0 / (this._far_clipping_plane_distance - near);
         this._camera.projection_matrix.update();
     }
 
@@ -174,6 +170,9 @@ export class ViewFrustum implements IViewFrustum {
 }
 
 export abstract class ProjectionMatrix extends Matrix4x4 implements IProjectionMatrix {
+    protected abstract _updateW(): void;
+    protected abstract _updateXY(): void;
+
     constructor(
         readonly lense: ILense,
         readonly view_frustum: IViewFrustum,
@@ -186,37 +185,38 @@ export abstract class ProjectionMatrix extends Matrix4x4 implements IProjectionM
     }
 
     // Update the matrix that converts from view space to clip space:
-    abstract update(): void;
-    abstract _updateW(): void;
-    _updateZ(): void {
-        this.translation.z = this.z_axis.z = this.view_frustum.far / (this.view_frustum.far - this.view_frustum.near);
-        this.translation.z *= -this.view_frustum.near;
+    update(): void {
+        this._updateXY();
+        this._updateZ();
+    }
+
+    protected _updateZ(): void {
+        this.scale.z        =   this.view_frustum.far * this.view_frustum.one_over_depth_span;
+        this.translation.z *= -this.view_frustum.near * this.view_frustum.one_over_depth_span;
     }
 }
 
 export class PerspectiveProjectionMatrix extends ProjectionMatrix {
-    update(): void {
-        this.y_axis.y = this.x_axis.x = this.lense.zoom * this.lense.focal_length;
-        this.y_axis.y *= this.view_frustum.aspect_ratio;
-        this._updateZ();
-    }
-
-    _updateW(): void {
+    protected _updateW(): void {
         this.m34 = 1;
         this.m44 = 0;
+    }
+
+    protected _updateXY(): void {
+        this.x_axis.x = this.lense.focal_length * this.lense.zoom;
+        this.y_axis.y = this.lense.focal_length * this.lense.zoom * this.view_frustum.aspect_ratio;
     }
 }
 
 
 export class OrthographicProjectionMatrix extends ProjectionMatrix {
-    update(): void {
-        this.x_axis.x = this.lense.zoom;
-        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
-        this._updateZ();
-    }
-
-    _updateW(): void {
+    protected _updateW(): void {
         this.m34 = 0;
         this.m44 = 1;
+    }
+
+    protected _updateXY(): void {
+        this.x_axis.x = this.lense.zoom;
+        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
     }
 }

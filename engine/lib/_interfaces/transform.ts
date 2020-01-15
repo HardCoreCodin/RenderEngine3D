@@ -21,8 +21,6 @@ export interface IEulerRotation {
     y: number;
     z: number;
 
-    angles_in_degrees: boolean;
-
     computeEagerly: boolean;
     computeMatrix(): void;
 }

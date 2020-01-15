@@ -19,7 +19,6 @@ export interface IControllerKeys {
 }
 
 export interface IController {
-    readonly forward_direction: IDirection3D;
     readonly key_bindings: IControllerKeys;
     readonly key_pressed: IControllerKeys;
 

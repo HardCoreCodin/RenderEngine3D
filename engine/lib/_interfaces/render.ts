@@ -10,16 +10,17 @@ export interface IRectangle {
 }
 
 export interface ILense {
+    fov: number;
     zoom: number;
     focal_length: number;
-    field_of_view_in_degrees: number;
-    field_of_view_in_radians: number;
 }
 
 export interface IViewFrustum {
     aspect_ratio: number;
     near: number;
     far: number;
+
+    readonly one_over_depth_span: number;
 }
 
 export interface IProjectionMatrix extends  IMatrix4x4 {
