@@ -32,11 +32,15 @@ export interface IScene<
 {
     context: Context,
 
+    readonly default_material: MaterialType;
+    readonly DefaultMaterialClass: MaterialConstructor<Context, MaterialType>;
+    readonly DefaultCameraClass: CameraConstructor<CameraType>;
+
     readonly cameras: Set<CameraType>;
     readonly materials: Set<MaterialType>;
     readonly mesh_geometries: IMeshGeometries;
 
-    addCamera(CameraClass: CameraConstructor<CameraType>): CameraType;
-    addMaterial(MaterialClass: MaterialConstructor<Context, MaterialType>): MaterialType;
+    addCamera(CameraClass?: CameraConstructor<CameraType>): CameraType;
+    addMaterial(MaterialClass?: MaterialConstructor<Context, MaterialType>): MaterialType;
 }
 

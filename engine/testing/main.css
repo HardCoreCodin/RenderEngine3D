@@ -5,8 +5,29 @@ body {
 img {
     display: none;
 }
-canvas {
-    display: block;  /* prevents scrollbar */
-    width: 100vw;
-    height: 100vh;
-}
+/*canvas {*/
+/*    display: block;  !* prevents scrollbar *!*/
+/*    width: 100vw;*/
+/*    height: 100vh;*/
+/*}*/
+
+/*div{*/
+/*    position: absolute;*/
+/*    z-index: auto;*/
+/*    width:100px;*/
+/*    height:60px;*/
+/*    border:4px solid black;*/
+/*    background:rgba(255,255,255,.2);*/
+/*}*/
+/*div *{ opacity:0;}*/
+
+/*div {*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    width:100px;*/
+/*    height:60px;*/
+/*    border:4px solid steelblue;*/
+/*    background:rgba(255,255,255,0.0);*/
+/*    z-index: 3;*/
+/*    display: block;*/
+/*}*/

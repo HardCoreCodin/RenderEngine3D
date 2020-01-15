@@ -36,6 +36,15 @@ export default class Camera extends Node3D implements ICamera {
         this.is_perspective = is_perspective;
     }
 
+    setFrom(other: this): void {
+        this.lense.setFrom(other.lense);
+        this.view_frustum.setFrom(other.view_frustum);
+        this.transform.setFrom(other.transform);
+        this._perspective_projection_matrix.setFrom(other._perspective_projection_matrix);
+        this._orthographic_projection_matrix.setFrom(other._orthographic_projection_matrix);
+        this.is_perspective = other.is_perspective;
+    }
+
     protected _getPerspectiveProjectionMatrix(): IProjectionMatrix {
         return new PerspectiveProjectionMatrix(this.lense, this.view_frustum);
     }
@@ -68,6 +77,12 @@ export class Lense implements ILense {
     protected _field_of_view: number = DEFAULT_FOV;
 
     constructor(protected _camera: ICamera) {}
+
+    setFrom(other: this): void {
+        this._zoom = other._zoom;
+        this._focal_length = other._focal_length;
+        this._field_of_view = other._field_of_view;
+    }
 
     get zoom(): number {
         return this._zoom
@@ -130,6 +145,13 @@ export class ViewFrustum implements IViewFrustum {
         this._one_over_depth_span = 1.0 / (
             this._far_clipping_plane_distance - this._near_clipping_plane_distance
         );
+    }
+
+    setFrom(other: this): void {
+        this._aspect_ratio = other._aspect_ratio;
+        this._near_clipping_plane_distance = other._near_clipping_plane_distance;
+        this._far_clipping_plane_distance = other._far_clipping_plane_distance;
+        this._one_over_depth_span = other._one_over_depth_span;
     }
 
     get one_over_depth_span(): number {return this._one_over_depth_span}

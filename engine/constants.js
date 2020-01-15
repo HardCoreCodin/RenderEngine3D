@@ -55,4 +55,14 @@ export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
 export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 1 / 1000;
 export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 10000;
 export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;
+export const VIEWPORT_BORDER_STYLE = `
+    position: absolute;
+    outline: 2px solid steelblue;
+    outline-offset: -2px;
+    background:rgba(255,255,255,0.0);
+    z-index: 3;
+    padding: 0px;
+    margin: 0px;
+    display: none;
+`;
 //# sourceMappingURL=constants.js.map

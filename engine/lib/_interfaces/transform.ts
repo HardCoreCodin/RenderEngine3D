@@ -6,6 +6,8 @@ export interface ITransform {
     readonly scale: IScale;
     readonly rotation: IEulerRotation;
     readonly translation: IPosition3D;
+
+    setFrom(other: this): void;
 }
 
 export interface IScale {
@@ -14,6 +16,7 @@ export interface IScale {
     z: number;
     applyEagerly: boolean;
     apply(): void;
+    setFrom(other: this): void;
 }
 
 export interface IEulerRotation {
@@ -23,4 +26,5 @@ export interface IEulerRotation {
 
     computeEagerly: boolean;
     computeMatrix(): void;
+    setFrom(other: this): void;
 }

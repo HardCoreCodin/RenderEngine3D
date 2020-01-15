@@ -1,7 +1,6 @@
 import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
 import {IVector2D, IVector3D} from "../_interfaces/vectors.js";
 import {IEulerRotation, IScale, ITransform} from "../_interfaces/transform.js";
-import {DEGREES_TO_RADIANS_FACTOR} from "../../constants.js";
 
 
 export default class Transform implements ITransform {
@@ -12,6 +11,12 @@ export default class Transform implements ITransform {
         readonly scale = new Scale(matrix.mat3)
     ) {
         matrix.setToIdentity();
+    }
+
+    setFrom(other: this): void {
+        this.scale.setFrom(other.scale);
+        this.rotation.setFrom(other.rotation);
+        this.matrix.setFrom(other.matrix);
     }
 }
 
@@ -28,6 +33,14 @@ export class EulerRotation implements IEulerRotation {
         protected _z_angle: number = 0
     ) {
         _rotation_matrix.setToIdentity();
+    }
+
+    setFrom(other: this): void {
+        this._x_angle = other._x_angle;
+        this._y_angle = other._y_angle;
+        this._z_angle = other._z_angle;
+        this._rotation_matrix.setFrom(other._rotation_matrix);
+        this._matrix.setFrom(other._matrix);
     }
 
     get x(): number {return this._x_angle}
@@ -106,6 +119,19 @@ export class Scale implements IScale {
         protected _y_scale: number = 0,
         protected _z_scale: number = 0
     ) {}
+
+
+    setFrom(other: this): void {
+        this._prior_x_scale = other._prior_x_scale;
+        this._prior_y_scale = other._prior_y_scale;
+        this._prior_z_scale = other._prior_z_scale;
+
+        this._x_scale = other._x_scale;
+        this._y_scale = other._y_scale;
+        this._z_scale = other._z_scale;
+
+        this._matrix.setFrom(other._matrix);
+    }
 
     get x(): number {return this._x_scale}
     get y(): number {return this._y_scale}

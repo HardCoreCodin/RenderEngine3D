@@ -12,21 +12,21 @@ import {non_zero} from "../../utils.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>,
     CameraType extends ICamera,
+    SceneType extends IScene<Context, CameraType>,
     RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
-    ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
-    implements IRenderEngine<Context, SceneType, CameraType, RenderPipelineType, ViewportType, ScreenType>
+    ScreenType extends IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>>
+    implements IRenderEngine<Context, CameraType, SceneType, RenderPipelineType, ViewportType, ScreenType>
 {
     protected abstract _createContext(canvas: HTMLCanvasElement): Context;
     protected abstract _createDefaultScreen(canvas: HTMLCanvasElement, camera: CameraType): ScreenType;
-    protected abstract _createDefaultController(canvas: HTMLCanvasElement, viewport: ViewportType): IController;
     protected abstract _createDefaultScene(): SceneType;
     protected abstract _getDefaultCamera(): CameraType;
 
     protected readonly _update_callback: FrameRequestCallback;
 
+    readonly canvas: HTMLCanvasElement;
     readonly context: Context;
     protected _scene: SceneType;
     protected _screen: ScreenType;
@@ -34,7 +34,6 @@ export abstract class BaseRenderEngine<
     protected _is_active: boolean = false;
     protected _is_running: boolean = false;
 
-    protected _controller: IController;
     protected _last_timestamp = 0;
     protected _delta_time = 0;
 
@@ -58,16 +57,21 @@ export abstract class BaseRenderEngine<
     ];
 
     constructor(
-        readonly canvas: HTMLCanvasElement,
+        parent_element: HTMLElement = document.body,
         scene?: SceneType,
         camera?: CameraType,
         controller?: IController,
         screen?: ScreenType
     ) {
-        this.context = this._createContext(canvas);
+        this.canvas = document.createElement('canvas');
+        parent_element.appendChild(this.canvas);
+
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+        this.canvas.style.cssText ='display: block; width: 100vw; height: 100vh;';
+        this.context = this._createContext(this.canvas);
         this.scene = scene || this._createDefaultScene();
-        this.screen = screen || this._createDefaultScreen(canvas, camera || this._getDefaultCamera());
-        this.controller = controller || this._createDefaultController(canvas, this.screen.active_viewport);
+        this.screen = screen || this._createDefaultScreen(this.canvas, camera || this._getDefaultCamera());
         if (document.ontouchmove)
             this._events.concat(
                 'touchmove',
@@ -92,19 +96,12 @@ export abstract class BaseRenderEngine<
         this._screen = screen;
     }
 
-    get controller(): IController {return this._controller}
-    set controller(controller: IController) {
-        controller.canvas = this.canvas;
-        controller.viewport = this.screen.active_viewport;
-        this._controller = this.screen.controller = controller;
-    }
-
     update(time: number): void {
         this._delta_time = time - this._last_timestamp;
         this._last_timestamp = time;
 
         if (this._is_active)
-            this._controller.update(this._delta_time);
+            this._screen.active_viewport.controller.update(this._delta_time);
         else if (!this.screen.active_viewport.camera.is_static)
             this.screen.active_viewport.updateMatrices();
 
@@ -122,47 +119,48 @@ export abstract class BaseRenderEngine<
     }
 
     protected _on_mousemove(mouse_event: MouseEvent): void {
-        this._controller.mouse_moved = true;
-        this._controller.mouse_movement.x += mouse_event.movementX;
-        this._controller.mouse_movement.y += mouse_event.movementY;
+        this._screen.active_viewport.controller.mouse_moved = true;
+        this._screen.active_viewport.controller.mouse_movement.x += mouse_event.movementX;
+        this._screen.active_viewport.controller.mouse_movement.y += mouse_event.movementY;
     }
 
     protected _on_wheel(wheel_event: WheelEvent): void {
-        this._controller.mouse_wheel = wheel_event.deltaY;
-        this._controller.mouse_wheel_moved = true;
+        this._screen.active_viewport.controller.mouse_wheel = wheel_event.deltaY;
+        this._screen.active_viewport.controller.mouse_wheel_moved = true;
     }
 
     protected _on_dblclick(): void {
         this._is_active = !this._is_active;
-        this._controller.mouse_double_clicked = this._is_active;
+        this._screen.active_viewport.controller.mouse_double_clicked = this._is_active;
         if (this._is_active)
             this.canvas.requestPointerLock();
         else
             document.exitPointerLock();
     }
 
-    protected _on_click(): void {
-        this._controller.mouse_clicked = true;
+    protected _on_click(mouse_event: MouseEvent): void {
+        this._screen.active_viewport.controller.mouse_clicked = true;
+        this.screen.setViewportAt(mouse_event.clientX, mouse_event.clientY);
     }
 
     protected _on_mousedown(mouse_event: MouseEvent): void {
-        this._controller.mouse_down = mouse_event.which;
+        this._screen.active_viewport.controller.mouse_down = mouse_event.which;
     }
 
     protected _on_mouseup(mouse_event: MouseEvent): void {
-        this._controller.mouse_up = mouse_event.which;
+        this._screen.active_viewport.controller.mouse_up = mouse_event.which;
     }
 
     protected _on_keydown(key_event: KeyboardEvent): void {
-        this._controller.key_pressed = true;
+        this._screen.active_viewport.controller.key_pressed = true;
 
         for (const key of Object.keys(this.keys))
             if (this.keys[key] === key_event.which)
                 this.pressed[key_event.which] = 1;
 
-        for (const key of Object.keys(this._controller.keys))
-            if (this._controller.keys[key] === key_event.which)
-                this._controller.pressed[key_event.which] = 1;
+        for (const key of Object.keys(this._screen.active_viewport.controller.keys))
+            if (this._screen.active_viewport.controller.keys[key] === key_event.which)
+                this._screen.active_viewport.controller.pressed[key_event.which] = 1;
     }
 
     protected _on_keyup(key_event: KeyboardEvent): void {
@@ -170,12 +168,12 @@ export abstract class BaseRenderEngine<
             if (this.keys[key] === key_event.which)
                 this.pressed[key_event.which] = 0;
 
-        for (const key of Object.keys(this._controller.keys))
-            if (this._controller.keys[key] === key_event.which)
-                this._controller.pressed[key_event.which] = 0;
+        for (const key of Object.keys(this._screen.active_viewport.controller.keys))
+            if (this._screen.active_viewport.controller.keys[key] === key_event.which)
+                this._screen.active_viewport.controller.pressed[key_event.which] = 0;
 
-        if (!this._controller.pressed.some(non_zero))
-            this._controller.key_pressed = false;
+        if (!this._screen.active_viewport.controller.pressed.some(non_zero))
+            this._screen.active_viewport.controller.key_pressed = false;
     }
 
     handleEvent(event: Event): void {
@@ -217,18 +215,14 @@ export abstract class BaseRenderEngine<
 }
 
 export default class RenderEngine
-    extends BaseRenderEngine<CanvasRenderingContext2D, Scene, Camera, RenderPipeline, Viewport, Screen>
+    extends BaseRenderEngine<CanvasRenderingContext2D, Camera, Scene, RenderPipeline, Viewport, Screen>
 {
     protected _createContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
         return canvas.getContext('2d');
     }
 
     protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): Screen {
-        return new Screen(camera, this.scene, this.context, this._controller, canvas);
-    }
-
-    protected _createDefaultController(canvas: HTMLCanvasElement, viewport: IViewport): FPSController {
-        return new FPSController(viewport, canvas);
+        return new Screen(camera, this.scene, this.context, canvas);
     }
 
     protected _createDefaultScene(): Scene {
@@ -236,6 +230,6 @@ export default class RenderEngine
     }
 
     protected _getDefaultCamera(): Camera {
-        return this.scene.cameras.size ? this.scene.cameras[0] : this.scene.addCamera(Camera);
+        return this.scene.cameras.size ? [...this.scene.cameras][0] : this.scene.addCamera(Camera);
     }
 }

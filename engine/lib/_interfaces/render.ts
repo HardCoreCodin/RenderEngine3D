@@ -13,6 +13,8 @@ export interface ILense {
     fov: number;
     zoom: number;
     focal_length: number;
+
+    setFrom(other: this): void;
 }
 
 export interface IViewFrustum {
@@ -21,6 +23,7 @@ export interface IViewFrustum {
     far: number;
 
     readonly one_over_depth_span: number;
+    setFrom(other: this): void;
 }
 
 export interface IProjectionMatrix extends  IMatrix4x4 {
@@ -40,6 +43,8 @@ export interface ICamera extends INode3D {
     readonly projection_matrix: IProjectionMatrix;
 
     is_perspective: boolean;
+
+    setFrom(other: this): void;
 }
 
 export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
@@ -108,39 +113,40 @@ export interface IViewport<
 {
     camera: CameraType
     render_pipeline: RenderPipelineType;
+    controller: IController;
 
-    readonly width: number;
-    readonly height: number;
-    readonly x: number;
-    readonly y: number;
+    width: number;
+    height: number;
+
+    x: number;
+    y: number;
 
     readonly scene: SceneType;
     readonly world_to_view: IMatrix4x4;
     readonly world_to_clip: IMatrix4x4;
 
     refresh(): void;
+    reset(width?: number, height?: number, x?: number, y?: number): void;
+    is_inside(x: number, y: number): boolean;
     updateMatrices(): void;
-    scale(x: number, y: number): void;
-    reset(width: number, height: number, x: number, y: number): void;
+    setFrom(other: this): void;
 }
 
 
 export interface IScreen<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>,
     CameraType extends ICamera,
+    SceneType extends IScene<Context, CameraType>,
     RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType
         > = IViewport<Context, SceneType, CameraType, RenderPipelineType>>
 {
     scene: SceneType;
     context: Context;
-    controller: IController;
     active_viewport: ViewportType;
 
     readonly viewports: Generator<ViewportType>;
 
-    clear(): void;
     refresh(): void;
     resize(width: number, height: number): void;
 
@@ -149,6 +155,8 @@ export interface IScreen<
 
     registerViewport(viewport: ViewportType): void;
     unregisterViewport(viewport: ViewportType): void;
+
+    setViewportAt(x: number, y: number): void;
 }
 
 export interface IRenderEngineKeys {
@@ -159,11 +167,11 @@ export interface IRenderEngineKeys {
 
 export interface IRenderEngine<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>,
     CameraType extends ICamera,
+    SceneType extends IScene<Context, CameraType>,
     RenderPipelineType extends IRenderPipeline<Context, SceneType>,
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
-    ScreenType extends IScreen<Context, SceneType, CameraType, RenderPipelineType, ViewportType>>
+    ScreenType extends IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>>
 {
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
@@ -173,7 +181,6 @@ export interface IRenderEngine<
 
     scene: SceneType;
     screen: ScreenType;
-    controller: IController;
 
     readonly is_active: boolean;
     readonly is_running: boolean;

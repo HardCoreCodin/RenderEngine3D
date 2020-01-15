@@ -3,13 +3,12 @@ import {MeshInputs} from "../lib/geometry/inputs.js";
 import {ATTRIBUTE, FACE_TYPE, DEGREES_TO_RADIANS_FACTOR} from "../constants.js";
 import {MeshOptions} from "../lib/geometry/options.js";
 import {GLRenderEngine} from "./gl/render/engine.js";
-import {GLMaterial} from "./gl/materials/base.js";
 
 var g: {[k: string]: any} = {};
 globalThis.g = g;
 
-g.canvas = document.querySelector('canvas');
-const engine = g.engine = new GLRenderEngine(g.canvas);
+// g.canvas = document.querySelector('canvas');
+const engine = g.engine = new GLRenderEngine();
 const camera = g.c = engine.screen.active_viewport.camera;
 camera.is_static = false;
 camera.lense.fov = 75 * DEGREES_TO_RADIANS_FACTOR;
@@ -56,8 +55,6 @@ g.input_uvs = g.mesh_inputs.uv;
     for (let i=0; i < 10; i++)
         for (let j=0; j< 10; j++) {
             let geo = g.engine.scene.mesh_geometries.addGeometry(g.mesh);
-            geo.material = g.engine.scene.addMaterial(GLMaterial);
-
             geo.transform.translation.x = i - 5;
             geo.transform.translation.z = j - 5;
             geo.transform.scale.x = geo.transform.scale.y = geo.transform.scale.z = 0.1

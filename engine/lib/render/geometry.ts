@@ -1,4 +1,3 @@
-import Mesh from "../geometry/mesh.js";
 import Node3D from "../scene_graph/node.js";
 import {Matrix4x4} from "../accessors/matrix.js";
 import {IMaterial, IMeshCallback, IMeshGeometries} from "../_interfaces/render.js";
@@ -14,7 +13,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
     readonly world_to_model = new Matrix4x4();
 
     constructor(
-        readonly scene: IScene,
+        readonly scene: IScene<Context>,
         protected _mesh: IMesh,
         public is_rigid: boolean = true,
         public is_renderable: boolean = true,
@@ -22,6 +21,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
     ) {
         super(scene);
         scene.mesh_geometries.addGeometry(this);
+        this.material = scene.default_material;
     }
 
     get mesh(): IMesh {

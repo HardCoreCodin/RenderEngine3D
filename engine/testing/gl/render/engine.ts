@@ -6,12 +6,16 @@ import {GLRenderPipeline} from "./pipeline.js";
 
 import {BaseScene} from "../../../lib/scene_graph/scene.js";
 import {BaseRenderEngine} from "../../../lib/render/engine.js";
-import {FPSController} from "../../../lib/input/controllers.js";
+import {CameraConstructor, MaterialConstructor} from "../../../lib/_interfaces/render.js";
 
 
-export class GLScene extends BaseScene<WebGL2RenderingContext, GLCamera, GLMaterial> {}
+export class GLScene extends BaseScene<WebGL2RenderingContext, GLCamera, GLMaterial> {
+    protected _getDefaultCameraClass(): CameraConstructor<GLCamera> {return GLCamera};
+    protected _getDefaultMaterialClass(): MaterialConstructor<WebGL2RenderingContext, GLMaterial> {return GLMaterial};
+}
+
 export class GLRenderEngine
-    extends BaseRenderEngine<WebGL2RenderingContext, GLScene, GLCamera, GLRenderPipeline, GLViewport, GLScreen>
+    extends BaseRenderEngine<WebGL2RenderingContext, GLCamera, GLScene, GLRenderPipeline, GLViewport, GLScreen>
 {
     protected _createContext(canvas: HTMLCanvasElement): WebGL2RenderingContext {
         gl = canvas.getContext('webgl2');
@@ -24,11 +28,7 @@ export class GLRenderEngine
     }
 
     protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: GLCamera): GLScreen {
-        return new GLScreen(camera, this.scene, this.context, this._controller, canvas);
-    }
-
-    protected _createDefaultController(canvas: HTMLCanvasElement, viewport: GLViewport): FPSController {
-        return new FPSController(viewport, canvas);
+        return new GLScreen(camera, this.scene, this.context, canvas);
     }
 
     protected _createDefaultScene(): GLScene {

@@ -46,15 +46,12 @@ abstract class Controller
     protected _projection_matrix: IMatrix4x4;
 
     constructor(
-        viewport: IViewport,
         public canvas: HTMLCanvasElement,
         public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
         public rotation_speed: number = DEFAULT_ROTATION_SPEED,
         public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY,
         public mouse_wheel_sensitivity: number = DEFAULT_MOUSE_WHEEL_SENSITIVITY
-    ) {
-        this.viewport = viewport;
-    }
+    ) {}
 
     get viewport(): IViewport {return this._viewport}
     set viewport(viewport: IViewport) {
@@ -221,21 +218,15 @@ export class FPSController
         }
 
         if (this.mouse_wheel_moved) {
-            console.log(this.mouse_wheel);
             this._camera.lense.zoom -= this.mouse_wheel * this.mouse_wheel_sensitivity;
             this.mouse_wheel_moved = false;
         }
 
         if (this.mouse_clicked) {
-            console.log('Mouse clicked');
             this.mouse_clicked = false;
         }
 
         if (this.mouse_down) {
-            console.log(`Mouse down: ${
-                this.mouse_down === MOUSE_BUTTON.LEFT ? 'left' : 
-                    this.mouse_down === MOUSE_BUTTON.MIDDLE  ? 'middle' : 'right'}`);
-
             if (this.mouse_down === MOUSE_BUTTON.MIDDLE)
                 this._camera.is_perspective = !this._camera.is_perspective;
 
@@ -243,9 +234,6 @@ export class FPSController
         }
 
         if (this.mouse_up) {
-            console.log(`Mouse up: ${
-                this.mouse_up === MOUSE_BUTTON.LEFT  ? 'left' : 
-                    this.mouse_up === MOUSE_BUTTON.MIDDLE ? 'middle' : 'right'}`);
             this.mouse_up = 0;
         }
     }
