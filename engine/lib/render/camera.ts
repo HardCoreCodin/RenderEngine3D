@@ -223,8 +223,8 @@ export class PerspectiveProjectionMatrix extends ProjectionMatrix {
     }
 
     updateXY(): void {
-        this.x_axis.x = this.lense.focal_length * this.lense.zoom;
-        this.y_axis.y = this.lense.focal_length * this.lense.zoom * this.view_frustum.aspect_ratio;
+        this.scale.x = this.lense.focal_length;
+        this.scale.y = this.lense.focal_length * this.view_frustum.aspect_ratio;
     }
 }
 
@@ -236,8 +236,8 @@ export class OrthographicProjectionMatrix extends ProjectionMatrix {
     }
 
     updateXY(): void {
-        this.x_axis.x = this.lense.zoom;
-        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
+        this.scale.x = this.lense.zoom;
+        this.scale.y = this.lense.zoom * this.view_frustum.aspect_ratio;
     }
 }
 

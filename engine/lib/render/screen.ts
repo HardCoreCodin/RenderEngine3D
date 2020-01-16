@@ -18,6 +18,9 @@ export abstract class BaseScreen<
     ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>>
     implements IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>
 {
+    protected abstract _initBorder(): void;
+    protected abstract _drawBorder(): void;
+
     protected _createDefaultController(): IController {
         return new FPSController(this._canvas)
     };
@@ -38,8 +41,6 @@ export abstract class BaseScreen<
     protected readonly _default_render_pipeline: RenderPipelineType;
     protected readonly _viewports = new Set<ViewportType>();
     protected readonly _render_pipelines = new Map<RenderPipelineType, Set<ViewportType>>();
-
-    protected _viewport_border: HTMLDivElement;
     protected _active_viewport: ViewportType;
 
     constructor(
@@ -49,10 +50,7 @@ export abstract class BaseScreen<
         protected readonly _canvas: HTMLCanvasElement,
         protected readonly _size: IRectangle = {width: 1, height: 1}
     ) {
-        this._viewport_border = document.createElement('div');
-        this._viewport_border.style.cssText = VIEWPORT_BORDER_STYLE;
-        this._canvas.insertAdjacentElement('afterend', this._viewport_border);
-
+        this._initBorder();
         this._default_render_pipeline = this._createDefaultRenderPipeline(context, scene);
         this.active_viewport = this.addViewport(camera);
     }
@@ -67,14 +65,15 @@ export abstract class BaseScreen<
 
         for (const viewport of this._viewports)
             viewport.refresh();
+
+        if (this._viewports.size > 1)
+            this._drawBorder();
     }
 
     resize(width: number, height: number): void {
         this._canvas.width = width;
         this._canvas.height = height;
 
-        // const width_scale = width / this._size.width;
-        // const height_scale = height / this._size.height;
         for (const viewport of this._viewports)
             viewport.reset(
                 (viewport.width / this._size.width) * width,
@@ -82,9 +81,6 @@ export abstract class BaseScreen<
                 (viewport.x / this._size.width)  * width,
                 (viewport.y / this._size.height) * height,
             );
-
-        if (this._viewports.size > 1)
-            this._updateBorder();
 
         this._size.width = width;
         this._size.height = height;
@@ -146,9 +142,7 @@ export abstract class BaseScreen<
             viewport.setFrom(this._active_viewport);
             viewport.x += viewport.width;
         }
-
         this._active_viewport = viewport;
-        this._updateBorder();
 
         return viewport;
     }
@@ -162,7 +156,6 @@ export abstract class BaseScreen<
 
         this.unregisterViewport(viewport);
         this._viewports.delete(viewport);
-        this._updateBorder();
     }
 
     get active_viewport(): ViewportType {
@@ -174,7 +167,6 @@ export abstract class BaseScreen<
             return;
 
         this._active_viewport = viewport;
-        this._updateBorder();
     }
 
     setViewportAt(x: number, y: number): void {
@@ -187,8 +179,32 @@ export abstract class BaseScreen<
                 break;
             }
     }
+}
 
-    protected _updateBorder(): void {
+export default class Screen extends BaseScreen<CanvasRenderingContext2D, Camera, Scene, RenderPipeline, Viewport> {
+    protected _createDefaultRenderPipeline(context: CanvasRenderingContext2D, scene: Scene): RenderPipeline {
+        return new RenderPipeline(context, scene);
+    }
+
+    protected _viewport_border: HTMLDivElement;
+
+    protected _createViewport(
+        camera: Camera,
+        render_pipeline: RenderPipeline,
+        controller: IController,
+        size: IRectangle,
+        position: IVector2D
+    ): Viewport {
+        return new Viewport(camera, render_pipeline, controller, this, size, position);
+    }
+
+    protected _initBorder(): void {
+        this._viewport_border = document.createElement('div');
+        this._viewport_border.style.cssText = VIEWPORT_BORDER_STYLE;
+        this._canvas.insertAdjacentElement('afterend', this._viewport_border);
+    }
+
+    protected _drawBorder(): void {
         if (this._viewports.size === 1) {
             this._viewport_border.style.display = 'none';
             return;
@@ -199,22 +215,6 @@ export abstract class BaseScreen<
         this._viewport_border.style.top = `${this.active_viewport.y}px`;
         this._viewport_border.style.width = `${this.active_viewport.width}px`;
         this._viewport_border.style.height = `${this.active_viewport.height}px`;
-    }
-}
-
-export default class Screen extends BaseScreen<CanvasRenderingContext2D, Camera, Scene, RenderPipeline, Viewport> {
-    protected _createDefaultRenderPipeline(context: CanvasRenderingContext2D, scene: Scene): RenderPipeline {
-        return new RenderPipeline(context, scene);
-    }
-
-    protected _createViewport(
-        camera: Camera,
-        render_pipeline: RenderPipeline,
-        controller: IController,
-        size: IRectangle,
-        position: IVector2D
-    ): Viewport {
-        return new Viewport(camera, render_pipeline, controller, this, size, position);
     }
 }
 

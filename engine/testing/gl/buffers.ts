@@ -50,6 +50,14 @@ abstract class GLBuffer implements IGLBuffer {
     get component_count(): number {return this._component_count}
     get data_type(): GLenum {return this._data_type}
 
+    bindToLocation(location: GLint): void {
+        gl = this._contex;
+        gl.bindBuffer(this._type, this._id);
+        gl.enableVertexAttribArray(location);
+        gl.vertexAttribPointer(location, this._component_count, this.data_type, false, 0, 0);
+        gl.bindBuffer(this._type, null)
+    }
+
     bind(): void {this._contex.bindBuffer(this._type, this._id)}
     unbind(): void {this._contex.bindBuffer(this._type, null)}
     delete(): void {this._contex.deleteBuffer(this._id)}
@@ -87,7 +95,7 @@ export class GLElementArrayBuffer extends GLBuffer {
         gl = this._contex;
         gl.bindBuffer(this._type, this._id);
         gl.drawElements(mode, this._length, this._data_type, 0);
-        // gl.bindBuffer(this._type, null);
+        gl.bindBuffer(this._type, null);
     }
 }
 
@@ -144,23 +152,15 @@ export class GLVertexArray {
 
     bindToLocations(locations: IGLAttributeLocations): void {
         gl = this._contex;
-
         gl.bindVertexArray(this._id);
 
-        let location: GLuint;
-        let attribute: IGLBuffer;
-
-        for (const name of Object.keys(locations)) {
-            location = locations[name];
-            attribute = this.attributes[name];
-            if (attribute) {
-                attribute.bind();
-                gl.enableVertexAttribArray(location);
-                gl.vertexAttribPointer(location, attribute.component_count, attribute.data_type, false, 0, 0);
-                attribute.unbind();
-            } else
+        for (const attribute in locations)
+            if (attribute in this.attributes)
+                this.attributes[attribute].bindToLocation(locations[attribute]);
+            else
                 throw `Missing data for attribute ${name}!`;
-        }
+
+        gl.bindVertexArray(null);
     }
 
     bind(): void {this._contex.bindVertexArray(this._id)}

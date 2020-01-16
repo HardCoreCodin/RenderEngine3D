@@ -10,9 +10,7 @@ export class BaseScreen {
         this._size = _size;
         this._viewports = new Set();
         this._render_pipelines = new Map();
-        this._viewport_border = document.createElement('div');
-        this._viewport_border.style.cssText = VIEWPORT_BORDER_STYLE;
-        this._canvas.insertAdjacentElement('afterend', this._viewport_border);
+        this._initBorder();
         this._default_render_pipeline = this._createDefaultRenderPipeline(context, scene);
         this.active_viewport = this.addViewport(camera);
     }
@@ -29,16 +27,14 @@ export class BaseScreen {
         }
         for (const viewport of this._viewports)
             viewport.refresh();
+        if (this._viewports.size > 1)
+            this._drawBorder();
     }
     resize(width, height) {
         this._canvas.width = width;
         this._canvas.height = height;
-        // const width_scale = width / this._size.width;
-        // const height_scale = height / this._size.height;
         for (const viewport of this._viewports)
             viewport.reset((viewport.width / this._size.width) * width, (viewport.height / this._size.height) * height, (viewport.x / this._size.width) * width, (viewport.y / this._size.height) * height);
-        if (this._viewports.size > 1)
-            this._updateBorder();
         this._size.width = width;
         this._size.height = height;
     }
@@ -87,7 +83,6 @@ export class BaseScreen {
             viewport.x += viewport.width;
         }
         this._active_viewport = viewport;
-        this._updateBorder();
         return viewport;
     }
     removeViewport(viewport) {
@@ -97,7 +92,6 @@ export class BaseScreen {
             throw `Can not remove last viewport! Screen must always have at least one.`;
         this.unregisterViewport(viewport);
         this._viewports.delete(viewport);
-        this._updateBorder();
     }
     get active_viewport() {
         return this._active_viewport;
@@ -106,7 +100,6 @@ export class BaseScreen {
         if (Object.is(viewport, this._active_viewport))
             return;
         this._active_viewport = viewport;
-        this._updateBorder();
     }
     setViewportAt(x, y) {
         if (this._active_viewport.is_inside(x, y))
@@ -117,7 +110,20 @@ export class BaseScreen {
                 break;
             }
     }
-    _updateBorder() {
+}
+export default class Screen extends BaseScreen {
+    _createDefaultRenderPipeline(context, scene) {
+        return new RenderPipeline(context, scene);
+    }
+    _createViewport(camera, render_pipeline, controller, size, position) {
+        return new Viewport(camera, render_pipeline, controller, this, size, position);
+    }
+    _initBorder() {
+        this._viewport_border = document.createElement('div');
+        this._viewport_border.style.cssText = VIEWPORT_BORDER_STYLE;
+        this._canvas.insertAdjacentElement('afterend', this._viewport_border);
+    }
+    _drawBorder() {
         if (this._viewports.size === 1) {
             this._viewport_border.style.display = 'none';
             return;
@@ -127,14 +133,6 @@ export class BaseScreen {
         this._viewport_border.style.top = `${this.active_viewport.y}px`;
         this._viewport_border.style.width = `${this.active_viewport.width}px`;
         this._viewport_border.style.height = `${this.active_viewport.height}px`;
-    }
-}
-export default class Screen extends BaseScreen {
-    _createDefaultRenderPipeline(context, scene) {
-        return new RenderPipeline(context, scene);
-    }
-    _createViewport(camera, render_pipeline, controller, size, position) {
-        return new Viewport(camera, render_pipeline, controller, this, size, position);
     }
 }
 //# sourceMappingURL=screen.js.map

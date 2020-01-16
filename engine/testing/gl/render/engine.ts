@@ -18,7 +18,7 @@ export class GLRenderEngine
     extends BaseRenderEngine<WebGL2RenderingContext, GLCamera, GLScene, GLRenderPipeline, GLViewport, GLScreen>
 {
     protected _createContext(canvas: HTMLCanvasElement): WebGL2RenderingContext {
-        gl = canvas.getContext('webgl2');
+        const gl = canvas.getContext('webgl2');
 
         gl.enable(gl.BLEND);
         gl.enable(gl.DEPTH_TEST);
@@ -39,5 +39,3 @@ export class GLRenderEngine
         return this.scene.cameras.size ? this.scene.cameras[0] : this.scene.addCamera(GLCamera);
     }
 }
-
-let gl: WebGL2RenderingContext;

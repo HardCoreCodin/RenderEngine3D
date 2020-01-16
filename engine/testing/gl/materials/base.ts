@@ -27,6 +27,7 @@ export class GLMaterial extends BaseMaterial<WebGL2RenderingContext> {
     prepareMeshForDrawing(mesh: IMesh, render_pipeline: GLRenderPipeline): void {
         this._mesh_buffers = render_pipeline.mesh_buffers.get(mesh);
         this._mesh_buffers.vertex_array.bindToLocations(this.program.locations);
+        this._mesh_buffers.vertex_array.bind();
     }
 
     uploadUniforms(): void {

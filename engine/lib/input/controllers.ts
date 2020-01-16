@@ -218,7 +218,10 @@ export class FPSController
         }
 
         if (this.mouse_wheel_moved) {
-            this._camera.lense.zoom -= this.mouse_wheel * this.mouse_wheel_sensitivity;
+            if (this._camera.is_perspective)
+                this._camera.lense.focal_length -= this.mouse_wheel * this.mouse_wheel_sensitivity;
+            else
+                this._camera.lense.zoom -= this.mouse_wheel * this.mouse_wheel_sensitivity;
             this.mouse_wheel_moved = false;
         }
 

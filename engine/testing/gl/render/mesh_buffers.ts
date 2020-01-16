@@ -1,5 +1,4 @@
 import {GLIndexBuffer, GLVertexArray, GLVertexBuffer} from "../buffers.js";
-import {IGLAttributeInputs} from "../types.js";
 import {IMesh} from "../../../lib/_interfaces/geometry.js";
 
 export class GLMeshBuffers {
