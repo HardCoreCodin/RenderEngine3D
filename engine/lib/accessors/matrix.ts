@@ -323,7 +323,7 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2
     }
 }
 
-export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
+export class Matrix3x3 extends RotationMatrix implements IMatrix3x3<Matrix2x2>
 {
     readonly _: IMatrix3x3FunctionSet;
     protected _getFunctionSet(): IMatrix3x3FunctionSet {return matrix3x3Functions}
@@ -430,7 +430,7 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3
     }
 }
 
-export class Matrix4x4 extends RotationMatrix implements IMatrix4x4
+export class Matrix4x4 extends RotationMatrix implements IMatrix4x4<Matrix2x2, Matrix3x3>
 {
     protected _getFunctionSet(): IMatrixRotationFunctionSet {return matrix4x4Functions}
 

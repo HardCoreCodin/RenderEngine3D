@@ -1,26 +1,37 @@
-import Geometry, {MeshGeometries} from "./geometry.js";
-import Mesh from "../geometry/mesh.js";
+import Geometry from "./geometry.js";
 // import {MeshShader} from "./shaders/mesh/base.js";
 import {VertexPositions4D} from "../geometry/positions.js";
 import {Matrix4x4} from "../accessors/matrix.js";
-import {cullFaces, cullVertices} from "../math/rendering/culling.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {cube_face_vertices} from "../geometry/cube.js";
-import {CLIP} from "../../constants.js";
 import {T3, T4} from "../../types.js";
-import {IMeshCallback, IRenderPipeline, IViewport} from "../_interfaces/render.js";
-import Viewport from "./viewport.js";
-import Scene from "../scene_graph/scene.js";
+import {
+    ICamera,
+    ICanvas2DRenderPipeline,
+    IMeshCallback,
+    IRenderPipeline,
+    ISize,
+    IViewport
+} from "../_interfaces/render.js";
 import {IGeometry, IMesh} from "../_interfaces/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
+import {IColor, IVector2D} from "../_interfaces/vectors.js";
+import {pos3} from "../accessors/position.js";
+import {dir3} from "../accessors/direction.js";
+import RenderTarget from "./target.js";
+import Camera from "./camera.js";
+import {Canvas2DViewport, RasterViewport, RayTraceViewport} from "./viewport.js";
+import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
 
 
 export abstract class BaseRenderPipeline<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>>
-    implements IRenderPipeline<Context, SceneType>
+    CameraType extends ICamera,
+    SceneType extends IScene<Context, CameraType>,
+    ViewportType extends IViewport<Context, CameraType, SceneType> = IViewport<Context, CameraType, SceneType>>
+    implements IRenderPipeline<Context, CameraType>
 {
-    abstract render(viewport: IViewport<Context>): void;
+    abstract render(viewport: ViewportType): void;
 
     readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
@@ -37,6 +48,8 @@ export abstract class BaseRenderPipeline<
         this.scene.mesh_geometries.on_mesh_removed.add(this.on_mesh_removed_callback);
     }
 
+    resetRenderTarget(size: ISize, position: IVector2D): void {}
+
     on_mesh_loaded(mesh: IMesh) {}
     on_mesh_added(mesh: IMesh) {mesh.on_mesh_loaded.add(this.on_mesh_loaded_callback)}
     on_mesh_removed(mesh: IMesh) {mesh.on_mesh_loaded.delete(this.on_mesh_loaded_callback)}
@@ -47,7 +60,126 @@ export abstract class BaseRenderPipeline<
     }
 }
 
-export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingContext2D, Scene> {
+export abstract class Canvas2DRenderPipeline<
+    CameraType extends ICamera,
+    SceneType extends IScene<CanvasRenderingContext2D, CameraType>,
+    ViewportType extends Canvas2DViewport<CameraType, SceneType> = Canvas2DViewport<CameraType, SceneType>>
+    extends BaseRenderPipeline<CanvasRenderingContext2D, CameraType, SceneType>
+    implements ICanvas2DRenderPipeline<CameraType, SceneType>
+{
+    protected _image: ImageData;
+    protected _render_target: RenderTarget;
+
+    protected abstract _render(viewport: ViewportType): void;
+
+    resetRenderTarget(size: ISize, position: IVector2D): void {
+        this._image = this.context.getImageData(
+            position.x,
+            position.y,
+
+            size.width,
+            size.height
+        );
+        if (!this._render_target)
+            this._render_target = new RenderTarget(size);
+
+        this._render_target.arrays[0] = new Uint32Array(this._image.data.buffer);
+    }
+
+    render(viewport: ViewportType): void {
+        this.context.clearRect(viewport.x, viewport.y, viewport.width, viewport.height);
+        this._render(viewport);
+        this.context.putImageData(this._image, viewport.x, viewport.y);
+    }
+
+    drawTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
+        this.context.beginPath();
+
+        this.context.moveTo(v1.x, v1.y);
+        this.context.lineTo(v2.x, v2.y);
+        this.context.lineTo(v3.x, v3.y);
+        // this.context.lineTo(v1.x, v1.y);
+        this.context.closePath();
+
+        this.context.strokeStyle = `${color}`;
+        this.context.stroke();
+    }
+
+    fillTriangle(v1: IVector2D, v2: IVector2D, v3: IVector2D, color: IColor) {
+        this.context.beginPath();
+
+        this.context.moveTo(v1.x, v1.y);
+        this.context.lineTo(v2.x, v2.y);
+        this.context.lineTo(v3.x, v3.y);
+
+        this.context.closePath();
+
+        this.context.fillStyle = `${color}`;
+        this.context.fill();
+    }
+}
+
+
+const pixel_direction = dir3();
+const pixel_position = pos3();
+const pixel_position_start = pos3();
+const pixel_position_plus_inc_x = pos3();
+const pixel_position_plus_inc_y = pos3();
+const pixel_position_inc_x = dir3();
+const pixel_position_inc_y = dir3();
+
+export class RayTracer extends Canvas2DRenderPipeline<Camera, RayTraceScene, RayTraceViewport> {
+    _render(viewport: RayTraceViewport): void {
+        if (!this.scene.mesh_geometries.mesh_count)
+            return;
+
+        const render_target = this._render_target;
+
+        const width = viewport.width;
+        const height = viewport.height;
+
+        const half_width = width / 2;
+        const half_height = height / 2;
+
+        const focal_length = viewport.camera.lense.focal_length * half_width;
+        const camera_position = viewport.camera.transform.translation;
+        const camera_rotataion = viewport.camera.transform.matrix.mat3;
+
+        const start_x = viewport.x + 0.5;
+        const start_y = viewport.y + 0.5;
+        const end_x = start_x + width;
+
+        const end_y = start_y + height;
+
+        pixel_position_start.setTo(0.5 - half_width, 0.5 - half_height, focal_length);
+        pixel_position_plus_inc_x.setTo(1.5 - half_width, 0.5 - half_height, focal_length);
+        pixel_position_plus_inc_y.setTo(0.5 - half_width, 1.5 - half_height, focal_length);
+
+        pixel_position_start.matmul(camera_rotataion).add(camera_position);
+        pixel_position_plus_inc_x.matmul(camera_rotataion).add(camera_position);
+        pixel_position_plus_inc_y.matmul(camera_rotataion).add(camera_position);
+
+        pixel_position_start.to(pixel_position_plus_inc_x, pixel_position_inc_x);
+        pixel_position_start.to(pixel_position_plus_inc_y, pixel_position_inc_y);
+
+        let x: number;
+        for (let y = start_y; y < end_y; y++) {
+            pixel_position.setFrom(pixel_position_start);
+
+            for (x = start_x; x < end_x; x++) {
+                camera_position.to(pixel_position, pixel_direction);
+                pixel_direction.normalize();
+
+                render_target.putPixel(x, y, pixel_direction.x, pixel_position.y, pixel_direction.z, 1);
+
+                pixel_position.add(pixel_position_inc_x);
+            }
+            pixel_position_start.add(pixel_position_inc_y);
+        }
+    }
+}
+
+export class Rasterizer extends Canvas2DRenderPipeline<Camera, RasterScene> {
     cull_back_faces: boolean = false;
 
     protected current_max_face_count: number = 0;
@@ -99,7 +231,7 @@ export default class RenderPipeline extends BaseRenderPipeline<CanvasRenderingCo
         }
     }
 
-    render(viewport: Viewport): void {
+    _render(viewport: RasterViewport): void {
         if (!this.scene.mesh_geometries.mesh_count)
             return;
 

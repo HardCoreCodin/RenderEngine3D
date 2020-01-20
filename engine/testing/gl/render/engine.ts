@@ -9,9 +9,9 @@ import {BaseRenderEngine} from "../../../lib/render/engine.js";
 import {CameraConstructor, MaterialConstructor} from "../../../lib/_interfaces/render.js";
 
 
-export class GLScene extends BaseScene<WebGL2RenderingContext, GLCamera, GLMaterial> {
+export class GLScene extends BaseScene<WebGL2RenderingContext, GLCamera, GLRenderPipeline, GLMaterial> {
     protected _getDefaultCameraClass(): CameraConstructor<GLCamera> {return GLCamera};
-    protected _getDefaultMaterialClass(): MaterialConstructor<WebGL2RenderingContext, GLMaterial> {return GLMaterial};
+    protected _getDefaultMaterialClass(): MaterialConstructor<WebGL2RenderingContext, GLRenderPipeline, GLMaterial> {return GLMaterial};
 }
 
 export class GLRenderEngine

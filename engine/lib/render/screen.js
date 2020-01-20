@@ -1,23 +1,46 @@
-import Viewport from "./viewport.js";
-import RenderPipeline from "./pipelines.js";
+import Rectangle from "./rectangle.js";
+import { RasterViewport, RayTraceViewport } from "./viewport.js";
+import { Rasterizer, RayTracer } from "./pipelines.js";
+import { rgba } from "../accessors/color.js";
 import { FPSController } from "../input/controllers.js";
-import { VIEWPORT_BORDER_STYLE } from "../../constants.js";
-export class BaseScreen {
-    constructor(camera, scene, context, _canvas, _size = { width: 1, height: 1 }) {
+export class BaseScreen extends Rectangle {
+    constructor(camera, scene, context, _canvas) {
+        super();
         this.scene = scene;
         this.context = context;
         this._canvas = _canvas;
-        this._size = _size;
         this._viewports = new Set();
         this._render_pipelines = new Map();
-        this._initBorder();
+        this._active_viewport_border_color = rgba(0, 1, 0, 1);
+        this._inactive_viewport_border_color = rgba(0.75);
+        this._grid_color = rgba(0, 1, 1, 1);
         this._default_render_pipeline = this._createDefaultRenderPipeline(context, scene);
         this.active_viewport = this.addViewport(camera);
+        this._active_viewport.display_border = false;
+        this._active_viewport.setGridColor(this._grid_color);
     }
     _createDefaultController() {
         return new FPSController(this._canvas);
     }
     ;
+    get grid_color() { return this._active_viewport_border_color; }
+    get active_viewport_border_color() { return this._active_viewport_border_color; }
+    get inactive_viewport_border_color() { return this._inactive_viewport_border_color; }
+    set grid_color(color) {
+        this._grid_color.setFrom(color);
+        for (const viewport of this._viewports)
+            viewport.setGridColor(color);
+    }
+    set active_viewport_border_color(color) {
+        this._active_viewport_border_color.setFrom(color);
+        this._active_viewport.setBorderColor(color);
+    }
+    set inactive_viewport_border_color(color) {
+        this._inactive_viewport_border_color.setFrom(color);
+        for (const viewport of this._viewports)
+            if (!Object.is(viewport, this._active_viewport))
+                viewport.setBorderColor(color);
+    }
     refresh() {
         const width = this._canvas.clientWidth;
         const height = this._canvas.clientHeight;
@@ -27,8 +50,6 @@ export class BaseScreen {
         }
         for (const viewport of this._viewports)
             viewport.refresh();
-        if (this._viewports.size > 1)
-            this._drawBorder();
     }
     resize(width, height) {
         this._canvas.width = width;
@@ -77,12 +98,16 @@ export class BaseScreen {
         const viewport = this._createViewport(camera, render_pipeline, controller, size, position);
         this._viewports.add(viewport);
         this.registerViewport(viewport);
+        viewport.setGridColor(this._grid_color);
         if (this._active_viewport) {
             this._active_viewport.width /= 2;
+            this._active_viewport.display_border = true;
             viewport.setFrom(this._active_viewport);
             viewport.x += viewport.width;
+            this.active_viewport = viewport;
         }
-        this._active_viewport = viewport;
+        else
+            this._active_viewport = viewport;
         return viewport;
     }
     removeViewport(viewport) {
@@ -92,6 +117,9 @@ export class BaseScreen {
             throw `Can not remove last viewport! Screen must always have at least one.`;
         this.unregisterViewport(viewport);
         this._viewports.delete(viewport);
+        this.active_viewport = [...this._viewports][0];
+        if (this._viewports.size === 1)
+            this._active_viewport.display_border = false;
     }
     get active_viewport() {
         return this._active_viewport;
@@ -99,40 +127,36 @@ export class BaseScreen {
     set active_viewport(viewport) {
         if (Object.is(viewport, this._active_viewport))
             return;
+        viewport.setBorderColor(this._active_viewport_border_color);
         this._active_viewport = viewport;
+        for (const other_viewport of this._viewports)
+            if (!Object.is(viewport, other_viewport))
+                other_viewport.setBorderColor(this._inactive_viewport_border_color);
     }
     setViewportAt(x, y) {
         if (this._active_viewport.is_inside(x, y))
             return;
         for (const viewport of this._viewports)
-            if (!Object.is(viewport, this._active_viewport) && viewport.is_inside(x, y)) {
+            if (!Object.is(viewport, this._active_viewport) && viewport.is_inside(x, y))
                 this.active_viewport = viewport;
-                break;
-            }
+            else
+                viewport.setBorderColor(this._inactive_viewport_border_color);
     }
 }
-export default class Screen extends BaseScreen {
+export class RasterScreen extends BaseScreen {
     _createDefaultRenderPipeline(context, scene) {
-        return new RenderPipeline(context, scene);
+        return new Rasterizer(context, scene);
     }
     _createViewport(camera, render_pipeline, controller, size, position) {
-        return new Viewport(camera, render_pipeline, controller, this, size, position);
+        return new RasterViewport(camera, render_pipeline, controller, this, size, position);
     }
-    _initBorder() {
-        this._viewport_border = document.createElement('div');
-        this._viewport_border.style.cssText = VIEWPORT_BORDER_STYLE;
-        this._canvas.insertAdjacentElement('afterend', this._viewport_border);
+}
+export class RayTraceScreen extends BaseScreen {
+    _createDefaultRenderPipeline(context, scene) {
+        return new RayTracer(context, scene);
     }
-    _drawBorder() {
-        if (this._viewports.size === 1) {
-            this._viewport_border.style.display = 'none';
-            return;
-        }
-        this._viewport_border.style.display = 'block';
-        this._viewport_border.style.left = `${this.active_viewport.x}px`;
-        this._viewport_border.style.top = `${this.active_viewport.y}px`;
-        this._viewport_border.style.width = `${this.active_viewport.width}px`;
-        this._viewport_border.style.height = `${this.active_viewport.height}px`;
+    _createViewport(camera, render_pipeline, controller, size, position) {
+        return new RayTraceViewport(camera, render_pipeline, controller, this, size, position);
     }
 }
 //# sourceMappingURL=screen.js.map

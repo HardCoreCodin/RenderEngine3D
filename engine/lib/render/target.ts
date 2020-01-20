@@ -1,11 +1,11 @@
 import {Buffer} from "../memory/buffers.js";
 import {Int32Allocator1D, RENDER_TARGET_ALLOCATOR} from "../memory/allocators.js";
-import {IRectangle} from "../_interfaces/render.js";
+import {ISize} from "../_interfaces/render.js";
 
 
 export default class RenderTarget extends Buffer<Uint32Array>
 {
-    constructor(protected readonly _size: IRectangle) {super()}
+    constructor(protected readonly _size: ISize) {super()}
     protected _getAllocator(): Int32Allocator1D {return RENDER_TARGET_ALLOCATOR}
 
     get width(): number {return this._size.width}

@@ -1,12 +1,18 @@
 import {INode3D, IScene} from "./nodes.js";
-import {IVector2D} from "./vectors.js";
+import {IColor4D, IVector2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
 
-export interface IRectangle {
+export interface ISize {
     width: number,
     height: number
+}
+
+export interface IRectangle extends ISize, IVector2D {
+    setPosition(x: number, y: number): void;
+    resize(width: number, height: number): void;
+    reset(width: number, height: number, x: number, y: number): void
 }
 
 export interface ILense {
@@ -26,7 +32,7 @@ export interface IViewFrustum {
     setFrom(other: this): void;
 }
 
-export interface IProjectionMatrix extends  IMatrix4x4 {
+export interface IProjectionMatrix extends IMatrix4x4 {
     readonly lense: ILense;
     readonly view_frustum: IViewFrustum;
 
@@ -50,18 +56,21 @@ export interface ICamera extends INode3D {
 export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
 
 export interface IMaterial<
-    Context extends RenderingContext> {
+    Context extends RenderingContext,
+    RenderPipelineType extends IRenderPipeline<Context, ICamera>>
+{
     readonly id: number;
     readonly scene: IScene<Context>;
     readonly mesh_geometries: IMeshGeometries;
 
-    prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context, IScene<Context>>): void;
+    prepareMeshForDrawing(mesh: IMesh, render_pipeline: RenderPipelineType): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
 
 export type MaterialConstructor<
     Context extends RenderingContext,
-    Instance extends IMaterial<Context> = IMaterial<Context>
+    RenderPipelineType extends IRenderPipeline<Context, ICamera>,
+    Instance extends IMaterial<Context, RenderPipelineType>
     > = new (scene: IScene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
@@ -87,14 +96,15 @@ export interface IMeshGeometries {
 
 export interface IRenderPipeline<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>>
+    CameraType extends ICamera = ICamera>
 {
-    readonly scene: SceneType,
+    readonly scene: IScene<Context, CameraType>;
     readonly context: Context;
     readonly model_to_clip: IMatrix4x4;
 
     delete(): void;
-    render(viewport: IViewport<Context>): void;
+    render(viewport: IViewport<Context, CameraType, IScene<Context, CameraType>>): void;
+    resetRenderTarget(size: ISize, position: IVector2D): void;
 
     on_mesh_added(mesh: IMesh): void;
     on_mesh_removed(mesh: IMesh): void;
@@ -105,29 +115,39 @@ export interface IRenderPipeline<
     readonly on_mesh_removed_callback: IMeshCallback;
 }
 
-export interface IViewport<
-    Context extends RenderingContext = RenderingContext,
-    SceneType extends IScene<Context> = IScene<Context>,
-    CameraType extends ICamera = ICamera,
-    RenderPipelineType extends IRenderPipeline<Context, SceneType> = IRenderPipeline<Context, SceneType>>
+export interface ICanvas2DRenderPipeline<CameraType extends ICamera,
+    SceneType extends IScene<CanvasRenderingContext2D, CameraType>>
+    extends IRenderPipeline<CanvasRenderingContext2D, CameraType>
 {
+    resetRenderTarget(size: ISize, position: IVector2D): void;
+}
+
+export interface IViewport<
+    Context extends RenderingContext,
+    CameraType extends ICamera,
+    SceneType extends IScene<Context, CameraType>,
+    RenderPipelineType extends IRenderPipeline<Context, CameraType> = IRenderPipeline<Context, CameraType>>
+    extends IRectangle
+{
+    display_grid: boolean;
+    display_border: boolean;
+
+    grid_size: number;
+
+    setBorderColor(color: IColor4D): void;
+    setGridColor(color: IColor4D): void;
+
     camera: CameraType
     render_pipeline: RenderPipelineType;
     controller: IController;
-
-    width: number;
-    height: number;
-
-    x: number;
-    y: number;
 
     readonly scene: SceneType;
     readonly world_to_view: IMatrix4x4;
     readonly world_to_clip: IMatrix4x4;
 
     refresh(): void;
-    reset(width?: number, height?: number, x?: number, y?: number): void;
     is_inside(x: number, y: number): boolean;
+
     updateMatrices(): void;
     setFrom(other: this): void;
 }
@@ -137,9 +157,9 @@ export interface IScreen<
     Context extends RenderingContext,
     CameraType extends ICamera,
     SceneType extends IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
-    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType
-        > = IViewport<Context, SceneType, CameraType, RenderPipelineType>>
+    RenderPipelineType extends IRenderPipeline<Context, CameraType>,
+    ViewportType extends IViewport<Context, CameraType, SceneType, RenderPipelineType> = IViewport<Context, CameraType, SceneType, RenderPipelineType>>
+    extends IRectangle
 {
     scene: SceneType;
     context: Context;
@@ -149,8 +169,9 @@ export interface IScreen<
 
     refresh(): void;
     resize(width: number, height: number): void;
+    setPosition(x: number, y: number): void;
 
-    addViewport(camera: CameraType, size?: IRectangle, position?: IVector2D): ViewportType;
+    addViewport(camera: CameraType, size?: ISize, position?: IVector2D): ViewportType;
     removeViewport(viewport: ViewportType): void;
 
     registerViewport(viewport: ViewportType): void;
@@ -169,8 +190,8 @@ export interface IRenderEngine<
     Context extends RenderingContext,
     CameraType extends ICamera,
     SceneType extends IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
-    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
+    RenderPipelineType extends IRenderPipeline<Context, CameraType>,
+    ViewportType extends IViewport<Context, CameraType, SceneType, RenderPipelineType>,
     ScreenType extends IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>>
 {
     readonly canvas: HTMLCanvasElement;

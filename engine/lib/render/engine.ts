@@ -1,21 +1,20 @@
 import Camera from "./camera.js";
-import Screen from "./screen.js";
-import Scene from "../scene_graph/scene.js";
-import Viewport from "./viewport.js";
-import RenderPipeline from "./pipelines.js";
-import {FPSController} from "../input/controllers.js";
+import {RasterScreen, RayTraceScreen} from "./screen.js";
+import {RasterViewport, RayTraceViewport} from "./viewport.js";
+import {Rasterizer, RayTracer} from "./pipelines.js";
 import {KEY_CODES} from "../../constants.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {non_zero} from "../../utils.js";
+import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,
     CameraType extends ICamera,
     SceneType extends IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, SceneType>,
-    ViewportType extends IViewport<Context, SceneType, CameraType, RenderPipelineType>,
+    RenderPipelineType extends IRenderPipeline<Context, CameraType>,
+    ViewportType extends IViewport<Context, CameraType, SceneType, RenderPipelineType>,
     ScreenType extends IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>>
     implements IRenderEngine<Context, CameraType, SceneType, RenderPipelineType, ViewportType, ScreenType>
 {
@@ -144,6 +143,8 @@ export abstract class BaseRenderEngine<
     }
 
     protected _on_mousedown(mouse_event: MouseEvent): void {
+        const rect = this.canvas.getBoundingClientRect();
+        this._screen.setPosition(rect.left, rect.top);
         this._screen.active_viewport.controller.mouse_down = mouse_event.which;
     }
 
@@ -214,19 +215,40 @@ export abstract class BaseRenderEngine<
     }
 }
 
-export default class RenderEngine
-    extends BaseRenderEngine<CanvasRenderingContext2D, Camera, Scene, RenderPipeline, Viewport, Screen>
+export class RasterEngine
+    extends BaseRenderEngine<CanvasRenderingContext2D, Camera, RasterScene, Rasterizer, RasterViewport, RasterScreen>
 {
     protected _createContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
         return canvas.getContext('2d');
     }
 
-    protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): Screen {
-        return new Screen(camera, this.scene, this.context, canvas);
+    protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): RasterScreen {
+        return new RasterScreen(camera, this.scene, this.context, canvas);
     }
 
-    protected _createDefaultScene(): Scene {
-        return new Scene(this.context);
+    protected _createDefaultScene(): RasterScene {
+        return new RasterScene(this.context);
+    }
+
+    protected _getDefaultCamera(): Camera {
+        return this.scene.cameras.size ? [...this.scene.cameras][0] : this.scene.addCamera(Camera);
+    }
+}
+
+
+export class RayTraceEngine
+    extends BaseRenderEngine<CanvasRenderingContext2D, Camera, RayTraceScene, RayTracer, RayTraceViewport, RayTraceScreen>
+{
+    protected _createContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+        return canvas.getContext('2d');
+    }
+
+    protected _createDefaultScreen(canvas: HTMLCanvasElement, camera: Camera): RayTraceScreen {
+        return new RayTraceScreen(camera, this.scene, this.context, canvas);
+    }
+
+    protected _createDefaultScene(): RayTraceScene {
+        return new RayTraceScene(this.context);
     }
 
     protected _getDefaultCamera(): Camera {

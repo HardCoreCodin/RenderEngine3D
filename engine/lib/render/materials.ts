@@ -1,31 +1,33 @@
 import Mesh from "../geometry/mesh.js";
-import Scene from "../scene_graph/scene.js";
 import {Matrix4x4} from "../accessors/matrix.js";
+import {Rasterizer, RayTracer} from "./pipelines.js";
 import {MeshGeometries} from "./geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IMaterial, IRenderPipeline} from "../_interfaces/render.js";
 
 export class BaseMaterial<
     Context extends RenderingContext,
-    SceneType extends IScene<Context> = IScene<Context>>
-    implements IMaterial<Context>
+    RenderPipelineType extends IRenderPipeline<Context>>
+    implements IMaterial<Context, RenderPipelineType>
 {
     static LAST_ID = 0;
 
-    prepareMeshForDrawing(mesh: Mesh, render_pipeline: IRenderPipeline<Context, SceneType>): void {};
+    prepareMeshForDrawing(mesh: Mesh, render_pipeline: RenderPipelineType): void {};
     drawMesh(mesh: Mesh, matrix: Matrix4x4): void {};
 
     readonly id: number;
     readonly mesh_geometries: MeshGeometries;
 
-    constructor(readonly scene: SceneType) {
+    constructor(readonly scene: IScene<Context>) {
         this.id = BaseMaterial.LAST_ID++;
         scene.materials.add(this);
         this.mesh_geometries = new MeshGeometries(scene);
     }
 }
 
-export default class Material extends BaseMaterial<CanvasRenderingContext2D, Scene> {}
+export class RasterMaterial extends BaseMaterial<CanvasRenderingContext2D, Rasterizer> {}
+
+export class RayTraceMaterial extends BaseMaterial<CanvasRenderingContext2D, RayTracer> {}
 
 export class PixelShader {
 

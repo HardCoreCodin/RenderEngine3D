@@ -1,6 +1,12 @@
 import {IMatrix4x4} from "./matrix.js";
 import {ITransform} from "./transform.js";
-import {CameraConstructor, ICamera, IMaterial, IMeshGeometries, MaterialConstructor} from "./render.js";
+import {
+    CameraConstructor,
+    ICamera,
+    IMaterial,
+    IMeshGeometries, IRenderPipeline,
+    MaterialConstructor
+} from "./render.js";
 
 export interface IParent {
     readonly child_count: number;
@@ -27,13 +33,14 @@ export interface INode3D extends IParent {
 export interface IScene<
     Context extends RenderingContext = RenderingContext,
     CameraType extends ICamera = ICamera,
-    MaterialType extends IMaterial<Context> = IMaterial<Context>>
+    RenderPipelineType extends IRenderPipeline<Context, CameraType> = IRenderPipeline<Context, CameraType>,
+    MaterialType extends IMaterial<Context, RenderPipelineType> = IMaterial<Context, RenderPipelineType>>
     extends IParent
 {
     context: Context,
 
     readonly default_material: MaterialType;
-    readonly DefaultMaterialClass: MaterialConstructor<Context, MaterialType>;
+    readonly DefaultMaterialClass: MaterialConstructor<Context, RenderPipelineType, MaterialType>;
     readonly DefaultCameraClass: CameraConstructor<CameraType>;
 
     readonly cameras: Set<CameraType>;
@@ -41,6 +48,6 @@ export interface IScene<
     readonly mesh_geometries: IMeshGeometries;
 
     addCamera(CameraClass?: CameraConstructor<CameraType>): CameraType;
-    addMaterial(MaterialClass?: MaterialConstructor<Context, MaterialType>): MaterialType;
+    addMaterial(MaterialClass?: MaterialConstructor<Context, RenderPipelineType, MaterialType>): MaterialType;
 }
 

@@ -1,10 +1,11 @@
 import {GLScene} from "./engine.js";
+import {GLCamera} from "./camera.js";
 import {GLMeshBuffers} from "./mesh_buffers.js";
 import {GLViewport} from "../display/viewport.js";
 import {BaseRenderPipeline} from "../../../lib/render/pipelines.js";
 import {IMesh} from "../../../lib/_interfaces/geometry.js";
 
-export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext, GLScene> {
+export class GLRenderPipeline extends BaseRenderPipeline<WebGL2RenderingContext, GLCamera, GLScene, GLViewport> {
     readonly mesh_buffers = new Map<IMesh, GLMeshBuffers>();
 
     render(viewport: GLViewport): void {
