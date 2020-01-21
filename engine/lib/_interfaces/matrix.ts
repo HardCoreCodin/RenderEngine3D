@@ -1,31 +1,26 @@
-import {
-    IMatrix2x2FunctionSet,
-    IMatrix3x3FunctionSet,
-    IMatrixFunctionSet,
-    IMatrixRotationFunctionSet
-} from "./functions.js";
-import {IMathAccessor} from "./accessors.js";
-import {IDirection3D, IPosition2D, IPosition3D, IVector, IVector3D} from "./vectors.js";
+import {Matrix2x2} from "../accessors/matrix2x2.js";
+import {Matrix3x3} from "../accessors/matrix3x3.js";
+import {Direction3D} from "../accessors/direction.js";
+import {Position2D, Position3D} from "../accessors/position.js";
+import {IMathAccessor} from "./vectors.js";
 
 export interface IMatrix extends IMathAccessor
 {
     is_identity: boolean;
-    readonly _: IMatrixFunctionSet;
 
     setToIdentity(): this;
+    invert(out?: this): this;
     transpose(out?: this): this;
 }
 
 export interface IRotationMatrix extends IMatrix
 {
-    readonly _: IMatrixRotationFunctionSet;
+    readonly translation: Position3D;
+    readonly scale: Direction3D;
 
-    readonly translation: IPosition3D;
-    readonly scale: IDirection3D;
-
-    readonly x_axis: IDirection3D;
-    readonly y_axis: IDirection3D;
-    readonly z_axis: IDirection3D;
+    readonly x_axis: Direction3D;
+    readonly y_axis: Direction3D;
+    readonly z_axis: Direction3D;
 
     setRotationAroundX(angle: number, reset: boolean): this;
     setRotationAroundY(angle: number, reset: boolean): this;
@@ -42,13 +37,8 @@ export interface IRotationMatrix extends IMatrix
 
 export interface IMatrix2x2 extends IMatrix
 {
-    readonly _: IMatrix2x2FunctionSet,
-
-    m11: number;
-    m12: number;
-
-    m21: number;
-    m22: number;
+    m11: number;  m12: number;
+    m21: number;  m22: number;
 
     setTo(
         m11: number, m12: number,
@@ -62,52 +52,45 @@ export interface IMatrix2x2 extends IMatrix
 
 export interface IMatrix3x3 extends IRotationMatrix
 {
-    readonly _: IMatrix3x3FunctionSet,
+    readonly mat2: Matrix2x2;
+    readonly translation2D: Position2D;
+    readonly translation: Position3D;
+    readonly scale: Direction3D;
 
-    mat2: IMatrix2x2;
-    translation2D: IPosition2D;
+    readonly x_axis: Direction3D;
+    readonly y_axis: Direction3D;
+    readonly z_axis: Direction3D;
 
-    m11: number;
-    m12: number;
-    m13: number;
-
-    m21: number;
-    m22: number;
-    m23: number;
-
-    m31: number;
-    m32: number;
-    m33: number;
+    m11: number;  m12: number;  m13: number;
+    m21: number;  m22: number;  m23: number;
+    m31: number;  m32: number;  m33: number;
 
     translate2DBy(x: number, y?: number, out?: this): this;
-    setToCrossProductOf(v: IVector & IVector3D): this;
-    setToOuterProductOf(v1: IVector & IVector3D, v2?: IVector & IVector3D): this;
+    setToCrossProductOf(v: Direction3D): this;
+    setToOuterProductOf(v1: Direction3D, v2?: Direction3D): this;
+
+    setTo(
+        m11: number, m12: number, m13: number,
+        m21: number, m22: number, m23: number,
+        m31: number, m32: number, m33: number
+    ): this;
 }
 
 export interface IMatrix4x4
     extends IRotationMatrix
 {
-    mat3: IMatrix3x3;
+    readonly mat3: Matrix3x3;
+    readonly translation: Position3D;
+    readonly scale: Direction3D;
 
-    m11: number;
-    m12: number;
-    m13: number;
-    m14: number;
+    readonly x_axis: Direction3D;
+    readonly y_axis: Direction3D;
+    readonly z_axis: Direction3D;
 
-    m21: number;
-    m22: number;
-    m23: number;
-    m24: number;
-
-    m31: number;
-    m32: number;
-    m33: number;
-    m34: number;
-
-    m41: number;
-    m42: number;
-    m43: number;
-    m44: number;
+    m11: number;  m12: number;  m13: number;  m14: number;
+    m21: number;  m22: number;  m23: number;  m24: number;
+    m31: number;  m32: number;  m33: number;  m34: number;
+    m41: number;  m42: number;  m43: number;  m44: number;
 
     setTo(
         m11: number, m12: number, m13: number, m14: number,

@@ -1,5 +1,5 @@
 import {IViewport} from "./render.js";
-import {IVector2D} from "./vectors.js";
+import {I2D} from "./vectors.js";
 
 export interface IControllerKeys {
     up: number;
@@ -32,7 +32,7 @@ export interface IController {
     mouse_up: number;
     mouse_down: number;
     mouse_moved: boolean;
-    mouse_movement: IVector2D;
+    mouse_movement: I2D;
     mouse_clicked: boolean;
     mouse_double_clicked: boolean;
     mouse_wheel: number;

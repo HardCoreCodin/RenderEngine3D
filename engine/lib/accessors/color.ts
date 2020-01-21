@@ -1,25 +1,12 @@
-import {Vector} from "./vector.js";
-import {base3DFunctions} from "../math/vec3.js";
-import {base4DFunctions} from "../math/vec4.js";
+import {Vector3D} from "./vector3D.js";
+import {Vector4D} from "./vector4D.js";
 import {IColor3D, IColor4D} from "../_interfaces/vectors.js";
-import {IVectorFunctionSet} from "../_interfaces/functions.js";
 
-export class Color3D extends Vector implements IColor3D
+export class Color3D extends Vector3D implements IColor3D
 {
-    protected _getFunctionSet(): IVectorFunctionSet {return base3DFunctions}
-
-    setTo(r: number, g: number, b: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-            r, g, b
-        );
-
-        return this;
-    }
-
-    toString(): string {
-        return `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`;
-    }
+    copy(out: Color3D = new Color3D()): Color3D {return out.setFrom(this)}
+    setTo(r: number, g: number, b: number): this {return super.setTo(r, g, b)}
+    toString(): string {return `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`}
 
     get r(): number {return this.arrays[0][this.id]}
     get g(): number {return this.arrays[1][this.id]}
@@ -67,22 +54,11 @@ export class Color3D extends Vector implements IColor3D
     set bgr(other: Color3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Color4D extends Vector implements IColor4D
+export class Color4D extends Vector4D implements IColor4D
 {
-    protected _getFunctionSet(): IVectorFunctionSet {return base4DFunctions}
-
-    toString(): string {
-        return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`;
-    }
-
-    setTo(r: number, g: number, b: number, a: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-            r, g, b, a
-        );
-
-        return this;
-    }
+    copy(out: Color4D = new Color4D()): Color4D {return out.setFrom(this)}
+    setTo(r: number, g: number, b: number, a: number): this {return super.setTo(r, g, b, a)}
+    toString(): string {return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`}
 
     get r(): number {return this.arrays[0][this.id]}
     get g(): number {return this.arrays[1][this.id]}

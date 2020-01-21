@@ -1,5 +1,5 @@
 import {dir3} from "../accessors/direction.js";
-import {IPosition3D, IVector2D} from "../_interfaces/vectors.js";
+import {IPosition3D, I2D} from "../_interfaces/vectors.js";
 import {IController, IControllerKeys} from "../_interfaces/input.js";
 import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
@@ -29,7 +29,7 @@ abstract class Controller
     public mouse_down: number = 0;
 
     public mouse_moved: boolean = false;
-    public mouse_movement: IVector2D = {x: 0, y: 0};
+    public mouse_movement: I2D = {x: 0, y: 0};
 
     public mouse_wheel_moved: boolean = false;
     public mouse_wheel: number = 0;

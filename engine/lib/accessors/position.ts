@@ -1,64 +1,85 @@
-import {TransformableVector} from "./vector.js";
-import Matrix, {Matrix2x2, Matrix3x3, Matrix4x4} from "./matrix.js";
-import {dir2, dir4} from "./direction.js";
-import {position3DFunctions} from "../math/vec3.js";
-import {position4DFunctions} from "../math/vec4.js";
-import {position2DFunctions} from "../math/vec2.js";
-import {IPosition3DFunctionSet, IPositionFunctionSet} from "../_interfaces/functions.js";
-import {IDirection, IPosition, IPosition2D, IPosition3D, IPosition4D} from "../_interfaces/vectors.js";
+import {Matrix4x4} from "./matrix4x4.js";
+import {TransformableVector2D} from "./vector2D.js";
+import {TransformableVector3D} from "./vector3D.js";
+import {TransformableVector4D} from "./vector4D.js";
+import {Direction2D, Direction3D, Direction4D} from "./direction.js";
+import {
+    compute_the_distance_from_a_2D_position_to_another_2D_position,
+    square_the_distance_from_a_2D_positions_to_another_2D_position,
+    subtract_a_2D_vector_from_another_2D_vector_to_out
+} from "../math/vec2.js";
+import {
+    compute_the_distance_from_a_3D_position_to_another_3D_position,
+    multiply_a_3D_position_by_a_4x4_matrix_to_out,
+    square_the_distance_from_a_3D_positions_to_another_3D_position,
+    subtract_a_3D_vector_from_another_3D_vector_to_out
+} from "../math/vec3.js";
+import {
+    compute_the_distance_from_a_4D_position_to_another_4D_position,
+    square_the_distance_from_a_4D_positions_to_another_4D_position,
+    subtract_a_4D_vector_from_another_4D_vector_to_out
+} from "../math/vec4.js";
+import {IPosition2D, IPosition3D, IPosition4D} from "../_interfaces/vectors.js";
 
-export abstract class Position<MatrixType extends Matrix>
-    extends TransformableVector<MatrixType>
-    implements IPosition<MatrixType>
+let this_arrays,
+    other_arrays,
+    out_arrays: Float32Array[];
+
+export class Position2D extends TransformableVector2D implements IPosition2D
 {
-    readonly _: IPositionFunctionSet;
-    protected abstract _getFunctionSet(): IPositionFunctionSet;
+    copy(out: Position2D = new Position2D()): Position2D {return out.setFrom(this)}
 
     distanceTo(other: this): number {
-        return this._.distance(
-            this.id, this.arrays,
-            other.id, other.arrays
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return compute_the_distance_from_a_2D_position_to_another_2D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1]
         );
     }
 
-    squaredDistanceTo(other: this): number {
-        return this._.distance_squared(
-            this.id, this.arrays,
-            other.id, other.arrays
+    distanceSquaredTo(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return square_the_distance_from_a_2D_positions_to_another_2D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1]
         );
     }
 
-    to(other: IPosition<MatrixType>, out: IDirection<MatrixType>): typeof out {
-        this._.subtract(
-            other.id, other.arrays,
-            this.id, this.arrays,
-            out.id, out.arrays
+    to(other: this, out: Direction2D): typeof out {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
+
+        subtract_a_2D_vector_from_another_2D_vector_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1]
         );
 
         return out;
     }
-}
-
-export class Position2D extends Position<Matrix2x2> implements IPosition2D
-{
-    protected _getFunctionSet(): IPositionFunctionSet {return position2DFunctions}
-    protected readonly _dir = dir2;
-
-    setTo(x: number, y: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-
-            x, y
-        );
-
-        return this;
-    }
-
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
 
     get xx(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[1]])}
@@ -67,34 +88,95 @@ export class Position2D extends Position<Matrix2x2> implements IPosition2D
     get yy(): Position2D {return new Position2D(this.id, [this.arrays[1], this.arrays[1]])}
 }
 
-export class Position3D extends Position<Matrix3x3> implements IPosition3D
+export class Position3D extends TransformableVector3D implements IPosition3D
 {
-    readonly _: IPosition3DFunctionSet;
-    protected _getFunctionSet(): IPosition3DFunctionSet {return position3DFunctions}
+    copy(out: Position3D = new Position3D()): Position3D {return out.setFrom(this)}
 
-    setTo(x: number, y: number, z: number): this {
-        this._.set_to(this.id, this.arrays, x, y, z);
+    distanceTo(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
 
-        return this;
+        return compute_the_distance_from_a_3D_position_to_another_3D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        );
     }
 
-    mat4mul(matrix: Matrix4x4, out: Position4D): Position4D {
-        this._.matrix_multiply_position_by_mat4(
-            this.id, this.arrays,
-            matrix.id, matrix.arrays,
-            out.id, out.arrays
+    distanceSquaredTo(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return square_the_distance_from_a_3D_positions_to_another_3D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        );
+    }
+
+    to(other: this, out: Direction3D): typeof out {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
+
+        subtract_a_3D_vector_from_another_3D_vector_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2]
         );
 
         return out;
     }
 
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
+    mat4mul(matrix: Matrix4x4, out: Position4D): Position4D {
+        this_arrays = this.arrays;
+        other_arrays = matrix.arrays;
+        out_arrays = out.arrays;
 
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
+        multiply_a_3D_position_by_a_4x4_matrix_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
+            other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[7],
+            other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
+            other_arrays[12], other_arrays[13], other_arrays[14], other_arrays[15],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
+
+        return out;
+    }
 
     get xx(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[1]])}
@@ -153,27 +235,75 @@ export class Position3D extends Position<Matrix3x3> implements IPosition3D
     set zyx(other: Position3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Position4D extends Position<Matrix4x4> implements IPosition4D
+export class Position4D extends TransformableVector4D implements IPosition4D
 {
-    protected _getFunctionSet(): IPositionFunctionSet {return position4DFunctions}
+    copy(out: Position4D = new Position4D()): Position4D {return out.setFrom(this)}
 
-    protected readonly _dir = dir4;
+    distanceTo(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
 
-    setTo(x: number, y: number, z: number, w: number): this {
-        this._.set_to(this.id, this.arrays, x, y, z, w);
+        return compute_the_distance_from_a_4D_position_to_another_4D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
 
-        return this;
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3]
+        );
     }
 
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
-    set w(w: number) {this.arrays[3][this.id] = w}
+    distanceSquaredTo(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
 
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
-    get w(): number {return this.arrays[3][this.id]}
+        return square_the_distance_from_a_4D_positions_to_another_4D_position(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3]
+        );
+    }
+
+    to(other: this, out: Direction4D): Direction4D {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
+
+        subtract_a_4D_vector_from_another_4D_vector_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
+
+        return out;
+    }
 
     get xx(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Position2D {return new Position2D(this.id, [this.arrays[0], this.arrays[1]])}

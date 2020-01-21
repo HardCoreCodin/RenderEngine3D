@@ -7,10 +7,8 @@ import {
     IColor,
     IColor3D,
     IColor4D,
-    IDirection,
     IDirection3D,
     IDirection4D,
-    IPosition,
     IPosition3D,
     IPosition4D,
     ITransformableVector,
@@ -19,12 +17,11 @@ import {
     IUV3D,
     IVector,
 } from "./vectors.js";
-import {
-    IDirectionAttribute3DFunctionSet,
-    IDirectionAttribute4DFunctionSet,
-    IPositionAttribute3DFunctionSet,
-    ITransformableAttributeFunctionSet
-} from "./functions.js";
+import {Matrix3x3} from "../accessors/matrix3x3.js";
+import {Position3D} from "../accessors/position.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
+import {VertexPositions3D, VertexPositions4D} from "../geometry/positions.js";
+import {VertexNormals4D} from "../geometry/normals.js";
 
 export interface ITriangle<VectorType extends IVector> {
     vertices: [VectorType, VectorType, VectorType]
@@ -66,20 +63,14 @@ export interface ITransformableAttribute<
     VectorType extends ITransformableVector<MatrixType> = ITransformableVector<MatrixType>>
     extends IAttribute<VectorType>
 {
-    _: ITransformableAttributeFunctionSet;
-
     matmul(matrix: MatrixType, out?: this): this;
 }
 
-export interface IPositionAttribute<
-    MatrixType extends IMatrix = IMatrix,
-    Position extends IPosition<MatrixType> = IPosition<MatrixType>>
-    extends ITransformableAttribute<MatrixType, Position> {}
+export interface IPositionAttribute<MatrixType extends IMatrix = IMatrix>
+    extends ITransformableAttribute<MatrixType> {}
 
-export interface INormalAttribute<
-    MatrixType extends IMatrix = IMatrix,
-    Direction extends IDirection<MatrixType> = IDirection<MatrixType>>
-    extends ITransformableAttribute<MatrixType, Direction> {}
+export interface INormalAttribute<MatrixType extends IMatrix = IMatrix>
+    extends ITransformableAttribute<MatrixType> {}
 
 export interface IColorAttribute<Color extends IColor = IColor>
     extends IAttribute<Color> {}
@@ -111,33 +102,20 @@ export interface IPullableVertexAttribute<
     pull(input: FaceAttributeType, vertex_faces: IVertexFaces): void;
 }
 
-export interface IVertexPositions<
-    MatrixType extends IMatrix = IMatrix,
-    Position extends IPosition<MatrixType> = IPosition<MatrixType>
-    > extends
-        IPositionAttribute<MatrixType, Position>,
-        ILoadableVertexAttribute<Position> {}
-
-export interface IVertexPositions3D<
-    MatrixType extends IMatrix3x3 = IMatrix3x3,
-    Position extends IPosition3D = IPosition3D>
-    extends IVertexPositions<MatrixType, Position>
+export interface IVertexPositions3D
+    extends ILoadableVertexAttribute
 {
-    _: IPositionAttribute3DFunctionSet;
-
-    mat4mul(matrix: IMatrix4x4, out: IVertexPositions4D): IVertexPositions4D;
+    matmul(matrix: Matrix3x3, out: VertexPositions3D): VertexPositions3D;
+    mat4mul(matrix: Matrix4x4, out: VertexPositions4D): VertexPositions4D;
 }
 
-export interface IVertexPositions4D<
-    MatrixType extends IMatrix4x4 = IMatrix4x4,
-    Position extends IPosition4D = IPosition4D>
-    extends IVertexPositions<MatrixType, Position>
-{}
+export interface IVertexPositions4D
+    extends ILoadableVertexAttribute
+{
+    matmul(matrix: Matrix4x4, out: VertexPositions4D): VertexPositions4D;
+}
 
-export interface IVertexNormals<
-    MatrixType extends IMatrix = IMatrix,
-    Direction extends IDirection<MatrixType> = IDirection<MatrixType>
-    > extends
+export interface IVertexNormals<MatrixType extends IMatrix = IMatrix> extends
         INormalAttribute<MatrixType, Direction>,
         IPullableVertexAttribute<Direction, IInputNormals> {}
 
@@ -146,9 +124,7 @@ export interface IVertexNormals3D<
     Direction extends IDirection3D = IDirection3D>
     extends IVertexNormals<MatrixType, Direction>
 {
-    _: IDirectionAttribute3DFunctionSet;
-
-    mat4mul(matrix: IMatrix4x4, out: IVertexNormals4D): IVertexNormals4D;
+    mat4mul(matrix: Matrix4x4, out: VertexNormals4D): VertexNormals4D;
     normalize(): this;
 }
 
@@ -157,8 +133,6 @@ export interface IVertexNormals4D<
     Direction extends IDirection4D = IDirection4D>
     extends IVertexNormals<MatrixType, Direction>
 {
-    _: IDirectionAttribute4DFunctionSet;
-
     normalize(): this;
 }
 
@@ -188,7 +162,6 @@ export interface IFaceAttribute<
 
 export interface IFacePositions<
     MatrixType extends IMatrix = IMatrix,
-    Position extends IPosition<MatrixType> = IPosition<MatrixType>,
     VertexPositions extends IVertexPositions<MatrixType, Position> = IVertexPositions<MatrixType, Position>>
     extends
         IPositionAttribute<MatrixType, Position>,
@@ -199,7 +172,6 @@ export interface IFacePositions4D extends IFacePositions<IMatrix4x4, IPosition4D
 
 export interface IFaceNormals<
     MatrixType extends IMatrix = IMatrix,
-    Direction extends IDirection<MatrixType> = IDirection<MatrixType>,
     VertexPositions extends IVertexPositions<MatrixType, IPosition<MatrixType>> = IVertexPositions<MatrixType, IPosition<MatrixType>>>
     extends INormalAttribute<MatrixType, Direction>, IFaceAttribute<Direction, VertexPositions> {}
 

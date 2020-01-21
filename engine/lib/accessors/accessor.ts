@@ -1,86 +1,46 @@
-import {Arrays, IMathFunctionSet, IAccessorFunctionSet} from "../_interfaces/functions.js";
-import {IAccessor, IAccessorConstructor, IMathAccessor} from "../_interfaces/accessors.js";
-
+import {IAccessor} from "../_interfaces/accessors.js";
+import {IAllocator} from "../_interfaces/allocators.js";
+import {IMathAccessor, IVector} from "../_interfaces/vectors.js";
 
 export abstract class Accessor implements IAccessor
 {
-    public id: number;
-    public arrays: Arrays;
-
-    readonly _: IAccessorFunctionSet;
-    protected abstract _getFunctionSet(): IAccessorFunctionSet;
+    id: number;
+    readonly arrays: Float32Array[];
+    readonly allocator: IAllocator<Float32Array>;
+    protected abstract _getAllocator(): IAllocator<Float32Array>;
 
     constructor(
         id?: number,
-        arrays?: Arrays
+        arrays?: Float32Array[]
     ) {
-        this._ = this._getFunctionSet();
+        this.allocator = this._getAllocator();
         if (arrays) {
             this.arrays = arrays;
             this.id = id;
         } else {
-            this.arrays = Array<Float32Array>(this._.allocator.dim) as Arrays;
-            this.id = this._.allocator.allocate(this.arrays);
+            this.arrays = Array<Float32Array>(this.allocator.dim);
+            this.id = this.allocator.allocate(this.arrays);
         }
     }
 
-    setTo(...values: number[]): this {
-        this._.set_to(
-            this.id, this.arrays,
-            ...values
-        );
+    abstract setTo(...values: number[]): this;
+    abstract setAllTo(value: number): this;
+    abstract setFrom(other: IAccessor): IAccessor;
+    abstract equals(other: IAccessor): boolean;
+    abstract copy(out?: IAccessor): IAccessor;
 
-        return this;
-    }
-
-    setAllTo(value: number): this {
-        this._.set_all_to(
-            this.id, this.arrays,
-            value
-        );
-
-        return this;
-    }
-
-    setFrom(other: IAccessor): this {
-        this._.set_from(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
-
-        return this;
-    }
-
-    readonly is = (other: IAccessor): boolean =>
-        this.id === other.id && (
-            Object.is(this.arrays, other.arrays) ||
-            this.arrays.every(
-                (array, index) => Object.is(array, other.arrays[index])
+    is(other: IAccessor): boolean {
+        return Object.is(this, other) || (
+            this.id === other.id && (
+                Object.is(this.arrays, other.arrays) ||
+                this.arrays.every(
+                    (array, index) => Object.is(array, other.arrays[index])
+                )
             )
         );
-
-    readonly equals = (other: IAccessor): boolean =>
-        other.is(this) ||
-        this._.equals(
-            other.id, other.arrays,
-            this.id, this.arrays
-        );
-
-    copy(out: this = this._new()): this {
-
-        this._.set_from(
-            out.id, out.arrays,
-            this.id, this.arrays
-        );
-
-        return out;
     }
 
-    _new(): this {
-        return new (this.constructor as IAccessorConstructor<this>)();
-    }
-
-    toArray(array: Float32Array = new Float32Array(this._.allocator.dim)): Float32Array {
+    toArray(array: Float32Array = new Float32Array(this.allocator.dim)): Float32Array {
         const id = this.id;
         for (const [i, a] of this.arrays.entries())
             array[i] = a[id];
@@ -89,114 +49,95 @@ export abstract class Accessor implements IAccessor
     }
 }
 
-export abstract class MathAccessor extends Accessor implements IMathAccessor
-{
-    readonly _: IMathFunctionSet;
-    protected abstract _getFunctionSet(): IMathFunctionSet;
+export abstract class MathAccessor extends Accessor implements IMathAccessor {
+    protected abstract _add_number_in_place(num: number): void;
+    protected abstract _add_other_in_place(other: IMathAccessor): void;
+    protected abstract _add_number_to_out(v: number, out: IMathAccessor): void;
+    protected abstract _add_other_to_out(other: IMathAccessor, out: IMathAccessor): void;
 
-    add(other: number, out?: IMathAccessor): this|typeof out;
+    protected abstract _sub_number_in_place(num: number): void;
+    protected abstract _sub_other_in_place(other: IMathAccessor): void;
+    protected abstract _sub_number_to_out(num: number, out: IMathAccessor): void;
+    protected abstract _sub_other_to_out(other: IMathAccessor, out: IMathAccessor): void;
+
+    protected abstract _mul_number_in_place(num: number): void;
+    protected abstract _mul_other_in_place(other: this): void;
+    protected abstract _mul_number_to_out(num: number, out: this): void;
+    protected abstract _mul_other_to_out(other: this, out: this): void;
+
+    protected abstract _div_number_in_place(num: number): void;
+    protected abstract _div_number_to_out(num: number, out: this): void;
+
+    add(num: number, out?: IMathAccessor): this|typeof out;
     add(other: IMathAccessor, out?: IMathAccessor): this|typeof out;
-    add(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out {
+    add(other_or_num: IMathAccessor|number, out?: IMathAccessor): this|typeof out {
         if (out && !out.is(this)) {
-            if (typeof other === "number")
-                this._.broadcast_add(
-                    this.id, this.arrays,
-                    other,
-                    out.id, out.arrays
-                );
-            else
-                this._.add(
-                    this.id, this.arrays,
-                    other.id, other.arrays,
-                    out.id, out.arrays
-                );
+            if (typeof other_or_num === "number") {
+                if (other_or_num !== 0)
+                    this._add_number_to_out(other_or_num, out);
+            } else
+                this._add_other_to_out(other_or_num, out);
 
             return out;
         }
 
-        if (typeof other === "number")
-            this._.broadcast_add_in_place(
-                this.id, this.arrays,
-                other,
-            );
+        if (typeof other_or_num === "number")
+            this._add_number_in_place(other_or_num);
         else
-            this._.add_in_place(
-                this.id, this.arrays,
-                other.id, other.arrays
-            );
+            this._add_other_in_place(other_or_num);
 
         return this;
     }
 
-    sub(other: number, out?: IMathAccessor): this|typeof out;
+    sub(num: number, out?: IMathAccessor): this|typeof out;
     sub(other: IMathAccessor, out?: IMathAccessor): this|typeof out;
-    sub(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out {
-        if (out) {
-            if (out.is(this) || out.equals(this))
-                this._.set_all_to(
-                    this.id, this.arrays,
-                    0
-                );
-            else if (typeof other === "number")
-                this._.broadcast_subtract(
-                    this.id, this.arrays,
-                    other,
-                    out.id, out.arrays
-                );
-            else
-                this._.subtract(
-                    this.id, this.arrays,
-                    other.id, other.arrays,
-                    out.id, out.arrays
-                );
+    sub(other_or_num: IMathAccessor|number, out?: IMathAccessor): this|typeof out {
+        if (out && !out.is(this)) {
+            if (typeof other_or_num === "number") {
+                if (other_or_num !== 0)
+                    this._sub_number_to_out(other_or_num, out);
+            } else {
+                if (other_or_num.is(this) || other_or_num.equals(this))
+                    out.setAllTo(0);
+                else
+                    this._sub_other_to_out(other_or_num, out);
+            }
 
             return out;
         }
 
-        if (typeof other === "number")
-            this._.broadcast_subtract_in_place(
-                this.id, this.arrays,
-                other,
-            );
-        else
-            this._.subtract_in_place(
-                this.id, this.arrays,
-                other.id, other.arrays
-            );
+        if (typeof other_or_num === "number") {
+            if (other_or_num !== 0)
+                this._sub_number_in_place(other_or_num);
+        } else {
+            if (other_or_num.is(this) || other_or_num.equals(this))
+                this.setAllTo(0);
+            else
+                this._sub_other_in_place(other_or_num);
+        }
 
         return this;
     }
 
-    mul(other: number, out?: this): this;
+    mul(num: number, out?: this): this;
     mul(other: this, out?: this): this;
-    mul(other: this|number, out?: this): this {
+    mul(other_or_num: this|number, out?: this): this {
         if (out && !out.is(this)) {
-            if (typeof other === "number")
-                this._.scale(
-                    this.id, this.arrays,
-                    other,
-                    out.id, out.arrays,
-                );
-            else
-                this._.multiply(
-                    this.id, this.arrays,
-                    other.id, other.arrays,
-                    out.id, out.arrays
-                );
+            if (typeof other_or_num === "number") {
+                if (other_or_num === 0)
+                    this.setAllTo(0);
+                else
+                    this._mul_number_to_out(other_or_num, out);
+            } else
+                this._mul_other_to_out(other_or_num, out);
 
             return out;
         }
 
-        if (typeof other === "number")
-            this._.scale_in_place(
-                this.id, this.arrays,
-                other
-            );
+        if (typeof other_or_num === "number")
+            this._mul_number_in_place(other_or_num);
         else
-            this._.multiply_in_place(
-                this.id, this.arrays,
-                other.id, other.arrays
-            );
+            this._mul_other_in_place(other_or_num);
 
         return this;
     }
@@ -206,39 +147,21 @@ export abstract class MathAccessor extends Accessor implements IMathAccessor
             throw `Division by zero!`;
 
         if (out && !out.is(this)) {
-            if (denominator !== 1)
-                this._.divide(
-                    this.id, this.arrays,
-                    denominator,
-                    out.id, out.arrays
-                );
+            if (denominator === 1)
+                return out;
+
+            this._div_number_to_out(denominator, out);
 
             return out;
         }
 
         if (denominator !== 1)
-            this._.divide_in_place(
-                this.id, this.arrays,
-                denominator
-            );
+            this._div_number_in_place(denominator);
 
         return this;
     }
+}
 
-    invert(out?: this): this {
-        if (out && !out.is(this)) {
-            this._.invert(
-                this.id, this.arrays,
-                out.id, this.arrays
-            );
-
-            return out;
-        }
-
-        this._.invert_in_place(
-            this.id, this.arrays
-        );
-
-        return this;
-    }
+export abstract class Vector extends MathAccessor implements IVector {
+    abstract lerp(to: this, by: number, out: this): this;
 }

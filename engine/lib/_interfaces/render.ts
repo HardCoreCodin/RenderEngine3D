@@ -1,5 +1,5 @@
 import {INode3D, IScene} from "./nodes.js";
-import {IColor4D, IVector2D} from "./vectors.js";
+import {IColor4D, I2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
@@ -9,7 +9,7 @@ export interface ISize {
     height: number
 }
 
-export interface IRectangle extends ISize, IVector2D {
+export interface IRectangle extends ISize, I2D {
     setPosition(x: number, y: number): void;
     resize(width: number, height: number): void;
     reset(width: number, height: number, x: number, y: number): void
@@ -57,7 +57,7 @@ export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) =>
 
 export interface IMaterial<
     Context extends RenderingContext,
-    RenderPipelineType extends IRenderPipeline<Context, ICamera>>
+    RenderPipelineType extends IRenderPipeline<Context, ICamera> = IRenderPipeline<Context, ICamera>>
 {
     readonly id: number;
     readonly scene: IScene<Context>;
@@ -104,7 +104,7 @@ export interface IRenderPipeline<
 
     delete(): void;
     render(viewport: IViewport<Context, CameraType, IScene<Context, CameraType>>): void;
-    resetRenderTarget(size: ISize, position: IVector2D): void;
+    resetRenderTarget(size: ISize, position: I2D): void;
 
     on_mesh_added(mesh: IMesh): void;
     on_mesh_removed(mesh: IMesh): void;
@@ -119,13 +119,13 @@ export interface ICanvas2DRenderPipeline<CameraType extends ICamera,
     SceneType extends IScene<CanvasRenderingContext2D, CameraType>>
     extends IRenderPipeline<CanvasRenderingContext2D, CameraType>
 {
-    resetRenderTarget(size: ISize, position: IVector2D): void;
+    resetRenderTarget(size: ISize, position: I2D): void;
 }
 
 export interface IViewport<
-    Context extends RenderingContext,
-    CameraType extends ICamera,
-    SceneType extends IScene<Context, CameraType>,
+    Context extends RenderingContext = RenderingContext,
+    CameraType extends ICamera = ICamera,
+    SceneType extends IScene<Context, CameraType> = IScene<Context, CameraType>,
     RenderPipelineType extends IRenderPipeline<Context, CameraType> = IRenderPipeline<Context, CameraType>>
     extends IRectangle
 {
@@ -171,7 +171,7 @@ export interface IScreen<
     resize(width: number, height: number): void;
     setPosition(x: number, y: number): void;
 
-    addViewport(camera: CameraType, size?: ISize, position?: IVector2D): ViewportType;
+    addViewport(camera: CameraType, size?: ISize, position?: I2D): ViewportType;
     removeViewport(viewport: ViewportType): void;
 
     registerViewport(viewport: ViewportType): void;

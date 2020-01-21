@@ -1,4 +1,4 @@
-import {Arrays, IAccessorFunctionSet, IMathFunctionSet} from "./functions.js";
+import {IAllocator} from "./allocators.js";
 
 export type IAccessorConstructor<Accessor extends IAccessor> = new (
     id?: number,
@@ -6,29 +6,16 @@ export type IAccessorConstructor<Accessor extends IAccessor> = new (
 ) => Accessor;
 
 export interface IAccessor {
-    _: IAccessorFunctionSet,
-
     id: number;
-    arrays: Arrays;
+    readonly arrays: Float32Array[];
+    readonly allocator: IAllocator<Float32Array>;
 
     setTo(...values: number[]): this;
     setAllTo(value: number): this;
-    setFrom(other: this): this;
+    setFrom(other: IAccessor): IAccessor;
 
     is(other: IAccessor): boolean;
     equals(other: IAccessor): boolean;
-    copy(out?: this): this;
+    copy(out?: IAccessor): IAccessor;
     toArray(array: Float32Array): Float32Array;
-    _new(): this;
-}
-
-export interface IMathAccessor extends IAccessor
-{
-    _: IMathFunctionSet,
-
-    add(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out;
-    sub(other: IMathAccessor|number, out?: IMathAccessor): this|typeof out;
-    mul(other: this|number, out?: this): this;
-    div(denominator: number): this;
-    invert(out?: this): this;
 }

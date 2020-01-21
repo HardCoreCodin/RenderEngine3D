@@ -1,6 +1,5 @@
 import GLProgram from "../program.js";
 import {GLScene} from "../render/engine.js";
-import {GLViewport} from "../display/viewport.js";
 import {GLMeshBuffers} from "../render/mesh_buffers.js";
 import {GLRenderPipeline} from "../render/pipeline.js";
 

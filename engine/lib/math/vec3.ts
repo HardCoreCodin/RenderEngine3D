@@ -1,23 +1,15 @@
-import {Float16, Float3, Float4, Float9} from "../../types.js";
-import {PRECISION_DIGITS} from "../../constants.js";
-import {
-    IDirection3DFunctionSet,
-    IDirectionAttribute3DFunctionSet,
-    IPosition3DFunctionSet,
-    IPositionAttribute3DFunctionSet,
-    ITransformableAttributeFunctionSet,
-    ITransformableVectorFunctionSet,
-    IVectorFunctionSet
-} from "../_interfaces/functions.js";
-import {VECTOR_3D_ALLOCATOR} from "../memory/allocators.js";
-
+const sqrt = Math.sqrt;
+const PRECISION_DIGITS = 3;
 let t_x,
     t_y,
     t_z,
     t_n: number;
 
-const set_to = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const set_the_components_of_a_3D_vector = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
     x: number,
     y: number,
@@ -28,25 +20,43 @@ const set_to = (
     Za[a] = z;
 };
 
-const set_all_to = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const set_all_components_of_a_3D_vector_to_a_number = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     value: number
 ): void => {
     Xa[a] = Ya[a] = Za[a] = value;
 };
 
-const set_from = (
-    a: number, [Xa, Ya, Za]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const set_a_3D_vector_from_another_3D_vector = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ): void => {
     Xa[a] = Xo[o];
     Ya[a] = Yo[o];
     Za[a] = Zo[o];
 };
 
-const equals = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const check_if_two_3D_vectrs_are_equal = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : boolean =>
     Xa[a].toFixed(PRECISION_DIGITS) ===
     Xb[b].toFixed(PRECISION_DIGITS) &&
@@ -57,99 +67,170 @@ const equals = (
     Za[a].toFixed(PRECISION_DIGITS) ===
     Zb[b].toFixed(PRECISION_DIGITS);
 
-const invert = (
-    a: number, [Xa, Ya, Za]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const negate_a_3D_direction_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ): void => {
     Xo[o] = -Xa[a];
     Yo[o] = -Ya[a];
     Zo[o] = -Za[a];
 };
 
-const invert_in_place = (
-    a: number, [Xa, Ya, Za]: Float3
+export const negate_a_3D_direction_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array
 ): void => {
     Xa[a] = -Xa[a];
     Ya[a] = -Ya[a];
     Za[a] = -Za[a];
 };
 
-const length = (
-    a: number, [Xa, Ya, Za]: Float3
-) : number => Math.hypot(
-    Xa[a],
-    Ya[a],
-    Za[a]
-);
+export const compute_the_length_of_a_3D_direction = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array
+) : number => sqrt((
+    Xa[a] ** 2 +
+    Ya[a] ** 2 +
+    Za[a] ** 2
+));
 
-const distance = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
-) : number => Math.hypot(
-    (Xb[b] - Xa[a]),
-    (Yb[b] - Ya[a]),
-    (Zb[b] - Za[a])
-);
+export const compute_the_distance_from_a_3D_position_to_another_3D_position = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-const length_squared = (
-    a: number, [Xa, Ya, Za]: Float3
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
+) : number => sqrt((
+    (Xb[b] - Xa[a]) ** 2 +
+    (Yb[b] - Ya[a]) ** 2 +
+    (Zb[b] - Za[a]) ** 2
+));
+
+export const square_the_length_of_a_3D_direction = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array
 ) : number =>
     Xa[a] ** 2 +
     Ya[a] ** 2 +
     Za[a] ** 2;
 
-const distance_squared = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const square_the_distance_from_a_3D_positions_to_another_3D_position = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : number => (
     (Xb[b] - Xa[a]) ** 2 +
     (Yb[b] - Ya[a]) ** 2 +
     (Zb[b] - Za[a]) ** 2
 );
 
-const lerp = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3,
+export const linearly_interpolate_from_a_3D_vectors_to_another_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-    t: number
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    t: number,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
 ) : void => {
     Xo[o] = (1-t)*Xa[a] + t*(Xb[b]);
     Yo[o] = (1-t)*Ya[a] + t*(Yb[b]);
     Zo[o] = (1-t)*Za[a] + t*(Zb[b]);
 };
 
-const add = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const add_a_3D_vector_to_another_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] + Xb[b];
     Yo[o] = Ya[a] + Yb[b];
     Zo[o] = Za[a] + Zb[b];
 };
 
-const add_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const add_a_3D_vector_to_another_3D_vector_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : void => {
     Xa[a] += Xb[b];
     Ya[a] += Yb[b];
     Za[a] += Zb[b];
 };
 
-const broadcast_add = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const add_a_number_to_a_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number,
-    o: number, [Xo, Yo, Zo]: Float3
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] + b;
     Yo[o] = Ya[a] + b;
     Zo[o] = Za[a] + b;
 };
 
-const broadcast_add_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const add_a_number_to_a_3D_vector_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number
 ) : void => {
     Xa[a] += b;
@@ -157,37 +238,67 @@ const broadcast_add_in_place = (
     Za[a] += b;
 };
 
-const subtract = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const subtract_a_3D_vector_from_another_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] - Xb[b];
     Yo[o] = Ya[a] - Yb[b];
     Zo[o] = Za[a] - Zb[b];
 };
 
-const subtract_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const subtract_a_3D_vector_from_another_3D_vector_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : void => {
     Xa[a] -= Xb[b];
     Ya[a] -= Yb[b];
     Za[a] -= Zb[b];
 };
 
-const broadcast_subtract = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const subtract_a_number_from_a_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number,
-    o: number, [Xo, Yo, Zo]: Float3
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] - b;
     Yo[o] = Ya[a] - b;
     Zo[o] = Za[a] - b;
 };
 
-const broadcast_subtract_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const subtract_a_number_from_a_3D_vector_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number
 ) : void => {
     Xa[a] -= b;
@@ -195,37 +306,67 @@ const broadcast_subtract_in_place = (
     Za[a] -= b;
 };
 
-const multiply = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const multiply_a_3D_vector_by_another_3D_vector_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] * Xb[b];
     Yo[o] = Ya[a] * Yb[b];
     Zo[o] = Za[a] * Zb[b];
 };
 
-const multiply_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const multiply_a_3D_vector_by_another_3D_vector_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : void => {
     Xa[a] *= Xb[b];
     Ya[a] *= Yb[b];
     Za[a] *= Zb[b];
 };
 
-const divide = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const divide_a_3D_vector_by_a_number_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number,
-    o: number, [Xo, Yo, Zo]: Float3
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] / b;
     Yo[o] = Ya[a] / b;
     Zo[o] = Za[a] / b;
 };
 
-const divide_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const divide_a_3D_vector_by_a_number_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number
 ) : void => {
     Xa[a] /= b;
@@ -233,18 +374,30 @@ const divide_in_place = (
     Za[a] /= b;
 };
 
-const scale = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const multiply_a_3D_vector_by_a_number_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number,
-    o: number, [Xo, Yo, Zo]: Float3
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a] * b;
     Yo[o] = Ya[a] * b;
     Zo[o] = Za[a] * b;
 };
 
-const scale_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
+export const multiply_a_3D_vector_by_a_number_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
     b: number
 ) : void => {
     Xa[a] *= b;
@@ -252,40 +405,56 @@ const scale_in_place = (
     Za[a] *= b;
 };
 
-const normalize = (
-    a: number, [Xa, Ya, Za]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const normalize_a_3D_direction_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
-    t_n = 1 / Math.hypot(
-        Xa[a],
-        Ya[a],
-        Za[a]
-    );
+    t_n = Xa[a]**2 + Ya[a]**2 + Za[a]**2;
+    if (t_n === 1)
+        return;
+
+    t_n = 1 / sqrt(t_n);
 
     Xo[o] = Xa[a] * t_n;
     Yo[o] = Ya[a] * t_n;
     Zo[o] = Za[a] * t_n;
 };
 
-const normalize_in_place = (
-    a: number, [Xa, Ya, Za]: Float3
+export const normalize_a_3D_direction_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array
 ) : void => {
-    t_n = 1 / Math.hypot(
-        Xa[a],
-        Ya[a],
-        Za[a]
-    );
+    t_n = Xa[a]**2 + Ya[a]**2 + Za[a]**2;
+    if (t_n === 1)
+        return;
+
+    t_n = 1 / sqrt(t_n);
 
     Xa[a] *= t_n;
     Ya[a] *= t_n;
     Za[a] *= t_n;
 };
 
-const normalize_all_in_place = (
-    [X, Y, Z]: Float3
+export const normalize_all_3D_directions_in_place = (
+    X: Float32Array,
+    Y: Float32Array,
+    Z: Float32Array
 ) : void => {
     for (let i = 0; i < X.length; i++) {
-        t_n = 1 / Math.hypot(X[i], Y[i], Z[i]);
+        t_n = X[i]**2 + Y[i]**2 + Z[i]**2;
+        if (t_n === 1)
+            continue;
+
+        t_n = 1 / sqrt(t_n);
 
         X[i] *= t_n;
         Y[i] *= t_n;
@@ -293,18 +462,56 @@ const normalize_all_in_place = (
     }
 };
 
-const dot = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const normalize_some_3D_directions_in_place = (
+    X: Float32Array,
+    Y: Float32Array,
+    Z: Float32Array,
+
+    include: Uint8Array
+) : void => {
+    for (let i = 0; i < X.length; i++) if (include[i]) {
+        t_n = X[i]**2 + Y[i]**2 + Z[i]**2;
+        if (t_n === 1)
+            continue;
+
+        t_n = 1 / sqrt(t_n);
+
+        X[i] *= t_n;
+        Y[i] *= t_n;
+        Z[i] *= t_n;
+    }
+};
+
+export const dot_a_3D_direction_with_another_3D_direction = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : number =>
     Xa[a] * Xb[b] +
     Ya[a] * Yb[b] +
     Za[a] * Zb[b];
 
-export const reflect = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const reflect_a_3D_vector_around_a_3D_direction_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ): void => {
     t_n = Xa[a] * Xb[b] +
           Ya[a] * Yb[b] +
@@ -316,9 +523,16 @@ export const reflect = (
     Zo[o] = Zb[b] * t_n - Za[a];
 };
 
-export const reflect_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const reflect_a_3D_vector_around_a_3D_direction_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ): void => {
     t_n = Xa[a] * Xb[b] +
           Ya[a] * Yb[b] +
@@ -330,19 +544,37 @@ export const reflect_in_place = (
     Za[a] = Zb[b] * t_n - Za[a];
 };
 
-export const cross = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3,
-    o: number, [Xo, Yo, Zo]: Float3
+export const cross_a_3D_direction_with_another_3D_direction_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Ya[a]*Zb[b] - Za[a]*Yb[b];
     Yo[o] = Za[a]*Xb[b] - Xa[a]*Zb[b];
     Zo[o] = Xa[a]*Yb[b] - Ya[a]*Xb[b];
 };
 
-export const cross_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    b: number, [Xb, Yb, Zb]: Float3
+export const cross_a_3D_direction_with_another_3D_direction_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    b: number,
+    Xb: Float32Array,
+    Yb: Float32Array,
+    Zb: Float32Array
 ) : void => {
     t_x = Xa[a];
     t_y = Ya[a];
@@ -353,29 +585,44 @@ export const cross_in_place = (
     Za[a] = t_x*Yb[b] - t_y*Xb[b];
 };
 
-const matrix_multiply = (
-    a: number, [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ]: Float9,
-    o: number, [Xo, Yo, Zo]: Float3
+export const multiply_a_3D_vector_by_a_3x3_matrix_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ) : void => {
     Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m];
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
 };
 
-const matrix_multiply_position_by_mat4 = (
-    a: number, [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    o: number, [Xo, Yo, Zo, Wo]: Float4
+export const multiply_a_3D_position_by_a_4x4_matrix_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
     Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m] + M41[m];
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m] + M42[m];
@@ -383,15 +630,23 @@ const matrix_multiply_position_by_mat4 = (
     Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m] + M44[m];
 };
 
-const matrix_multiply_direction_by_mat4 = (
-    a: number, [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    o: number, [Xo, Yo, Zo, Wo]: Float4
+export const multiply_a_3D_direction_by_a_4x4_matrix_to_out = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
     Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m];
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
@@ -399,14 +654,19 @@ const matrix_multiply_direction_by_mat4 = (
     Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m];
 };
 
-const matrix_multiply_all = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ]: Float9,
-    [Xo, Yo, Zo]: Float3
+export const multiply_all_3D_vectors_by_a_3x3_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
 ): void => {
     for (let i = 0; i < Xa.length; i++) {
         Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
@@ -415,18 +675,25 @@ const matrix_multiply_all = (
     }
 };
 
-export const matrix_multiply_some_positions_by_mat4 = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    flags: Uint8Array,
-    [Xo, Yo, Zo, Wo]: Float4
+export const multiply_some_3D_positions_by_a_4x4_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    include: Uint8Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
-    for (let i = 0; i < Xa.length; i++) if (flags[i]) {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
         Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
         Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
         Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
@@ -434,15 +701,21 @@ export const matrix_multiply_some_positions_by_mat4 = (
     }
 };
 
-export const matrix_multiply_all_positions_by_mat4 = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    [Xo, Yo, Zo, Wo]: Float4
+export const multiply_all_3D_positions_by_a_4x4_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
     for (let i = 0; i < Xa.length; i++) {
         Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
@@ -452,15 +725,21 @@ export const matrix_multiply_all_positions_by_mat4 = (
     }
 };
 
-export const matrix_multiply_all_directions_by_mat4 = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    [Xo, Yo, Zo, Wo]: Float4
+export const multiply_all_3D_directions_by_a_4x4_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
     for (let i = 0; i < Xa.length; i++) {
         Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
@@ -469,19 +748,25 @@ export const matrix_multiply_all_directions_by_mat4 = (
         Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
     }
 };
+export const multiply_some_3D_directions_by_a_4x4_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-export const matrix_multiply_some_directions_by_mat4 = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13, M14,
-        M21, M22, M23, M24,
-        M31, M32, M33, M34,
-        M41, M42, M43, M44
-    ]: Float16,
-    flags: Uint8Array,
-    [Xo, Yo, Zo, Wo]: Float4
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
+
+    include: Uint8Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
 ) : void => {
-    for (let i = 0; i < Xa.length; i++) if (flags[i]) {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
         Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
         Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
         Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
@@ -489,13 +774,16 @@ export const matrix_multiply_some_directions_by_mat4 = (
     }
 };
 
-const matrix_multiply_in_place = (
-    a: number, [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ]: Float9
+export const multiply_a_3D_vector_by_a_3x3_matrix_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array
 ) : void => {
     t_x = Xa[a];
     t_y = Ya[a];
@@ -506,13 +794,15 @@ const matrix_multiply_in_place = (
     Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
 };
 
-const matrix_multiply_in_place_all = (
-    [Xa, Ya, Za]: Float3,
-    m: number, [
-        M11, M12, M13,
-        M21, M22, M23,
-        M31, M32, M33
-    ]: Float9
+export const multiply_all_3D_vectors_by_a_3x3_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array
 ): void => {
     for (let i = 0; i < Xa.length; i++) {
         t_x = Xa[i];
@@ -525,94 +815,25 @@ const matrix_multiply_in_place_all = (
     }
 };
 
-export const transformableAttribute3DFunctions: ITransformableAttributeFunctionSet = {
-    matrix_multiply_all,
-    matrix_multiply_in_place_all
-};
+export const multiply_some_3D_vectors_by_a_3x3_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-export const positionAttribute3DFunctions: IPositionAttribute3DFunctionSet = {
-    ...transformableAttribute3DFunctions,
+    include: Uint8Array,
 
-    matrix_multiply_some_positions_by_mat4,
-    matrix_multiply_all_positions_by_mat4
-};
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array
+): void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
 
-export const directionAttribute3DFunctions: IDirectionAttribute3DFunctionSet = {
-    ...transformableAttribute3DFunctions,
-
-    matrix_multiply_some_directions_by_mat4,
-    matrix_multiply_all_directions_by_mat4,
-    normalize_all_in_place
-};
-
-export const base3DFunctions: IVectorFunctionSet = {
-    allocator: VECTOR_3D_ALLOCATOR,
-
-    set_to,
-    set_from,
-    set_all_to,
-
-    equals,
-
-    add,
-    add_in_place,
-
-    subtract,
-    subtract_in_place,
-
-    broadcast_add,
-    broadcast_add_in_place,
-
-    broadcast_subtract,
-    broadcast_subtract_in_place,
-
-    multiply,
-    multiply_in_place,
-
-    divide,
-    divide_in_place,
-
-    scale,
-    scale_in_place,
-
-    invert,
-    invert_in_place,
-
-    lerp
-};
-
-export const vector3DFunctions: ITransformableVectorFunctionSet = {
-    ...base3DFunctions,
-
-    matrix_multiply,
-    matrix_multiply_in_place,
-};
-
-export const position3DFunctions: IPosition3DFunctionSet = {
-    ...vector3DFunctions,
-
-    distance,
-    distance_squared,
-
-    matrix_multiply_position_by_mat4
-};
-
-export const direction3DFunctions: IDirection3DFunctionSet = {
-    ...vector3DFunctions,
-
-    length,
-    length_squared,
-
-    normalize,
-    normalize_in_place,
-
-    reflect,
-    reflect_in_place,
-
-    dot,
-
-    cross,
-    cross_in_place,
-
-    matrix_multiply_direction_by_mat4
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
+    }
 };

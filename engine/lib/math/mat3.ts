@@ -1,18 +1,14 @@
-import {PRECISION_DIGITS} from "../../constants.js";
-import {Float9} from "../../types.js";
-import {IMatrix3x3FunctionSet, IMatrixRotationFunctionSet} from "../_interfaces/functions.js";
-import {MATRIX_3X3_ALLOCATOR} from "../memory/allocators.js";
+export const PRECISION_DIGITS = 3;
 
 let t11, t12, t13,
     t21, t22, t23,
     t31, t32, t33: number;
 
-const set_to = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_the_components_of_a_3x3_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     m11: number, m12: number, m13: number,
     m21: number, m22: number, m23: number,
@@ -23,12 +19,11 @@ const set_to = (
     M31a[a] = m31;  M32a[a] = m32;  M33a[a] = m33;
 };
 
-const set_all_to = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_all_components_of_a_3x3_matrix_to_a_number = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     value: number
 ): void => {
@@ -37,43 +32,42 @@ const set_all_to = (
     M31a[a] = M32a[a] = M33a[a] = value;
 };
 
-const set_from = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_from_another_3x3_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ): void => {
     M11a[a] = M11o[o];  M12a[a] = M12o[o];  M13a[a] = M13o[o];
     M21a[a] = M21o[o];  M22a[a] = M22o[o];  M23a[a] = M23o[o];
     M31a[a] = M31o[o];  M32a[a] = M32o[o];  M33a[a] = M33o[o];
 };
 
-const set_to_identity = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9
+export const set_a_3x3_matrix_to_the_identity_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 ) : void => {
     M11a[a] = M22a[a] = M33a[a] = 1;
     M12a[a] = M13a[a] = M21a[a] = M23a[a] = M31a[a] = M32a[a] = 0;
 };
 
-const set_to_cross_product = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_to_a_cross_product_matrix_for_a_3D_direction_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    v: number, [X, Y, Z]
+    v: number,
+    X: Float32Array,
+    Y: Float32Array,
+    Z: Float32Array
 ) : void => {
     M11a[a] = M22a[a] = M33a[a] = 0;
     M23a[a] = X[v];  M32a[a] = -X[v];
@@ -81,33 +75,37 @@ const set_to_cross_product = (
     M12a[a] = Z[v];  M21a[a] = -Z[v];
 };
 
-const set_to_outer_product = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_to_an_outer_product_matrix_for_two_3D_directions_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    v1: number, [X1, Y1, Z1],
-    v2: number, [X2, Y2, Z2]
+    v1: number,
+    X1: Float32Array,
+    Y1: Float32Array,
+    Z1: Float32Array,
+
+    v2: number,
+    X2: Float32Array,
+    Y2: Float32Array,
+    Z2: Float32Array
 ) : void => {
     M11a[a] = X1[v1] * X2[v2];  M12a[a] = Y1[v1] * X2[v2];  M13a[a] = Z1[v1] * X2[v2];
     M21a[a] = X1[v1] * Y2[v2];  M22a[a] = Y1[v1] * Y2[v2];  M23a[a] = Z1[v1] * Y2[v2];
     M31a[a] = X1[v1] * Z2[v2];  M32a[a] = Y1[v1] * Z2[v2];  M33a[a] = Z1[v1] * Z2[v2];
 };
 
-const invert = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const invert_a_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M13o[o] = M13a[a];  M11o[o] = M11a[a];
     M23o[o] = M23a[a];  M22o[o] = M22a[a];
@@ -121,12 +119,11 @@ const invert = (
     M33o[o] = 1;
 };
 
-const invert_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9
+export const invert_a_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 ) : void => {
     // Store the rotation and translation portions of the matrix in temporary variables:
     t11 = M11a[a];  t21 = M21a[a];  t31 = M31a[a];
@@ -142,47 +139,42 @@ const invert_in_place = (
     M33a[a] = 1;
 };
 
-const transpose = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const transpose_a_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a];  M21o[o] = M12a[a];  M31o[o] = M13a[a];
     M12o[o] = M21a[a];  M22o[o] = M22a[a];  M32o[o] = M23a[a];
     M13o[o] = M31a[a];  M23o[o] = M32a[a];  M33o[o] = M33a[a];
 };
 
-const transpose_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9
+export const transpose_a_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 ) : void => {[
     M12a[a], M13a[a], M21a[a], M23a[a], M31a[a], M32a[a]] = [
     M21a[a], M31a[a], M12a[a], M32a[a], M13a[a], M23a[a]]
 };
 
-const equals = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const check_if_two_3x3_matrices_are_equal = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array
 ) : boolean =>
     M11a[a].toFixed(PRECISION_DIGITS) ===
     M11b[b].toFixed(PRECISION_DIGITS) &&
@@ -213,85 +205,76 @@ const equals = (
     M33a[a].toFixed(PRECISION_DIGITS) ===
     M33b[b].toFixed(PRECISION_DIGITS);
 
-const is_identity = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9
+export const check_if_a_3x3_matrix_is_the_identity_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 ) : boolean =>
     M11a[a] === 1  &&  M21a[a] === 0  &&  M31a[a] === 0  &&
     M12a[a] === 0  &&  M22a[a] === 1  &&  M32a[a] === 0  &&
     M13a[a] === 0  &&  M23a[a] === 0  &&  M33a[a] === 1;
 
-const add = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const add_a_3x3_matrix_to_another_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] + M11b[b];  M21o[o] = M21a[a] + M21b[b];  M31o[o] = M31a[a] + M31b[b];
     M12o[o] = M12a[a] + M12b[b];  M22o[o] = M22a[a] + M22b[b];  M32o[o] = M32a[a] + M32b[b];
     M13o[o] = M13a[a] + M13b[b];  M23o[o] = M23a[a] + M23b[b];  M33o[o] = M33a[a] + M33b[b];
 };
 
-const add_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const add_a_3x3_matrix_to_another_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array
 ) : void => {
     M11a[a] += M11b[b];  M21a[a] += M21b[b];  M31a[a] += M31b[b];
     M12a[a] += M12b[b];  M22a[a] += M22b[b];  M32a[a] += M32b[b];
     M13a[a] += M13b[b];  M23a[a] += M23b[b];  M33a[a] += M33b[b];
 };
 
-const broadcast_add = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const add_a_number_to_a_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] + b;  M21o[o] = M21a[a] + b;  M31o[o] = M31a[a] + b;
     M12o[o] = M12a[a] + b;  M22o[o] = M22a[a] + b;  M32o[o] = M32a[a] + b;
     M13o[o] = M13a[a] + b;  M23o[o] = M23a[a] + b;  M33o[o] = M33a[a] + b;
 };
 
-const broadcast_add_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const add_a_number_to_a_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number
 ) : void => {
@@ -300,74 +283,66 @@ const broadcast_add_in_place = (
     M13a[a] += b;  M23a[a] += b;  M33a[a] += b;
 };
 
-const subtract = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const subtract_a_3x3_matrix_from_another_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] - M11b[b];  M21o[o] = M21a[a] - M21b[b];  M31o[o] = M31a[a] - M31b[b];
     M12o[o] = M12a[a] - M12b[b];  M22o[o] = M22a[a] - M22b[b];  M32o[o] = M32a[a] - M32b[b];
     M13o[o] = M13a[a] - M13b[b];  M23o[o] = M23a[a] - M23b[b];  M33o[o] = M33a[a] - M33b[b];
 };
 
-const subtract_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const subtract_a_3x3_matrix_from_another_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array
 ) : void => {
     M11a[a] -= M11b[b];  M21a[a] -= M21b[b];  M31a[a] -= M31b[b];
     M12a[a] -= M12b[b];  M22a[a] -= M22b[b];  M32a[a] -= M32b[b];
     M13a[a] -= M13b[b];  M23a[a] -= M23b[b];  M33a[a] -= M33b[b];
 };
 
-const broadcast_subtract = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const subtract_a_number_from_a_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] - b;  M21o[o] = M21a[a] - b;  M31o[o] = M31a[a] - b;
     M12o[o] = M12a[a] - b;  M22o[o] = M22a[a] - b;  M32o[o] = M32a[a] - b;
     M13o[o] = M13a[a] - b;  M23o[o] = M23a[a] - b;  M33o[o] = M33a[a] - b;
 };
 
-const broadcast_subtract_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const subtract_a_number_from_a_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number
 ) : void => {
@@ -376,32 +351,29 @@ const broadcast_subtract_in_place = (
     M13a[a] -= b;  M23a[a] -= b;  M33a[a] -= b;
 };
 
-const divide = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const divide_a_3x3_matrix_by_a_number_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] / b;  M21o[o] = M21a[a] / b;  M31o[o] = M31a[a] / b;
     M12o[o] = M12a[a] / b;  M22o[o] = M22a[a] / b;  M32o[o] = M32a[a] / b;
     M13o[o] = M13a[a] / b;  M23o[o] = M23a[a] / b;  M33o[o] = M33a[a] / b;
 };
 
-const divide_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const divide_a_3x3_matrix_by_a_number_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number
 ) : void => {
@@ -410,32 +382,29 @@ const divide_in_place = (
     M13a[a] /= b;  M23a[a] /= b;  M33a[a] /= b;
 };
 
-const scale = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const multiply_a_3x3_matrix_by_a_number_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a] * b;  M21o[o] = M21a[a] * b;  M31o[o] = M31a[a] * b;
     M12o[o] = M12a[a] * b;  M22o[o] = M22a[a] * b;  M32o[o] = M32a[a] * b;
     M13o[o] = M13a[a] * b;  M23o[o] = M23a[a] * b;  M33o[o] = M33a[a] * b;
 };
 
-const scale_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const multiply_a_3x3_matrix_by_a_number_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     b: number
 ) : void => {
@@ -444,24 +413,21 @@ const scale_in_place = (
     M13a[a] *= b;  M23a[a] *= b;  M33a[a] *= b;
 };
 
-const multiply = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const multiply_a_3x3_matrix_by_another_3x3_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     M11o[o] = M11a[a]*M11b[b] + M12a[a]*M21b[b] + M13a[a]*M31b[b]; // Row 1 | Column 1
     M12o[o] = M11a[a]*M12b[b] + M12a[a]*M22b[b] + M13a[a]*M32b[b]; // Row 1 | Column 2
@@ -477,18 +443,16 @@ const multiply = (
 
 };
 
-const multiply_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const multiply_a_3x3_matrix_by_another_3x3_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    b: number, [
-        M11b, M12b, M13b,
-        M21b, M22b, M23b,
-        M31b, M32b, M33b
-    ]: Float9
+    b: number,
+    M11b: Float32Array, M12b: Float32Array, M13b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array, M23b: Float32Array,
+    M31b: Float32Array, M32b: Float32Array, M33b: Float32Array
 ) : void => {
     t11 = M11a[a];  t12 = M12a[a];  t13 = M13a[a];
     t21 = M21a[a];  t22 = M22a[a];  t23 = M23a[a];
@@ -507,12 +471,11 @@ const multiply_in_place = (
     M33a[a] = t31*M13b[b] + t32*M23b[b] + t33*M33b[b]; // Row 3 | Column 3
 };
 
-const set_rotation_around_x = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_to_a_rotation_around_x_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -522,12 +485,11 @@ const set_rotation_around_x = (
     M32a[a] = sin;
 };
 
-const set_rotation_around_y = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_to_a_rotation_around_y_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -537,12 +499,11 @@ const set_rotation_around_y = (
     M31a[a] = -sin;
 };
 
-const set_rotation_around_z = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const set_a_3x3_matrix_to_a_rotation_around_z_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -553,21 +514,19 @@ const set_rotation_around_z = (
 };
 
 
-const rotate_around_x = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_x_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     // t11 t12 t13     r11 r12 r13
     // t21 t22 t23  *  r21 r22 r23
@@ -610,12 +569,11 @@ const rotate_around_x = (
     M31o[o] = M31a[a];  M32o[o] = M32a[a]*cos + M33a[a]*sin;  M33o[o] = M33a[a]*cos - M32a[a]*sin;
 };
 
-const rotate_around_x_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_x_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -665,21 +623,19 @@ const rotate_around_x_in_place = (
     M32a[a] = t32*cos + t33*sin;  M33a[a] = t33*cos - t32*sin;
 };
 
-const rotate_around_y = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_y_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     // t11 t12 t13     r11 r12 r13
     // t21 t22 t23  *  r21 r22 r23
@@ -722,12 +678,11 @@ const rotate_around_y = (
     M31o[o] = M31a[a]*cos - M33a[a]*sin;  M32o[o] = M32a[a];  M33o[o] = M31a[a]*sin + M33a[a]*cos;
 };
 
-const rotate_around_y_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_y_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -777,21 +732,19 @@ const rotate_around_y_in_place = (
     M31a[a] = t31*cos - t33*sin;  M33a[a] = t31*sin + t33*cos;
 };
 
-const rotate_around_z = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_z_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number,
 
-    o: number, [
-        M11o, M12o, M13o,
-        M21o, M22o, M23o,
-        M31o, M32o, M33o
-    ]: Float9
+    o: number,
+    M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array, M23o: Float32Array,
+    M31o: Float32Array, M32o: Float32Array, M33o: Float32Array
 ) : void => {
     // t11 t12 t13     r11 r12 r13
     // t21 t22 t23  *  r21 r22 r23
@@ -834,12 +787,11 @@ const rotate_around_z = (
     M31o[o] = M31a[a]*cos + M32a[a]*sin;  M32o[o] = M32a[a]*cos - M31a[a]*sin;  M33o[o] = M33a[a];
 };
 
-const rotate_around_z_in_place = (
-    a: number, [
-        M11a, M12a, M13a,
-        M21a, M22a, M23a,
-        M31a, M32a, M33a
-    ]: Float9,
+export const rotate_a_3x3_matrix_around_z_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array, M13a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
+    M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
     cos: number,
     sin: number
@@ -887,63 +839,4 @@ const rotate_around_z_in_place = (
     M11a[a] = t11*cos + t12*sin;  M12a[a] = t12*cos - t11*sin;
     M21a[a] = t21*cos + t22*sin;  M22a[a] = t22*cos - t21*sin;
     M31a[a] = t31*cos + t32*sin;  M32a[a] = t32*cos - t31*sin;
-};
-
-export const rotationMatrixFunctions: IMatrixRotationFunctionSet = {
-    allocator: MATRIX_3X3_ALLOCATOR,
-
-    set_to,
-    set_from,
-    set_all_to,
-
-    equals,
-
-    invert,
-    invert_in_place,
-
-    add,
-    add_in_place,
-
-    subtract,
-    subtract_in_place,
-
-    broadcast_add,
-    broadcast_add_in_place,
-
-    broadcast_subtract,
-    broadcast_subtract_in_place,
-
-    divide,
-    divide_in_place,
-
-    scale,
-    scale_in_place,
-
-    multiply,
-    multiply_in_place,
-
-    is_identity,
-    set_to_identity,
-
-    transpose,
-    transpose_in_place,
-
-    set_rotation_around_x,
-    set_rotation_around_y,
-    set_rotation_around_z,
-
-    rotate_around_x,
-    rotate_around_y,
-    rotate_around_z,
-
-    rotate_around_x_in_place,
-    rotate_around_y_in_place,
-    rotate_around_z_in_place
-};
-
-export const matrix3x3Functions: IMatrix3x3FunctionSet = {
-    ...rotationMatrixFunctions,
-
-    set_to_cross_product,
-    set_to_outer_product
 };

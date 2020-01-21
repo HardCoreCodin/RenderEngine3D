@@ -1,5 +1,6 @@
 import {ATTRIBUTE} from "../../constants.js";
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
+import {Matrix3x3} from "../accessors/matrix3x3.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {FacePositions3D, FacePositions4D} from "./positions.js";
 import {FaceNormals3D, FaceNormals4D} from "./normals.js";
 import {FaceColors3D, FaceColors4D} from "./colors.js";

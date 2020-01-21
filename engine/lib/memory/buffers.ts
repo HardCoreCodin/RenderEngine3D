@@ -11,7 +11,7 @@ export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<Ar
 
     get length(): number {return this._length}
 
-    arrays: ArrayType[];
+    arrays: ArrayType[] = [];
 
     constructor(
         length?: number,

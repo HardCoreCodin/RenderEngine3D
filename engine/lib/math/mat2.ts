@@ -1,16 +1,12 @@
-import {Float4} from "../../types.js";
-import {PRECISION_DIGITS} from "../../constants.js";
-import {IMatrix2x2FunctionSet} from "../_interfaces/functions.js";
-import {MATRIX_2X2_ALLOCATOR} from "../memory/allocators.js";
+export const PRECISION_DIGITS = 3;
 
 let t11, t12,
     t21, t22: number;
 
-const set_to = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const set_the_components_of_a_2x2_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     m11: number, m12: number,
     m21: number, m22: number
@@ -19,11 +15,10 @@ const set_to = (
     M21a[a] = m21;  M22a[a] = m22;
 };
 
-const set_all_to = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const set_all_components_of_a_2x2_matrix_to_a_number = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     value: number
 ): void => {
@@ -31,51 +26,47 @@ const set_all_to = (
     M21a[a] = M22a[a] = value;
 };
 
-const set_from = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const set_a_2x2_matrix_from_another_2x2_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ): void => {
     M11a[a] = M11o[o];  M12a[a] = M12o[o];
     M21a[a] = M21o[o];  M22a[a] = M22o[o];
 };
 
-const set_to_identity = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4
+export const set_a_2x2_matrix_to_the_identity_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 ) : void => {
     M11a[a] = M22a[a] = 1;
     M12a[a] = M21a[a] = 0;
 };
 
-const transpose = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+// TODO: Fix...
+export const invert_a_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a];  M21o[o] = M12a[a];
     M12o[o] = M21a[a];  M22o[o] = M22a[a];
 };
 
-const transpose_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4
+// TODO: Fix...
+export const invert_a_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 ) : void => {
     [
         M12a[a], M21a[a]
@@ -84,28 +75,23 @@ const transpose_in_place = (
     ]
 };
 
-// TODO: Fix...
-const invert = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const transpose_a_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a];  M21o[o] = M12a[a];
     M12o[o] = M21a[a];  M22o[o] = M22a[a];
 };
 
-// TODO: Fix...
-const invert_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4
+export const transpose_a_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 ) : void => {
     [
         M12a[a], M21a[a]
@@ -114,16 +100,14 @@ const invert_in_place = (
     ]
 };
 
-const equals = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const check_if_two_2x2_matrices_are_equal = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array
 ) : boolean =>
     M11a[a].toFixed(PRECISION_DIGITS) ===
     M11b[b].toFixed(PRECISION_DIGITS) &&
@@ -138,72 +122,63 @@ const equals = (
     M22a[a].toFixed(PRECISION_DIGITS) ===
     M22b[b].toFixed(PRECISION_DIGITS);
 
-const is_identity = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4
+export const check_if_a_2x2_matrix_is_the_identity_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 ) : boolean =>
     M11a[a] === 1  &&  M21a[a] === 0 &&
     M12a[a] === 0  &&  M22a[a] === 1;
 
-const add = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const add_a_2x2_matrix_to_another_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] + M11b[b];  M21o[o] = M21a[a] + M21b[b];
     M12o[o] = M12a[a] + M12b[b];  M22o[o] = M22a[a] + M22b[b];
 };
 
-const add_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const add_a_2x2_matrix_to_another_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array
 ) : void => {
     M11a[a] += M11b[b];  M21a[a] += M21b[b];
     M12a[a] += M12b[b];  M22a[a] += M22b[b];
 };
 
-const broadcast_add = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const add_a_number_to_a_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] + b;  M21o[o] = M21a[a] + b;
     M12o[o] = M12a[a] + b;  M22o[o] = M22a[a] + b;
 };
 
-const broadcast_add_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const add_a_number_to_a_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number
 ) : void => {
@@ -211,63 +186,55 @@ const broadcast_add_in_place = (
     M12a[a] += b;  M22a[a] += b;
 };
 
-const subtract = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const subtract_a_2x2_matrix_from_another_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] - M11b[b];  M21o[o] = M21a[a] - M21b[b];
     M12o[o] = M12a[a] - M12b[b];  M22o[o] = M22a[a] - M22b[b];
 };
 
-const subtract_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const subtract_a_2x2_matrix_from_another_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array
 ) : void => {
     M11a[a] -= M11b[b];  M21a[a] -= M21b[b];
     M12a[a] -= M12b[b];  M22a[a] -= M22b[b];
 };
 
-const broadcast_subtract = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const subtract_a_number_from_a_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] - b;  M21o[o] = M21a[a] - b;
     M12o[o] = M12a[a] - b;  M22o[o] = M22a[a] - b;
 };
 
-const broadcast_subtract_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const subtract_a_number_from_a_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number
 ) : void => {
@@ -275,28 +242,25 @@ const broadcast_subtract_in_place = (
     M12a[a] -= b;  M22a[a] -= b;
 };
 
-const divide = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const divide_a_2x2_matrix_by_a_number_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] / b;  M21o[o] = M21a[a] / b;
     M12o[o] = M12a[a] / b;  M22o[o] = M22a[a] / b;
 };
 
-const divide_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const divide_a_2x2_matrix_by_a_number_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number
 ) : void => {
@@ -304,28 +268,25 @@ const divide_in_place = (
     M12a[a] /= b;  M22a[a] /= b;
 };
 
-const scale = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const multiply_a_2x2_matrix_by_a_number_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a] * b;  M21o[o] = M21a[a] * b;
     M12o[o] = M12a[a] * b;  M22o[o] = M22a[a] * b;
 };
 
-const scale_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const multiply_a_2x2_matrix_by_a_number_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     b: number
 ) : void => {
@@ -333,21 +294,18 @@ const scale_in_place = (
     M12a[a] *= b;  M22a[a] *= b;
 };
 
-const multiply = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const multiply_a_2x2_matrix_by_another_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4,
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     M11o[o] = M11a[a]*M11b[b] + M12a[a]*M21b[b]; // Row 1 | Column 1
     M12o[o] = M11a[a]*M12b[b] + M12a[a]*M22b[b]; // Row 1 | Column 2
@@ -356,16 +314,14 @@ const multiply = (
     M22o[o] = M21a[a]*M12b[b] + M22a[a]*M22b[b]; // Row 2 | Column 2
 };
 
-const multiply_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const multiply_a_2x2_matrix_by_another_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
-    b: number, [
-        M11b, M12b,
-        M21b, M22b
-    ]: Float4
+    b: number,
+    M11b: Float32Array, M12b: Float32Array,
+    M21b: Float32Array, M22b: Float32Array,
 ) : void => {
     t11 = M11a[a];  t21 = M21a[a];
     t12 = M12a[a];  t22 = M22a[a];
@@ -377,11 +333,10 @@ const multiply_in_place = (
     M22a[a] = t21*M12b[b] + t22*M22b[b]; // Row 2 | Column 2
 };
 
-const set_rotation = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const set_a_2x2_matrix_to_a_rotation_matrix = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     cos: number,
     sin: number
@@ -391,19 +346,17 @@ const set_rotation = (
     M21a[a] = -sin;
 };
 
-const rotate = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const rotate_a_2x2_matrix_to_out = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     cos: number,
     sin: number,
 
-    o: number, [
-        M11o, M12o,
-        M21o, M22o
-    ]: Float4,
+    o: number,
+    M11o: Float32Array, M12o: Float32Array,
+    M21o: Float32Array, M22o: Float32Array,
 ) : void => {
     // t11 t12 * r11 r12
     // t21 t22   r21 r22
@@ -436,11 +389,10 @@ const rotate = (
     M21o[o] = M21a[a]*cos - M22a[a]*sin;  M22o[o] = M21a[a]*sin + M22a[a]*cos;
 };
 
-const rotate_in_place = (
-    a: number, [
-        M11a, M12a,
-        M21a, M22a
-    ]: Float4,
+export const rotate_a_2x2_matrix_in_place = (
+    a: number,
+    M11a: Float32Array, M12a: Float32Array,
+    M21a: Float32Array, M22a: Float32Array,
 
     cos: number,
     sin: number
@@ -477,48 +429,4 @@ const rotate_in_place = (
 
     M11a[a] = t11 * cos - t12 * sin;   M12a[a] = t11 * sin + t12 * cos;
     M21a[a] = t21 * cos - t22 * sin;   M22a[a] = t21 * sin + t22 * cos;
-};
-
-export const matrix2x2Functions: IMatrix2x2FunctionSet = {
-    allocator: MATRIX_2X2_ALLOCATOR,
-
-    set_to,
-    set_from,
-    set_all_to,
-
-    equals,
-
-    invert,
-    invert_in_place,
-
-    add,
-    add_in_place,
-
-    subtract,
-    subtract_in_place,
-
-    broadcast_add,
-    broadcast_add_in_place,
-
-    broadcast_subtract,
-    broadcast_subtract_in_place,
-
-    divide,
-    divide_in_place,
-
-    scale,
-    scale_in_place,
-
-    multiply,
-    multiply_in_place,
-
-    is_identity,
-    set_to_identity,
-
-    transpose,
-    transpose_in_place,
-
-    set_rotation,
-    rotate,
-    rotate_in_place
 };

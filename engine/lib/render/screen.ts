@@ -5,7 +5,7 @@ import {Rasterizer, RayTracer} from "./pipelines.js";
 import {Color4D, rgba} from "../accessors/color.js";
 import {FPSController} from "../input/controllers.js";
 import {IScene} from "../_interfaces/nodes.js";
-import {IVector2D} from "../_interfaces/vectors.js";
+import {I2D} from "../_interfaces/vectors.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, ISize, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
@@ -34,7 +34,7 @@ export abstract class BaseScreen<
         render_pipeline: RenderPipelineType,
         controller: IController,
         size: ISize,
-        position: IVector2D
+        position: I2D
     ): ViewportType;
 
     protected readonly _default_render_pipeline: RenderPipelineType;
@@ -82,15 +82,16 @@ export abstract class BaseScreen<
     }
 
     refresh() {
-        const width = this._canvas.clientWidth;
-        const height = this._canvas.clientHeight;
-        if (width !== this._size.width ||
-            height !== this._size.height) {
-            this.resize(width, height);
-        }
+        // const width = this._canvas.clientWidth;
+        // const height = this._canvas.clientHeight;
+        // if (width !== this._size.width ||
+        //     height !== this._size.height) {
+        //     this.resize(width, height);
+        // }
 
-        for (const viewport of this._viewports)
-            viewport.refresh();
+        this._active_viewport.refresh();
+        // for (const viewport of this._viewports)
+        //     viewport.refresh();
     }
 
     resize(width: number, height: number): void {
@@ -149,7 +150,7 @@ export abstract class BaseScreen<
             width: this._size.width,
             height: this._size.height
         },
-        position: IVector2D = {
+        position: I2D = {
             x: 0,
             y: 0
         },
@@ -225,7 +226,7 @@ export class RasterScreen extends BaseScreen<CanvasRenderingContext2D, Camera, R
         render_pipeline: Rasterizer,
         controller: IController,
         size: ISize,
-        position: IVector2D
+        position: I2D
     ): RasterViewport {
         return new RasterViewport(camera, render_pipeline, controller, this, size, position);
     }
@@ -241,7 +242,7 @@ export class RayTraceScreen extends BaseScreen<CanvasRenderingContext2D, Camera,
         render_pipeline: RayTracer,
         controller: IController,
         size: ISize,
-        position: IVector2D
+        position: I2D
     ): RayTraceViewport {
         return new RayTraceViewport(camera, render_pipeline, controller, this, size, position);
     }

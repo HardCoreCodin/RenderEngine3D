@@ -1,12 +1,12 @@
 import {IRectangle, ISize} from "../_interfaces/render.js";
-import {IVector2D} from "../_interfaces/vectors.js";
+import {I2D} from "../_interfaces/vectors.js";
 
 export default class Rectangle implements IRectangle{
     protected readonly _size: ISize = {width: 1, height: 1};
-    protected readonly _position: IVector2D = {x: 0, y: 0};
+    protected readonly _position: I2D = {x: 0, y: 0};
     constructor(
         size?: ISize,
-        position?: IVector2D
+        position?: I2D
     ) {
         if (size && position)
             this.reset(size.width, size.height, position.x, position.y);

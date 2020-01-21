@@ -1,5 +1,5 @@
 import Node3D from "../scene_graph/node.js";
-import {Matrix4x4} from "../accessors/matrix.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {Float16} from "../../types.js";
 import {ICamera, ILense, IProjectionMatrix, IViewFrustum} from "../_interfaces/render.js";

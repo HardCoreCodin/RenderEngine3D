@@ -4,7 +4,7 @@ import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
 import {Rasterizer, RayTracer} from "./pipelines.js";
 import {mat3, mat4} from "../accessors/matrix.js";
 import {IScene} from "../_interfaces/nodes.js";
-import {IVector2D} from "../_interfaces/vectors.js";
+import {I2D} from "../_interfaces/vectors.js";
 import {ICamera, ISize, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {IController} from "../_interfaces/input.js";
 import {Color4D, rgba} from "../accessors/color.js";
@@ -36,7 +36,7 @@ export class BaseViewport<
         protected _controller: IController,
         protected readonly _screen: IScreen<Context, CameraType, SceneType, RenderPipelineType>,
         size: ISize,
-        position: IVector2D = {x: 0, y: 0},
+        position: I2D = {x: 0, y: 0},
         readonly context: Context = _screen.context as Context
     ) {
         super();
@@ -66,7 +66,7 @@ export class BaseViewport<
         )
     }
 
-    get controller(): IController {return this._controller};
+    get controller(): IController {return this._controller}
     set controller(constroller: IController) {
         constroller.viewport = this;
         this._controller = constroller;
@@ -84,7 +84,7 @@ export class BaseViewport<
     }
 
     refresh() {
-        this.render_pipeline.render(this);
+        this._render_pipeline.render(this);
         this._drawOverlay();
     }
 
@@ -125,14 +125,9 @@ export class Canvas2DViewport<
 }
 
 
-export class RayTraceViewport extends BaseViewport<CanvasRenderingContext2D, Camera, RayTraceScene, RayTracer> {
-    reset(width: number, height: number, x: number, y: number): void {
-        super.reset(width, height, x, y);
-        this.render_pipeline.resetRenderTarget(this._size, this._position);
-    }
-}
+export class RayTraceViewport extends Canvas2DViewport<Camera, RayTraceScene, RayTracer> {}
 
-export class RasterViewport extends BaseViewport<CanvasRenderingContext2D, Camera, RasterScene, Rasterizer> {
+export class RasterViewport extends Canvas2DViewport<Camera, RasterScene, Rasterizer> {
     readonly ndc_to_screen = mat3();
 
     reset(width: number, height: number, x: number, y: number): void {
@@ -152,7 +147,6 @@ export class RasterViewport extends BaseViewport<CanvasRenderingContext2D, Camer
 
         // this.depth_buffer = new Float32Array(this.screen.width * this.screen.height);
 
-        this.render_pipeline.resetRenderTarget(this._size, this._position);
         super.reset(width, height, x, y);
     }
 }

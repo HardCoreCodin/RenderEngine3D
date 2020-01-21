@@ -5,7 +5,7 @@ import {GLRenderPipeline} from "../render/pipeline.js";
 
 import {BaseScreen} from "../../../lib/render/screen.js";
 import {ISize} from "../../../lib/_interfaces/render.js";
-import {IVector2D} from "../../../lib/_interfaces/vectors.js";
+import {I2D} from "../../../lib/_interfaces/vectors.js";
 import {IController} from "../../../lib/_interfaces/input.js";
 
 
@@ -25,7 +25,7 @@ export class GLScreen extends BaseScreen<WebGL2RenderingContext, GLCamera, GLSce
         render_pipeline: GLRenderPipeline,
         controller: IController,
         size: ISize,
-        position: IVector2D
+        position: I2D
     ): GLViewport {
         return new GLViewport(camera, render_pipeline, controller, this, size, position);
     }

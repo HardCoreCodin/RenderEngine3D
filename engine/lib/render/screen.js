@@ -42,14 +42,15 @@ export class BaseScreen extends Rectangle {
                 viewport.setBorderColor(color);
     }
     refresh() {
-        const width = this._canvas.clientWidth;
-        const height = this._canvas.clientHeight;
-        if (width !== this._size.width ||
-            height !== this._size.height) {
-            this.resize(width, height);
-        }
-        for (const viewport of this._viewports)
-            viewport.refresh();
+        // const width = this._canvas.clientWidth;
+        // const height = this._canvas.clientHeight;
+        // if (width !== this._size.width ||
+        //     height !== this._size.height) {
+        //     this.resize(width, height);
+        // }
+        this._active_viewport.refresh();
+        // for (const viewport of this._viewports)
+        //     viewport.refresh();
     }
     resize(width, height) {
         this._canvas.width = width;

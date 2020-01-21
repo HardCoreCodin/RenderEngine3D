@@ -1,21 +1,11 @@
-import {Vector} from "./vector.js";
-import {base2DFunctions} from "../math/vec2.js";
-import {base3DFunctions} from "../math/vec3.js";
+import {Vector2D} from "./vector2D.js";
+import {Vector3D} from "./vector3D.js";
 import {IUV2D, IUV3D} from "../_interfaces/vectors.js";
-import {IVectorFunctionSet} from "../_interfaces/functions.js";
 
-export class UV2D extends Vector implements IUV2D
+export class UV2D extends Vector2D implements IUV2D
 {
-    protected _getFunctionSet(): IVectorFunctionSet {return base2DFunctions}
-
-    setTo(u: number, v: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-            u, v
-        );
-
-        return this;
-    }
+    setTo(u: number, v: number): this {return super.setTo(u, v)}
+    copy(out: UV2D = new UV2D()): UV2D {return out.setFrom(this)}
 
     set u(u: number) {this.arrays[0][this.id] = u}
     set v(v: number) {this.arrays[1][this.id] = v}
@@ -33,18 +23,10 @@ export class UV2D extends Vector implements IUV2D
     set vu(other: UV2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
 }
 
-export class UV3D extends Vector implements IUV3D
+export class UV3D extends Vector3D implements IUV3D
 {
-    protected _getFunctionSet(): IVectorFunctionSet {return base3DFunctions}
-
-    setTo(u: number, v: number, w: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-            u, v, w
-        );
-
-        return this;
-    }
+    setTo(u: number, v: number, w: number): this {return super.setTo(u, v, w)}
+    copy(out: UV3D = new UV3D()): UV3D {return out.setFrom(this)}
 
     set u(u: number) {this.arrays[0][this.id] = u}
     set v(v: number) {this.arrays[1][this.id] = v}

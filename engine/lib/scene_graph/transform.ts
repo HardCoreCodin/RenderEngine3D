@@ -1,5 +1,7 @@
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
-import {IVector2D, IVector3D} from "../_interfaces/vectors.js";
+import {Matrix3x3} from "../accessors/matrix3x3.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
+
+import {I2D, I3D} from "../_interfaces/vectors.js";
 import {IEulerRotation, IScale, ITransform} from "../_interfaces/transform.js";
 
 
@@ -65,28 +67,28 @@ export class EulerRotation implements IEulerRotation {
             this.computeMatrix();
     }
 
-    set xy(xy: IVector2D) {
+    set xy(xy: I2D) {
         this._x_angle = xy.x;
         this._y_angle = xy.y;
         if (this.computeEagerly)
             this.computeMatrix();
     }
 
-    set xz(xz: IVector3D) {
+    set xz(xz: I3D) {
         this._x_angle = xz.x;
         this._z_angle = xz.z;
         if (this.computeEagerly)
             this.computeMatrix();
     }
 
-    set yz(yz: IVector3D) {
+    set yz(yz: I3D) {
         this._y_angle = yz.y;
         this._z_angle = yz.z;
         if (this.computeEagerly)
             this.computeMatrix();
     }
 
-    set xyz(xyz: IVector3D) {
+    set xyz(xyz: I3D) {
         this._x_angle = xyz.x;
         this._y_angle = xyz.y;
         this._z_angle = xyz.z;
@@ -155,28 +157,28 @@ export class Scale implements IScale {
             this.apply();
     }
 
-    set xy(xy: IVector2D) {
+    set xy(xy: I2D) {
         this._x_scale= xy.x;
         this._y_scale = xy.y;
         if (this.applyEagerly)
             this.apply();
     }
 
-    set xz(xz: IVector3D) {
+    set xz(xz: I3D) {
         this._x_scale = xz.x;
         this._z_scale = xz.z;
         if (this.applyEagerly)
             this.apply();
     }
 
-    set yz(yz: IVector3D) {
+    set yz(yz: I3D) {
         this._y_scale = yz.y;
         this._z_scale = yz.z;
         if (this.applyEagerly)
             this.apply();
     }
 
-    set xyz(xyz: IVector3D) {
+    set xyz(xyz: I3D) {
         this._x_scale = xyz.x;
         this._y_scale = xyz.y;
         this._z_scale = xyz.z;

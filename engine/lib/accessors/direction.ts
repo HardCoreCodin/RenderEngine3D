@@ -1,142 +1,180 @@
-import {TransformableVector} from "./vector.js";
-import Matrix, {Matrix2x2, Matrix3x3, Matrix4x4} from "./matrix.js";
+import {Matrix4x4} from "./matrix4x4.js";
+import {TransformableVector2D} from "./vector2D.js";
+import {TransformableVector3D} from "./vector3D.js";
+import {TransformableVector4D} from "./vector4D.js";
 import {
-    ICrossDirectionFunctionSet,
-    IDirection3DFunctionSet,
-    IDirectionFunctionSet,
-} from "../_interfaces/functions.js";
-import {PRECISION_DIGITS} from "../../constants.js";
-import {direction2DFunctions} from "../math/vec2.js";
-import {direction4DFunctions} from "../math/vec4.js";
-import {direction3DFunctions} from "../math/vec3.js";
-import {ICrossedDirection, IDirection, IDirection2D, IDirection3D, IDirection4D} from "../_interfaces/vectors.js";
+    compute_the_length_of_a_2D_direction,
+    dot_a_2D_direction_with_another_2D_direction,
+    negate_a_2D_direction_in_place, negate_a_2D_direction_to_out,
+    normalize_a_2D_direction_in_place,
+    normalize_a_2D_direction_to_out,
+    reflect_a_2D_vector_around_a_2D_direction_in_place,
+    reflect_a_2D_vector_around_a_2D_direction_to_out,
+    square_the_length_of_a_2D_direction
+} from "../math/vec2.js";
+import {
+    compute_the_length_of_a_3D_direction,
+    cross_a_3D_direction_with_another_3D_direction_in_place,
+    cross_a_3D_direction_with_another_3D_direction_to_out,
+    dot_a_3D_direction_with_another_3D_direction, multiply_a_3D_direction_by_a_4x4_matrix_to_out,
+    negate_a_3D_direction_in_place,
+    negate_a_3D_direction_to_out,
+    normalize_a_3D_direction_in_place,
+    normalize_a_3D_direction_to_out,
+    reflect_a_3D_vector_around_a_3D_direction_in_place,
+    reflect_a_3D_vector_around_a_3D_direction_to_out,
+    square_the_length_of_a_3D_direction
+} from "../math/vec3.js";
+import {
+    compute_the_length_of_a_4D_direction,
+    dot_a_4D_direction_with_another_4D_direction, negate_a_4D_direction_in_place, negate_a_4D_direction_to_out,
+    normalize_a_4D_direction_in_place,
+    normalize_a_4D_direction_to_out, reflect_a_4D_vector_around_a_4D_direction_in_place,
+    reflect_a_4D_vector_around_a_4D_direction_to_out,
+    square_the_length_of_a_4D_direction
+} from "../math/vec4.js";
+import {IDirection2D, IDirection3D, IDirection4D} from "../_interfaces/vectors.js";
 
-export abstract class Direction<MatrixType extends Matrix>
-    extends TransformableVector<MatrixType>
-    implements IDirection<MatrixType>
+let this_arrays,
+    other_arrays,
+    out_arrays: Float32Array[];
+
+
+export class Direction2D extends TransformableVector2D implements IDirection2D
 {
-    readonly _: IDirectionFunctionSet;
-    protected abstract _getFunctionSet(): IDirectionFunctionSet;
+    copy(out: Direction2D = new Direction2D()): Direction2D {return out.setFrom(this)}
+
+    get is_normalized(): boolean {
+        return this.length_squared === 1;
+    }
 
     dot(other: this): number {
-        return this._.dot(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return dot_a_2D_direction_with_another_2D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1]
+        )
     }
 
     get length(): number {
-        return this._.length(
-            this.id, this.arrays
-        );
+        this_arrays = this.arrays;
+
+        return compute_the_length_of_a_2D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1]
+        )
     }
 
     get length_squared(): number {
-        return this._.length_squared(
-            this.id, this.arrays
-        );
-    }
+        this_arrays = this.arrays;
 
-    get is_normalized(): boolean {
-        return this.length_squared.toFixed(PRECISION_DIGITS) === '1.000';
+        return square_the_length_of_a_2D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1]
+        )
     }
 
     normalize(out?: this): this {
-        if (out && !out.is(this)) {
-            if (this.is_normalized)
-                return out.setFrom(this);
+        this_arrays = this.arrays;
 
-            this._.normalize(
-                this.id, this.arrays,
-                out.id, out.arrays
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            normalize_a_2D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1]
             );
 
             return out;
         }
 
-        if (!this.is_normalized)
-            this._.normalize_in_place(
-                this.id, this.arrays
-            );
+        normalize_a_2D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1]
+        );
 
         return this;
     }
 
     reflect(other: this, out?: this): this {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
         if (out && !out.is(this)) {
-            this._.reflect(
-                this.id, this.arrays,
-                other.id, other.arrays,
-                out.id, out.arrays
+            out_arrays = out.arrays;
+
+            reflect_a_2D_vector_around_a_2D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+
+                other.id,
+                other_arrays[0],
+                other_arrays[1],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1]
             );
 
             return out;
         }
 
-        this._.reflect_in_place(
-            this.id, this.arrays,
-            other.id, other.arrays
+        reflect_a_2D_vector_around_a_2D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1]
         );
 
         return this;
     }
-}
 
-export abstract class CrossedDirection<MatrixType extends Matrix>
-    extends Direction<MatrixType>
-    implements ICrossedDirection<MatrixType>
-{
-    readonly _: ICrossDirectionFunctionSet;
-    protected abstract _getFunctionSet(): ICrossDirectionFunctionSet;
+    negate(out?: this): this {
+        this_arrays = this.arrays;
 
-    get z(): number {
-        return this.arrays[2][this.id]
-    }
-
-    set z(z: number) {
-        this.arrays[2][this.id] = z
-    }
-
-    cross(other: ICrossedDirection<MatrixType>, out?: this): this {
         if (out && !out.is(this)) {
-            this._.cross(
-                this.id, this.arrays,
-                other.id, other.arrays,
-                out.id, out.arrays
+            out_arrays = out.arrays;
+
+            negate_a_2D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1]
             );
 
             return out;
         }
 
-        this._.cross_in_place(
-            this.id, this.arrays,
-            other.id, other.arrays
-        );
-
-        return this;
-    };
-}
-
-export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
-{
-    protected _getFunctionSet(): IDirectionFunctionSet {return direction2DFunctions}
-
-    setTo(x: number, y: number): this {
-        this._.set_to(
-            this.id, this.arrays,
-
-            x, y
+        negate_a_2D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1]
         );
 
         return this;
     }
-
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-
 
     get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
@@ -145,38 +183,226 @@ export class Direction2D extends Direction<Matrix2x2> implements IDirection2D
     get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
 }
 
-export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirection3D
+export class Direction3D extends TransformableVector3D implements IDirection3D
 {
-    readonly _: IDirection3DFunctionSet;
-    protected _getFunctionSet(): IDirection3DFunctionSet {return direction3DFunctions}
+    copy(out: Direction3D = new Direction3D()): Direction3D {return out.setFrom(this)}
 
-    setTo(x: number, y: number, z: number): this {
-        this._.set_to(
-            this.id, this.arrays,
+    get is_normalized(): boolean {
+        return this.length_squared === 1;
+    }
 
-            x, y, z
+    dot(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return dot_a_3D_direction_with_another_3D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        )
+    }
+
+    get length(): number {
+        this_arrays = this.arrays;
+
+        return compute_the_length_of_a_3D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2]
+        )
+    }
+
+    get length_squared(): number {
+        this_arrays = this.arrays;
+
+        return square_the_length_of_a_3D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2]
+        )
+    }
+
+    normalize(out?: this): this {
+        this_arrays = this.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            normalize_a_3D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2]
+            );
+
+            return out;
+        }
+
+        normalize_a_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2]
         );
 
         return this;
     }
 
+    reflect(other: this, out?: this): this {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            reflect_a_3D_vector_around_a_3D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                other.id,
+                other_arrays[0],
+                other_arrays[1],
+                other_arrays[2],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2]
+            );
+
+            return out;
+        }
+
+        reflect_a_3D_vector_around_a_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        );
+
+        return this;
+    }
+
+    negate(out?: this): this {
+        this_arrays = this.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            negate_a_3D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2]
+            );
+
+            return out;
+        }
+
+        negate_a_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2]
+        );
+
+        return this;
+    }
+
+
+    cross(other: Direction3D, out?: this): this {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            cross_a_3D_direction_with_another_3D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                other.id,
+                other_arrays[0],
+                other_arrays[1],
+                other_arrays[2],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2]
+            );
+
+            return out;
+        }
+
+        cross_a_3D_direction_with_another_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        );
+
+        return this;
+    };
+
     mat4mul(matrix: Matrix4x4, out: Direction4D): Direction4D {
-        this._.matrix_multiply_direction_by_mat4(
-            this.id, this.arrays,
-            matrix.id, matrix.arrays,
-            out.id, out.arrays
+        this_arrays = this.arrays;
+        other_arrays = matrix.arrays;
+        out_arrays = out.arrays;
+
+        multiply_a_3D_direction_by_a_4x4_matrix_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
+            other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[7],
+            other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
+            other_arrays[12], other_arrays[13], other_arrays[14], other_arrays[15],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
         );
 
         return out;
     }
-
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
-
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
 
     get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
@@ -235,29 +461,213 @@ export class Direction3D extends CrossedDirection<Matrix3x3> implements IDirecti
     set zyx(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Direction4D extends CrossedDirection<Matrix4x4> implements IDirection4D
+export class Direction4D extends TransformableVector4D implements IDirection4D
 {
-    protected _getFunctionSet(): ICrossDirectionFunctionSet {return direction4DFunctions}
+    copy(out: Direction4D = new Direction4D()): Direction4D {return out.setFrom(this)}
 
-    setTo(x: number, y: number, z: number, w: number): this {
-        this._.set_to(
-            this.id, this.arrays,
+    get is_normalized(): boolean {
+        return this.length_squared === 1;
+    }
 
-            x, y, z, w
+    dot(other: this): number {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        return dot_a_4D_direction_with_another_4D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3]
+        )
+    }
+
+    get length(): number {
+        this_arrays = this.arrays;
+
+        return compute_the_length_of_a_4D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3]
+        )
+    }
+
+    get length_squared(): number {
+        this_arrays = this.arrays;
+
+        return square_the_length_of_a_4D_direction(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3]
+        )
+    }
+
+    normalize(out?: this): this {
+        this_arrays = this.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            normalize_a_4D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+                this_arrays[3],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2],
+                out_arrays[3]
+            );
+
+            return out;
+        }
+
+        normalize_a_4D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3]
         );
 
         return this;
     }
 
-    set x(x: number) {this.arrays[0][this.id] = x}
-    set y(y: number) {this.arrays[1][this.id] = y}
-    set z(z: number) {this.arrays[2][this.id] = z}
-    set w(w: number) {this.arrays[3][this.id] = w}
+    reflect(other: this, out?: this): this {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
 
-    get x(): number {return this.arrays[0][this.id]}
-    get y(): number {return this.arrays[1][this.id]}
-    get z(): number {return this.arrays[2][this.id]}
-    get w(): number {return this.arrays[3][this.id]}
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            reflect_a_4D_vector_around_a_4D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+                this_arrays[3],
+
+                other.id,
+                other_arrays[0],
+                other_arrays[1],
+                other_arrays[2],
+                other_arrays[3],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2],
+                out_arrays[3]
+            );
+
+            return out;
+        }
+
+        reflect_a_4D_vector_around_a_4D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3]
+        );
+
+        return this;
+    }
+
+    negate(out?: this): this {
+        this_arrays = this.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            negate_a_4D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+                this_arrays[3],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2],
+                out_arrays[3]
+            );
+
+            return out;
+        }
+
+        negate_a_4D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3]
+        );
+
+        return this;
+    }
+
+    cross(other: Direction4D, out?: this): this {
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+
+        if (out && !out.is(this)) {
+            out_arrays = out.arrays;
+
+            cross_a_3D_direction_with_another_3D_direction_to_out(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                other.id,
+                other_arrays[0],
+                other_arrays[1],
+                other_arrays[2],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2]
+            );
+
+            return out;
+        }
+
+        cross_a_3D_direction_with_another_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2]
+        );
+
+        return this;
+    };
 
     get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}

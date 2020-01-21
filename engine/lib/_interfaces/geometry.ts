@@ -57,7 +57,9 @@ export interface IMesh {
     load(): this;
 }
 
-export interface IGeometry<Context extends RenderingContext = RenderingContext> extends INode3D {
+export interface IGeometry<
+    Context extends RenderingContext = RenderingContext
+    > extends INode3D {
     readonly id: number;
     readonly scene: IScene;
     readonly world_to_model: IMatrix4x4;

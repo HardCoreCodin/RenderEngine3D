@@ -108,7 +108,7 @@ export abstract class BaseRenderEngine<
         for (const node of this.scene.children)
             node.refreshWorldMatrix();
 
-        this.screen.refresh();
+        this._screen.refresh();
 
         requestAnimationFrame(this._update_callback);
     }
@@ -206,6 +206,7 @@ export abstract class BaseRenderEngine<
         this.screen.active_viewport.camera.projection_matrix.update();
         this.screen.active_viewport.updateMatrices();
 
+        this._screen.resize(this.canvas.clientWidth, this.canvas.clientHeight);
         requestAnimationFrame(this._update_callback);
     }
 

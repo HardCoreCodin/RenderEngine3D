@@ -1,7 +1,7 @@
-import {Vector} from "../accessors/vector.js";
-import {FloatBuffer} from "../memory/buffers.js";
-import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {zip} from "../../utils.js";
+import {Vector} from "../accessors/accessor.js";
+import {FloatBuffer} from "../memory/buffers.js";
+import {ATTRIBUTE} from "../../constants.js";
 import {InputAttribute} from "./inputs.js";
 import {
     IAttribute,
@@ -10,11 +10,10 @@ import {
     IPullableVertexAttribute,
     IVertexAttribute
 } from "../_interfaces/attributes.js";
+import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 import {IVector} from "../_interfaces/vectors.js";
 import {AnyConstructor, T3} from "../../types.js";
 import {IAccessor, IAccessorConstructor} from "../_interfaces/accessors.js";
-import {Arrays} from "../_interfaces/functions.js";
-import {ATTRIBUTE} from "../../constants.js";
 
 export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
     extends FloatBuffer
@@ -24,14 +23,13 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
     readonly Vector: IAccessorConstructor<AccessorType>;
     protected abstract _getVectorConstructor(): IAccessorConstructor<AccessorType>;
 
-    arrays: Arrays;
     current: AccessorType;
 
     constructor(
         readonly face_vertices: IFaceVertices,
         readonly face_count: number = face_vertices.length,
         length?: number,
-        arrays?: Arrays
+        arrays?: Float32Array[]
     ) {
         super(length, arrays);
         this.Vector = this._getVectorConstructor();
@@ -66,7 +64,7 @@ export abstract class FaceAttribute<
     constructor(
         readonly face_vertices: IFaceVertices,
         readonly face_count: number = face_vertices.length,
-        arrays?: Arrays
+        arrays?: Float32Array[]
     ) {
         super(face_vertices, face_count, face_count, arrays);
     }
@@ -121,7 +119,7 @@ export abstract class VertexAttribute<
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
         readonly face_count: number = face_vertices.length,
-        arrays?: Arrays
+        arrays?: Float32Array[]
     ) {
         super(face_vertices, face_count, is_shared ? vertex_count : face_count * 3, arrays);
         this._is_shared = !!is_shared;
