@@ -718,3 +718,15 @@ ${a[8][i]} ${a[9][i]} ${a[10][i]} ${a[11][i]}
 ${a[12][i]} ${a[13][i]} ${a[14][i]} ${a[15][i]}`;
     }
 }
+
+export const mat4 = (
+    m11: number = 0, m12: number = m11, m13: number = m11, m14: number = m11,
+    m21: number = m11, m22: number = m11, m23: number = m11, m24: number = m11,
+    m31: number = m11, m32: number = m11, m33: number = m11, m34: number = m11,
+    m41: number = m11, m42: number = m11, m43: number = m11, m44: number = m11
+): Matrix4x4 => new Matrix4x4().setTo(
+    m11, m12, m13, m14,
+    m21, m22, m23, m24,
+    m31, m32, m33, m34,
+    m41, m42, m43, m44
+);

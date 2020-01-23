@@ -5,7 +5,7 @@ import {FacePositions3D, FacePositions4D} from "./positions.js";
 import {FaceNormals3D, FaceNormals4D} from "./normals.js";
 import {FaceColors3D, FaceColors4D} from "./colors.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
-import {FacePositions2D} from "../accessors/position.js";
+import {FacePositions2D} from "../attributes/face/positions.js";
 
 abstract class Faces {
     protected abstract _createPositions(face_vertices: IFaceVertices): FacePositions2D|FacePositions3D|FacePositions4D;

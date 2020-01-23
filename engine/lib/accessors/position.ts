@@ -1,19 +1,8 @@
-import {ATTRIBUTE} from "../../constants.js";
 import {Matrix4x4} from "./matrix4x4.js";
-import {InputPositions} from "../geometry/inputs.js";
 import {TransformableVector2D} from "./vector2D.js";
 import {TransformableVector3D} from "./vector3D.js";
 import {TransformableVector4D} from "./vector4D.js";
-import {
-    Triangle,
-    TransformableFaceAttributeBuffer2D,
-    TransformableFaceAttributeBuffer3D,
-    TransformableFaceAttributeBuffer4D,
-    TransformableVertexAttributeBuffer2D,
-    TransformableVertexAttributeBuffer3D,
-    TransformableVertexAttributeBuffer4D
-} from "./attributes.js";
-import {dir3, dir4, Direction2D, Direction3D, Direction4D} from "./direction.js";
+import {Direction2D, Direction3D, Direction4D} from "./direction.js";
 import {
     compute_the_distance_from_a_2D_position_to_another_2D_position,
     square_the_distance_from_a_2D_positions_to_another_2D_position,
@@ -30,8 +19,7 @@ import {
     square_the_distance_from_a_4D_positions_to_another_4D_position,
     subtract_a_4D_vector_from_another_4D_vector_to_out
 } from "../math/vec4.js";
-import {IPosition2D, IPosition3D, IPosition4D, VectorConstructor} from "../_interfaces/vectors.js";
-import {AnyConstructor} from "../../types.js";
+import {IPosition2D, IPosition3D, IPosition4D} from "../_interfaces/vectors.js";
 
 let this_arrays,
     other_arrays,
@@ -392,128 +380,3 @@ export const pos4 = (
     w: number = x
 ): Position4D => new Position4D().setTo(x, y, z, w);
 
-
-// Attribute Buffers:
-
-const d1_3D = dir3();
-const d2_3D = dir3();
-const d1_4D = dir4();
-const d2_4D = dir4();
-
-export class PositionTriangle2D extends Triangle<Position2D> {
-}
-
-export class PositionTriangle3D extends Triangle<Position3D> {
-    computeNormal(normal: Direction3D): void {
-        this.vertices[0].to(this.vertices[1], d1_3D);
-        this.vertices[0].to(this.vertices[2], d2_3D);
-        d1_3D.cross(d2_3D).normalize(normal);
-    }
-}
-
-export class PositionTriangle4D extends Triangle<Position4D> {
-    computeNormal(normal: Direction4D): void {
-        this.vertices[0].to(this.vertices[1], d1_4D);
-        this.vertices[0].to(this.vertices[2], d2_4D);
-        d1_4D.cross(d2_4D).normalize(normal);
-    }
-}
-
-export class VertexPositions2D
-    extends TransformableVertexAttributeBuffer2D<Position2D, PositionTriangle2D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getTriangleConstructor(): AnyConstructor<PositionTriangle2D> {
-        return PositionTriangle2D
-    }
-
-    protected _getVectorConstructor(): VectorConstructor<Position2D> {
-        return Position2D
-    }
-
-    load(input_attribute: InputPositions): this {
-        return this._load(input_attribute.vertices, true)
-    }
-}
-
-export class VertexPositions3D
-    extends TransformableVertexAttributeBuffer3D<Position3D,
-        PositionTriangle3D,
-        Position4D,
-        PositionTriangle4D,
-        VertexPositions4D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getTriangleConstructor(): AnyConstructor<PositionTriangle3D> {
-        return PositionTriangle3D
-    }
-
-    protected _getVectorConstructor(): VectorConstructor<Position3D> {
-        return Position3D
-    }
-
-    load(input_attribute: InputPositions): this {
-        return this._load(input_attribute.vertices, true)
-    }
-}
-
-export class VertexPositions4D
-    extends TransformableVertexAttributeBuffer4D<Position4D, PositionTriangle4D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getTriangleConstructor(): AnyConstructor<PositionTriangle4D> {
-        return PositionTriangle4D
-    }
-
-    protected _getVectorConstructor(): VectorConstructor<Position4D> {
-        return Position4D
-    }
-
-    load(input_attribute: InputPositions): this {
-        return this._load(input_attribute.vertices, true)
-    }
-}
-
-export class FacePositions2D
-    extends TransformableFaceAttributeBuffer2D<Position2D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getVectorConstructor(): VectorConstructor<Position2D> {
-        return Position2D
-    }
-
-    pull(input: VertexPositions2D): this {
-        this._pull(input.arrays, input.is_shared);
-        return this;
-    }
-}
-
-export class FacePositions3D
-    extends TransformableFaceAttributeBuffer3D<Position3D,
-        Position4D,
-        FacePositions4D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getVectorConstructor(): VectorConstructor<Position3D> {
-        return Position3D;
-    }
-
-    pull(input: VertexPositions3D): this {
-        this._pull(input.arrays, input.is_shared);
-        return this;
-    }
-}
-
-export class FacePositions4D
-    extends TransformableFaceAttributeBuffer4D<Position4D> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _getVectorConstructor(): VectorConstructor<Position4D> {
-        return Position4D
-    }
-
-    pull(input: VertexPositions4D): this {
-        this._pull(input.arrays, input.is_shared);
-        return this;
-    }
-}

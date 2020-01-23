@@ -82,16 +82,16 @@ export abstract class BaseScreen<
     }
 
     refresh() {
-        // const width = this._canvas.clientWidth;
-        // const height = this._canvas.clientHeight;
-        // if (width !== this._size.width ||
-        //     height !== this._size.height) {
-        //     this.resize(width, height);
-        // }
+        const width = this._canvas.clientWidth;
+        const height = this._canvas.clientHeight;
+        if (width !== this._size.width ||
+            height !== this._size.height) {
+            this.resize(width, height);
+        }
 
-        this._active_viewport.refresh();
-        // for (const viewport of this._viewports)
-        //     viewport.refresh();
+        // this._active_viewport.refresh();
+        for (const viewport of this._viewports)
+            viewport.refresh();
     }
 
     resize(width: number, height: number): void {

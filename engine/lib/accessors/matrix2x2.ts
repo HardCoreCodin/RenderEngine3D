@@ -34,7 +34,7 @@ import {IMatrix2x2} from "../_interfaces/matrix.js";
 import {Float4} from "../../types.js";
 
 const cos = Math.cos;
-const sin = Math.cos;
+const sin = Math.sin;
 
 let this_arrays,
     other_arrays,
@@ -514,3 +514,11 @@ export class Matrix2x2 extends Matrix implements IMatrix2x2 {
         );
     }
 }
+
+export const mat3 = (
+    m11: number = 0, m12: number = m11,
+    m21: number = m11, m22: number = m11
+): Matrix2x2 => new Matrix2x2().setTo(
+    m11, m12,
+    m21, m22
+);

@@ -1,12 +1,10 @@
 import {Position3D} from "./position.js";
 import {Direction3D} from "./direction.js";
 import {MathAccessor} from "./accessor.js";
-import {Matrix3x3} from "./matrix3x3.js";
-import {Matrix4x4} from "./matrix4x4.js";
 import {IMatrix, IRotationMatrix} from "../_interfaces/matrix.js";
 
 const cos = Math.cos;
-const sin = Math.cos;
+const sin = Math.sin;
 
 let this_arrays, out_arrays: Float32Array[];
 
@@ -159,24 +157,3 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     }
 }
 
-export const mat3 = (
-    m11: number = 0,   m12: number = m11, m13: number = m11,
-    m21: number = m11, m22: number = m11, m23: number = m11,
-    m31: number = m11, m32: number = m11, m33: number = m11,
-): Matrix3x3 => new Matrix3x3().setTo(
-    m11, m12, m13,
-    m21, m22, m23,
-    m31, m32, m33
-);
-
-export const mat4 = (
-    m11: number = 0,   m12: number = m11, m13: number = m11, m14: number = m11,
-    m21: number = m11, m22: number = m11, m23: number = m11, m24: number = m11,
-    m31: number = m11, m32: number = m11, m33: number = m11, m34: number = m11,
-    m41: number = m11, m42: number = m11, m43: number = m11, m44: number = m11
-): Matrix4x4 => new Matrix4x4().setTo(
-    m11, m12, m13, m14,
-    m21, m22, m23, m24,
-    m31, m32, m33, m34,
-    m41, m42, m43, m44
-);

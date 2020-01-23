@@ -477,8 +477,8 @@ export const set_a_3x3_matrix_to_a_rotation_around_x_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     M33a[a] = M22a[a] = cos;
     M23a[a] = -sin;
@@ -491,8 +491,8 @@ export const set_a_3x3_matrix_to_a_rotation_around_y_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     M11a[a] = M33a[a] = cos;
     M13a[a] = sin;
@@ -505,8 +505,8 @@ export const set_a_3x3_matrix_to_a_rotation_around_z_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     M11a[a] = M22a[a] = cos;
     M12a[a] = -sin;
@@ -520,8 +520,8 @@ export const rotate_a_3x3_matrix_around_x_to_out = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
     sin: number,
+    cos: number,
 
     o: number,
     M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
@@ -575,8 +575,8 @@ export const rotate_a_3x3_matrix_around_x_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     // t11 t12 t13      r11 r12 r13
     // t21 t22 t23  *=  r21 r22 r23
@@ -629,8 +629,8 @@ export const rotate_a_3x3_matrix_around_y_to_out = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
     sin: number,
+    cos: number,
 
     o: number,
     M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
@@ -684,8 +684,8 @@ export const rotate_a_3x3_matrix_around_y_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     // t11 t12 t13      r11 r12 r13
     // t21 t22 t23  *=  r21 r22 r23
@@ -738,8 +738,8 @@ export const rotate_a_3x3_matrix_around_z_to_out = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
     sin: number,
+    cos: number,
 
     o: number,
     M11o: Float32Array, M12o: Float32Array, M13o: Float32Array,
@@ -793,8 +793,8 @@ export const rotate_a_3x3_matrix_around_z_in_place = (
     M21a: Float32Array, M22a: Float32Array, M23a: Float32Array,
     M31a: Float32Array, M32a: Float32Array, M33a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     // t11 t12 t13      r11 r12 r13
     // t21 t22 t23  *=  r21 r22 r23

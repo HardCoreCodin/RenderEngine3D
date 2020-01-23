@@ -1,12 +1,10 @@
+import {Allocator} from "../memory/allocators.js";
 import {IAccessor} from "../_interfaces/accessors.js";
 import {IMathAccessor, IVector} from "../_interfaces/vectors.js";
-import {Allocator, Float32Allocator} from "../memory/allocators.js";
 import {IAllocator} from "../_interfaces/allocators.js";
 
 export abstract class Accessor implements IAccessor
 {
-    static Allocator: Float32Allocator;
-
     id: number;
     readonly arrays: Float32Array[];
     readonly allocator: IAllocator<Float32Array>;

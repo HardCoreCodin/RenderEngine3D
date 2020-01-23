@@ -1,5 +1,4 @@
 import {Vector} from "./accessor.js";
-import {Matrix3x3} from "./matrix3x3.js";
 import {Float32Allocator3D, VECTOR_3D_ALLOCATOR} from "../memory/allocators.js";
 import {
     add_a_3D_vector_to_another_3D_vector_in_place,
@@ -24,6 +23,7 @@ import {
     subtract_a_number_from_a_3D_vector_in_place,
     subtract_a_number_from_a_3D_vector_to_out
 } from "../math/vec3.js";
+import {IMatrix3x3} from "../_interfaces/matrix.js";
 import {ITransformableVector, IVector3D} from "../_interfaces/vectors.js";
 
 let this_arrays,
@@ -401,18 +401,20 @@ export abstract class Vector3D extends Vector implements IVector3D {
     }
 }
 
-export abstract class TransformableVector3D extends Vector3D implements ITransformableVector<Matrix3x3> {
+export abstract class TransformableVector3D extends Vector3D implements ITransformableVector<IMatrix3x3> {
     mul(num: number, out?: this): this;
     mul(other: this, out?: this): this;
-    mul(matrix: Matrix3x3, out?: this): this;
-    mul(matrix_or_other_or_num: Matrix3x3|this|number, out?: this): this {
+    mul(matrix: IMatrix3x3, out?: this): this;
+    mul(matrix_or_other_or_num: IMatrix3x3|this|number, out?: this): this {
         if (out && !out.is(this)) {
             if (typeof matrix_or_other_or_num === "number") {
                 if (matrix_or_other_or_num === 0)
                     this.setAllTo(0);
                 else
                     this._mul_number_to_out(matrix_or_other_or_num, out);
-            } else if (matrix_or_other_or_num instanceof Matrix3x3) {
+            } else if (matrix_or_other_or_num instanceof this.constructor)
+                this._mul_other_to_out(matrix_or_other_or_num as this, out);
+            else {
                 other_arrays = matrix_or_other_or_num.arrays;
 
                 multiply_a_3D_vector_by_a_3x3_matrix_to_out(
@@ -431,15 +433,16 @@ export abstract class TransformableVector3D extends Vector3D implements ITransfo
                     out_arrays[1],
                     out_arrays[2]
                 );
-            } else
-                this._mul_other_to_out(matrix_or_other_or_num, out);
+            }
 
             return out;
         }
 
         if (typeof matrix_or_other_or_num === "number")
             this._mul_number_in_place(matrix_or_other_or_num);
-        else if (matrix_or_other_or_num instanceof Matrix3x3) {
+        else if (matrix_or_other_or_num instanceof this.constructor)
+            this._mul_other_in_place(matrix_or_other_or_num as this);
+        else {
             other_arrays = matrix_or_other_or_num.arrays;
 
             multiply_a_3D_vector_by_a_3x3_matrix_in_place(
@@ -453,8 +456,7 @@ export abstract class TransformableVector3D extends Vector3D implements ITransfo
                 other_arrays[3], other_arrays[4], other_arrays[5],
                 other_arrays[6], other_arrays[6], other_arrays[8]
             );
-        } else
-            this._mul_other_in_place(matrix_or_other_or_num);
+        }
 
         return this;
     }

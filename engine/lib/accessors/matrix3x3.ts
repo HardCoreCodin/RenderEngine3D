@@ -705,3 +705,13 @@ export class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
         );
     }
 }
+
+export const mat3 = (
+    m11: number = 0, m12: number = m11, m13: number = m11,
+    m21: number = m11, m22: number = m11, m23: number = m11,
+    m31: number = m11, m32: number = m11, m33: number = m11,
+): Matrix3x3 => new Matrix3x3().setTo(
+    m11, m12, m13,
+    m21, m22, m23,
+    m31, m32, m33
+);

@@ -1,7 +1,7 @@
-import {mat4} from "../lib/accessors/matrix.js";
 import GLProgram from "./gl/program.js";
 import {GLIndexBuffer, GLTexture, GLVertexArray} from "./gl/buffers.js";
 import {IGLUniform} from "./gl/types.js";
+import {mat4} from "../lib/accessors/matrix4x4.js";
 
 export const canvas: HTMLCanvasElement = document.querySelector('canvas');
 canvas.width = window.innerWidth;

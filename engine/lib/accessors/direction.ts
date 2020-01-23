@@ -1,27 +1,12 @@
-import {ATTRIBUTE} from "../../constants.js";
-import {InputNormals} from "../geometry/inputs.js";
 import {Matrix4x4} from "./matrix4x4.js";
 import {TransformableVector2D} from "./vector2D.js";
 import {TransformableVector3D} from "./vector3D.js";
 import {TransformableVector4D} from "./vector4D.js";
 import {
-    VertexPositions2D,
-    VertexPositions3D,
-    VertexPositions4D
-} from "./position.js";
-import {
-    Triangle,
-    TransformableFaceAttributeBuffer2D,
-    TransformableFaceAttributeBuffer3D,
-    TransformableFaceAttributeBuffer4D,
-    TransformableVertexAttributeBuffer2D,
-    TransformableVertexAttributeBuffer3D,
-    TransformableVertexAttributeBuffer4D
-} from "./attributes.js";
-import {
     compute_the_length_of_a_2D_direction,
     dot_a_2D_direction_with_another_2D_direction,
-    negate_a_2D_direction_in_place, negate_a_2D_direction_to_out,
+    negate_a_2D_direction_in_place,
+    negate_a_2D_direction_to_out,
     normalize_a_2D_direction_in_place,
     normalize_a_2D_direction_to_out,
     reflect_a_2D_vector_around_a_2D_direction_in_place,
@@ -32,7 +17,8 @@ import {
     compute_the_length_of_a_3D_direction,
     cross_a_3D_direction_with_another_3D_direction_in_place,
     cross_a_3D_direction_with_another_3D_direction_to_out,
-    dot_a_3D_direction_with_another_3D_direction, multiply_a_3D_direction_by_a_4x4_matrix_to_out,
+    dot_a_3D_direction_with_another_3D_direction,
+    multiply_a_3D_direction_by_a_4x4_matrix_to_out,
     negate_a_3D_direction_in_place,
     negate_a_3D_direction_to_out,
     normalize_a_3D_direction_in_place,
@@ -43,15 +29,16 @@ import {
 } from "../math/vec3.js";
 import {
     compute_the_length_of_a_4D_direction,
-    dot_a_4D_direction_with_another_4D_direction, negate_a_4D_direction_in_place, negate_a_4D_direction_to_out,
+    dot_a_4D_direction_with_another_4D_direction,
+    negate_a_4D_direction_in_place,
+    negate_a_4D_direction_to_out,
     normalize_a_4D_direction_in_place,
-    normalize_a_4D_direction_to_out, reflect_a_4D_vector_around_a_4D_direction_in_place,
+    normalize_a_4D_direction_to_out,
+    reflect_a_4D_vector_around_a_4D_direction_in_place,
     reflect_a_4D_vector_around_a_4D_direction_to_out,
     square_the_length_of_a_4D_direction
 } from "../math/vec4.js";
-import {IDirection2D, IDirection3D, IDirection4D, VectorConstructor} from "../_interfaces/vectors.js";
-import {AnyConstructor} from "../../types.js";
-import {zip} from "../../utils.js";
+import {IDirection2D, IDirection3D, IDirection4D} from "../_interfaces/vectors.js";
 
 let this_arrays,
     other_arrays,
@@ -761,77 +748,3 @@ export const dir4 = (
     z: number = x,
     w: number = x
 ): Direction4D => new Direction4D().setTo(x, y, z, w);
-
-
-// Attribute Buffers:
-
-export class DirectionTriangle3D extends Triangle<Direction3D> {}
-export class DirectionTriangle4D extends Triangle<Direction4D> {}
-
-export class VertexNormals3D
-    extends TransformableVertexAttributeBuffer3D<Direction3D,
-        DirectionTriangle3D,
-        Direction4D,
-        DirectionTriangle4D,
-        VertexNormals4D> {
-    readonly attribute: ATTRIBUTE.normal;
-
-    protected _getTriangleConstructor(): AnyConstructor<DirectionTriangle3D> {
-        return DirectionTriangle3D
-    }
-
-    protected _getVectorConstructor(): VectorConstructor<Direction3D> {
-        return Direction3D
-    }
-
-    load(input_attribute: InputNormals): this {
-        return this._load(input_attribute.vertices, true)
-    }
-}
-
-export class VertexNormals4D
-    extends TransformableVertexAttributeBuffer4D<Direction4D, DirectionTriangle4D> {
-    readonly attribute: ATTRIBUTE.normal;
-
-    protected _getTriangleConstructor(): AnyConstructor<DirectionTriangle4D> {
-        return DirectionTriangle4D
-    }
-
-    protected _getVectorConstructor(): VectorConstructor<Direction4D> {
-        return Direction4D
-    }
-
-    load(input_attribute: InputNormals): this {
-        return this._load(input_attribute.vertices, true)
-    }
-}
-
-export class FaceNormals3D
-    extends TransformableFaceAttributeBuffer3D<Direction3D,
-        Direction4D,
-        FaceNormals4D> {
-    readonly attribute: ATTRIBUTE.normal;
-
-    protected _getVectorConstructor(): VectorConstructor<Direction3D> {
-        return Direction3D;
-    }
-
-    pull(vertex_positions: VertexPositions3D) {
-        for (const [face_normal, triangle] of zip(this, vertex_positions.triangles))
-            triangle.computeNormal(face_normal);
-    }
-}
-
-export class FaceNormals4D
-    extends TransformableFaceAttributeBuffer4D<Direction4D> {
-    readonly attribute: ATTRIBUTE.normal;
-
-    protected _getVectorConstructor(): VectorConstructor<Direction4D> {
-        return Direction4D
-    }
-
-    pull(vertex_positions: VertexPositions4D) {
-        for (const [face_normal, triangle] of zip(this, vertex_positions.triangles))
-            triangle.computeNormal(face_normal);
-    }
-}

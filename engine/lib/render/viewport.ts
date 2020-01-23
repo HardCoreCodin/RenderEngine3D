@@ -2,12 +2,13 @@ import Camera from "./camera.js";
 import Rectangle from "./rectangle.js";
 import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
 import {Rasterizer, RayTracer} from "./pipelines.js";
-import {mat3, mat4} from "../accessors/matrix.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {I2D} from "../_interfaces/vectors.js";
 import {ICamera, ISize, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {IController} from "../_interfaces/input.js";
 import {Color4D, rgba} from "../accessors/color.js";
+import {mat3} from "../accessors/matrix3x3.js";
+import {mat4} from "../accessors/matrix4x4.js";
 
 export class BaseViewport<
     Context extends RenderingContext,

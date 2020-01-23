@@ -338,8 +338,8 @@ export const set_a_2x2_matrix_to_a_rotation_matrix = (
     M11a: Float32Array, M12a: Float32Array,
     M21a: Float32Array, M22a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     M11a[a] = M22a[a] = cos;
     M12a[a] = sin;
@@ -351,8 +351,8 @@ export const rotate_a_2x2_matrix_to_out = (
     M11a: Float32Array, M12a: Float32Array,
     M21a: Float32Array, M22a: Float32Array,
 
-    cos: number,
     sin: number,
+    cos: number,
 
     o: number,
     M11o: Float32Array, M12o: Float32Array,
@@ -394,8 +394,8 @@ export const rotate_a_2x2_matrix_in_place = (
     M11a: Float32Array, M12a: Float32Array,
     M21a: Float32Array, M22a: Float32Array,
 
-    cos: number,
-    sin: number
+    sin: number,
+    cos: number
 ) : void => {
     // t11 t12 *= r11 r12
     // t21 t22    r21 r22
