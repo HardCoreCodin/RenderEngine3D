@@ -17,10 +17,6 @@ export const _pullSharedFace = (
                 vertex_component[indices_2[face_index]] +
                 vertex_component[indices_3[face_index]]
             ) / 3;
-
-    if (this_arrays.length === 4 &&
-        input_arrays.length === 3)
-        this_arrays[3].fill(1);
 };
 
 export const _pullUnsharedFace = (
@@ -35,8 +31,4 @@ export const _pullUnsharedFace = (
                 vertex_component[face_index] +
                 vertex_component[face_index]
             ) / 3;
-
-    if (this_arrays.length === 4 &&
-        input_arrays.length === 3)
-        this_arrays[3].fill(1);
 };

@@ -1,6 +1,6 @@
 import {zip} from "../../../utils.js";
-import {_norm3D, _norm4D} from "../_core.js";
 import {ATTRIBUTE} from "../../../constants.js";
+import {Matrix4x4} from "../../accessors/matrix4x4.js";
 import {
     Direction3D,
     Direction4D
@@ -13,13 +13,17 @@ import {
     TransformableFaceAttributeBuffer3D,
     TransformableFaceAttributeBuffer4D
 } from "./_base.js";
+import {
+    _mulAllDir3Mat4,
+    _mulSomeDir3Mat4,
+    _norm3D,
+    _norm4D
+} from "../_core.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
 
 
-export class FaceNormals3D
-    extends TransformableFaceAttributeBuffer3D<Direction3D,
-        Direction4D,
-        FaceNormals4D> {
+export class FaceNormals3D extends TransformableFaceAttributeBuffer3D<Direction3D>
+{
     readonly attribute: ATTRIBUTE.normal;
 
     protected _getVectorConstructor(): VectorConstructor<Direction3D> {
@@ -35,10 +39,19 @@ export class FaceNormals3D
         _norm3D(this.arrays, include);
         return this;
     }
+
+    mul4(matrix: Matrix4x4, out: FaceNormals4D, include?: Uint8Array[]): FaceNormals4D {
+        if (include)
+            _mulSomeDir3Mat4(this.arrays, matrix.arrays, matrix.id, include, out.arrays);
+        else
+            _mulAllDir3Mat4(this.arrays, matrix.arrays, matrix.id, out.arrays);
+
+        return out;
+    }
 }
 
-export class FaceNormals4D
-    extends TransformableFaceAttributeBuffer4D<Direction4D> {
+export class FaceNormals4D extends TransformableFaceAttributeBuffer4D<Direction4D>
+{
     readonly attribute: ATTRIBUTE.normal;
 
     protected _getVectorConstructor(): VectorConstructor<Direction4D> {

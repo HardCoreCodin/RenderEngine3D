@@ -1,9 +1,10 @@
 import Mesh from "../geometry/mesh.js";
 import {Matrix4x4} from "../accessors/matrix4x4.js";
-import {Rasterizer, RayTracer} from "./pipelines.js";
+import {Rasterizer} from "./pipelines.js";
 import {MeshGeometries} from "./geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IMaterial, IRenderPipeline} from "../_interfaces/render.js";
+import {RayTracer} from "./raytracer.js";
 
 export class BaseMaterial<
     Context extends RenderingContext,

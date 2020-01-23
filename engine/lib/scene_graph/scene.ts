@@ -4,7 +4,8 @@ import {RasterMaterial, RayTraceMaterial} from "../render/materials.js";
 import {MeshGeometries} from "../render/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {CameraConstructor, ICamera, IMaterial, IRenderPipeline, MaterialConstructor} from "../_interfaces/render.js";
-import {Rasterizer, RayTracer} from "../render/pipelines.js";
+import {Rasterizer} from "../render/pipelines.js";
+import {RayTracer} from "../render/raytracer.js";
 
 
 export abstract class BaseScene<

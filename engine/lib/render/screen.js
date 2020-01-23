@@ -1,8 +1,9 @@
 import Rectangle from "./rectangle.js";
 import { RasterViewport, RayTraceViewport } from "./viewport.js";
-import { Rasterizer, RayTracer } from "./pipelines.js";
+import { Rasterizer } from "./pipelines.js";
 import { rgba } from "../accessors/color.js";
 import { FPSController } from "../input/controllers.js";
+import { RayTracer } from "./raytracer.js";
 export class BaseScreen extends Rectangle {
     constructor(camera, scene, context, _canvas) {
         super();

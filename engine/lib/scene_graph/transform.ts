@@ -27,22 +27,22 @@ export class EulerRotation implements IEulerRotation {
 
     constructor(
         // Overall rotation matrix:
-        protected readonly _matrix: Matrix3x3 = new Matrix3x3(),
-        protected readonly _rotation_matrix: Matrix3x3 = new Matrix3x3(),
+        protected readonly _result_matrix: Matrix3x3 = new Matrix3x3(),
+        public readonly matrix: Matrix3x3 = new Matrix3x3(),
 
         protected _x_angle: number = 0,
         protected _y_angle: number = 0,
         protected _z_angle: number = 0
     ) {
-        _rotation_matrix.setToIdentity();
+        matrix.setToIdentity();
     }
 
     setFrom(other: this): void {
         this._x_angle = other._x_angle;
         this._y_angle = other._y_angle;
         this._z_angle = other._z_angle;
-        this._rotation_matrix.setFrom(other._rotation_matrix);
-        this._matrix.setFrom(other._matrix);
+        this.matrix.setFrom(other.matrix);
+        this._result_matrix.setFrom(other._result_matrix);
     }
 
     get x(): number {return this._x_angle}
@@ -97,14 +97,14 @@ export class EulerRotation implements IEulerRotation {
     }
 
     computeMatrix(): void {
-        this._rotation_matrix.transpose();
-        this._matrix.mul(this._rotation_matrix);
+        this.matrix.transpose();
+        this._result_matrix.mul(this.matrix);
 
-        this._rotation_matrix.setRotationAroundZ(this._z_angle, true); // Roll
-        this._rotation_matrix.rotateAroundX(this._x_angle); // Pitch
-        this._rotation_matrix.rotateAroundY(this._y_angle); // Yaw
+        this.matrix.setRotationAroundZ(this._z_angle, true); // Roll
+        this.matrix.rotateAroundX(this._x_angle); // Pitch
+        this.matrix.rotateAroundY(this._y_angle); // Yaw
 
-        this._matrix.mul(this._rotation_matrix);
+        this._result_matrix.mul(this.matrix);
     }
 }
 

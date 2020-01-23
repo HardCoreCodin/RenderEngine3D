@@ -1,7 +1,11 @@
 import {Vector} from "../../accessors/accessor.js";
-import {AnyConstructor} from "../../../types.js";
-import {IFaceVertices} from "../../_interfaces/buffers.js";
+import {Vector2D} from "../../accessors/vector2D.js";
+import {Vector3D} from "../../accessors/vector3D.js";
 import {Vector4D} from "../../accessors/vector4D.js";
+import {Matrix2x2} from "../../accessors/matrix2x2.js";
+import {Matrix3x3} from "../../accessors/matrix3x3.js";
+import {Matrix4x4} from "../../accessors/matrix4x4.js";
+import {AttributeBuffer} from "../_base.js";
 import {
     Float32Allocator2D,
     Float32Allocator3D,
@@ -10,19 +14,23 @@ import {
     VECTOR_3D_ALLOCATOR,
     VECTOR_4D_ALLOCATOR
 } from "../../memory/allocators.js";
-import {Matrix3x3} from "../../accessors/matrix3x3.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
-import {Matrix2x2} from "../../accessors/matrix2x2.js";
-import {_loadSaredSimple, _loadShared, _loadUnshared, _pullShared, _pullUnshared} from "./_core.js";
 import {
-    _mulAllPos3Mat4,
-    _mulSomePos3Mat4, _mulVec2Mat2, _mulVec2Mat2IP,
+    _loadSaredSimple,
+    _loadShared,
+    _loadUnshared,
+    _pullShared,
+    _pullUnshared
+} from "./_core.js";
+import {
+    _mulVec2Mat2,
+    _mulVec2Mat2IP,
     _mulVec3Mat3,
     _mulVec3Mat3IP,
     _mulVec4Mat4,
     _mulVec4Mat4IP
 } from "../_core.js";
-import {AttributeBuffer} from "../_base.js";
+import {IFaceVertices} from "../../_interfaces/buffers.js";
+import {AnyConstructor} from "../../../types.js";
 
 export class Triangle<VectorType extends Vector> {
     constructor(public readonly vertices: [VectorType, VectorType, VectorType]) {
@@ -34,8 +42,7 @@ export abstract class VertexAttributeBuffer<VectorType extends Vector,
     extends AttributeBuffer<VectorType> {
     protected abstract _getTriangleConstructor(): AnyConstructor<TriangleType>;
 
-    readonly Triangle: AnyConstructor<TriangleType>;
-
+    protected Triangle: AnyConstructor<TriangleType>;
     protected _is_shared: boolean;
     protected _current_face_vertex_vectors: [VectorType, VectorType, VectorType];
     current_triangle: TriangleType;
@@ -49,12 +56,16 @@ export abstract class VertexAttributeBuffer<VectorType extends Vector,
     ) {
         super(face_vertices, face_count, is_shared ? vertex_count : face_count * 3, arrays);
         this._is_shared = !!is_shared;
-        this.Triangle = this._getTriangleConstructor();
+    }
+
+    protected _post_init(): void {
         this._current_face_vertex_vectors = [
             new this.Vector(0, this.arrays),
             new this.Vector(0, this.arrays),
             new this.Vector(0, this.arrays)
         ];
+
+        this.Triangle = this._getTriangleConstructor();
         this.current_triangle = new this.Triangle(this._current_face_vertex_vectors);
     }
 
@@ -113,7 +124,7 @@ export abstract class VertexAttributeBuffer<VectorType extends Vector,
 }
 
 export abstract class VertexAttributeBuffer2D<
-    VectorType extends Vector,
+    VectorType extends Vector2D,
     TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer<VectorType, TriangleType>
 {
@@ -123,7 +134,7 @@ export abstract class VertexAttributeBuffer2D<
 }
 
 export abstract class VertexAttributeBuffer3D<
-    VectorType extends Vector,
+    VectorType extends Vector3D,
     TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer<VectorType, TriangleType>
 {
@@ -133,7 +144,7 @@ export abstract class VertexAttributeBuffer3D<
 }
 
 export abstract class VertexAttributeBuffer4D<
-    VectorType extends Vector,
+    VectorType extends Vector4D,
     TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer<VectorType, TriangleType>
 {
@@ -143,7 +154,7 @@ export abstract class VertexAttributeBuffer4D<
 }
 
 export abstract class TransformableVertexAttributeBuffer2D<
-    VectorType extends Vector,
+    VectorType extends Vector2D,
     TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer2D<VectorType, TriangleType>
 {
@@ -159,45 +170,23 @@ export abstract class TransformableVertexAttributeBuffer2D<
 }
 
 export abstract class TransformableVertexAttributeBuffer3D<
-    VectorType extends Vector,
-    TriangleType extends Triangle<VectorType>,
-    Vector4DType extends Vector4D,
-    Triangle4DType extends Triangle<Vector4DType>,
-    VertexAttribute4DType extends TransformableVertexAttributeBuffer4D<Vector4DType, Triangle4DType>>
+    VectorType extends Vector3D,
+    TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer3D<VectorType, TriangleType>
 {
-    mul(matrix: Matrix3x3): this;
-    mul(matrix: Matrix3x3, out: this): this;
-    mul(matrix: Matrix4x4, out: VertexAttribute4DType): VertexAttribute4DType;
-    mul(matrix: Matrix4x4, out: VertexAttribute4DType, include: Uint8Array[]): VertexAttribute4DType;
-    mul(matrix: Matrix3x3 | Matrix4x4, out?: this | VertexAttribute4DType, include?: Uint8Array[]): this | VertexAttribute4DType {
-        if (matrix instanceof Matrix3x3) {
-            if (out) {
-                if (out instanceof this.constructor) {
-                    _mulVec3Mat3(this.arrays, matrix.arrays, matrix.id, out.arrays);
-                    return out;
-                } else
-                    throw `Invalid out type: ${out}`;
-            }
-
-            _mulVec3Mat3IP(this.arrays, matrix.arrays, matrix.id);
-            return this;
-        } else if (matrix instanceof Matrix4x4) {
-            if (out instanceof this.constructor)
-                throw `Invalid out type: ${out}`;
-
-            if (include)
-                _mulSomePos3Mat4(this.arrays, matrix.arrays, matrix.id, include, out.arrays);
-            else
-                _mulAllPos3Mat4(this.arrays, matrix.arrays, matrix.id, out.arrays);
-
+    mul(matrix: Matrix3x3, out?: this): this {
+        if (out) {
+            _mulVec3Mat3(this.arrays, matrix.arrays, matrix.id, out.arrays);
             return out;
         }
+
+        _mulVec3Mat3IP(this.arrays, matrix.arrays, matrix.id);
+        return this;
     }
 }
 
 export abstract class TransformableVertexAttributeBuffer4D<
-    VectorType extends Vector,
+    VectorType extends Vector4D,
     TriangleType extends Triangle<VectorType>>
     extends VertexAttributeBuffer4D<VectorType, TriangleType>
 {

@@ -1,4 +1,4 @@
-import {IMatrix4x4} from "./matrix.js";
+import {IMatrix3x3, IMatrix4x4} from "./matrix.js";
 import {IPosition3D} from "./vectors.js";
 
 export interface ITransform {
@@ -20,6 +20,8 @@ export interface IScale {
 }
 
 export interface IEulerRotation {
+    readonly matrix: IMatrix3x3;
+
     x: number;
     y: number;
     z: number;

@@ -1,13 +1,14 @@
 import Camera from "./camera.js";
 import {RasterScreen, RayTraceScreen} from "./screen.js";
 import {RasterViewport, RayTraceViewport} from "./viewport.js";
-import {Rasterizer, RayTracer} from "./pipelines.js";
+import {Rasterizer} from "./pipelines.js";
 import {KEY_CODES} from "../../constants.js";
 import {IScene} from "../_interfaces/nodes.js";
 import {IController} from "../_interfaces/input.js";
 import {ICamera, IRenderEngine, IRenderPipeline, IScreen, IViewport} from "../_interfaces/render.js";
 import {non_zero} from "../../utils.js";
 import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
+import {RayTracer} from "./raytracer.js";
 
 export abstract class BaseRenderEngine<
     Context extends RenderingContext,

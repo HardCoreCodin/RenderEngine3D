@@ -8,11 +8,8 @@ export const _loadSaredSimple = (
 ): void => {
     for (const [array, input_array] of zip(this_arrays, input_arrays))
         array.set(input_array);
-
-    if (this_arrays.length === 4 &&
-        input_arrays.length === 3)
-        this_arrays[3].fill(1);
 };
+
 export const _loadShared = (
     this_arrays: Float32Array[],
     input_vertices: number[][],

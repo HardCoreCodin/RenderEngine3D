@@ -69,6 +69,11 @@ export abstract class MathAccessor extends Accessor implements IMathAccessor {
     protected abstract _div_number_in_place(num: number): void;
     protected abstract _div_number_to_out(num: number, out: this): void;
 
+    addOtherInPlace(other: IMathAccessor): this {
+        this._add_other_in_place(other);
+        return this;
+    }
+
     add(num: number, out?: IMathAccessor): this|typeof out;
     add(other: IMathAccessor, out?: IMathAccessor): this|typeof out;
     add(other_or_num: IMathAccessor|number, out?: IMathAccessor): this|typeof out {

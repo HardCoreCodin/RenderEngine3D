@@ -235,6 +235,19 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         )
     }
 
+    normalizeInPlace(): this {
+        this_arrays = this.arrays;
+
+        normalize_a_3D_direction_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2]
+        );
+
+        return this;
+    }
+
     normalize(out?: this): this {
         this_arrays = this.arrays;
 

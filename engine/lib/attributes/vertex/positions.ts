@@ -1,14 +1,30 @@
 import {ATTRIBUTE} from "../../../constants.js";
+import {Matrix4x4} from "../../accessors/matrix4x4.js";
 import {InputPositions} from "../../geometry/inputs.js";
-import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
-import {dir3, dir4, Direction3D, Direction4D} from "../../accessors/direction.js";
+import {
+    Position2D,
+    Position3D,
+    Position4D
+} from "../../accessors/position.js";
+import {
+    dir3,
+    dir4,
+    Direction3D,
+    Direction4D
+} from "../../accessors/direction.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
 import {AnyConstructor} from "../../../types.js";
 import {
+    Triangle,
     TransformableVertexAttributeBuffer2D,
     TransformableVertexAttributeBuffer3D,
-    TransformableVertexAttributeBuffer4D, Triangle
+    TransformableVertexAttributeBuffer4D
 } from "./_base.js";
+import {
+    _mulAllPos3Mat4,
+    _mulSomePos3Mat4
+} from "../_core.js";
+
 
 const d1_3D = dir3();
 const d2_3D = dir3();
@@ -51,12 +67,7 @@ export class VertexPositions2D
 }
 
 export class VertexPositions3D
-    extends TransformableVertexAttributeBuffer3D<
-        Position3D,
-        PositionTriangle3D,
-        Position4D,
-        PositionTriangle4D,
-        VertexPositions4D>
+    extends TransformableVertexAttributeBuffer3D<Position3D, PositionTriangle3D>
 {
     readonly attribute: ATTRIBUTE.position;
 
@@ -66,6 +77,15 @@ export class VertexPositions3D
 
     protected _getVectorConstructor(): VectorConstructor<Position3D> {
         return Position3D
+    }
+
+    mul4(matrix: Matrix4x4, out: VertexPositions4D, include?: Uint8Array[]): VertexPositions4D {
+        if (include)
+            _mulSomePos3Mat4(this.arrays, matrix.arrays, matrix.id, include, out.arrays);
+        else
+            _mulAllPos3Mat4(this.arrays, matrix.arrays, matrix.id, out.arrays);
+
+        return out;
     }
 
     load(input_attribute: InputPositions): this {
@@ -83,6 +103,11 @@ export class VertexPositions4D
 
     protected _getVectorConstructor(): VectorConstructor<Position4D> {
         return Position4D
+    }
+
+    protected _post_init(): void {
+        super._post_init();
+        this.arrays[3].fill(1);
     }
 
     load(input_attribute: InputPositions): this {
