@@ -5,30 +5,24 @@ import {FacePositions3D, FacePositions4D} from "./positions.js";
 import {FaceNormals3D, FaceNormals4D} from "./normals.js";
 import {FaceColors3D, FaceColors4D} from "./colors.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
-import {
-    IFaceColors,
-    IFaceNormals,
-    IFacePositions,
-    IFaces,
-    IFaces3D, IFaces4D
-} from "../_interfaces/attributes.js";
+import {FacePositions2D} from "../accessors/position.js";
 
-abstract class Faces implements IFaces {
-    protected abstract _createPositions(face_vertices: IFaceVertices): IFacePositions;
-    protected abstract _createNormals(face_vertices: IFaceVertices): IFaceNormals;
-    protected abstract _createColors(face_vertices: IFaceVertices): IFaceColors;
+abstract class Faces {
+    protected abstract _createPositions(face_vertices: IFaceVertices): FacePositions2D|FacePositions3D|FacePositions4D;
+    protected abstract _createNormals(face_vertices: IFaceVertices): FaceNormals3D|FaceNormals4D;
+    protected abstract _createColors(face_vertices: IFaceVertices): FaceColors3D|FaceColors4D;
 
-    positions: IFacePositions | null;
-    normals: IFaceNormals | null;
-    colors: IFaceColors | null;
+    positions: FacePositions2D|FacePositions3D|FacePositions4D|null;
+    normals: FaceNormals3D|FaceNormals4D|null;
+    colors: FaceColors3D|FaceColors4D|null;
 
     init(
         face_vertices: IFaceVertices,
         include: ATTRIBUTE,
 
-        positions?: IFacePositions,
-        normals?: IFaceNormals,
-        colors?: IFaceColors
+        positions?: FacePositions2D|FacePositions3D|FacePositions4D,
+        normals?: FaceNormals3D|FaceNormals4D,
+        colors?: FaceColors3D|FaceColors4D
     ): void {
         this.positions = include & ATTRIBUTE.position ? positions || this._createPositions(face_vertices): null;
         this.normals = include & ATTRIBUTE.normal ? normals || this._createNormals(face_vertices) : null;
@@ -36,7 +30,7 @@ abstract class Faces implements IFaces {
     }
 }
 
-export class Faces3D extends Faces implements IFaces3D {
+export class Faces3D extends Faces {
     readonly positions: FacePositions3D;
     readonly normals: FaceNormals3D;
     readonly colors: FaceColors3D;
@@ -75,7 +69,7 @@ export class Faces3D extends Faces implements IFaces3D {
     }
 }
 
-export class Faces4D extends Faces implements IFaces4D {
+export class Faces4D extends Faces {
     readonly positions: FacePositions4D;
     readonly normals: FaceNormals4D;
     readonly colors: FaceColors4D;

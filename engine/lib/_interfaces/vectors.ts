@@ -5,6 +5,7 @@ import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D} from "../accessors/color.js";
+import {Vector} from "../accessors/accessor.js";
 
 export interface IMathAccessor extends IAccessor {
     add(other: IAccessor|number, out?: IAccessor): this|typeof out;
@@ -17,6 +18,11 @@ export interface IVector extends IMathAccessor
 {
     lerp(to: this, by: number, out: this): this;
 }
+
+export type VectorConstructor<VectorType extends Vector> = new (
+    id?: number,
+    arrays?: Float32Array[]
+) => VectorType;
 
 export interface ITransformableVector<Matrix extends IMatrix = IMatrix> extends IVector
 {
@@ -185,7 +191,7 @@ export interface IPosition2D
 }
 
 export interface IPosition3D
-    extends ITransformableVector, I2D
+    extends ITransformableVector, I3D
 {
     to(other: this, out: Direction3D): Direction3D;
     distanceTo(other: this): number;

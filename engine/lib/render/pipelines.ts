@@ -1,7 +1,8 @@
 import Geometry from "./geometry.js";
 // import {MeshShader} from "./shaders/mesh/base.js";
 import {VertexPositions4D} from "../geometry/positions.js";
-import {Matrix3x3, Matrix4x4} from "../accessors/matrix.js";
+import {Matrix3x3} from "../accessors/matrix3x3.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 import {cube_face_vertices} from "../geometry/cube.js";
 import {T3, T4} from "../../types.js";
@@ -15,14 +16,13 @@ import {
 } from "../_interfaces/render.js";
 import {IGeometry, IMesh} from "../_interfaces/geometry.js";
 import {IScene} from "../_interfaces/nodes.js";
-import {IColor, IPosition3D, I2D} from "../_interfaces/vectors.js";
+import {IColor, I2D} from "../_interfaces/vectors.js";
 import {pos3, Position3D} from "../accessors/position.js";
 import {dir3} from "../accessors/direction.js";
 import RenderTarget from "./target.js";
 import Camera from "./camera.js";
 import {Canvas2DViewport, RasterViewport, RayTraceViewport} from "./viewport.js";
 import {RasterScene, RayTraceScene} from "../scene_graph/scene.js";
-import {IMatrix3x3} from "../_interfaces/matrix.js";
 
 
 export abstract class BaseRenderPipeline<
@@ -159,9 +159,9 @@ export class RayTracer extends Canvas2DRenderPipeline<Camera, RayTraceScene, Ray
         pixel_position_plus_inc_x.setTo(1.5 - half_width, 0.5 - half_height, focal_length);
         pixel_position_plus_inc_y.setTo(0.5 - half_width, 1.5 - half_height, focal_length);
 
-        pixel_position_start.matmul(camera_rotation).add(camera_position);
-        pixel_position_plus_inc_x.matmul(camera_rotation).add(camera_position);
-        pixel_position_plus_inc_y.matmul(camera_rotation).add(camera_position);
+        pixel_position_start.mul(camera_rotation).add(camera_position);
+        pixel_position_plus_inc_x.mul(camera_rotation).add(camera_position);
+        pixel_position_plus_inc_y.mul(camera_rotation).add(camera_position);
 
         pixel_position_start.to(pixel_position_plus_inc_x, pixel_position_inc_x);
         pixel_position_start.to(pixel_position_plus_inc_y, pixel_position_inc_y);

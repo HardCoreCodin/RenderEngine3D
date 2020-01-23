@@ -549,7 +549,7 @@ export const normalize_some_4D_directions_in_place = (
     Z: Float32Array,
     W: Float32Array,
 
-    include: Uint8Array
+    include: Uint8Array[]
 ) : void => {
     for (let i = 0; i < X.length; i++) if (include[i]) {
         t_n = X[i]**2 + Y[i]**2 + Z[i]**2 + W[i]**2;
@@ -719,7 +719,7 @@ export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
     Za: Float32Array,
     Wa: Float32Array,
 
-    include: Uint8Array,
+    include: Uint8Array[],
 
     m: number,
     M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
@@ -771,7 +771,7 @@ export const multiply_some_4D_vectors_by_a_4x4_matrix_in_place = (
     Za: Float32Array,
     Wa: Float32Array,
 
-    include: Uint8Array,
+    include: Uint8Array[],
 
     m: number,
     M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,

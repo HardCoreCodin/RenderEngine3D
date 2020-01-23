@@ -384,7 +384,7 @@ export const normalize_some_2D_directions_in_place = (
     X: Float32Array,
     Y: Float32Array,
 
-    include: Uint8Array
+    include: Uint8Array[]
 ) : void => {
     for (let i = 0; i < X.length; i++) if (include[i]) {
         t_n = X[i]**2 + Y[i]**2;
@@ -477,4 +477,37 @@ export const multiply_a_2D_vector_by_a_2x2_matrix_in_place = (
 
     Xa[a] = t_x*M11[m] + t_y*M21[m];
     Ya[a] = t_x*M12[m] + t_y*M22[m];
+};
+
+export const multiply_all_2D_vectors_by_a_2x2_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array,
+    M21: Float32Array, M22: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array
+): void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m];
+    }
+};
+export const multiply_all_2D_vectors_by_a_2x2_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array,
+    M21: Float32Array, M22: Float32Array
+): void => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m];
+    }
 };

@@ -1,31 +1,22 @@
 import {ATTRIBUTE} from "../../constants.js";
-import {Matrix4x4} from "../accessors/matrix.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {VertexNormals3D, VertexNormals4D} from "./normals.js";
 import {VertexColors3D, VertexColors4D} from "./colors.js";
 import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
-import {
-    IVertexColors,
-    IVertexNormals,
-    IVertexPositions,
-    IVertexUVs,
-    IVertices,
-    IVertices3D,
-    IVertices4D
-} from "../_interfaces/attributes.js";
 
 
-export abstract class Vertices implements IVertices {
-    protected abstract _createPositions(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexPositions;
-    protected abstract _createNormals(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexNormals;
-    protected abstract _createColors(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexColors;
-    protected abstract _createUVs(count: number, indices: IFaceVertices, share: ATTRIBUTE): IVertexUVs;
+export abstract class Vertices {
+    protected abstract _createPositions(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexPositions3D|VertexPositions3D|VertexPositions4D;
+    protected abstract _createNormals(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexNormals3D|VertexNormals4D;
+    protected abstract _createColors(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexColors3D|VertexColors4D;
+    protected abstract _createUVs(count: number, indices: IFaceVertices, share: ATTRIBUTE): VertexUVs2D|VertexUVs3D;
 
-    positions: IVertexPositions;
-    normals: IVertexNormals | null;
-    colors: IVertexColors | null;
-    uvs: IVertexUVs | null;
+    positions: VertexPositions3D|VertexPositions3D|VertexPositions4D;
+    normals: VertexNormals3D|VertexNormals4D|null;
+    colors: VertexColors3D|VertexColors4D|null;
+    uvs: VertexUVs2D|VertexUVs3D|null;
 
     init(
         indices: IFaceVertices,
@@ -33,10 +24,10 @@ export abstract class Vertices implements IVertices {
         share: ATTRIBUTE,
         count: number,
 
-        positions?: IVertexPositions,
-        normals?: IVertexNormals,
-        colors?: IVertexColors,
-        uvs?: IVertexUVs,
+        positions?: VertexPositions3D|VertexPositions3D|VertexPositions4D,
+        normals?: VertexNormals3D|VertexNormals4D,
+        colors?: VertexColors3D|VertexColors4D,
+        uvs?: VertexUVs2D|VertexUVs3D,
     ): void {
         this.positions = positions || this._createPositions(count, indices, share);
         this.normals = include & ATTRIBUTE.normal ?
@@ -50,7 +41,7 @@ export abstract class Vertices implements IVertices {
     }
 }
 
-export class Vertices3D extends Vertices implements IVertices3D {
+export class Vertices3D extends Vertices {
     positions: VertexPositions3D;
     normals: VertexNormals3D;
     colors: VertexColors3D;
@@ -73,7 +64,7 @@ export class Vertices3D extends Vertices implements IVertices3D {
     }
 }
 
-export class Vertices4D extends Vertices implements IVertices4D {
+export class Vertices4D extends Vertices {
     positions: VertexPositions4D;
     normals: VertexNormals4D;
     colors: VertexColors4D;

@@ -3,8 +3,11 @@ import {IMatrix4x4} from "./matrix.js";
 import {IMaterial, IMeshCallback} from "./render.js";
 import {IPosition3D, IPosition4D} from "./vectors.js";
 import {IFaceVertices, IVertexFaces} from "./buffers.js";
-import {IFaces3D, IMeshInputs, IVertexPositions3D, IVertexPositions4D, IVertices3D} from "./attributes.js";
+import {IMeshInputs} from "./attributes.js";
 import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
+import {VertexPositions3D, VertexPositions4D} from "../geometry/positions.js";
+import {Faces3D} from "../geometry/faces.js";
+import {Vertices3D} from "../geometry/vertices.js";
 
 
 export interface IMeshOptions {
@@ -21,28 +24,28 @@ export interface IMeshOptions {
 }
 
 export interface IBounds {
-    vertex_positions: IVertexPositions3D | IVertexPositions4D;
+    vertex_positions: VertexPositions3D|VertexPositions4D;
     min: IPosition3D | IPosition4D;
     max: IPosition3D | IPosition4D;
 
-    load(source_positions: IVertexPositions3D | IVertexPositions4D): void;
+    load(source_positions: VertexPositions3D|VertexPositions4D): void;
 }
 
 export interface IBounds3D extends IBounds {
-    readonly vertex_positions: IVertexPositions3D;
+    readonly vertex_positions: VertexPositions3D;
     readonly min: IPosition3D;
     readonly max: IPosition3D;
 }
 
 export interface IBounds4D extends IBounds {
-    readonly vertex_positions: IVertexPositions4D;
+    readonly vertex_positions: VertexPositions4D;
     readonly min: IPosition4D;
     readonly max: IPosition4D;
 }
 
 export interface IMesh {
-    faces: IFaces3D;
-    vertices: IVertices3D;
+    faces: Faces3D;
+    vertices: Vertices3D;
 
     readonly face_count: number;
     readonly vertex_count: number;
@@ -72,5 +75,3 @@ export interface IGeometry<
 
     postWorldMatrixRefresh(): void;
 }
-
-

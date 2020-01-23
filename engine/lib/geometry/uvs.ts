@@ -8,7 +8,6 @@ import {
     VECTOR_2D_ALLOCATOR,
     VECTOR_3D_ALLOCATOR
 } from "../memory/allocators.js";
-import {IVertexUVs} from "../_interfaces/attributes.js";
 import {IAccessorConstructor} from "../_interfaces/accessors.js";
 import {AnyConstructor} from "../../types.js";
 
@@ -18,7 +17,6 @@ class UVTriangle3D extends Triangle<UV3D> {}
 
 export class VertexUVs2D
     extends LoadableVertexAttribute<UV2D, UVTriangle2D, InputUVs>
-    implements IVertexUVs<UV2D>
 {
     readonly attribute = ATTRIBUTE.uv;
     protected _getTriangleConstructor(): AnyConstructor<UVTriangle2D> {return UVTriangle2D}
@@ -28,7 +26,6 @@ export class VertexUVs2D
 
 export class VertexUVs3D
     extends LoadableVertexAttribute<UV3D, UVTriangle3D, InputUVs>
-    implements IVertexUVs<UV3D>
 {
     readonly attribute = ATTRIBUTE.uv;
     protected _getTriangleConstructor(): AnyConstructor<UVTriangle3D> {return UVTriangle3D}

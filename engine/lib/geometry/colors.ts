@@ -1,6 +1,5 @@
 import {ATTRIBUTE} from "../../constants.js";
 import {Color3D, Color4D} from "../accessors/color.js";
-import {IFaceColors, IVertexColors} from "../_interfaces/attributes.js";
 import {
     Float32Allocator3D,
     Float32Allocator4D,
@@ -17,7 +16,6 @@ class ColorTriangle4D extends Triangle<Color4D> {}
 
 export class VertexColors3D
     extends PulledVertexAttribute<Color3D, ColorTriangle3D, InputColors, FaceColors3D>
-    implements IVertexColors<Color3D>
 {
     readonly attribute = ATTRIBUTE.color;
     protected _getTriangleConstructor(): AnyConstructor<ColorTriangle3D> {return ColorTriangle3D}
@@ -37,7 +35,6 @@ export class VertexColors3D
 
 export class VertexColors4D
     extends PulledVertexAttribute<Color4D, ColorTriangle4D, InputColors, FaceColors4D>
-    implements IVertexColors<Color4D>
 {
     readonly attribute = ATTRIBUTE.color;
     protected _getTriangleConstructor(): AnyConstructor<ColorTriangle4D> {return ColorTriangle4D}
@@ -57,8 +54,7 @@ export class VertexColors4D
 }
 
 export class FaceColors3D
-    extends FaceAttribute<Color3D, VertexColors3D>
-    implements IFaceColors<Color3D>
+    extends FaceAttribute<Color3D, Color3D, VertexColors3D>
 {
     readonly attribute = ATTRIBUTE.color;
     protected _getAllocator(): Float32Allocator3D {return VECTOR_3D_ALLOCATOR}
@@ -76,8 +72,7 @@ export class FaceColors3D
 }
 
 export class FaceColors4D
-    extends FaceAttribute<Color4D, VertexColors4D>
-    implements IFaceColors<Color4D>
+    extends FaceAttribute<Color4D, Color4D, VertexColors4D>
 {
     readonly attribute = ATTRIBUTE.color;
     protected _getVectorConstructor(): IAccessorConstructor<Color4D> {return Color4D}

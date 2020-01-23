@@ -8,9 +8,11 @@ import {
     MIN_FOV,
     MIN_ZOOM,
     MIN_FOCAL_LENGTH,
-    DEFAULT_FOV,
     DEFAULT_ZOOM,
-    DEFAULT_FOCAL_LENGTH, DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE, DEFAULT_FAR_CLIPPING_PLANE_DISTANCE
+    DEFAULT_FOCAL_LENGTH,
+    DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE,
+    DEFAULT_FAR_CLIPPING_PLANE_DISTANCE,
+    RADIANS_TO_DEGREES_FACTOR, DEGREES_TO_RADIANS_FACTOR
 } from "../../constants.js";
 
 
@@ -74,14 +76,12 @@ export default class Camera extends Node3D implements ICamera {
 export class Lense implements ILense {
     protected _zoom: number = DEFAULT_ZOOM;
     protected _focal_length: number = DEFAULT_FOCAL_LENGTH;
-    protected _field_of_view: number = DEFAULT_FOV;
 
     constructor(protected _camera: ICamera) {}
 
     setFrom(other: this): void {
         this._zoom = other._zoom;
         this._focal_length = other._focal_length;
-        this._field_of_view = other._field_of_view;
     }
 
     get zoom(): number {
@@ -99,20 +99,17 @@ export class Lense implements ILense {
         this._camera.projection_matrix.updateXY();
     }
 
-    get fov(): number {
-        return this._field_of_view
+    get fov(): number { // angle_in_degrees
+        return (Math.atan(1.0 / this._focal_length) / 2) * RADIANS_TO_DEGREES_FACTOR;
     }
-    set fov(radians: number) {
-        if (radians === this._field_of_view)
-            return;
 
-        if (radians > MAX_FOV)
-            radians = MAX_FOV;
-        if (radians < MIN_FOV)
-            radians = MIN_FOV;
+    set fov(angle_in_degrees: number) {
+        if (angle_in_degrees > MAX_FOV)
+            angle_in_degrees = MAX_FOV;
+        if (angle_in_degrees < MIN_FOV)
+            angle_in_degrees = MIN_FOV;
 
-        this._field_of_view = radians;
-        this._focal_length = 1.0 / Math.tan(this._field_of_view / 2);
+        this._focal_length = 1.0 / Math.tan(angle_in_degrees*DEGREES_TO_RADIANS_FACTOR / 2);
         this._camera.projection_matrix.updateXY();
     }
 
@@ -128,7 +125,6 @@ export class Lense implements ILense {
             focal_length = MIN_FOCAL_LENGTH;
 
         this._focal_length = focal_length;
-        this._field_of_view = Math.atan(1.0 / focal_length) / 2;
         this._camera.projection_matrix.updateXY();
     }
 }

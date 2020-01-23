@@ -3,27 +3,20 @@ import {Vector} from "../accessors/accessor.js";
 import {FloatBuffer} from "../memory/buffers.js";
 import {ATTRIBUTE} from "../../constants.js";
 import {InputAttribute} from "./inputs.js";
-import {
-    IAttribute,
-    IFaceAttribute,
-    ILoadableVertexAttribute,
-    IPullableVertexAttribute,
-    IVertexAttribute
-} from "../_interfaces/attributes.js";
+import {IAttribute} from "../_interfaces/attributes.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
-import {IVector} from "../_interfaces/vectors.js";
 import {AnyConstructor, T3} from "../../types.js";
-import {IAccessor, IAccessorConstructor} from "../_interfaces/accessors.js";
+import {VectorConstructor} from "../_interfaces/vectors.js";
 
-export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
+export abstract class Attribute<VectorType extends Vector>
     extends FloatBuffer
-    implements IAttribute<AccessorType>
+    implements IAttribute<VectorType>
 {
     readonly abstract attribute: ATTRIBUTE;
-    readonly Vector: IAccessorConstructor<AccessorType>;
-    protected abstract _getVectorConstructor(): IAccessorConstructor<AccessorType>;
+    readonly Vector: VectorConstructor<VectorType>;
+    protected abstract _getVectorConstructor(): VectorConstructor<VectorType>;
 
-    current: AccessorType;
+    current: VectorType;
 
     constructor(
         readonly face_vertices: IFaceVertices,
@@ -40,14 +33,14 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
         this.current = new this.Vector(0, this.arrays);
     }
 
-    * [Symbol.iterator](): Generator<AccessorType> {
+    * [Symbol.iterator](): Generator<VectorType> {
         for (let id = 0; id < this.length; id++) {
             this.current.id = id;
             yield this.current;
         }
     }
 
-    setFrom(other: IAttribute<IVector>): this {
+    setFrom(other: Attribute<Vector>): this {
         for (const [this_array, other_array] of zip(this.arrays, other.arrays))
             this_array.set(other_array);
 
@@ -56,10 +49,10 @@ export abstract class Attribute<AccessorType extends IAccessor = IAccessor>
 }
 
 export abstract class FaceAttribute<
-    VectorType extends Vector,
-    VertexAttribute extends IVertexAttribute>
+    VectorType extends Vector = Vector,
+    VertexVectorType extends Vector = Vector,
+    VertexAttributeType extends VertexAttribute<VertexVectorType, Triangle<VertexVectorType>> = VertexAttribute<VertexVectorType, Triangle<VertexVectorType>>>
     extends Attribute<VectorType>
-    implements IFaceAttribute<VectorType, VertexAttribute>
 {
     constructor(
         readonly face_vertices: IFaceVertices,
@@ -69,7 +62,7 @@ export abstract class FaceAttribute<
         super(face_vertices, face_count, face_count, arrays);
     }
 
-    pull(input: VertexAttribute): void {
+    pull(input: VertexAttributeType): void {
         let face_index,
             vertex_index_1,
             vertex_index_2,
@@ -104,7 +97,6 @@ export abstract class VertexAttribute<
     VectorType extends Vector,
     TriangleType extends Triangle<VectorType>>
     extends Attribute<VectorType>
-    implements IVertexAttribute<VectorType>
 {
     protected _is_shared: boolean;
     protected _current_face_vertex_vectors: T3<VectorType>;
@@ -175,7 +167,6 @@ export abstract class LoadableVertexAttribute<
     TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute>
     extends VertexAttribute<VectorType, TriangleType>
-    implements ILoadableVertexAttribute<VectorType, InputAttributeType>
 {
     protected _loadShared(input: InputAttributeType): void {
         let in_index, out_index: number;
@@ -216,9 +207,8 @@ export abstract class PulledVertexAttribute<
     VectorType extends Vector,
     TriangleType extends Triangle<VectorType>,
     InputAttributeType extends InputAttribute,
-    FaceAttributeType extends IFaceAttribute>
+    FaceAttributeType extends FaceAttribute>
     extends LoadableVertexAttribute<VectorType, TriangleType, InputAttributeType>
-    implements IPullableVertexAttribute<VectorType, InputAttributeType, FaceAttributeType>
 {
     protected _pullShared(input: FaceAttributeType, vertex_faces: IVertexFaces): void {
         // Average vertex-attribute values from their related face's attribute values:

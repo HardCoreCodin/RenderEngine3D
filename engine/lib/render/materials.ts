@@ -1,5 +1,5 @@
 import Mesh from "../geometry/mesh.js";
-import {Matrix4x4} from "../accessors/matrix.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {Rasterizer, RayTracer} from "./pipelines.js";
 import {MeshGeometries} from "./geometry.js";
 import {IScene} from "../_interfaces/nodes.js";

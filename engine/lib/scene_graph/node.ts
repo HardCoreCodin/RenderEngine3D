@@ -1,6 +1,6 @@
 import Parent from "./parent.js";
 import Transform from "./transform.js";
-import {Matrix4x4} from "../accessors/matrix.js";
+import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {INode3D, IScene} from "../_interfaces/nodes.js";
 
 export default class Node3D extends Parent implements INode3D

@@ -6,7 +6,6 @@ import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {Direction3D, Direction4D} from "../accessors/direction.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {FaceAttribute, PulledVertexAttribute, Triangle} from "./attributes.js";
-import {IFaceNormals, IVertexNormals3D, IVertexNormals4D} from "../_interfaces/attributes.js";
 
 import {
     Float32Allocator3D,
@@ -28,6 +27,7 @@ import {
     multiply_all_4D_vectors_by_a_4x4_matrix_to_out,
     normalize_all_4D_directions_in_place
 } from "../math/vec4.js";
+import {Position3D, Position4D} from "../accessors/position.js";
 
 let this_arrays,
     other_arrays,
@@ -38,7 +38,6 @@ class NormalTriangle4D extends Triangle<Direction4D> {}
 
 export class VertexNormals3D
     extends PulledVertexAttribute<Direction3D, NormalTriangle3D, InputNormals, FaceNormals3D>
-    implements IVertexNormals3D<Matrix3x3, Direction3D>
 {
     readonly attribute = ATTRIBUTE.normal;
     protected _getTriangleConstructor(): AnyConstructor<NormalTriangle3D> {return NormalTriangle3D}
@@ -130,7 +129,6 @@ export class VertexNormals3D
 
 export class VertexNormals4D
     extends PulledVertexAttribute<Direction4D, NormalTriangle4D, InputNormals, FaceNormals4D>
-    implements IVertexNormals4D<Matrix4x4, Direction4D>
 {
     readonly attribute = ATTRIBUTE.normal;
     protected _getTriangleConstructor(): AnyConstructor<NormalTriangle4D> {return NormalTriangle4D}
@@ -201,8 +199,7 @@ export class VertexNormals4D
     }
 }
 
-export class FaceNormals3D extends FaceAttribute<Direction3D, VertexPositions3D>
-    implements IFaceNormals<Matrix3x3, Direction3D, VertexPositions3D>
+export class FaceNormals3D extends FaceAttribute<Direction3D, Position3D, VertexPositions3D>
 {
     readonly attribute = ATTRIBUTE.normal;
     protected _getVectorConstructor(): IAccessorConstructor<Direction3D> {return Direction3D}
@@ -264,7 +261,7 @@ export class FaceNormals3D extends FaceAttribute<Direction3D, VertexPositions3D>
         return this;
     }
 
-    mat4mul(matrix: Matrix4x4, out: FaceNormals4D, include?: Uint8Array): FaceNormals4D {
+    mat4mul(matrix: Matrix4x4, out: FaceNormals4D, include?: Uint8Array[]): FaceNormals4D {
         this_arrays = this.arrays;
         other_arrays = matrix.arrays;
         out_arrays = out.arrays;
@@ -312,8 +309,7 @@ export class FaceNormals3D extends FaceAttribute<Direction3D, VertexPositions3D>
 }
 
 export class FaceNormals4D
-    extends FaceAttribute<Direction4D, VertexPositions4D>
-    implements IFaceNormals<Matrix4x4, Direction4D, VertexPositions4D>
+    extends FaceAttribute<Direction4D, Position4D, VertexPositions4D>
 {
     readonly attribute = ATTRIBUTE.normal;
     protected _getVectorConstructor(): IAccessorConstructor<Direction4D> {return Direction4D}
