@@ -1,5 +1,5 @@
 import {cube_face_vertices, cube_vertex_count} from "./cube.js";
-import {VertexPositions3D, VertexPositions4D} from "./positions.js";
+import {VertexPositions3D, VertexPositions4D} from "../attributes/vertex/positions.js";
 import {Position3D, Position4D} from "../accessors/position.js";
 import {IBounds, IBounds3D, IBounds4D} from "../_interfaces/geometry.js";
 

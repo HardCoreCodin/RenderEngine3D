@@ -5,12 +5,17 @@ import {
     Color4D
 } from "../../accessors/color.js";
 import {
+    FaceColors3D,
+    FaceColors4D
+} from "../face/colors.js";
+import {
     Triangle,
     VertexAttributeBuffer3D,
     VertexAttributeBuffer4D
 } from "./_base.js";
 import {AnyConstructor} from "../../../types.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
+import {IVertexFaces} from "../../_interfaces/buffers.js";
 import {_randomize3D, _randomize4D} from "../_core.js";
 
 let this_arrays: Float32Array[];
@@ -35,6 +40,10 @@ export class VertexColors3D
         return this._load(input_attribute.vertices, true)
     }
 
+    pull(input: FaceColors3D, vertex_faces: IVertexFaces): void {
+        this._pull(input.arrays, vertex_faces);
+    }
+
     generate(): this {
         this_arrays = this.arrays;
         _randomize3D(this_arrays[0], this_arrays[1], this_arrays[2]);
@@ -57,6 +66,10 @@ export class VertexColors4D
 
     load(input_attribute: InputColors): this {
         return this._load(input_attribute.vertices, true)
+    }
+
+    pull(input: FaceColors4D, vertex_faces: IVertexFaces): void {
+        this._pull(input.arrays, vertex_faces);
     }
 
     generate(): this {

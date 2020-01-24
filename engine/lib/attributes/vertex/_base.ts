@@ -29,7 +29,7 @@ import {
     _mulVec4Mat4,
     _mulVec4Mat4IP
 } from "../_core.js";
-import {IFaceVertices} from "../../_interfaces/buffers.js";
+import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
 import {AnyConstructor} from "../../../types.js";
 
 export class Triangle<VectorType extends Vector> {
@@ -59,6 +59,7 @@ export abstract class VertexAttributeBuffer<VectorType extends Vector,
     }
 
     protected _post_init(): void {
+        super._post_init();
         this._current_face_vertex_vectors = [
             new this.Vector(0, this.arrays),
             new this.Vector(0, this.arrays),
@@ -101,9 +102,9 @@ export abstract class VertexAttributeBuffer<VectorType extends Vector,
             this._iterUnsharedTriangles();
     }
 
-    protected _pull(input_arrays: Float32Array[]): this {
+    protected _pull(input_arrays: Float32Array[], vertex_faces: IVertexFaces): this {
         if (this._is_shared)
-            _pullShared(this.arrays, input_arrays, this.face_count, this.face_vertices.arrays);
+            _pullShared(this.arrays, input_arrays, this.face_count, vertex_faces.arrays);
         else
             _pullUnshared(this.arrays, input_arrays, this.face_count);
 

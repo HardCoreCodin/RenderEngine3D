@@ -27,7 +27,7 @@ export default abstract class BaseScene<
         this.mesh_geometries = new MeshGeometries(this);
         this.DefaultCameraClass = this._getDefaultCameraClass();
         this.DefaultMaterialClass = this._getDefaultMaterialClass();
-        this.default_material = new this.DefaultMaterialClass(this);
+        this.default_material = this.addMaterial() as MaterialType;
     }
 
     addCamera(

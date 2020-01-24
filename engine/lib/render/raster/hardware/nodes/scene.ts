@@ -5,8 +5,6 @@ import BaseScene from "../../../../nodes/scene.js";
 import {CameraConstructor, MaterialConstructor} from "../../../../_interfaces/render.js";
 
 export default class GLScene extends BaseScene<WebGL2RenderingContext, GLCamera, GLMaterial> {
-    readonly materials = new Set<GLMaterial>();
-
     protected _getDefaultCameraClass(): CameraConstructor<GLCamera> {
         return GLCamera
     };

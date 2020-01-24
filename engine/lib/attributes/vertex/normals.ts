@@ -6,6 +6,10 @@ import {
     Direction4D
 } from "../../accessors/direction.js";
 import {
+    FaceNormals3D,
+    FaceNormals4D
+} from "../face/normals.js";
+import {
     Triangle,
     TransformableVertexAttributeBuffer3D,
     TransformableVertexAttributeBuffer4D
@@ -13,6 +17,7 @@ import {
 import {AnyConstructor} from "../../../types.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
 import {_mulAllDir3Mat4, _mulSomeDir3Mat4, _norm3D, _norm4D} from "../_core.js";
+import {IVertexFaces} from "../../_interfaces/buffers.js";
 
 
 export class NormalTriangle3D extends Triangle<Direction3D> {}
@@ -32,6 +37,10 @@ export class VertexNormals3D extends TransformableVertexAttributeBuffer3D<Direct
 
     load(input_attribute: InputNormals): this {
         return this._load(input_attribute.vertices, true)
+    }
+
+    pull(input: FaceNormals3D, vertex_faces: IVertexFaces): void {
+        this._pull(input.arrays, vertex_faces);
     }
 
     mul4(matrix: Matrix4x4, out: VertexNormals4D, include?: Uint8Array[]): VertexNormals4D {
@@ -64,6 +73,10 @@ export class VertexNormals4D
 
     load(input_attribute: InputNormals): this {
         return this._load(input_attribute.vertices, true)
+    }
+
+    pull(input: FaceNormals4D, vertex_faces: IVertexFaces): void {
+        this._pull(input.arrays, vertex_faces);
     }
 
     normalize(include?: Uint8Array[]): this {

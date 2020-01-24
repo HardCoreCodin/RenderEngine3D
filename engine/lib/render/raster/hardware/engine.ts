@@ -3,6 +3,7 @@ import GLScreen from "./screen.js";
 import GLScene from "./nodes/scene.js";
 import GLRenderPipeline from "./pipeline.js";
 import BaseRenderEngine from "../../_base/engine.js";
+import GLMaterial from "./materials/_base.js";
 
 
 export default class GLRenderEngine
@@ -23,7 +24,7 @@ export default class GLRenderEngine
             new GLRenderPipeline(
                 this.context,
                 this._scene.mesh_geometries,
-                this._scene.materials
+                this._scene.materials as Set<GLMaterial>
             ),
             this.canvas,
             camera

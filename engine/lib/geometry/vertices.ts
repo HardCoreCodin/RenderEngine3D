@@ -1,9 +1,9 @@
 import Matrix4x4 from "../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../constants.js";
-import {VertexPositions3D, VertexPositions4D} from "./positions.js";
-import {VertexNormals3D, VertexNormals4D} from "./normals.js";
-import {VertexColors3D, VertexColors4D} from "./colors.js";
-import {VertexUVs2D, VertexUVs3D} from "./uvs.js";
+import {VertexPositions3D, VertexPositions4D} from "../attributes/vertex/positions.js";
+import {VertexNormals3D, VertexNormals4D} from "../attributes/vertex/normals.js";
+import {VertexColors3D, VertexColors4D} from "../attributes/vertex/colors.js";
+import {VertexUVs2D, VertexUVs3D} from "../attributes/vertex/uvs.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
 
 
@@ -88,13 +88,13 @@ export class Vertices4D extends Vertices {
 
     mul(matrix: Matrix4x4, out?: this): this {
         if (out) {
-            this.positions.matmul(matrix, out.positions);
-            this.normals!.matmul(matrix, out.normals);
+            this.positions.mul(matrix, out.positions);
+            this.normals!.mul(matrix, out.normals);
             return out;
         }
 
-        this.positions.matmul(matrix);
-        this.normals!.matmul(matrix);
+        this.positions.mul(matrix);
+        this.normals!.mul(matrix);
         return this;
     }
 }
