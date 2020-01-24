@@ -2,27 +2,38 @@ import RasterCamera from "../raster/software/nodes/camera.js";
 import {KEY_CODES} from "../../../constants.js";
 import {IScene} from "../../_interfaces/nodes.js";
 import {IController} from "../../_interfaces/input.js";
-import {ICamera, IRenderEngine, IScreen, IViewport} from "../../_interfaces/render.js";
+import {
+    CameraConstructor,
+    ICamera,
+    IRenderEngine,
+    IScreen,
+    IViewport,
+    MaterialConstructor
+} from "../../_interfaces/render.js";
 import {non_zero} from "../../../utils.js";
+import Scene from "../../nodes/scene.js";
 
 
 export default abstract class BaseRenderEngine<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>,
     ScreenType extends IScreen<Context>,
     CameraType extends ICamera = ICamera>
-    implements IRenderEngine<Context, SceneType, ScreenType>
+    // CameraType extends ICamera,
+    // MaterialType extends IMaterial<Context>,
+    // CameraConstructorType extends CameraConstructor<CameraType>,
+    // MaterialConstructorType extends MaterialConstructor<Context, MaterialType>>
+    implements IRenderEngine<Context, ScreenType>
 {
     protected abstract _createDefaultScreen(camera: CameraType): ScreenType;
     protected abstract _createContext(canvas: HTMLCanvasElement): Context;
-    protected abstract _createDefaultScene(): SceneType;
+    // protected abstract _createDefaultScene(): SceneType;
     protected abstract _getDefaultCamera(): CameraType;
 
     protected readonly _update_callback: FrameRequestCallback;
 
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
-    protected _scene: SceneType;
+    protected _scene: Scene<Context>;
     protected _screen: ScreenType;
 
     protected _is_active: boolean = false;
@@ -51,8 +62,10 @@ export default abstract class BaseRenderEngine<
     ];
 
     constructor(
+        Camera: CameraConstructor<CameraType>,
+        Material: MaterialConstructor<Context>,
         parent_element: HTMLElement = document.body,
-        scene?: SceneType,
+        scene?: Scene<Context>,
         camera?: CameraType,
         controller?: IController,
         screen?: ScreenType
@@ -64,7 +77,7 @@ export default abstract class BaseRenderEngine<
         this.canvas.height = this.canvas.clientHeight;
         this.canvas.style.cssText ='display: block; width: 100vw; height: 100vh;';
         this.context = this._createContext(this.canvas);
-        this.scene = scene || this._createDefaultScene();
+        this.scene = scene || new Scene(this.context, Camera, Material);
         this.screen = screen || this._createDefaultScreen(camera || this._getDefaultCamera());
         if (document.ontouchmove)
             this._events.concat(
@@ -78,8 +91,8 @@ export default abstract class BaseRenderEngine<
     get is_active(): boolean {return this._is_active}
     get is_running(): boolean {return this._is_running}
 
-    get scene(): SceneType {return this._scene}
-    set scene(scene: SceneType) {
+    get scene(): Scene<Context> {return this._scene}
+    set scene(scene: Scene<Context>) {
         scene.context = this.context;
         this._scene = scene;
     }

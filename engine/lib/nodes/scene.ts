@@ -4,40 +4,37 @@ import {IScene} from "../_interfaces/nodes.js";
 import {CameraConstructor, ICamera, IMaterial, MaterialConstructor} from "../_interfaces/render.js";
 
 
-export default abstract class BaseScene<
+export default class Scene<
     Context extends RenderingContext,
     CameraType extends ICamera = ICamera,
     MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends Parent
     implements IScene<Context, CameraType, MaterialType>
 {
-    protected abstract _getDefaultCameraClass(): CameraConstructor<CameraType>;
-    protected abstract _getDefaultMaterialClass(): MaterialConstructor<Context, MaterialType>;
-
     readonly mesh_geometries: MeshGeometries;
     readonly cameras = new Set<ICamera>();
     readonly materials = new Set<IMaterial<Context>>();
 
     readonly default_material: MaterialType;
-    readonly DefaultMaterialClass: MaterialConstructor<Context, MaterialType>;
-    readonly DefaultCameraClass: CameraConstructor<CameraType>;
 
-    constructor(public context: Context) {
+    constructor(
+        public context: Context,
+        readonly Camera: CameraConstructor<CameraType>,
+        readonly Material: MaterialConstructor<Context, MaterialType>
+    ) {
         super();
         this.mesh_geometries = new MeshGeometries(this);
-        this.DefaultCameraClass = this._getDefaultCameraClass();
-        this.DefaultMaterialClass = this._getDefaultMaterialClass();
         this.default_material = this.addMaterial() as MaterialType;
     }
 
     addCamera(
-        CameraClass: CameraConstructor<ICamera> = this.DefaultCameraClass
+        CameraClass: CameraConstructor<ICamera> = this.Camera
     ): ICamera {
         return new CameraClass(this)
     }
 
     addMaterial(
-        MaterialClass: MaterialConstructor<Context, IMaterial<Context>> = this.DefaultMaterialClass
+        MaterialClass: MaterialConstructor<Context, IMaterial<Context>> = this.Material
     ): IMaterial<Context> {
         return new MaterialClass(this);
     }

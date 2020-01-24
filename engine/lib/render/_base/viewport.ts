@@ -28,18 +28,20 @@ export default abstract class BaseViewport<
         protected _render_pipeline: IRenderPipeline<Context>,
         protected _controller: IController,
         protected readonly _screen: IScreen<Context>,
-        size: ISize,
-        position: I2D = {x: 0, y: 0},
-        readonly context: Context = _screen.context as Context
+        readonly context: Context = _screen.context as Context,
+        size?: ISize,
+        position?: I2D
     ) {
         super();
-        this._init();
+        this._init(size, position);
         this._initOverlay();
-        this._controller.camera = _camera;
-        this.reset(size.width, size.height, position.x, position.y);
     }
 
-    protected _init(): void {}
+    protected _init(size?: ISize, position?: I2D): void {
+        this._controller.camera = this._camera;
+        if (size && position)
+            this.reset(size.width, size.height, position.x, position.y);
+    }
 
     setBorderColor(color: Color4D): void {
         this._border_color.setFrom(color);

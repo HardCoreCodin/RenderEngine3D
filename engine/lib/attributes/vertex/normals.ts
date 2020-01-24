@@ -16,8 +16,8 @@ import {
 } from "./_base.js";
 import {AnyConstructor} from "../../../types.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
-import {_mulAllDir3Mat4, _mulSomeDir3Mat4, _norm3D, _norm4D} from "../_core.js";
 import {IVertexFaces} from "../../_interfaces/buffers.js";
+import {_mulAllDir3Mat4, _mulSomeDir3Mat4, _norm3D, _norm4D} from "../_core.js";
 
 
 export class NormalTriangle3D extends Triangle<Direction3D> {}

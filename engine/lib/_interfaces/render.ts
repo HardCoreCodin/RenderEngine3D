@@ -1,5 +1,5 @@
 import {INode3D, IScene} from "./nodes.js";
-import {IColor4D, I2D} from "./vectors.js";
+import {I2D, IColor4D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
@@ -69,7 +69,7 @@ export interface IMaterial<Context extends RenderingContext>
 
 export type MaterialConstructor<
     Context extends RenderingContext,
-    Instance extends IMaterial<Context>
+    Instance extends IMaterial<Context> = IMaterial<Context>
     > = new (scene: IScene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
@@ -156,6 +156,16 @@ export interface IViewport <
     setFrom(other: this): void;
 }
 
+export type ViewportConstructor<Context extends RenderingContext> = new (
+    camera: ICamera,
+    render_pipeline: IRenderPipeline<Context>,
+    controller: IController,
+    screen: IScreen<Context>,
+    context?: Context,
+    size?: ISize,
+    position?: I2D
+) => IViewport<Context>;
+
 export interface IRasterViewport<
     Context extends RenderingContext = RenderingContext,
     CameraType extends IRasterCamera = IRasterCamera>
@@ -178,7 +188,11 @@ export interface IScreen<Context extends RenderingContext>
     resize(width: number, height: number): void;
     setPosition(x: number, y: number): void;
 
-    addViewport(camera: ICamera, size?: ISize, position?: I2D): IViewport<Context>;
+    addViewport(camera: ICamera,
+                render_pipeline?: IRenderPipeline<Context>,
+                controller?: IController,
+                viewport?: IViewport<Context>
+    ): IViewport<Context>;
     removeViewport(viewport: IViewport<Context>): void;
 
     registerViewport(viewport: IViewport<Context>): void;
@@ -195,7 +209,7 @@ export interface IRenderEngineKeys {
 
 export interface IRenderEngine<
     Context extends RenderingContext,
-    SceneType extends IScene<Context>,
+    // SceneType extends IScene<Context>,
     ScreenType extends IScreen<Context>>
 {
     readonly canvas: HTMLCanvasElement;
@@ -204,7 +218,7 @@ export interface IRenderEngine<
     readonly keys: IRenderEngineKeys;
     readonly pressed: Uint8Array;
 
-    scene: SceneType;
+    scene: IScene<Context>;
     screen: ScreenType;
 
     readonly is_active: boolean;

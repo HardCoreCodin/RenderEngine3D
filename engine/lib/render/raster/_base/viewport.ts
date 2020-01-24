@@ -1,6 +1,7 @@
 import BaseViewport from "../../_base/viewport.js";
 import Matrix4x4, {mat4} from "../../../accessors/matrix4x4.js";
-import {IRasterCamera, IRasterViewport} from "../../../_interfaces/render.js";
+import {IRasterCamera, IRasterViewport, ISize} from "../../../_interfaces/render.js";
+import {I2D} from "../../../_interfaces/vectors.js";
 
 
 export default class RasterViewport<Context extends RenderingContext,
@@ -11,7 +12,8 @@ export default class RasterViewport<Context extends RenderingContext,
     world_to_view: Matrix4x4;
     world_to_clip: Matrix4x4;
 
-    protected _init(): void {
+    protected _init(size?: ISize, position?: I2D): void {
+        super._init();
         this.world_to_view = mat4();
         this.world_to_clip = mat4();
     };

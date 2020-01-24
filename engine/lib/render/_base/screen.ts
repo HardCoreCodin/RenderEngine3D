@@ -1,27 +1,14 @@
 import Rectangle from "./rectangle.js";
 import {Color4D, rgba} from "../../accessors/color.js";
 import {FPSController} from "../../input/controllers.js";
-import {I2D} from "../../_interfaces/vectors.js";
 import {IController} from "../../_interfaces/input.js";
-import {ICamera, IRenderPipeline, IScreen, ISize, IViewport} from "../../_interfaces/render.js";
+import {ICamera, IRenderPipeline, IScreen, IViewport, ViewportConstructor} from "../../_interfaces/render.js";
 
 
 export default abstract class BaseScreen<Context extends RenderingContext>
     extends Rectangle
     implements IScreen<Context>
 {
-    protected _createDefaultController(): IController {
-        return new FPSController(this._canvas)
-    };
-
-    protected abstract _createViewport(
-        camera: ICamera,
-        render_pipeline: IRenderPipeline<Context>,
-        controller: IController,
-        size: ISize,
-        position: I2D
-    ): IViewport<Context>;
-
     protected readonly _viewports = new Set<IViewport<Context>>();
     protected readonly _render_pipelines = new Map<IRenderPipeline<Context>, Set<IViewport<Context>>>();
     protected _active_viewport: IViewport<Context>;
@@ -31,12 +18,15 @@ export default abstract class BaseScreen<Context extends RenderingContext>
     protected readonly _grid_color = rgba(0, 1, 1, 1);
 
     constructor(
+        camera: ICamera,
         public context: Context,
-        protected readonly _default_render_pipeline: IRenderPipeline<Context>,
         protected readonly _canvas: HTMLCanvasElement,
-        camera: ICamera
+        protected readonly _default_render_pipeline: IRenderPipeline<Context>,
+        protected readonly _default_viewport_class: ViewportConstructor<Context>,
+        protected readonly _default_controller: IController = new FPSController(_canvas)
     ) {
         super();
+        _default_controller.camera = camera;
         this.active_viewport = this.addViewport(camera);
         this._active_viewport.display_border = false;
         this._active_viewport.setGridColor(this._grid_color);
@@ -77,8 +67,8 @@ export default abstract class BaseScreen<Context extends RenderingContext>
     }
 
     resize(width: number, height: number): void {
-        this._canvas.width = width;
-        this._canvas.height = height;
+        this._canvas.width = this.context.canvas.width  = width;
+        this._canvas.height =this.context.canvas.height = height;
 
         for (const viewport of this._viewports)
             viewport.reset(
@@ -128,18 +118,10 @@ export default abstract class BaseScreen<Context extends RenderingContext>
 
     addViewport(
         camera: ICamera,
-        size: ISize = {
-            width: this._size.width,
-            height: this._size.height
-        },
-        position: I2D = {
-            x: 0,
-            y: 0
-        },
         render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline,
-        controller: IController = this._createDefaultController(),
+        controller: IController = this._default_controller,
+        viewport:IViewport<Context> = new this._default_viewport_class(camera, render_pipeline, controller, this)
     ): IViewport<Context> {
-        const viewport = this._createViewport(camera, render_pipeline, controller, size, position);
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         viewport.setGridColor(this._grid_color);

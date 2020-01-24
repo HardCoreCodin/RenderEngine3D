@@ -2,24 +2,23 @@ import Rectangle from "./rectangle.js";
 import { rgba } from "../../accessors/color.js";
 import { FPSController } from "../../input/controllers.js";
 export default class BaseScreen extends Rectangle {
-    constructor(context, _default_render_pipeline, _canvas, camera) {
+    constructor(camera, context, _canvas, _default_render_pipeline, _default_viewport_class, _default_controller = new FPSController(_canvas)) {
         super();
         this.context = context;
-        this._default_render_pipeline = _default_render_pipeline;
         this._canvas = _canvas;
+        this._default_render_pipeline = _default_render_pipeline;
+        this._default_viewport_class = _default_viewport_class;
+        this._default_controller = _default_controller;
         this._viewports = new Set();
         this._render_pipelines = new Map();
         this._active_viewport_border_color = rgba(0, 1, 0, 1);
         this._inactive_viewport_border_color = rgba(0.75);
         this._grid_color = rgba(0, 1, 1, 1);
+        _default_controller.camera = camera;
         this.active_viewport = this.addViewport(camera);
         this._active_viewport.display_border = false;
         this._active_viewport.setGridColor(this._grid_color);
     }
-    _createDefaultController() {
-        return new FPSController(this._canvas);
-    }
-    ;
     get grid_color() { return this._active_viewport_border_color; }
     get active_viewport_border_color() { return this._active_viewport_border_color; }
     get inactive_viewport_border_color() { return this._inactive_viewport_border_color; }
@@ -49,8 +48,8 @@ export default class BaseScreen extends Rectangle {
             viewport.refresh();
     }
     resize(width, height) {
-        this._canvas.width = width;
-        this._canvas.height = height;
+        this._canvas.width = this.context.canvas.width = width;
+        this._canvas.height = this.context.canvas.height = height;
         for (const viewport of this._viewports)
             viewport.reset((viewport.width / this._size.width) * width, (viewport.height / this._size.height) * height, (viewport.x / this._size.width) * width, (viewport.y / this._size.height) * height);
         this._size.width = width;
@@ -85,14 +84,7 @@ export default class BaseScreen extends Rectangle {
                 viewports.delete(viewport);
         }
     }
-    addViewport(camera, size = {
-        width: this._size.width,
-        height: this._size.height
-    }, position = {
-        x: 0,
-        y: 0
-    }, render_pipeline = this._default_render_pipeline, controller = this._createDefaultController()) {
-        const viewport = this._createViewport(camera, render_pipeline, controller, size, position);
+    addViewport(camera, render_pipeline = this._default_render_pipeline, controller = this._default_controller, viewport = new this._default_viewport_class(camera, render_pipeline, controller, this)) {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         viewport.setGridColor(this._grid_color);
