@@ -1,9 +1,9 @@
 import {dir3} from "../accessors/direction.js";
+import {ICamera} from "../_interfaces/render.js";
+import {IMatrix4x4} from "../_interfaces/matrix.js";
 import {IPosition3D, I2D} from "../_interfaces/vectors.js";
 import {IController, IControllerKeys} from "../_interfaces/input.js";
-import {ICamera, IViewport} from "../_interfaces/render.js";
 import {IEulerRotation} from "../_interfaces/transform.js";
-import {IMatrix4x4} from "../_interfaces/matrix.js";
 import {
     DEFAULT_MOUSE_SENSITIVITY,
     DEFAULT_MOUSE_WHEEL_SENSITIVITY,
@@ -38,12 +38,10 @@ abstract class Controller
     protected rotation_amount: number;
     protected readonly right_movement = dir3();
 
-    protected _viewport: IViewport;
     protected _rotation: IEulerRotation;
     protected _translation: IPosition3D;
     protected _matrix: IMatrix4x4;
     protected _camera: ICamera;
-    protected _projection_matrix: IMatrix4x4;
 
     constructor(
         public canvas: HTMLCanvasElement,
@@ -53,14 +51,12 @@ abstract class Controller
         public mouse_wheel_sensitivity: number = DEFAULT_MOUSE_WHEEL_SENSITIVITY
     ) {}
 
-    get viewport(): IViewport {return this._viewport}
-    set viewport(viewport: IViewport) {
-        this._viewport = viewport;
-        this._camera = viewport.camera;
-        this._rotation = viewport.camera.transform.rotation;
-        this._translation = viewport.camera.transform.translation;
-        this._matrix = viewport.camera.transform.matrix;
-        this._projection_matrix = viewport.camera.projection_matrix;
+    get camera(): ICamera {return this._camera}
+    set camera(camera: ICamera) {
+        this._camera = camera;
+        this._rotation = camera.transform.rotation;
+        this._translation = camera.transform.translation;
+        this._matrix = camera.transform.matrix;
     }
 
     update(delta_time: number): void {
@@ -79,11 +75,6 @@ abstract class Controller
 
         if (this.mouse_moved || this.mouse_wheel_moved || this.mouse_clicked)
             this._updateFromMouse(delta_time);
-
-        if (!this._camera.is_static || this.direction_changed || this.position_changed) {
-            this._viewport.updateMatrices();
-            this.direction_changed = this.position_changed = false;
-        }
     }
 
     protected _updateFromKeyboard(delta_time: number): void {}

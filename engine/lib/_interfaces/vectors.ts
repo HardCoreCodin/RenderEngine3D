@@ -2,7 +2,7 @@ import {IMatrix} from "./matrix.js";
 import {IAccessor} from "./accessors.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
-import {Matrix4x4} from "../accessors/matrix4x4.js";
+import Matrix4x4 from "../accessors/matrix4x4.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D} from "../accessors/color.js";
 import {Vector} from "../accessors/accessor.js";

@@ -1,4 +1,4 @@
-import {Matrix2x2} from "./matrix2x2.js";
+import Matrix2x2 from "./matrix2x2.js";
 import {RotationMatrix} from "./matrix.js";
 import {Direction3D} from "./direction.js";
 import {Position2D, Position3D} from "./position.js";
@@ -47,7 +47,7 @@ let this_arrays,
     other_arrays,
     out_arrays: Float32Array[];
 
-export class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
+export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
     protected _getAllocator(): Float32Allocator9D {
         return MATRIX_3X3_ALLOCATOR;
     }

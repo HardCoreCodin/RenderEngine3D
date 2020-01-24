@@ -1,5 +1,5 @@
+import Matrix4x4 from "../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../constants.js";
-import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {VertexNormals3D, VertexNormals4D} from "./normals.js";
 import {VertexColors3D, VertexColors4D} from "./colors.js";

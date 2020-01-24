@@ -1,5 +1,5 @@
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
 import {InputNormals} from "../../geometry/inputs.js";
 import {
     Direction3D,
@@ -17,6 +17,7 @@ import {_mulAllDir3Mat4, _mulSomeDir3Mat4, _norm3D, _norm4D} from "../_core.js";
 
 export class NormalTriangle3D extends Triangle<Direction3D> {}
 export class NormalTriangle4D extends Triangle<Direction4D> {}
+
 
 export class VertexNormals3D extends TransformableVertexAttributeBuffer3D<Direction3D, NormalTriangle3D> {
     readonly attribute: ATTRIBUTE.normal;

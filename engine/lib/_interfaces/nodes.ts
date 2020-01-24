@@ -4,7 +4,7 @@ import {
     CameraConstructor,
     ICamera,
     IMaterial,
-    IMeshGeometries, IRenderPipeline,
+    IMeshGeometries,
     MaterialConstructor
 } from "./render.js";
 
@@ -33,21 +33,19 @@ export interface INode3D extends IParent {
 export interface IScene<
     Context extends RenderingContext = RenderingContext,
     CameraType extends ICamera = ICamera,
-    RenderPipelineType extends IRenderPipeline<Context, CameraType> = IRenderPipeline<Context, CameraType>,
-    MaterialType extends IMaterial<Context, RenderPipelineType> = IMaterial<Context, RenderPipelineType>>
+    MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends IParent
 {
     context: Context,
 
     readonly default_material: MaterialType;
-    readonly DefaultMaterialClass: MaterialConstructor<Context, RenderPipelineType, MaterialType>;
+    readonly DefaultMaterialClass: MaterialConstructor<Context, MaterialType>;
     readonly DefaultCameraClass: CameraConstructor<CameraType>;
 
-    readonly cameras: Set<CameraType>;
-    readonly materials: Set<MaterialType>;
+    readonly cameras: Set<ICamera>;
+    readonly materials: Set<IMaterial<Context>>;
     readonly mesh_geometries: IMeshGeometries;
 
-    addCamera(CameraClass?: CameraConstructor<CameraType>): CameraType;
-    addMaterial(MaterialClass?: MaterialConstructor<Context, RenderPipelineType, MaterialType>): MaterialType;
+    addCamera(CameraClass?: CameraConstructor<ICamera>): ICamera;
+    addMaterial(MaterialClass?: MaterialConstructor<Context, IMaterial<Context>>): IMaterial<Context>;
 }
-

@@ -30,7 +30,7 @@ let this_arrays,
     other_arrays,
     out_arrays: Float32Array[];
 
-export abstract class Vector3D extends Vector implements IVector3D {
+export default abstract class Vector3D extends Vector implements IVector3D {
     protected _getAllocator(): Float32Allocator3D {
         return VECTOR_3D_ALLOCATOR;
     }

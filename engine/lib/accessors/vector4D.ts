@@ -30,7 +30,7 @@ let this_arrays,
     other_arrays,
     out_arrays: Float32Array[];
 
-export abstract class Vector4D extends Vector implements IVector4D {
+export default abstract class Vector4D extends Vector implements IVector4D {
     protected _getAllocator(): Float32Allocator4D {
         return VECTOR_4D_ALLOCATOR;
     }

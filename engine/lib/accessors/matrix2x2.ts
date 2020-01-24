@@ -40,7 +40,7 @@ let this_arrays,
     other_arrays,
     out_arrays: Float32Array[];
 
-export class Matrix2x2 extends Matrix implements IMatrix2x2 {
+export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
     protected _getAllocator(): Float32Allocator4D {
         return MATRIX_2X2_ALLOCATOR;
     }

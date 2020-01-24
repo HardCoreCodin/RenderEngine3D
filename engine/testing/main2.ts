@@ -2,7 +2,8 @@ import Mesh from "../lib/geometry/mesh.js";
 import {MeshInputs} from "../lib/geometry/inputs.js";
 import {ATTRIBUTE, FACE_TYPE} from "../constants.js";
 import {MeshOptions} from "../lib/geometry/options.js";
-import {GLRenderEngine} from "./gl/render/engine.js";
+
+import GLRenderEngine from "../lib/render/raster/hardware/engine.js";
 
 var g: {[k: string]: any} = {};
 globalThis.g = g;

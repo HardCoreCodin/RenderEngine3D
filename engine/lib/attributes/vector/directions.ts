@@ -1,4 +1,4 @@
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {
     Direction2D,
     Direction3D,

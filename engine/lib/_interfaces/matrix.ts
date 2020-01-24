@@ -1,5 +1,5 @@
-import {Matrix2x2} from "../accessors/matrix2x2.js";
-import {Matrix3x3} from "../accessors/matrix3x3.js";
+import Matrix2x2 from "../accessors/matrix2x2.js";
+import Matrix3x3 from "../accessors/matrix3x3.js";
 import {Direction3D} from "../accessors/direction.js";
 import {Position2D, Position3D} from "../accessors/position.js";
 import {IMathAccessor} from "./vectors.js";

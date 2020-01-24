@@ -1,5 +1,5 @@
 import {ATTRIBUTE} from "../../../constants.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {
     Position2D,
     Position3D,

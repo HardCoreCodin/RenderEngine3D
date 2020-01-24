@@ -1,6 +1,6 @@
 import {zip} from "../../../utils.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {
     Direction3D,
     Direction4D

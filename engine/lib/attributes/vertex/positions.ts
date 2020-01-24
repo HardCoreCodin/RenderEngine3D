@@ -1,5 +1,5 @@
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
 import {InputPositions} from "../../geometry/inputs.js";
 import {
     Position2D,

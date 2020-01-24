@@ -1,7 +1,7 @@
+import Matrix3x3 from "../accessors/matrix3x3.js";
+import Matrix4x4 from "../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../constants.js";
 import {InputPositions} from "./inputs.js";
-import {Matrix3x3} from "../accessors/matrix3x3.js";
-import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {Position3D, Position4D} from "../accessors/position.js";
 import {Direction3D, Direction4D, dir3, dir4} from "../accessors/direction.js";
 import {Triangle, FaceAttribute, LoadableVertexAttribute} from "./attributes.js";

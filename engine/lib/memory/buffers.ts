@@ -2,7 +2,7 @@ import {TypedArray} from "../../types.js";
 import {IBuffer} from "../_interfaces/buffers.js";
 import {IAllocator} from "../_interfaces/allocators.js";
 
-export abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType>
+export default abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType>
 {
     protected abstract _getAllocator(): IAllocator<ArrayType>;
     readonly allocator: IAllocator<ArrayType>;

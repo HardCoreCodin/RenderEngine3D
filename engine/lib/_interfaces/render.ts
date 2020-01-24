@@ -43,34 +43,33 @@ export interface IProjectionMatrix extends IMatrix4x4 {
 }
 
 export interface ICamera extends INode3D {
+    is_perspective: boolean;
     readonly lense: ILense;
-    readonly scene: IScene;
+    setFrom(other: this): void;
+}
+
+export interface IRasterCamera extends ICamera {
     readonly view_frustum: IViewFrustum;
     readonly projection_matrix: IProjectionMatrix;
-
-    is_perspective: boolean;
-
-    setFrom(other: this): void;
 }
 
 export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
 
-export interface IMaterial<
-    Context extends RenderingContext,
-    RenderPipelineType extends IRenderPipeline<Context, ICamera> = IRenderPipeline<Context, ICamera>>
+export interface IMaterial<Context extends RenderingContext>
 {
     readonly id: number;
     readonly scene: IScene<Context>;
     readonly mesh_geometries: IMeshGeometries;
 
-    prepareMeshForDrawing(mesh: IMesh, render_pipeline: RenderPipelineType): void;
+    prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context>): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
 
+
+
 export type MaterialConstructor<
     Context extends RenderingContext,
-    RenderPipelineType extends IRenderPipeline<Context, ICamera>,
-    Instance extends IMaterial<Context, RenderPipelineType>
+    Instance extends IMaterial<Context>
     > = new (scene: IScene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
@@ -96,14 +95,15 @@ export interface IMeshGeometries {
 
 export interface IRenderPipeline<
     Context extends RenderingContext,
-    CameraType extends ICamera = ICamera>
+    ViewportType extends IViewport<Context> = IViewport<Context>,
+    MaterialType extends IMaterial<Context> = IMaterial<Context>>
 {
-    readonly scene: IScene<Context, CameraType>;
     readonly context: Context;
-    readonly model_to_clip: IMatrix4x4;
+    readonly mesh_geometries: IMeshGeometries;
+    readonly materials: Set<MaterialType>
 
     delete(): void;
-    render(viewport: IViewport<Context, CameraType, IScene<Context, CameraType>>): void;
+    render(viewport: ViewportType): void;
     resetRenderTarget(size: ISize, position: I2D): void;
 
     on_mesh_added(mesh: IMesh): void;
@@ -115,18 +115,26 @@ export interface IRenderPipeline<
     readonly on_mesh_removed_callback: IMeshCallback;
 }
 
-export interface ICanvas2DRenderPipeline<CameraType extends ICamera,
-    SceneType extends IScene<CanvasRenderingContext2D, CameraType>>
-    extends IRenderPipeline<CanvasRenderingContext2D, CameraType>
+export interface IRasterRenderPipeline<
+    Context extends RenderingContext,
+    ViewportType extends IRasterViewport<Context>,
+    MaterialType extends IMaterial<Context> = IMaterial<Context>>
+    extends IRenderPipeline<Context, ViewportType, MaterialType>
+{
+    readonly model_to_clip: IMatrix4x4;
+}
+
+export interface ICanvas2DRenderPipeline<
+    ViewportType extends IViewport<CanvasRenderingContext2D>,
+    MaterialType extends IMaterial<CanvasRenderingContext2D> = IMaterial<CanvasRenderingContext2D>>
+    extends IRenderPipeline<CanvasRenderingContext2D, ViewportType, MaterialType>
 {
     resetRenderTarget(size: ISize, position: I2D): void;
 }
 
-export interface IViewport<
+export interface IViewport <
     Context extends RenderingContext = RenderingContext,
-    CameraType extends ICamera = ICamera,
-    SceneType extends IScene<Context, CameraType> = IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, CameraType> = IRenderPipeline<Context, CameraType>>
+    CameraType extends ICamera = ICamera>
     extends IRectangle
 {
     display_grid: boolean;
@@ -138,12 +146,8 @@ export interface IViewport<
     setGridColor(color: IColor4D): void;
 
     camera: CameraType
-    render_pipeline: RenderPipelineType;
+    render_pipeline: IRenderPipeline<Context>;
     controller: IController;
-
-    readonly scene: SceneType;
-    readonly world_to_view: IMatrix4x4;
-    readonly world_to_clip: IMatrix4x4;
 
     refresh(): void;
     is_inside(x: number, y: number): boolean;
@@ -152,30 +156,33 @@ export interface IViewport<
     setFrom(other: this): void;
 }
 
+export interface IRasterViewport<
+    Context extends RenderingContext = RenderingContext,
+    CameraType extends IRasterCamera = IRasterCamera>
+    extends IViewport<Context, CameraType>
+{
+    readonly world_to_view: IMatrix4x4;
+    readonly world_to_clip: IMatrix4x4;
+}
 
-export interface IScreen<
-    Context extends RenderingContext,
-    CameraType extends ICamera,
-    SceneType extends IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, CameraType>,
-    ViewportType extends IViewport<Context, CameraType, SceneType, RenderPipelineType> = IViewport<Context, CameraType, SceneType, RenderPipelineType>>
+
+export interface IScreen<Context extends RenderingContext>
     extends IRectangle
 {
-    scene: SceneType;
     context: Context;
-    active_viewport: ViewportType;
+    active_viewport: IViewport<Context>;
 
-    readonly viewports: Generator<ViewportType>;
+    readonly viewports: Generator<IViewport<Context>>;
 
     refresh(): void;
     resize(width: number, height: number): void;
     setPosition(x: number, y: number): void;
 
-    addViewport(camera: CameraType, size?: ISize, position?: I2D): ViewportType;
-    removeViewport(viewport: ViewportType): void;
+    addViewport(camera: ICamera, size?: ISize, position?: I2D): IViewport<Context>;
+    removeViewport(viewport: IViewport<Context>): void;
 
-    registerViewport(viewport: ViewportType): void;
-    unregisterViewport(viewport: ViewportType): void;
+    registerViewport(viewport: IViewport<Context>): void;
+    unregisterViewport(viewport: IViewport<Context>): void;
 
     setViewportAt(x: number, y: number): void;
 }
@@ -188,11 +195,8 @@ export interface IRenderEngineKeys {
 
 export interface IRenderEngine<
     Context extends RenderingContext,
-    CameraType extends ICamera,
-    SceneType extends IScene<Context, CameraType>,
-    RenderPipelineType extends IRenderPipeline<Context, CameraType>,
-    ViewportType extends IViewport<Context, CameraType, SceneType, RenderPipelineType>,
-    ScreenType extends IScreen<Context, CameraType, SceneType, RenderPipelineType, ViewportType>>
+    SceneType extends IScene<Context>,
+    ScreenType extends IScreen<Context>>
 {
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;

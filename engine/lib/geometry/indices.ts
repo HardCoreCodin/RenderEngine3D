@@ -1,4 +1,4 @@
-import {Buffer} from "../memory/buffers.js";
+import Buffer from "../memory/buffers.js";
 import {IFaceVertices, IFromToIndices, IVertexFaces} from "../_interfaces/buffers.js";
 import {InputPositions} from "./inputs.js";
 import {

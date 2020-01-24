@@ -1,10 +1,10 @@
 import {Vector} from "../../accessors/accessor.js";
-import {Vector2D} from "../../accessors/vector2D.js";
-import {Vector3D} from "../../accessors/vector3D.js";
-import {Vector4D} from "../../accessors/vector4D.js";
-import {Matrix2x2} from "../../accessors/matrix2x2.js";
-import {Matrix3x3} from "../../accessors/matrix3x3.js";
-import {Matrix4x4} from "../../accessors/matrix4x4.js";
+import Vector2D from "../../accessors/vector2D.js";
+import Vector3D from "../../accessors/vector3D.js";
+import Vector4D from "../../accessors/vector4D.js";
+import Matrix2x2 from "../../accessors/matrix2x2.js";
+import Matrix3x3 from "../../accessors/matrix3x3.js";
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {AttributeBuffer} from "../_base.js";
 import {
     Float32Allocator2D,

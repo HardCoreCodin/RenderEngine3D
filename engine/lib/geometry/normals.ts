@@ -1,11 +1,11 @@
-import {zip} from "../../utils.js";
+import Matrix3x3 from "../accessors/matrix3x3.js";
+import Matrix4x4 from "../accessors/matrix4x4.js";
 import {ATTRIBUTE} from "../../constants.js";
 import {InputNormals} from "./inputs.js";
-import {Matrix3x3} from "../accessors/matrix3x3.js";
-import {Matrix4x4} from "../accessors/matrix4x4.js";
 import {Direction3D, Direction4D} from "../accessors/direction.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
 import {FaceAttribute, PulledVertexAttribute, Triangle} from "./attributes.js";
+import {zip} from "../../utils.js";
 
 import {
     Float32Allocator3D,

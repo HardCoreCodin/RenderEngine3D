@@ -1,5 +1,5 @@
-import {IViewport} from "./render.js";
 import {I2D} from "./vectors.js";
+import {ICamera} from "./render.js";
 
 export interface IControllerKeys {
     up: number;
@@ -18,9 +18,9 @@ export interface IControllerKeys {
     pitch_down: number;
 }
 
-export interface IController {
-    viewport: IViewport;
+export interface IController<CameraType extends ICamera = ICamera> {
     canvas: HTMLCanvasElement;
+    camera: CameraType,
 
     position_changed: boolean;
     direction_changed: boolean;

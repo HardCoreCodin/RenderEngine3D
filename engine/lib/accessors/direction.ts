@@ -1,4 +1,4 @@
-import {Matrix4x4} from "./matrix4x4.js";
+import Matrix4x4 from "./matrix4x4.js";
 import {TransformableVector2D} from "./vector2D.js";
 import {TransformableVector3D} from "./vector3D.js";
 import {TransformableVector4D} from "./vector4D.js";

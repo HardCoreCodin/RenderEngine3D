@@ -1,5 +1,5 @@
-import {GLRenderEngine} from "./gl/render/engine.js";
-import {GLMaterial} from "./gl/materials/base.js";
+import GLRenderEngine from "../lib/render/raster/hardware/engine.js";
+import GLMaterial from "../lib/render/raster/hardware/materials/_base.js";
 import CubeMesh from "../lib/geometry/cube.js";
 
 var g: {[k: string]: any} = {};

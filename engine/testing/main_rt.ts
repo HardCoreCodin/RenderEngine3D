@@ -1,4 +1,4 @@
-import {RayTraceEngine} from "../lib/render/engine.js";
+import RayTraceEngine from "../lib/render/raytrace/engine.js";
 
 var g: {[k: string]: any} = {};
 globalThis.g = g;
