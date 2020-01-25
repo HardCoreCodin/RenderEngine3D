@@ -222,32 +222,3 @@ export interface IRenderEngine<Context extends RenderingContext>
     start(): void;
     stop(): void;
 }
-export interface IRenderTarget {
-    reset(): void;
-
-    drawTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor): void;
-
-    fillTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor): void;
-
-    putPixel(
-        x: number,
-        y: number,
-        r: number,
-        g: number,
-        b: number,
-        a: number
-    ): void;
-
-    putPixelClamped(
-        x: number,
-        y: number,
-        r: number,
-        g: number,
-        b: number,
-        a: number
-    ): void;
-
-    clear(): void;
-
-    draw(): void;
-}

@@ -1,6 +1,6 @@
 import RayTraceViewport from "./viewport.js";
 import {BaseRenderPipeline} from "../_base/pipelines.js";
-import {IRenderTarget} from "../../_interfaces/render.js";
+import RenderTarget from "../_base/render_target.js";
 
 
 export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext2D, RayTraceViewport>
@@ -32,17 +32,22 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
         }
 
         ray_direction_index = 0;
-
+        pixel_index = y_start * width + x_start;
         for (y = y_start; y < y_end; y++) {
             for (x = x_start; x < x_end; x++) {
-                render_target.putPixel(
-                    x, y,
-                    ray_x[ray_direction_index],
-                    ray_y[ray_direction_index],
-                    ray_z[ray_direction_index],
-                    1
-                );
+                if (viewport.is_active)
+                    render_target.putPixel(pixel_index,
+                        (ray_x[ray_direction_index] + 5) / 10,
+                        (ray_y[ray_direction_index] + 5) / 10,
+                        (ray_z[ray_direction_index] + 5) / 10);
+                else
+                    render_target.putPixel(pixel_index,
+                        (ray_x[ray_direction_index] + 1) / 2,
+                        (ray_y[ray_direction_index] + 1) / 2,
+                        (ray_z[ray_direction_index] + 1) / 2);
+
                 ray_direction_index++;
+                pixel_index++;
             }
         }
 
@@ -51,7 +56,7 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
 }
 
 
-let render_target: IRenderTarget;
+let render_target: RenderTarget;
 
 let ray_x,
     ray_y,
@@ -63,4 +68,5 @@ let width,
     x, x_start, x_end,
     y, y_start, y_end,
 
+    pixel_index,
     ray_direction_index: number;

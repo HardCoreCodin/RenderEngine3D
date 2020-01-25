@@ -5,7 +5,7 @@ import {
     IRenderPipeline,
     IDisplay,
     IViewport,
-    ViewportConstructor, RenderPipelineConstructor, ICamera
+    ViewportConstructor, RenderPipelineConstructor,
 } from "../../_interfaces/render.js";
 import Scene from "../../nodes/scene.js";
 
@@ -65,9 +65,8 @@ export default class Display<Context extends RenderingContext>
         const width = this._canvas.clientWidth;
         const height = this._canvas.clientHeight;
         if (width !== this._size.width ||
-            height !== this._size.height) {
+            height !== this._size.height)
             this.resize(width, height);
-        }
 
         for (const viewport of this._viewports)
             viewport.refresh();
@@ -142,6 +141,7 @@ export default class Display<Context extends RenderingContext>
         } else
             this._active_viewport = viewport;
 
+        viewport.is_active = true;
         return viewport;
     }
 

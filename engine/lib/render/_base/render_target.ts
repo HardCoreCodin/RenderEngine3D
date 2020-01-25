@@ -1,11 +1,13 @@
 import {I2D, IColor} from "../../_interfaces/vectors.js";
-import {IRenderTarget, IViewport} from "../../_interfaces/render.js";
+import {IViewport} from "../../_interfaces/render.js";
+import {IS_BIG_ENDIAN} from "../../../constants.js";
 
 
-export default class RenderTarget implements IRenderTarget {
+export default class RenderTarget {
     protected _image: ImageData;
     protected _array: Uint32Array;
-    protected _clamped_array: Uint8ClampedArray;
+    // protected _array_buffer: ArrayBuffer;
+    // protected _clamped_array: Uint8ClampedArray;
 
     constructor(
         protected readonly _viewport: IViewport<CanvasRenderingContext2D>,
@@ -22,7 +24,9 @@ export default class RenderTarget implements IRenderTarget {
             this._viewport.height
         );
 
-        // this._clamped_array = this._image.data;
+        // this._array_buffer = new ArrayBuffer(this._image.data.length);
+        // this._clamped_array = new Uint8ClampedArray(this._array_buffer);
+        // this._array = new Uint32Array(this._array_buffer);
         this._array = new Uint32Array(this._image.data.buffer);
     }
 
@@ -53,35 +57,14 @@ export default class RenderTarget implements IRenderTarget {
     }
 
     putPixel(
-        x: number,
-        y: number,
+        index: number,
+
         r: number,
         g: number,
         b: number,
-        a: number
+        a: number = 1
     ) {
-        this._array[y * this._viewport.width + x] =
-            ((a * 255) << 24) |    // alpha
-            ((b * 255) << 16) |    // blue
-            ((g * 255) << 8) |    // green
-            (r * 255);            // red
-    }
-
-    putPixelClamped(
-        x: number,
-        y: number,
-        r: number,
-        g: number,
-        b: number,
-        a: number
-    ) {
-        array = this._clamped_array;
-        offset = y * this._viewport.width + x;
-
-        array[offset++] = r * 255;
-        array[offset++] = g * 255;
-        array[offset++] = b * 255;
-        array[offset] = a * 255;
+        put_pixel_data(this._array, index, r, g, b, a);
     }
 
     clear(): void {
@@ -94,9 +77,54 @@ export default class RenderTarget implements IRenderTarget {
     }
 
     draw(): void {
+        // this._image.data.set(this._clamped_array);
         this._context.putImageData(this._image, this._viewport.x, this._viewport.y);
     }
 }
 
-let offset: number;
-let array: Uint8ClampedArray;
+
+const put_pixel_data = IS_BIG_ENDIAN ? (
+    data: Uint32Array,
+    index: number,
+
+    r: number,
+    g: number,
+    b: number,
+    a: number
+): void => {
+    data[index] = (
+        // red
+        (r * 255) << 24
+    ) | (
+        // green
+        (g * 255) << 16
+    ) | (
+        // blue
+        (b * 255) << 8
+    )  | (
+        // alpha
+        (a * 255)
+    );
+} : (
+    data: Uint32Array,
+    index: number,
+
+    r: number,
+    g: number,
+    b: number,
+    a: number
+): void => {
+    data[index] = (
+        // alpha
+        (a * 255) << 24
+    ) | (
+        // blue
+        (b * 255) << 16
+    ) | (
+        // green
+        (g * 255) << 8
+    )  | (
+        // red
+        (r * 255)
+    );
+};

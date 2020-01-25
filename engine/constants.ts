@@ -120,13 +120,6 @@ export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 0.001;
 export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 10000;
 export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;
 
-export const VIEWPORT_BORDER_STYLE = `
-    position: absolute;
-    outline: 2px solid steelblue;
-    outline-offset: -2px;
-    background:rgba(255,255,255,0.0);
-    z-index: 3;
-    padding: 0px;
-    margin: 0px;
-    display: none;
-`;
+const __array = new Uint8Array(4);
+const __view = new Uint32Array(__array.buffer);
+export const IS_BIG_ENDIAN =  !((__view[0] = 1) & __array[0]);
