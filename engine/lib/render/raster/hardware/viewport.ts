@@ -61,8 +61,6 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
     }
 
     _drawOverlay(): void {
-        this.context.viewport(this._position.x, this._position.y, this._size.width, this._size.height);
-
         if (this.display_grid) {
             this._grid_program.use();
             this._grid_vao.bind();
@@ -94,15 +92,16 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
         this.world_to_clip.toArray(this._world_to_clip_array);
     }
 
-    protected _pre_render(): void {
+    refresh() {
         this.context.enable(this.context.SCISSOR_TEST);
         this.context.scissor(this._position.x, this._position.y, this._size.width, this._size.height);
         this.context.clearColor(0, 0, 0, 1);
         this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT);
         this.context.viewport(this._position.x, this._position.y, this._size.width, this._size.height);
-    }
 
-    protected _post_render(): void {
+        this._render_pipeline.render(this);
+        this._drawOverlay();
+
         this.context.disable(this.context.SCISSOR_TEST);
     }
 }

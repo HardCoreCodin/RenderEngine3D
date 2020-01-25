@@ -23,7 +23,7 @@ export default abstract class BaseViewport<
     protected readonly _grid_color = rgba();
 
     protected _initOverlay(): void {};
-    protected _drawOverlay(): void {}
+    protected _drawOverlay(): void {};
 
     constructor(
         protected _controller: IController<CameraType>,
@@ -52,7 +52,7 @@ export default abstract class BaseViewport<
     }
 
     setFrom(other: this): void {
-        this._render_pipeline = other._render_pipeline;
+        this._controller.camera.setFrom(other.controller.camera);
         this.reset(
             other._size.width,
             other._size.height,

@@ -19,8 +19,8 @@ export default class Scene<
 
     constructor(
         public context: Context,
-        readonly Camera: CameraConstructor,
-        readonly Material: MaterialConstructor<Context, MaterialType>
+        protected readonly Camera: CameraConstructor,
+        protected readonly Material: MaterialConstructor<Context, MaterialType>
     ) {
         super();
         this.mesh_geometries = new MeshGeometries(this);

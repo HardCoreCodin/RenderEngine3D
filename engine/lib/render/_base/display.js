@@ -1,18 +1,20 @@
 import Rectangle from "./rectangle.js";
 import { rgba } from "../../accessors/color.js";
 export default class Display extends Rectangle {
-    constructor(context, _default_render_pipeline, _default_controller, Viewport) {
+    constructor(_scene, RenderPipeline, Viewport, Controller, context = _scene.context) {
         super();
-        this.context = context;
-        this._default_render_pipeline = _default_render_pipeline;
-        this._default_controller = _default_controller;
+        this._scene = _scene;
+        this.RenderPipeline = RenderPipeline;
         this.Viewport = Viewport;
+        this.Controller = Controller;
+        this.context = context;
         this._viewports = new Set();
         this._render_pipelines = new Map();
         this._active_viewport_border_color = rgba(0, 1, 0, 1);
         this._inactive_viewport_border_color = rgba(0.75);
         this._grid_color = rgba(0, 1, 1, 1);
         this._canvas = context.canvas;
+        this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
         this.active_viewport = this.addViewport();
         this._active_viewport.display_border = false;
         this._active_viewport.setGridColor(this._grid_color);
@@ -46,12 +48,12 @@ export default class Display extends Rectangle {
             viewport.refresh();
     }
     resize(width, height) {
-        this._canvas.width = width;
-        this._canvas.height = height;
         const scale_x = width / this._size.width;
         const scale_y = height / this._size.height;
         for (const viewport of this._viewports)
             viewport.reset((viewport.width * scale_x), (viewport.height * scale_y), (viewport.x * scale_x), (viewport.y * scale_y));
+        this._canvas.width = width;
+        this._canvas.height = height;
         this._size.width = width;
         this._size.height = height;
     }
@@ -84,7 +86,7 @@ export default class Display extends Rectangle {
                 viewports.delete(viewport);
         }
     }
-    addViewport(controller = this._default_controller, render_pipeline = this._default_render_pipeline, viewport = new this.Viewport(controller, render_pipeline, this)) {
+    addViewport(controller = new this.Controller(this._canvas, this._scene.addCamera()), render_pipeline = this._default_render_pipeline, viewport = new this.Viewport(controller, render_pipeline, this)) {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         viewport.setGridColor(this._grid_color);

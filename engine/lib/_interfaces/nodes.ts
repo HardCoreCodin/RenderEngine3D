@@ -32,8 +32,8 @@ export interface IScene<
     context: Context,
 
     readonly default_material: MaterialType;
-    readonly Material: MaterialConstructor<Context, MaterialType>;
-    readonly Camera: CameraConstructor;
+    // readonly Material: MaterialConstructor<Context, MaterialType>;
+    // readonly Camera: CameraConstructor;
 
     readonly cameras: Set<ICamera>;
     readonly materials: Set<IMaterial<Context>>;

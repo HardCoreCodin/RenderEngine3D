@@ -66,16 +66,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         this.context = this._createContext(this.canvas);
 
         this._scene = new Scene(this.context, Camera, Material);
-        this._display = new Display(this.context,
-            new RenderPipeline(this.context, this._scene),
-            new Controller(
-                this.canvas,
-                this._scene.cameras.size ? (
-                    [...this._scene.cameras][0]
-                ) : this._scene.addCamera()
-            ),
-            Viewport
-        );
+        this._display = new Display(this._scene, RenderPipeline, Viewport, Controller);
 
         if (document.ontouchmove)
             this._events.concat(

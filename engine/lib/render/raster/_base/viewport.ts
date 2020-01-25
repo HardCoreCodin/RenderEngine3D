@@ -20,6 +20,7 @@ export default class RasterViewport<
     };
 
     setFrom(other: this): void {
+        this._controller.camera.setFrom(other.controller.camera);
         this.world_to_clip.setFrom(other.world_to_clip);
         this.world_to_view.setFrom(other.world_to_view);
         this.reset(
