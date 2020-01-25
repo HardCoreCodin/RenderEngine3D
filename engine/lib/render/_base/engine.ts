@@ -1,15 +1,16 @@
 import Scene from "../../nodes/scene.js";
+import Camera from "../../nodes/camera.js";
 import Display from "./display.js";
-import RasterCamera from "../raster/software/nodes/camera.js";
+import RasterViewport from "../raster/_base/viewport.js";
 import {KEY_CODES} from "../../../constants.js";
 import {FPSController} from "../../input/controllers.js";
 import {ControllerConstructor, IController} from "../../_interfaces/input.js";
 import {
-    CameraConstructor,
-    ICamera,
     IRenderEngine,
+    IRenderPipelineConstructor,
     IViewport,
-    MaterialConstructor, RenderPipelineConstructor, ViewportConstructor
+    IViewportConstructor,
+    IMaterialConstructor
 } from "../../_interfaces/render.js";
 import {non_zero} from "../../../utils.js";
 
@@ -50,10 +51,9 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     ];
 
     constructor(
-        Camera: CameraConstructor,
-        Viewport: ViewportConstructor<Context>,
-        Material: MaterialConstructor<Context>,
-        RenderPipeline: RenderPipelineConstructor<Context>,
+        Viewport: IViewportConstructor<Context>,
+        Material: IMaterialConstructor<Context>,
+        RenderPipeline: IRenderPipelineConstructor<Context>,
         parent_element: HTMLElement = document.body,
         Controller: ControllerConstructor = FPSController,
     ) {
@@ -65,7 +65,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         this.canvas.style.cssText ='display: block; width: 100vw; height: 100vh;';
         this.context = this._createContext(this.canvas);
 
-        this._scene = new Scene(this.context, Camera, Material);
+        this._scene = new Scene(this.context, Material);
         this._display = new Display(this._scene, RenderPipeline, Viewport, Controller);
 
         if (document.ontouchmove)
@@ -218,9 +218,8 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         // Matrices are updated by the controller (which is inactive initially).
         // Initialize matrices manually here once, to set their initial state:
         viewport = this._display.active_viewport;
-        camera = viewport.controller.camera;
-        if (camera instanceof RasterCamera)
-            camera.projection_matrix.update();
+        if (viewport instanceof RasterViewport)
+            viewport.projection_matrix.update();
         viewport.update();
 
         this._display.resize(this.canvas.clientWidth, this.canvas.clientHeight);
@@ -237,7 +236,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     }
 }
 
-let camera: ICamera;
+let camera: Camera;
 let viewport: IViewport;
 let viewports: Generator<IViewport>;
 let controller: IController;

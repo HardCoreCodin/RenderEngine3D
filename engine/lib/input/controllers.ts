@@ -1,5 +1,4 @@
 import {dir3} from "../accessors/direction.js";
-import {ICamera} from "../_interfaces/render.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
 import {IPosition3D, I2D} from "../_interfaces/vectors.js";
 import {IController, IControllerKeys} from "../_interfaces/input.js";
@@ -11,6 +10,7 @@ import {
     DEFAULT_ROTATION_SPEED,
     KEY_CODES, MOUSE_BUTTON
 } from "../../constants.js";
+import Camera from "../nodes/camera.js";
 
 abstract class Controller
     implements IController
@@ -44,7 +44,7 @@ abstract class Controller
 
     constructor(
         public canvas: HTMLCanvasElement,
-        protected _camera: ICamera,
+        protected _camera: Camera,
         public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
         public rotation_speed: number = DEFAULT_ROTATION_SPEED,
         public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY,
@@ -55,8 +55,8 @@ abstract class Controller
         this._matrix = _camera.transform.matrix;
     }
 
-    get camera(): ICamera {return this._camera}
-    set camera(camera: ICamera) {
+    get camera(): Camera {return this._camera}
+    set camera(camera: Camera) {
         this._camera = camera;
         this._rotation = camera.transform.rotation;
         this._translation = camera.transform.translation;

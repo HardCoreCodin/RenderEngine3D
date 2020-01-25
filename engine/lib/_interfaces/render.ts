@@ -1,5 +1,6 @@
-import {INode3D, IScene} from "./nodes.js";
-import {I2D, IColor, IColor4D} from "./vectors.js";
+import {ProjectionMatrix, ViewFrustum} from "../render/raster/_base/viewport.js";
+import {IScene} from "./nodes.js";
+import {I2D, IColor4D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
@@ -15,46 +16,6 @@ export interface IRectangle extends ISize, I2D {
     reset(width: number, height: number, x: number, y: number): void
 }
 
-export interface ILense {
-    fov: number;
-    zoom: number;
-    focal_length: number;
-
-    setFrom(other: this): void;
-}
-
-export interface IViewFrustum {
-    aspect_ratio: number;
-    near: number;
-    far: number;
-
-    readonly one_over_depth_span: number;
-    setFrom(other: this): void;
-}
-
-export interface IProjectionMatrix extends IMatrix4x4 {
-    readonly lense: ILense;
-    readonly view_frustum: IViewFrustum;
-
-    update(): void;
-    updateZ(): void;
-    updateW(): void;
-    updateXY(): void;
-}
-
-export interface ICamera extends INode3D {
-    is_perspective: boolean;
-    readonly lense: ILense;
-    setFrom(other: this): void;
-}
-
-export interface IRasterCamera extends ICamera {
-    readonly view_frustum: IViewFrustum;
-    readonly projection_matrix: IProjectionMatrix;
-}
-
-export type CameraConstructor = new (scene: IScene) => ICamera;
-
 export interface IMaterial<Context extends RenderingContext>
 {
     readonly id: number;
@@ -65,7 +26,7 @@ export interface IMaterial<Context extends RenderingContext>
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
 
-export type MaterialConstructor<
+export type IMaterialConstructor<
     Context extends RenderingContext,
     Instance extends IMaterial<Context> = IMaterial<Context>
     > = new (scene: IScene<Context>) => Instance;
@@ -110,7 +71,7 @@ export interface IRenderPipeline<
     readonly on_mesh_removed_callback: IMeshCallback;
 }
 
-export type RenderPipelineConstructor<
+export type IRenderPipelineConstructor<
     Context extends RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>> = new (
     context: Context,
@@ -125,9 +86,7 @@ export interface IRasterRenderPipeline<
     readonly model_to_clip: IMatrix4x4;
 }
 
-export interface IViewport<
-    Context extends RenderingContext = RenderingContext,
-    CameraType extends ICamera = ICamera>
+export interface IViewport<Context extends RenderingContext = RenderingContext>
     extends IRectangle
 {
     context: Context;
@@ -140,7 +99,7 @@ export interface IViewport<
     setGridColor(color: IColor4D): void;
     render_pipeline: IRenderPipeline<Context>;
 
-    controller: IController<CameraType>;
+    controller: IController;
 
     is_active: boolean;
     is_inside(x: number, y: number): boolean;
@@ -150,23 +109,20 @@ export interface IViewport<
     setFrom(other: this): void;
 }
 
-export type ViewportConstructor<
-    Context extends RenderingContext,
-    CameraType extends ICamera = ICamera
-    > = new (
+export type IViewportConstructor<Context extends RenderingContext> = new (
     controller: IController,
     render_pipeline: IRenderPipeline<Context>,
     screen: IDisplay<Context>,
     context?: Context,
     size?: ISize,
     position?: I2D
-) => IViewport<Context, CameraType>;
+) => IViewport<Context>;
 
-export interface IRasterViewport<
-    Context extends RenderingContext,
-    CameraType extends IRasterCamera = IRasterCamera>
-    extends IViewport<Context, CameraType>
+export interface IRasterViewport<Context extends RenderingContext>
+    extends IViewport<Context>
 {
+    readonly view_frustum: ViewFrustum<Context>;
+    readonly projection_matrix: ProjectionMatrix<Context>;
     readonly world_to_view: IMatrix4x4;
     readonly world_to_clip: IMatrix4x4;
 }

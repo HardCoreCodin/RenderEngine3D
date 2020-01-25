@@ -1,5 +1,5 @@
 import {I2D} from "./vectors.js";
-import {ICamera} from "./render.js";
+import Camera from "../nodes/camera.js";
 
 export interface IControllerKeys {
     up: number;
@@ -18,9 +18,9 @@ export interface IControllerKeys {
     pitch_down: number;
 }
 
-export interface IController<CameraType extends ICamera = ICamera> {
+export interface IController {
     canvas: HTMLCanvasElement;
-    camera: CameraType,
+    camera: Camera,
 
     position_changed: boolean;
     direction_changed: boolean;
@@ -46,11 +46,11 @@ export interface IController<CameraType extends ICamera = ICamera> {
     update(delta_time: number): void;
 }
 
-export type ControllerConstructor<CameraType extends ICamera = ICamera> = new (
+export type ControllerConstructor = new (
     canvas: HTMLCanvasElement,
-    _camera: ICamera,
+    _camera: Camera,
     movement_speed?: number,
     rotation_speed?: number,
     mouse_sensitivity?: number,
     mouse_wheel_sensitivity?: number
-) => IController<CameraType>;
+) => IController;

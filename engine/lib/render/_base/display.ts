@@ -3,9 +3,10 @@ import {Color4D, rgba} from "../../accessors/color.js";
 import {ControllerConstructor, IController} from "../../_interfaces/input.js";
 import {
     IRenderPipeline,
+    IRenderPipelineConstructor,
     IDisplay,
     IViewport,
-    ViewportConstructor, RenderPipelineConstructor,
+    IViewportConstructor,
 } from "../../_interfaces/render.js";
 import Scene from "../../nodes/scene.js";
 
@@ -26,8 +27,8 @@ export default class Display<Context extends RenderingContext>
 
     constructor(
         protected readonly _scene: Scene<Context>,
-        protected readonly RenderPipeline: RenderPipelineConstructor<Context>,
-        protected readonly Viewport: ViewportConstructor<Context>,
+        protected readonly RenderPipeline: IRenderPipelineConstructor<Context>,
+        protected readonly Viewport: IViewportConstructor<Context>,
         protected readonly Controller: ControllerConstructor,
         public context: Context = _scene.context
     ) {
@@ -78,14 +79,22 @@ export default class Display<Context extends RenderingContext>
         this._size.width = this._canvas.width = width;
         this._size.height = this._canvas.height = height;
 
+        let new_width,
+            new_height: number;
+        let last_x: number = 0;
         for (const viewport of this._viewports) {
+            new_width = Math.round(viewport.width * scale_x);
+            new_height = Math.round(viewport.height * scale_y);
+
             viewport.reset(
-                Math.ceil(viewport.width * scale_x),
-                Math.ceil(viewport.height * scale_y),
-                Math.ceil(viewport.x * scale_x),
-                Math.ceil(viewport.y * scale_y),
+                new_width,
+                new_height,
+                last_x,
+                viewport.y
             );
             viewport.update();
+
+            last_x += new_width
         }
     }
 
@@ -133,10 +142,13 @@ export default class Display<Context extends RenderingContext>
         viewport.setGridColor(this._grid_color);
 
         if (this._active_viewport) {
-            this._active_viewport.width /= 2;
+            const old_width = this._active_viewport.width;
+            const new_width = Math.round(old_width / 2);
+            const left_over = old_width - new_width;
+            this._active_viewport.width = new_width;
             this._active_viewport.display_border = true;
             viewport.setFrom(this._active_viewport);
-            viewport.x += viewport.width;
+            viewport.reset(left_over, viewport.height, this.active_viewport.x + new_width, viewport.y);
             this.active_viewport = viewport;
         } else
             this._active_viewport = viewport;

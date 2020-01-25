@@ -1,6 +1,7 @@
+import Camera from "../nodes/camera.js";
 import {IMatrix4x4} from "./matrix.js";
 import {ITransform} from "./transform.js";
-import {CameraConstructor, ICamera, IMaterial, IMeshGeometries, MaterialConstructor} from "./render.js";
+import {IMaterial, IMeshGeometries, IMaterialConstructor} from "./render.js";
 
 export interface IParent {
     readonly child_count: number;
@@ -35,10 +36,10 @@ export interface IScene<
     // readonly Material: MaterialConstructor<Context, MaterialType>;
     // readonly Camera: CameraConstructor;
 
-    readonly cameras: Set<ICamera>;
+    readonly cameras: Set<Camera>;
     readonly materials: Set<IMaterial<Context>>;
     readonly mesh_geometries: IMeshGeometries;
 
-    addCamera(CameraClass?: CameraConstructor): ICamera;
-    addMaterial(MaterialClass?: MaterialConstructor<Context, IMaterial<Context>>): IMaterial<Context>;
+    addCamera(): Camera;
+    addMaterial(MaterialClass?: IMaterialConstructor<Context, IMaterial<Context>>): IMaterial<Context>;
 }

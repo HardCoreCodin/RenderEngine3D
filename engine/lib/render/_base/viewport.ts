@@ -1,13 +1,11 @@
 import Rectangle from "./rectangle.js";
 import {Color4D, rgba} from "../../accessors/color.js";
 import {I2D} from "../../_interfaces/vectors.js";
-import {ICamera, IRenderPipeline, IDisplay, ISize, IViewport} from "../../_interfaces/render.js";
+import {IRenderPipeline, IDisplay, ISize, IViewport} from "../../_interfaces/render.js";
 import {IController} from "../../_interfaces/input.js";
 
 
-export default abstract class BaseViewport<
-    Context extends RenderingContext,
-    CameraType extends ICamera = ICamera>
+export default abstract class BaseViewport<Context extends RenderingContext>
     extends Rectangle
     implements IViewport<Context>
 {
@@ -26,7 +24,7 @@ export default abstract class BaseViewport<
     protected _drawOverlay(): void {};
 
     constructor(
-        protected _controller: IController<CameraType>,
+        protected _controller: IController,
         protected _render_pipeline: IRenderPipeline<Context>,
         protected readonly _display: IDisplay<Context>,
         readonly context: Context = _display.context as Context,
@@ -61,8 +59,8 @@ export default abstract class BaseViewport<
         )
     }
 
-    get controller(): IController<CameraType> {return this._controller}
-    set controller(constroller: IController<CameraType>) {this._controller = constroller}
+    get controller(): IController {return this._controller}
+    set controller(constroller: IController) {this._controller = constroller}
 
     get render_pipeline(): IRenderPipeline<Context> {return this._render_pipeline}
     set render_pipeline(render_pipeline: IRenderPipeline<Context>) {

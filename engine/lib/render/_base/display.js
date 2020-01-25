@@ -51,9 +51,14 @@ export default class Display extends Rectangle {
         const scale_y = height / this._size.height;
         this._size.width = this._canvas.width = width;
         this._size.height = this._canvas.height = height;
+        let new_width, new_height;
+        let last_x = 0;
         for (const viewport of this._viewports) {
-            viewport.reset(Math.ceil(viewport.width * scale_x), Math.ceil(viewport.height * scale_y), Math.ceil(viewport.x * scale_x), Math.ceil(viewport.y * scale_y));
+            new_width = Math.round(viewport.width * scale_x);
+            new_height = Math.round(viewport.height * scale_y);
+            viewport.reset(new_width, new_height, last_x, viewport.y);
             viewport.update();
+            last_x += new_width;
         }
     }
     get viewports() { return this._iterViewports(); }
@@ -90,10 +95,13 @@ export default class Display extends Rectangle {
         this.registerViewport(viewport);
         viewport.setGridColor(this._grid_color);
         if (this._active_viewport) {
-            this._active_viewport.width /= 2;
+            const old_width = this._active_viewport.width;
+            const new_width = Math.round(old_width / 2);
+            const left_over = old_width - new_width;
+            this._active_viewport.width = new_width;
             this._active_viewport.display_border = true;
             viewport.setFrom(this._active_viewport);
-            viewport.x += viewport.width;
+            viewport.reset(left_over, viewport.height, this.active_viewport.x + new_width, viewport.y);
             this.active_viewport = viewport;
         }
         else

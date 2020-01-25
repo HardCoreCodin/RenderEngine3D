@@ -1,4 +1,3 @@
-import RasterCamera from "../raster/software/nodes/camera.js";
 import BaseViewport from "../_base/viewport.js";
 import RenderTarget from "../_base/render_target.js";
 import {Positions3D} from "../../attributes/vector/positions.js";
@@ -9,7 +8,7 @@ import {I2D} from "../../_interfaces/vectors.js";
 
 
 export default class RayTraceViewport
-    extends BaseViewport<CanvasRenderingContext2D, RasterCamera>
+    extends BaseViewport<CanvasRenderingContext2D>
 {
     render_target: RenderTarget;
 
@@ -78,10 +77,6 @@ export default class RayTraceViewport
         this.render_target = new RenderTarget(this);
     }
 }
-
-let ray_directions_x,
-    ray_directions_y,
-    ray_directions_z: Float32Array;
 
 let pixel_count,
     width,

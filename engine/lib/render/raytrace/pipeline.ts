@@ -1,5 +1,5 @@
 import RayTraceViewport from "./viewport.js";
-import {BaseRenderPipeline} from "../_base/pipelines.js";
+import BaseRenderPipeline from "../_base/pipelines.js";
 import RenderTarget from "../_base/render_target.js";
 
 

@@ -1,5 +1,4 @@
 import RayTracer from "./pipeline.js";
-import RasterCamera from "../raster/software/nodes/camera.js";
 import RenderEngine from "../_base/engine.js";
 import RayTraceViewport from "./viewport.js";
 import RayTraceMaterial from "./materials/_base.js";
@@ -11,7 +10,6 @@ export default class RayTraceEngine extends RenderEngine
 {
     constructor(parent_element?: HTMLElement, Controller: ControllerConstructor = FPSController) {
         super(
-            RasterCamera,
             RayTraceViewport,
             RayTraceMaterial,
             RayTracer,

@@ -1,4 +1,3 @@
-import GLCamera from "./nodes/camera.js";
 import GLMaterial from "./materials/_base.js";
 import GLRenderPipeline from "./pipeline.js";
 import GLViewport from "./viewport.js";
@@ -11,7 +10,6 @@ export default class GLRenderEngine extends RenderEngine<WebGL2RenderingContext>
 {
     constructor(parent_element?: HTMLElement, Controller: ControllerConstructor = FPSController) {
         super(
-            GLCamera,
             GLViewport,
             GLMaterial,
             GLRenderPipeline,

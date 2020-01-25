@@ -7,7 +7,7 @@ import {
 } from "../../_interfaces/render.js";
 
 
-export abstract class BaseRenderPipeline<
+export default abstract class BaseRenderPipeline<
     Context extends RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>>
     implements IRenderPipeline<Context, ViewportType>
