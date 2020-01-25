@@ -9,7 +9,7 @@ var g: {[k: string]: any} = {};
 globalThis.g = g;
 
 const engine = g.engine = new GLRenderEngine();
-const camera = g.c = engine.screen.active_viewport.camera;
+const camera = g.c = engine.display.active_viewport.controller.camera;
 camera.is_static = false;
 camera.lense.fov = 75;
 camera.transform.translation.y = 1;

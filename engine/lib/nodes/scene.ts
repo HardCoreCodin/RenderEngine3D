@@ -9,7 +9,7 @@ export default class Scene<
     CameraType extends ICamera = ICamera,
     MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends Parent
-    implements IScene<Context, CameraType, MaterialType>
+    implements IScene<Context, MaterialType>
 {
     readonly mesh_geometries: MeshGeometries;
     readonly cameras = new Set<ICamera>();
@@ -19,7 +19,7 @@ export default class Scene<
 
     constructor(
         public context: Context,
-        readonly Camera: CameraConstructor<CameraType>,
+        readonly Camera: CameraConstructor,
         readonly Material: MaterialConstructor<Context, MaterialType>
     ) {
         super();
@@ -28,7 +28,7 @@ export default class Scene<
     }
 
     addCamera(
-        CameraClass: CameraConstructor<ICamera> = this.Camera
+        CameraClass: CameraConstructor = this.Camera
     ): ICamera {
         return new CameraClass(this)
     }

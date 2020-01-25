@@ -1,40 +1,28 @@
+import Scene from "../../nodes/scene.js";
+import Display from "./display.js";
 import RasterCamera from "../raster/software/nodes/camera.js";
 import {KEY_CODES} from "../../../constants.js";
-import {IScene} from "../../_interfaces/nodes.js";
-import {IController} from "../../_interfaces/input.js";
+import {FPSController} from "../../input/controllers.js";
+import {ControllerConstructor, IController} from "../../_interfaces/input.js";
 import {
     CameraConstructor,
     ICamera,
     IRenderEngine,
-    IScreen,
     IViewport,
-    MaterialConstructor
+    MaterialConstructor, RenderPipelineConstructor, ViewportConstructor
 } from "../../_interfaces/render.js";
 import {non_zero} from "../../../utils.js";
-import Scene from "../../nodes/scene.js";
 
 
-export default abstract class BaseRenderEngine<
-    Context extends RenderingContext,
-    ScreenType extends IScreen<Context>,
-    CameraType extends ICamera = ICamera>
-    // CameraType extends ICamera,
-    // MaterialType extends IMaterial<Context>,
-    // CameraConstructorType extends CameraConstructor<CameraType>,
-    // MaterialConstructorType extends MaterialConstructor<Context, MaterialType>>
-    implements IRenderEngine<Context, ScreenType>
+export default class RenderEngine<Context extends RenderingContext = CanvasRenderingContext2D>
+    implements IRenderEngine<Context>
 {
-    protected abstract _createDefaultScreen(camera: CameraType): ScreenType;
-    protected abstract _createContext(canvas: HTMLCanvasElement): Context;
-    // protected abstract _createDefaultScene(): SceneType;
-    protected abstract _getDefaultCamera(): CameraType;
-
     protected readonly _update_callback: FrameRequestCallback;
 
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
     protected _scene: Scene<Context>;
-    protected _screen: ScreenType;
+    protected _display: Display<Context>;
 
     protected _is_active: boolean = false;
     protected _is_running: boolean = false;
@@ -62,13 +50,12 @@ export default abstract class BaseRenderEngine<
     ];
 
     constructor(
-        Camera: CameraConstructor<CameraType>,
+        Camera: CameraConstructor,
+        Viewport: ViewportConstructor<Context>,
         Material: MaterialConstructor<Context>,
+        RenderPipeline: RenderPipelineConstructor<Context>,
         parent_element: HTMLElement = document.body,
-        scene?: Scene<Context>,
-        camera?: CameraType,
-        controller?: IController,
-        screen?: ScreenType
+        Controller: ControllerConstructor = FPSController,
     ) {
         this.canvas = document.createElement('canvas');
         parent_element.appendChild(this.canvas);
@@ -77,8 +64,19 @@ export default abstract class BaseRenderEngine<
         this.canvas.height = this.canvas.clientHeight;
         this.canvas.style.cssText ='display: block; width: 100vw; height: 100vh;';
         this.context = this._createContext(this.canvas);
-        this.scene = scene || new Scene(this.context, Camera, Material);
-        this.screen = screen || this._createDefaultScreen(camera || this._getDefaultCamera());
+
+        this._scene = new Scene(this.context, Camera, Material);
+        this._display = new Display(this.context,
+            new RenderPipeline(this.context, this._scene),
+            new Controller(
+                this.canvas,
+                this._scene.cameras.size ? (
+                    [...this._scene.cameras][0]
+                ) : this._scene.addCamera()
+            ),
+            Viewport
+        );
+
         if (document.ontouchmove)
             this._events.concat(
                 'touchmove',
@@ -97,33 +95,38 @@ export default abstract class BaseRenderEngine<
         this._scene = scene;
     }
 
-    get screen(): ScreenType {return this._screen}
-    set screen(screen: ScreenType) {
-        screen.context = this.context;
-        this._screen = screen;
+    get display(): Display<Context> {return this._display}
+    set display(display: Display<Context>) {
+        display.context = this.context;
+        this._display = display;
     }
 
     update(time: number): void {
         this._delta_time = time - this._last_timestamp;
         this._last_timestamp = time;
 
-        viewport = this._screen.active_viewport;
-        camera = viewport.camera;
+        viewport = this._display.active_viewport;
+        viewports = this._display.viewports;
+        controller = viewport.controller;
+        camera = controller.camera;
         if (this._is_active) {
-            controller = viewport.controller;
             controller.update(this._delta_time);
             if (!camera.is_static || controller.direction_changed || controller.position_changed) {
-                viewport.updateMatrices();
+                for (viewport of viewports)
+                    if (Object.is(controller, viewport.controller))
+                        viewport.update();
                 controller.direction_changed = controller.position_changed = false;
             }
         } else if (!camera.is_static)
-            viewport.updateMatrices();
+            for (viewport of viewports)
+                if (Object.is(controller, viewport.controller))
+                    viewport.update();
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this._scene.children)
             node.refreshWorldMatrix();
 
-        this._screen.refresh();
+        this._display.refresh();
 
         requestAnimationFrame(this._update_callback);
     }
@@ -133,21 +136,21 @@ export default abstract class BaseRenderEngine<
     }
 
     protected _on_mousemove(mouse_event: MouseEvent): void {
-        controller = this._screen.active_viewport.controller;
+        controller = this._display.active_viewport.controller;
         controller.mouse_moved = true;
         controller.mouse_movement.x += mouse_event.movementX;
         controller.mouse_movement.y += mouse_event.movementY;
     }
 
     protected _on_wheel(wheel_event: WheelEvent): void {
-        controller = this._screen.active_viewport.controller;
+        controller = this._display.active_viewport.controller;
         controller.mouse_wheel = wheel_event.deltaY;
         controller.mouse_wheel_moved = true;
     }
 
     protected _on_dblclick(): void {
         this._is_active = !this._is_active;
-        this._screen.active_viewport.controller.mouse_double_clicked = this._is_active;
+        this._display.active_viewport.controller.mouse_double_clicked = this._is_active;
         if (this._is_active)
             this.canvas.requestPointerLock();
         else
@@ -155,22 +158,22 @@ export default abstract class BaseRenderEngine<
     }
 
     protected _on_click(mouse_event: MouseEvent): void {
-        this._screen.active_viewport.controller.mouse_clicked = true;
-        this._screen.setViewportAt(mouse_event.clientX, mouse_event.clientY);
+        this._display.active_viewport.controller.mouse_clicked = true;
+        this._display.setViewportAt(mouse_event.clientX, mouse_event.clientY);
     }
 
     protected _on_mousedown(mouse_event: MouseEvent): void {
         const rect = this.canvas.getBoundingClientRect();
-        this._screen.setPosition(rect.left, rect.top);
-        this._screen.active_viewport.controller.mouse_down = mouse_event.which;
+        this._display.setPosition(rect.left, rect.top);
+        this._display.active_viewport.controller.mouse_down = mouse_event.which;
     }
 
     protected _on_mouseup(mouse_event: MouseEvent): void {
-        this._screen.active_viewport.controller.mouse_up = mouse_event.which;
+        this._display.active_viewport.controller.mouse_up = mouse_event.which;
     }
 
     protected _on_keydown(key_event: KeyboardEvent): void {
-        controller = this._screen.active_viewport.controller;
+        controller = this._display.active_viewport.controller;
         controller.key_pressed = true;
 
         for (const key of Object.keys(this.keys))
@@ -183,7 +186,7 @@ export default abstract class BaseRenderEngine<
     }
 
     protected _on_keyup(key_event: KeyboardEvent): void {
-        controller = this._screen.active_viewport.controller;
+        controller = this._display.active_viewport.controller;
 
         for (const key of Object.keys(this.keys))
             if (this.keys[key] === key_event.which)
@@ -223,13 +226,13 @@ export default abstract class BaseRenderEngine<
         // Engine starts "inactive" to input until user clicks on the canvas.
         // Matrices are updated by the controller (which is inactive initially).
         // Initialize matrices manually here once, to set their initial state:
-        viewport = this._screen.active_viewport;
-        camera = viewport.camera;
+        viewport = this._display.active_viewport;
+        camera = viewport.controller.camera;
         if (camera instanceof RasterCamera)
             camera.projection_matrix.update();
-        viewport.updateMatrices();
+        viewport.update();
 
-        this._screen.resize(this.canvas.clientWidth, this.canvas.clientHeight);
+        this._display.resize(this.canvas.clientWidth, this.canvas.clientHeight);
         requestAnimationFrame(this._update_callback);
     }
 
@@ -237,8 +240,13 @@ export default abstract class BaseRenderEngine<
         this._stopListening();
         this._is_running = false;
     }
+
+    protected _createContext(canvas: HTMLCanvasElement): Context {
+        return canvas.getContext('2d') as Context;
+    }
 }
 
 let camera: ICamera;
 let viewport: IViewport;
+let viewports: Generator<IViewport>;
 let controller: IController;

@@ -26,7 +26,6 @@ export interface INode3D extends IParent {
 
 export interface IScene<
     Context extends RenderingContext = RenderingContext,
-    CameraType extends ICamera = ICamera,
     MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends IParent
 {
@@ -34,20 +33,12 @@ export interface IScene<
 
     readonly default_material: MaterialType;
     readonly Material: MaterialConstructor<Context, MaterialType>;
-    readonly Camera: CameraConstructor<CameraType>;
+    readonly Camera: CameraConstructor;
 
     readonly cameras: Set<ICamera>;
     readonly materials: Set<IMaterial<Context>>;
     readonly mesh_geometries: IMeshGeometries;
 
-    addCamera(CameraClass?: CameraConstructor<ICamera>): ICamera;
+    addCamera(CameraClass?: CameraConstructor): ICamera;
     addMaterial(MaterialClass?: MaterialConstructor<Context, IMaterial<Context>>): IMaterial<Context>;
 }
-
-// export type SceneConstructor<Context extends RenderingContext,
-//     CameraType extends ICamera,
-//     MaterialType extends IMaterial<Context>,
-//     CameraConstructorType extends CameraConstructor<CameraType>,
-//     MaterialConstructorType extends MaterialConstructor<Context, MaterialType>> = new (
-//     context: Context, Camera: CameraConstructorType, Material: MaterialConstructorType
-// ) => IScene<Context, CameraType, MaterialType>;

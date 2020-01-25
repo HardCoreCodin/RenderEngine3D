@@ -4,10 +4,11 @@ import {IRasterCamera, IRasterViewport, ISize} from "../../../_interfaces/render
 import {I2D} from "../../../_interfaces/vectors.js";
 
 
-export default class RasterViewport<Context extends RenderingContext,
+export default class RasterViewport<
+    Context extends RenderingContext,
     CameraType extends IRasterCamera>
     extends BaseViewport<Context, CameraType>
-    implements IRasterViewport<Context, CameraType>
+    implements IRasterViewport<Context>
 {
     world_to_view: Matrix4x4;
     world_to_clip: Matrix4x4;
@@ -35,12 +36,12 @@ export default class RasterViewport<Context extends RenderingContext,
         x: number = this._position.x,
         y: number = this._position.y
     ): void {
-        this.camera.view_frustum.aspect_ratio = width / height;
+        this._controller.camera.view_frustum.aspect_ratio = width / height;
         super.reset(width, height, x, y);
     }
 
-    updateMatrices(): void {
-        this.camera.transform.matrix.invert(this.world_to_view
-        ).mul(this.camera.projection_matrix, this.world_to_clip);
+    update(): void {
+        this._controller.camera.transform.matrix.invert(this.world_to_view
+        ).mul(this._controller.camera.projection_matrix, this.world_to_clip);
     }
 }

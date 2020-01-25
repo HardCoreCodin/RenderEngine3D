@@ -1,14 +1,19 @@
 import Rectangle from "./rectangle.js";
 import {Color4D, rgba} from "../../accessors/color.js";
-import {FPSController} from "../../input/controllers.js";
 import {IController} from "../../_interfaces/input.js";
-import {ICamera, IRenderPipeline, IScreen, IViewport, ViewportConstructor} from "../../_interfaces/render.js";
+import {
+    IRenderPipeline,
+    IDisplay,
+    IViewport,
+    ViewportConstructor
+} from "../../_interfaces/render.js";
 
 
-export default abstract class BaseScreen<Context extends RenderingContext>
+export default class Display<Context extends RenderingContext>
     extends Rectangle
-    implements IScreen<Context>
+    implements IDisplay<Context>
 {
+    protected readonly _canvas: HTMLCanvasElement;
     protected readonly _viewports = new Set<IViewport<Context>>();
     protected readonly _render_pipelines = new Map<IRenderPipeline<Context>, Set<IViewport<Context>>>();
     protected _active_viewport: IViewport<Context>;
@@ -18,16 +23,14 @@ export default abstract class BaseScreen<Context extends RenderingContext>
     protected readonly _grid_color = rgba(0, 1, 1, 1);
 
     constructor(
-        camera: ICamera,
         public context: Context,
-        protected readonly _canvas: HTMLCanvasElement,
         protected readonly _default_render_pipeline: IRenderPipeline<Context>,
-        protected readonly _default_viewport_class: ViewportConstructor<Context>,
-        protected readonly _default_controller: IController = new FPSController(_canvas)
+        protected readonly _default_controller: IController,
+        public Viewport: ViewportConstructor<Context>
     ) {
         super();
-        _default_controller.camera = camera;
-        this.active_viewport = this.addViewport(camera);
+        this._canvas = context.canvas as HTMLCanvasElement;
+        this.active_viewport = this.addViewport();
         this._active_viewport.display_border = false;
         this._active_viewport.setGridColor(this._grid_color);
     }
@@ -67,15 +70,18 @@ export default abstract class BaseScreen<Context extends RenderingContext>
     }
 
     resize(width: number, height: number): void {
-        this._canvas.width = this.context.canvas.width  = width;
-        this._canvas.height =this.context.canvas.height = height;
+        this._canvas.width = width;
+        this._canvas.height = height;
+
+        const scale_x = width / this._size.width;
+        const scale_y = height / this._size.height;
 
         for (const viewport of this._viewports)
             viewport.reset(
-                (viewport.width / this._size.width) * width,
-                (viewport.height / this._size.height) * height,
-                (viewport.x / this._size.width)  * width,
-                (viewport.y / this._size.height) * height,
+                (viewport.width * scale_x),
+                (viewport.height * scale_y),
+                (viewport.x * scale_x),
+                (viewport.y * scale_y),
             );
 
         this._size.width = width;
@@ -117,10 +123,9 @@ export default abstract class BaseScreen<Context extends RenderingContext>
     }
 
     addViewport(
-        camera: ICamera,
-        render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline,
         controller: IController = this._default_controller,
-        viewport:IViewport<Context> = new this._default_viewport_class(camera, render_pipeline, controller, this)
+        render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline,
+        viewport:IViewport<Context> = new this.Viewport(controller, render_pipeline, this)
     ): IViewport<Context> {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
@@ -160,6 +165,8 @@ export default abstract class BaseScreen<Context extends RenderingContext>
         if (Object.is(viewport, this._active_viewport))
             return;
 
+        this._active_viewport.is_active = false;
+        viewport.is_active = true;
         viewport.setBorderColor(this._active_viewport_border_color);
         this._active_viewport = viewport;
 

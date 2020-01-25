@@ -1,0 +1,39 @@
+Ray/Triangle Intersection:
+==========================
+
+Define a 3D ray as a 3D ray-origin position P and a 3D ray-direction D:
+
+Eq.1:    P = [Px, Py, Pz]
+Eq.2:    D = [Dx, Dy, Dz]
+
+Define a 3D point I of "possible" intersection with the triangle:
+
+Eq.3:    I = [Ix, Iy, Iz]
+
+This point can be "parameterized", as being the ray-origin
+position, "displaced" by "some" scalar-multiple of the ray-direction:
+
+Eq.4:    I = P + t*D
+
+Given a 3D triangle ABC comprised of 3D points A, B and C:
+
+Eq.5:    A = [Ax, Ay, Az]
+Eq.6:    B = [Bx, By, Cz]
+Eq.7:    C = [Cx, Cy, Cz]
+
+First consider the point I as intersecting the "plane" formed by that triangle ABC.
+
+
+Compue the "signed" 2D area of the 3 parallelograms fomed from the point and 2 points in the triangle.
+Just use the x and y coordinates, and ignore the Z:
+
+(Ay - By)*Ix + (Bx - Ax)*Iy + (By*Ax - Bx*Ay)
+(Cy - Ay)*Ix + (Ax - Cx)*Iy + (Ay*Cx - Ax*Cy)
+(By - Cy)*Ix + (Cx - Bx)*Iy + (Cy*Bx - Cx*By)
+
+If ANY of the "signs" of these areas are "negative",
+then there is no intersection because one of the parallelograms is flipped backwards,
+signalling that the poins is on the "out-side" side of one of the triangle's-edge participating in it.
+If they're all zero, then there's also no intersection because the triangle is at
+grazing-angle to the ray direction.
+Otherwise, there's an intersection.

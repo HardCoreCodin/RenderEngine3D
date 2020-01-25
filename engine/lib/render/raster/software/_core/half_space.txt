@@ -141,13 +141,13 @@ E1.39:    β(Px + △x, Py + △y) = β(Px, Py) + (△x * β▱x) + (△y * β�
 Given:
 Eq.11:    γ = ▱CAP / ▱ABC
 And:
-Eq.40:    ▱BAP = (By - Cy)Px + (Ax - Cx)Py + (AyCx - AxCy)
+Eq.40:    ▱CAP = (Cy - Ay)Px + (Ax - Cx)Py + (AyCx - AxCy)
 
 Defining:
-Eq.41:    γ△x = By - Cy
+Eq.41:    γ△x = Cy - Ay
 Eq.42:    γ△y = Ax - Cx
 Eq.43:    γK  = AyCx - AxCy
-Eq.44:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(By - Cy)
+Eq.44:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(Cy - Ay)
 Eq.45:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Ax - Cx)
 Eq.46:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(AyCx - AxCy)
 

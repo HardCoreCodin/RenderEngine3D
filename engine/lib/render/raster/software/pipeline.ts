@@ -4,7 +4,8 @@ import RasterCamera from "./nodes/camera.js";
 import RasterViewport from "../_base/viewport.js";
 import SoftwareRasterViewport from "./viewport.js";
 import SoftwareRasterMaterial from "./materials/_base.js";
-import Canvas2DRenderPipeline from "../../_base/pipelines.js";
+import RenderTarget from "../../_base/render_target.js";
+import {BaseRenderPipeline} from "../../_base/pipelines.js";
 import {VertexPositions4D} from "../../../geometry/positions.js";
 import {cube_face_vertices} from "../../../geometry/cube.js";
 import {VECTOR_4D_ALLOCATOR} from "../../../memory/allocators.js";
@@ -14,7 +15,7 @@ import {IGeometry, IMesh} from "../../../_interfaces/geometry.js";
 
 
 export default class Rasterizer
-    extends Canvas2DRenderPipeline<RasterViewport<CanvasRenderingContext2D, RasterCamera>>
+    extends BaseRenderPipeline<CanvasRenderingContext2D, RasterViewport<CanvasRenderingContext2D, RasterCamera>>
     implements IRasterRenderPipeline<CanvasRenderingContext2D, RasterViewport<CanvasRenderingContext2D, RasterCamera>> {
     readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
@@ -35,8 +36,8 @@ export default class Rasterizer
         let max_face_count = 0;
         let max_vertex_count = 0;
 
-        for (const mesh of this.mesh_geometries.meshes) {
-            for (const geometry of this.mesh_geometries.getGeometries(mesh)) {
+        for (const mesh of this.scene.mesh_geometries.meshes) {
+            for (const geometry of this.scene.mesh_geometries.getGeometries(mesh)) {
                 if (geometry.is_renderable) {
                     if (geometry.mesh.face_count > max_face_count)
                         max_face_count = geometry.mesh.face_count;
@@ -68,9 +69,12 @@ export default class Rasterizer
         }
     }
 
-    _render(viewport: SoftwareRasterViewport): void {
-        if (!this.mesh_geometries.mesh_count)
+    render(viewport: SoftwareRasterViewport): void {
+        if (!this.scene.mesh_geometries.mesh_count)
             return;
+
+        render_target = viewport.render_target;
+        render_target.clear();
 
         this._updateClippingBuffers();
 
@@ -79,7 +83,8 @@ export default class Rasterizer
         let mesh_geometry: IGeometry;
         let mesh_geometries: Set<Geometry>;
 
-        const n = viewport.camera.view_frustum.near;
+        const camera = viewport.controller.camera;
+        const n = camera.view_frustum.near;
         const world_to_clip = viewport.world_to_clip;
         const model_to_clip = this.model_to_clip;
         const clip_positions = this.clip_space_vertex_positions;
@@ -97,9 +102,9 @@ export default class Rasterizer
         let fv: T3<Uint8Array | Uint16Array | Uint32Array>;
         let v1, v2, v3: Uint8Array | Uint16Array | Uint32Array;
         let vc, fc, result: number;
-        const pz = viewport.camera.projection_matrix.translation.z;
+        const pz = camera.projection_matrix.translation.z;
 
-        for (const material of this.materials) if (material instanceof SoftwareRasterMaterial) {
+        for (const material of this.scene.materials) if (material instanceof SoftwareRasterMaterial) {
             // mesh_shader = material.mesh_shader;
 
             for (mesh of material.mesh_geometries.meshes) {
@@ -165,8 +170,13 @@ export default class Rasterizer
                 }
             }
         }
+
+        render_target.draw();
     }
 }
+
+
+let render_target: RenderTarget;
 
 // import {Matrix4x4} from "../accessors/matrix.js";
 // import {VertexPositions3D, VertexPositions4D} from "../geometry/positions.js";

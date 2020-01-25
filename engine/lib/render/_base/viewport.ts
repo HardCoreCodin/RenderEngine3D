@@ -1,21 +1,23 @@
 import Rectangle from "./rectangle.js";
 import {Color4D, rgba} from "../../accessors/color.js";
 import {I2D} from "../../_interfaces/vectors.js";
-import {ICamera, IRenderPipeline, IScreen, ISize, IViewport} from "../../_interfaces/render.js";
+import {ICamera, IRenderPipeline, IDisplay, ISize, IViewport} from "../../_interfaces/render.js";
 import {IController} from "../../_interfaces/input.js";
 
 
 export default abstract class BaseViewport<
     Context extends RenderingContext,
-    CameraType extends ICamera>
+    CameraType extends ICamera = ICamera>
     extends Rectangle
-    implements IViewport<Context, CameraType>
+    implements IViewport<Context>
 {
+    is_active: boolean = false;
+
     grid_size: number = 20;
     display_grid: boolean = true;
     display_border: boolean = true;
 
-    abstract updateMatrices(): void;
+    abstract update(): void;
 
     protected readonly _border_color = rgba();
     protected readonly _grid_color = rgba();
@@ -24,11 +26,10 @@ export default abstract class BaseViewport<
     protected _drawOverlay(): void {}
 
     constructor(
-        protected _camera: CameraType,
+        protected _controller: IController<CameraType>,
         protected _render_pipeline: IRenderPipeline<Context>,
-        protected _controller: IController,
-        protected readonly _screen: IScreen<Context>,
-        readonly context: Context = _screen.context as Context,
+        protected readonly _display: IDisplay<Context>,
+        readonly context: Context = _display.context as Context,
         size?: ISize,
         position?: I2D
     ) {
@@ -38,7 +39,6 @@ export default abstract class BaseViewport<
     }
 
     protected _init(size?: ISize, position?: I2D): void {
-        this._controller.camera = this._camera;
         if (size && position)
             this.reset(size.width, size.height, position.x, position.y);
     }
@@ -52,7 +52,6 @@ export default abstract class BaseViewport<
     }
 
     setFrom(other: this): void {
-        this._camera.setFrom(other._camera);
         this._render_pipeline = other._render_pipeline;
         this.reset(
             other._size.width,
@@ -62,22 +61,14 @@ export default abstract class BaseViewport<
         )
     }
 
-    get controller(): IController {return this._controller}
-    set controller(constroller: IController) {
-        constroller.camera = this._camera;
-        this._controller = constroller;
-    }
-
-    get camera(): CameraType {return this._camera}
-    set camera(camera: CameraType) {
-        this._camera = this._controller.camera = camera;
-    }
+    get controller(): IController<CameraType> {return this._controller}
+    set controller(constroller: IController<CameraType>) {this._controller = constroller}
 
     get render_pipeline(): IRenderPipeline<Context> {return this._render_pipeline}
     set render_pipeline(render_pipeline: IRenderPipeline<Context>) {
-        this._screen.unregisterViewport(this);
+        this._display.unregisterViewport(this);
         this._render_pipeline = render_pipeline;
-        this._screen.registerViewport(this);
+        this._display.registerViewport(this);
     }
 
     refresh() {
@@ -92,7 +83,7 @@ export default abstract class BaseViewport<
         y: number = this._position.y
     ): void {
         super.reset(width, height, x, y);
-        this.updateMatrices();
+        this.update();
     }
 
 

@@ -45,3 +45,12 @@ export interface IController<CameraType extends ICamera = ICamera> {
 
     update(delta_time: number): void;
 }
+
+export type ControllerConstructor<CameraType extends ICamera = ICamera> = new (
+    canvas: HTMLCanvasElement,
+    _camera: ICamera,
+    movement_speed?: number,
+    rotation_speed?: number,
+    mouse_sensitivity?: number,
+    mouse_wheel_sensitivity?: number
+) => IController<CameraType>;

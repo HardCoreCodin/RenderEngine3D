@@ -1,0 +1,114 @@
+Ray/Sphere Intersection:
+==========================
+
+Define a 3D ray as a 3D ray-origin position P and a 3D ray-direction D:
+
+Eq.1:    P = [Px, Py, Pz]
+Eq.2:    D = [Dx, Dy, Dz]
+
+
+Define a 3D point I of "possible" intersection with the triangle:
+
+Eq.3:    I = [Ix, Iy, Iz]
+
+
+This point can be "parameterized", as being the ray-origin
+position, "displaced" by "some" scalar-multiple of the ray-direction:
+
+Eq.4:    I = P + t*D
+
+
+Given a sphere represented as a center position C and a 'scalar' radius R:
+
+Eq.5:    C = [Px, Py, Pz]
+Eq.6:    R = r (scalar)
+
+
+There could be 0, 1 or 2 points of intersection with the sphere.
+For a point I to be intersecting the sphere, it's distance from it's center is it's radius:
+
+Eq.7:    |I - C| = R
+
+
+Squaring both sides gives:
+
+Eq.8:    |I - C|² = R²
+
+
+Substituting the squared-length of the vector (I -C), by a dot-product with itself, gives:
+
+Eq.9:    (I - C).(I -C) = R²
+
+
+Substituting I for it's parameterized form gives:
+
+Eq.10:   (P + t*D - C).(P + t*D - C) = R²
+
+
+Re-arranging terms, the expression P - C can be defined as a vector V:
+
+Eq.11:   (t*D + P - C).(t*D + P - C) = R²
+         (t*D + (P-C)).(t*D + (P-C)) = R²
+         (t*D + V).(t*D + V) = R²
+
+
+Expanding the dot product gives:
+
+Eq.12:   (t*D).(t*D) + (t*D).(V) + (V).(t*D) + (V).(V) = R²
+         t*t*D.D + 2(t*D).(V)  + V.V = R²
+         t²*D.D + 2t*D.V + V.V = R²
+         t²*D.D + t*2*D.V + V.V - R² = 0
+
+
+Defining constants:
+
+Eq.13:   a = D.D
+         b = 2*D.V
+         c = V.V - R²
+
+
+Gives:
+
+Eq.14:   t²a + tb + c = 0
+
+
+Define discriminant d:
+
+Eq.15:   d = b² - 4ac
+
+
+Gives the quadratic solution:
+
+Eq.16:    t1,2 = (±√d - b) / 2a
+
+
+For a negative discriminant, there are no roots, implying there is no intersection.
+
+For a zero discriminant, there is a single root:
+
+Eq.17:   t = -b/2a
+
+
+This implies a "single tangential" intersection (the ray is tangent to the sphere's surface):
+
+Eq.18:   I = P + t*D = P - b/2a*D
+
+
+If the root is negative, the sphere is "behind" the ray origin position.
+If the root is positive, the sphere is "in front" of the ray.
+If the root is zero, the ray position is "on" the sphere's surface (I = P).
+
+For a positive discriminant, there are 2 roots:
+
+Eq.19:   t1 = (+√d - b)/2a = -(b - √d)/2a
+         t2 = (-√d - b)/2a = -(b + √d)/2a
+
+
+This implies 2 points of intersection:
+
+Eq.20:   I1 = P - (b - √d)/2a*D
+         I2 = P - (b + √d)/2a*D
+
+If both roots are negative, the sphere intersects "behind" the ray origin position.
+If one root is positive and the other negative, the ray origin position is "inside" the sphere.
+If both roots are positive, the sphere is "in front" of the ray, and intersects it twice.

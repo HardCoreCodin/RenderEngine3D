@@ -89,8 +89,8 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
         this._grid_color.toArray(this._grid_color_array);
     }
 
-    updateMatrices(): void {
-        super.updateMatrices();
+    update(): void {
+        super.update();
         this.world_to_clip.toArray(this._world_to_clip_array);
     }
 

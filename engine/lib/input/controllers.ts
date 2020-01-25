@@ -41,15 +41,19 @@ abstract class Controller
     protected _rotation: IEulerRotation;
     protected _translation: IPosition3D;
     protected _matrix: IMatrix4x4;
-    protected _camera: ICamera;
 
     constructor(
         public canvas: HTMLCanvasElement,
+        protected _camera: ICamera,
         public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
         public rotation_speed: number = DEFAULT_ROTATION_SPEED,
         public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY,
         public mouse_wheel_sensitivity: number = DEFAULT_MOUSE_WHEEL_SENSITIVITY
-    ) {}
+    ) {
+        this._rotation = _camera.transform.rotation;
+        this._translation = _camera.transform.translation;
+        this._matrix = _camera.transform.matrix;
+    }
 
     get camera(): ICamera {return this._camera}
     set camera(camera: ICamera) {

@@ -1,5 +1,5 @@
 import {INode3D, IScene} from "./nodes.js";
-import {I2D, IColor4D} from "./vectors.js";
+import {I2D, IColor, IColor4D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IGeometry, IMesh} from "./geometry.js";
@@ -53,7 +53,7 @@ export interface IRasterCamera extends ICamera {
     readonly projection_matrix: IProjectionMatrix;
 }
 
-export type CameraConstructor<Instance extends ICamera> = new (scene: IScene) => Instance;
+export type CameraConstructor = new (scene: IScene) => ICamera;
 
 export interface IMaterial<Context extends RenderingContext>
 {
@@ -64,8 +64,6 @@ export interface IMaterial<Context extends RenderingContext>
     prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context>): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
 }
-
-
 
 export type MaterialConstructor<
     Context extends RenderingContext,
@@ -95,16 +93,13 @@ export interface IMeshGeometries {
 
 export interface IRenderPipeline<
     Context extends RenderingContext,
-    ViewportType extends IViewport<Context> = IViewport<Context>,
-    MaterialType extends IMaterial<Context> = IMaterial<Context>>
+    ViewportType extends IViewport<Context> = IViewport<Context>>
 {
     readonly context: Context;
-    readonly mesh_geometries: IMeshGeometries;
-    readonly materials: Set<MaterialType>
+    readonly scene: IScene<Context>;
 
     delete(): void;
     render(viewport: ViewportType): void;
-    resetRenderTarget(size: ISize, position: I2D): void;
 
     on_mesh_added(mesh: IMesh): void;
     on_mesh_removed(mesh: IMesh): void;
@@ -115,59 +110,60 @@ export interface IRenderPipeline<
     readonly on_mesh_removed_callback: IMeshCallback;
 }
 
+export type RenderPipelineConstructor<
+    Context extends RenderingContext,
+    ViewportType extends IViewport<Context> = IViewport<Context>> = new (
+    context: Context,
+    scene: IScene<Context>
+) => IRenderPipeline<Context, ViewportType>;
+
 export interface IRasterRenderPipeline<
     Context extends RenderingContext,
-    ViewportType extends IRasterViewport<Context>,
-    MaterialType extends IMaterial<Context> = IMaterial<Context>>
-    extends IRenderPipeline<Context, ViewportType, MaterialType>
+    ViewportType extends IRasterViewport<Context>>
+    extends IRenderPipeline<Context, ViewportType>
 {
     readonly model_to_clip: IMatrix4x4;
 }
 
-export interface ICanvas2DRenderPipeline<
-    ViewportType extends IViewport<CanvasRenderingContext2D>,
-    MaterialType extends IMaterial<CanvasRenderingContext2D> = IMaterial<CanvasRenderingContext2D>>
-    extends IRenderPipeline<CanvasRenderingContext2D, ViewportType, MaterialType>
-{
-    resetRenderTarget(size: ISize, position: I2D): void;
-}
-
-export interface IViewport <
+export interface IViewport<
     Context extends RenderingContext = RenderingContext,
     CameraType extends ICamera = ICamera>
     extends IRectangle
 {
+    context: Context;
     display_grid: boolean;
     display_border: boolean;
-
     grid_size: number;
 
     setBorderColor(color: IColor4D): void;
+
     setGridColor(color: IColor4D): void;
-
-    camera: CameraType
     render_pipeline: IRenderPipeline<Context>;
-    controller: IController;
 
-    refresh(): void;
+    controller: IController<CameraType>;
+
+    is_active: boolean;
     is_inside(x: number, y: number): boolean;
+    refresh(): void;
 
-    updateMatrices(): void;
+    update(): void;
     setFrom(other: this): void;
 }
 
-export type ViewportConstructor<Context extends RenderingContext> = new (
-    camera: ICamera,
-    render_pipeline: IRenderPipeline<Context>,
+export type ViewportConstructor<
+    Context extends RenderingContext,
+    CameraType extends ICamera = ICamera
+    > = new (
     controller: IController,
-    screen: IScreen<Context>,
+    render_pipeline: IRenderPipeline<Context>,
+    screen: IDisplay<Context>,
     context?: Context,
     size?: ISize,
     position?: I2D
-) => IViewport<Context>;
+) => IViewport<Context, CameraType>;
 
 export interface IRasterViewport<
-    Context extends RenderingContext = RenderingContext,
+    Context extends RenderingContext,
     CameraType extends IRasterCamera = IRasterCamera>
     extends IViewport<Context, CameraType>
 {
@@ -176,7 +172,7 @@ export interface IRasterViewport<
 }
 
 
-export interface IScreen<Context extends RenderingContext>
+export interface IDisplay<Context extends RenderingContext>
     extends IRectangle
 {
     context: Context;
@@ -188,9 +184,8 @@ export interface IScreen<Context extends RenderingContext>
     resize(width: number, height: number): void;
     setPosition(x: number, y: number): void;
 
-    addViewport(camera: ICamera,
+    addViewport(controller?: IController,
                 render_pipeline?: IRenderPipeline<Context>,
-                controller?: IController,
                 viewport?: IViewport<Context>
     ): IViewport<Context>;
     removeViewport(viewport: IViewport<Context>): void;
@@ -207,10 +202,7 @@ export interface IRenderEngineKeys {
     space: number;
 }
 
-export interface IRenderEngine<
-    Context extends RenderingContext,
-    // SceneType extends IScene<Context>,
-    ScreenType extends IScreen<Context>>
+export interface IRenderEngine<Context extends RenderingContext>
 {
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
@@ -219,7 +211,7 @@ export interface IRenderEngine<
     readonly pressed: Uint8Array;
 
     scene: IScene<Context>;
-    screen: ScreenType;
+    display: IDisplay<Context>;
 
     readonly is_active: boolean;
     readonly is_running: boolean;
@@ -229,4 +221,33 @@ export interface IRenderEngine<
 
     start(): void;
     stop(): void;
+}
+export interface IRenderTarget {
+    reset(): void;
+
+    drawTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor): void;
+
+    fillTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor): void;
+
+    putPixel(
+        x: number,
+        y: number,
+        r: number,
+        g: number,
+        b: number,
+        a: number
+    ): void;
+
+    putPixelClamped(
+        x: number,
+        y: number,
+        r: number,
+        g: number,
+        b: number,
+        a: number
+    ): void;
+
+    clear(): void;
+
+    draw(): void;
 }

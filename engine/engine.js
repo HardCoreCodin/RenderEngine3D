@@ -1,4 +1,3 @@
-// import Screen from "./lib/render/screen.js";
 // import Camera, {cam} from "./lib/render/camera.js";
 // import Triangle4D, {tri} from "./primitives/triangle.js";
 // import FPSController, {fps} from "./input.js";

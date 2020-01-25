@@ -1,10 +1,10 @@
-import GLScene from "../nodes/scene.js";
 import GLProgram from "../_core/program.js";
 import GLMeshBuffers from "../_core/mesh_buffers.js";
 import GLRenderPipeline from "../pipeline.js";
 import BaseMaterial from "../../../_base/material.js";
 import {IMesh} from "../../../../_interfaces/geometry.js";
 import {IMatrix4x4} from "../../../../_interfaces/matrix.js";
+import Scene from "../../../../nodes/scene.js";
 
 
 export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLRenderPipeline>
@@ -14,7 +14,7 @@ export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLR
     protected _model_to_clip = new Float32Array(16);
     protected _mesh_buffers: GLMeshBuffers;
 
-    constructor(scene: GLScene) {
+    constructor(scene: Scene<WebGL2RenderingContext>) {
         super(scene);
         this.program = new GLProgram(
             scene.context,
