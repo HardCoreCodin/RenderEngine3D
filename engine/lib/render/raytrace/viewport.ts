@@ -37,10 +37,6 @@ export default class RayTraceViewport
             this.ray_directions_transformed.init(pixel_count);
         }
 
-        ray_directions_x = this.ray_directions.arrays[0];
-        ray_directions_y = this.ray_directions.arrays[1];
-        ray_directions_z = this.ray_directions.arrays[2];
-
         x_end = width / 2;
         y_end = height / 2;
 
@@ -56,9 +52,9 @@ export default class RayTraceViewport
             x_end,
             y_end,
 
-            ray_directions_x,
-            ray_directions_y,
-            ray_directions_z
+            this.ray_directions.arrays[0],
+            this.ray_directions.arrays[1],
+            this.ray_directions.arrays[2]
         );
 
         this._updateRayDirections();

@@ -22,8 +22,8 @@ export default class RenderTarget implements IRenderTarget {
             this._viewport.height
         );
 
-        this._clamped_array = this._image.data;
-        this._array = new Uint32Array(this._clamped_array.buffer);
+        // this._clamped_array = this._image.data;
+        this._array = new Uint32Array(this._image.data.buffer);
     }
 
     drawTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor) {

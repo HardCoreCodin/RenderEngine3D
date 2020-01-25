@@ -76,17 +76,6 @@ export default abstract class BaseViewport<
         this._drawOverlay();
     }
 
-    reset(
-        width: number,
-        height: number,
-        x: number = this._position.x,
-        y: number = this._position.y
-    ): void {
-        super.reset(width, height, x, y);
-        this.update();
-    }
-
-
     is_inside(x: number, y: number): boolean {
         return (
             x >= this._position.x && x < this._position.x + this._size.width &&

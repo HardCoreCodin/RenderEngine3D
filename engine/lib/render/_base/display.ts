@@ -76,20 +76,18 @@ export default class Display<Context extends RenderingContext>
     resize(width: number, height: number): void {
         const scale_x = width / this._size.width;
         const scale_y = height / this._size.height;
+        this._size.width = this._canvas.width = width;
+        this._size.height = this._canvas.height = height;
 
-        for (const viewport of this._viewports)
+        for (const viewport of this._viewports) {
             viewport.reset(
-                (viewport.width * scale_x),
-                (viewport.height * scale_y),
-                (viewport.x * scale_x),
-                (viewport.y * scale_y),
+                Math.ceil(viewport.width * scale_x),
+                Math.ceil(viewport.height * scale_y),
+                Math.ceil(viewport.x * scale_x),
+                Math.ceil(viewport.y * scale_y),
             );
-
-        this._canvas.width = width;
-        this._canvas.height = height;
-
-        this._size.width = width;
-        this._size.height = height;
+            viewport.update();
+        }
     }
 
     get viewports(): Generator<IViewport<Context>> {return this._iterViewports()}

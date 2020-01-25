@@ -37,8 +37,8 @@ export default class RasterViewport<
         x: number = this._position.x,
         y: number = this._position.y
     ): void {
-        this._controller.camera.view_frustum.aspect_ratio = width / height;
         super.reset(width, height, x, y);
+        this._controller.camera.view_frustum.aspect_ratio = width / height;
     }
 
     update(): void {
