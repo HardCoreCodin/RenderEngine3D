@@ -82,14 +82,12 @@ export default abstract class BaseViewport<
 export class Grid {
     display = true;
 
-    protected _size: number;
+    protected _size: number = 20;;
     protected _color = rgba(1);
     protected _vertex_count: number;
     protected _vertex_positions: Float32Array;
 
-    constructor(size: number = 20) {
-        this.size = size;
-    }
+    constructor(){this._reset()}
 
     setFrom(other: this): void {
         this.size = other.size;
@@ -106,11 +104,15 @@ export class Grid {
     get size(): number {return this._size}
     set size(size: number) {
         this._size = size;
-        right_and_front = size >>> 1;
+        this._reset();
+    }
+
+    protected _reset(): void {
+        right_and_front = this._size >>> 1;
         left_and_back = -right_and_front;
-        this._vertex_count = 2 * (size + 1) * 2;
+        this._vertex_count = 2 * (this._size + 1) * 2;
         grid = this._vertex_positions = new Float32Array(this._vertex_count * 3);
-        v = 2 * (size + 1) * 3;
+        v = 2 * (this._size + 1) * 3;
         offset = 0;
         for (i = left_and_back; i <= right_and_front; i++) {
             grid[offset    ] = grid[offset + 3] = grid[offset + v + 2] = grid[offset + v + 5] = i;

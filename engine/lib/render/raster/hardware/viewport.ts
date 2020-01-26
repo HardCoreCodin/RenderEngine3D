@@ -125,11 +125,9 @@ class GLGrid extends Grid {
 
     constructor(
         gl: WebGL2RenderingContext,
-        protected readonly _world_to_clip_array: Float32Array,
-        size: number = 20
+        protected readonly _world_to_clip_array: Float32Array
     ) {
-        super(size);
-
+        super();
         this._mode = gl.LINES;
         this._program = new GLProgram(gl, GRID_VERTEX_SHADER, GRID_FRAGMENT_SHADER);
         this._color.toArray(this._color_array);
@@ -139,10 +137,16 @@ class GLGrid extends Grid {
             position: this._vertex_positions
         }, this._program.locations);
         this._vbo = this._vao.attributes.position;
-
     }
+
     get color(): Color4D {return this._color}
     set color(color: Color4D) {this._color.setFrom(color).toArray(this._color_array)}
+
+    get size(): number {return this._size}
+    set size(size: number) {
+        super.size = size;
+        this._vbo.load(this._vertex_positions, this._vertex_count);
+    }
 
     draw(): void {
         this._program.use();

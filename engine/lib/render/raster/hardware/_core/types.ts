@@ -27,6 +27,6 @@ export interface IGLBuffer {
     delete(): void;
 
     bindToLocation(location: GLint): void;
-    load(data: TypedArray, usage?: GLenum): void;
+    load(data: TypedArray, count?: number, usage?: GLenum): void;
     draw(mode?: GLenum): void;
 }

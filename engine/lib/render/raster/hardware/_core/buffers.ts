@@ -11,18 +11,18 @@ abstract class GLBuffer implements IGLBuffer {
     protected _component_count: number;
 
     protected constructor(
-        readonly _contex: WebGL2RenderingContext,
-        readonly _type: GLenum,
-        readonly _count: number,
+        protected readonly _contex: WebGL2RenderingContext,
+        protected readonly _type: GLenum,
+        protected _count: number,
         data?: TypedArray,
         readonly usage: GLenum = _contex.STATIC_DRAW
     ) {
         this._id = _contex.createBuffer();
         if (data)
-            this.load(data, usage);
+            this.load(data, _count, usage);
     }
 
-    load(data: TypedArray, usage: GLenum = this.usage) {
+    load(data: TypedArray, count: number = this._count, usage: GLenum = this.usage) {
         gl = this._contex;
         this._data_type = (
             data instanceof Float32Array ? gl.FLOAT :
@@ -37,6 +37,7 @@ abstract class GLBuffer implements IGLBuffer {
         if (this._data_type === -1)
             throw `Unsupported data type for ${data}`;
 
+        this._count = count;
         this._length = data.length;
         this._component_count = this._length / this._count;
 
