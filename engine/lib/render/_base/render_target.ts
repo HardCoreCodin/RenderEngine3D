@@ -12,9 +12,7 @@ export default class RenderTarget {
     constructor(
         protected readonly _viewport: IViewport<CanvasRenderingContext2D>,
         protected readonly _context = _viewport.context
-    ) {
-        this.reset();
-    }
+    ) {}
 
     reset(): void {
         this._image = this._context.getImageData(

@@ -3,18 +3,15 @@ import RenderTarget from "../_base/render_target.js";
 import {Positions3D} from "../../attributes/vector/positions.js";
 import {Directions3D} from "../../attributes/vector/directions.js";
 import {generateRayDirections} from "./_core/ray_generation.js";
-import {ISize} from "../../_interfaces/render.js";
-import {I2D} from "../../_interfaces/vectors.js";
 
 
 export default class RayTraceViewport
     extends BaseViewport<CanvasRenderingContext2D>
 {
     render_target: RenderTarget;
-
-    readonly ray_positions = new Positions3D();
-    readonly ray_directions = new Directions3D();
-    readonly ray_directions_transformed = new Directions3D();
+    ray_positions: Positions3D;
+    ray_directions: Directions3D;
+    ray_directions_transformed: Directions3D;
 
     protected _updateRayPositions(): void {
         this.ray_directions.mul4AsPos(this._controller.camera.transform.matrix, this.ray_positions);
@@ -68,13 +65,16 @@ export default class RayTraceViewport
 
     reset(width: number, height: number, x: number, y: number): void {
         super.reset(width, height, x, y);
-        this.render_target.reset();
         this._resetRays();
+        this.render_target.reset();
     }
 
-    protected _init(size?: ISize, position?: I2D): void {
-        super._init(size, position);
+    protected _init(): void {
+        this.ray_positions = new Positions3D();
+        this.ray_directions = new Directions3D();
+        this.ray_directions_transformed = new Directions3D();
         this.render_target = new RenderTarget(this);
+        super._init();
     }
 }
 

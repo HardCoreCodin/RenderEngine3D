@@ -1,15 +1,16 @@
 import {Lense} from "../../../nodes/camera.js";
-import BaseViewport from "../../_base/viewport.js";
+import BaseViewport, {Grid} from "../../_base/viewport.js";
 import Matrix4x4, {mat4} from "../../../accessors/matrix4x4.js";
-import {IRasterViewport, ISize} from "../../../_interfaces/render.js";
-import {I2D} from "../../../_interfaces/vectors.js";
+import {IRasterViewport} from "../../../_interfaces/render.js";
 import {DEFAULT_FAR_CLIPPING_PLANE_DISTANCE, DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE} from "../../../../constants.js";
 import {Float16} from "../../../../types.js";
 
 
-export default class RasterViewport<Context extends RenderingContext>
-    extends BaseViewport<Context>
-    implements IRasterViewport<Context>
+export default class RasterViewport<
+    Context extends RenderingContext,
+    GridType extends Grid = Grid>
+    extends BaseViewport<Context, GridType>
+    implements IRasterViewport<Context, GridType>
 {
     protected _perspective_projection_matrix: ProjectionMatrix<Context>;
     protected _orthographic_projection_matrix: ProjectionMatrix<Context>;
@@ -18,13 +19,13 @@ export default class RasterViewport<Context extends RenderingContext>
     world_to_clip: Matrix4x4;
     view_frustum: ViewFrustum<Context>;
 
-    protected _init(size?: ISize, position?: I2D): void {
-        super._init(size, position);
+    protected _init(): void {
         this.world_to_view = mat4();
         this.world_to_clip = mat4();
         this.view_frustum = new ViewFrustum(this);
         this._perspective_projection_matrix = this._getPerspectiveProjectionMatrix();
         this._orthographic_projection_matrix = this._getOrthographicProjectionMatrix();
+        super._init();
     };
 
     get projection_matrix(): ProjectionMatrix<Context> {

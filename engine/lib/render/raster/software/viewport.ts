@@ -1,8 +1,6 @@
 import RasterViewport from "../_base/viewport.js";
 import RenderTarget from "../../_base/render_target.js";
 import {mat3} from "../../../accessors/matrix3x3.js";
-import {ISize} from "../../../_interfaces/render.js";
-import {I2D} from "../../../_interfaces/vectors.js";
 
 
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D>
@@ -31,11 +29,8 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
         this.render_target.reset();
     }
 
-    update(): void {
-    }
-
-    protected _init(size?: ISize, position?: I2D): void {
-        super._init(size, position);
+    protected _init(): void {
+        super._init();
         this.render_target = new RenderTarget(this);
     }
 }

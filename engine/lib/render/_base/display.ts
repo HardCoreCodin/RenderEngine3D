@@ -23,7 +23,6 @@ export default class Display<Context extends RenderingContext>
 
     protected readonly _active_viewport_border_color = rgba(0, 1, 0, 1);
     protected readonly _inactive_viewport_border_color = rgba(0.75);
-    protected readonly _grid_color = rgba(0, 1, 1, 1);
 
     constructor(
         protected readonly _scene: Scene<Context>,
@@ -37,18 +36,10 @@ export default class Display<Context extends RenderingContext>
         this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
         this.active_viewport = this.addViewport();
         this._active_viewport.display_border = false;
-        this._active_viewport.setGridColor(this._grid_color);
     }
 
-    get grid_color(): Color4D {return this._active_viewport_border_color}
     get active_viewport_border_color(): Color4D {return this._active_viewport_border_color}
     get inactive_viewport_border_color(): Color4D {return this._inactive_viewport_border_color}
-
-    set grid_color(color: Color4D) {
-        this._grid_color.setFrom(color);
-        for (const viewport of this._viewports)
-            viewport.setGridColor(color);
-    }
 
     set active_viewport_border_color(color: Color4D) {
         this._active_viewport_border_color.setFrom(color);
@@ -139,7 +130,6 @@ export default class Display<Context extends RenderingContext>
     ): IViewport<Context> {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
-        viewport.setGridColor(this._grid_color);
 
         if (this._active_viewport) {
             const old_width = this._active_viewport.width;
@@ -147,6 +137,7 @@ export default class Display<Context extends RenderingContext>
             const left_over = old_width - new_width;
             this._active_viewport.width = new_width;
             this._active_viewport.display_border = true;
+            this._active_viewport.update();
             viewport.setFrom(this._active_viewport);
             viewport.reset(left_over, viewport.height, this.active_viewport.x + new_width, viewport.y);
             this.active_viewport = viewport;
@@ -154,6 +145,7 @@ export default class Display<Context extends RenderingContext>
             this._active_viewport = viewport;
 
         viewport.is_active = true;
+        viewport.update();
         return viewport;
     }
 

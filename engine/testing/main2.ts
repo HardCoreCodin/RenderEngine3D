@@ -64,5 +64,5 @@ g.input_uvs = g.mesh_inputs.uv;
     g.engine.start();
 
     g.engine.display.addViewport(g.engine.display.active_viewport.controller);
-    // g.engine.display.addViewport(g.engine.display.active_viewport.controller);
+    g.engine.display.addViewport(g.engine.display.active_viewport.controller);
 })();

@@ -6,11 +6,11 @@ import RasterViewport, {
     PerspectiveProjectionMatrix
 } from "../_base/viewport.js";
 import {IGLBuffer, IGLUniform} from "./_core/types.js";
+import {Grid} from "../../_base/viewport.js";
 
 
-export default class GLViewport extends RasterViewport<WebGL2RenderingContext> {
+export default class GLViewport extends RasterViewport<WebGL2RenderingContext, GLGrid> {
     protected _world_to_clip_array: Float32Array;
-
     protected _border_program: GLProgram;
     protected _border_vao: GLVertexArray;
     protected _border_vbo: IGLBuffer;
@@ -18,22 +18,21 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext> {
     protected _border_color_array: Float32Array;
     protected _border_color_uniform: IGLUniform;
 
-    protected _grid_program: GLProgram;
-    protected _grid_vao: GLVertexArray;
-    protected _grid_vbo: IGLBuffer;
-    protected _grid_positions: Float32Array;
-    protected _grid_color_array: Float32Array;
-    protected _grid_color_uniform: IGLUniform;
-    protected _world_to_clip_uniform: IGLUniform;
+    protected _init(): void {
+        super._init();
+        this._world_to_clip_array = new Float32Array(16);
+    }
+
+    protected _getGrid(): GLGrid {
+        return new GLGrid(this.context, this._world_to_clip_array);
+    }
 
     protected _initOverlay(): void {
-        this._world_to_clip_array = new Float32Array(16);
+        super._initOverlay();
         this._border_color_array = new Float32Array(4);
-        this._grid_color_array = new Float32Array(4);
 
         this.world_to_clip.toArray(this._world_to_clip_array);
         this._border_color.toArray(this._border_color_array);
-        this._grid_color.toArray(this._grid_color_array);
 
         const gl = this.context;
         const border = this._border_positions = Float32Array.of(-1,-1,  1,-1,  1,1,  -1,1);
@@ -41,35 +40,10 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext> {
         this._border_color_uniform = this._border_program.uniforms.color;
         this._border_vao = new GLVertexArray(gl, 4, {position: border}, this._border_program.locations);
         this._border_vbo = this._border_vao.attributes.position;
-
-        const right_and_front = this.grid_size >>> 1;
-        const left_and_back = -right_and_front;
-        const vertex_count = 2 * (this.grid_size + 1) * 2;
-        const offset_to_v = 2 * (this.grid_size + 1) * 3;
-        const grid = this._grid_positions = new Float32Array(vertex_count * 3);
-        let o = 0;
-        for (let i = left_and_back; i <= right_and_front; i++) {
-            grid[o    ] = grid[o + 3] = grid[o + offset_to_v + 2] = grid[o + offset_to_v + 5] = i;
-            grid[o + 2] = grid[o + offset_to_v    ] = right_and_front;
-            grid[o + 5] = grid[o + offset_to_v + 3] = left_and_back;
-            o += 6;
-        }
-        this._grid_program = new GLProgram(gl, GRID_VERTEX_SHADER, GRID_FRAGMENT_SHADER);
-        this._grid_color_uniform = this._grid_program.uniforms.color;
-        this._world_to_clip_uniform = this._grid_program.uniforms.world_to_clip;
-        this._grid_vao = new GLVertexArray(gl, vertex_count, {position: grid}, this._grid_program.locations);
-        this._grid_vbo = this._grid_vao.attributes.position;
     }
 
     _drawOverlay(): void {
-        if (this.display_grid) {
-            this._grid_program.use();
-            this._grid_vao.bind();
-            this._grid_color_uniform.load(this._grid_color_array);
-            this._world_to_clip_uniform.load(this._world_to_clip_array);
-            this._grid_vbo.draw(this.context.LINES);
-        }
-
+        if (this.grid.display) this.grid.draw();
         if (this.display_border) {
             this._border_program.use();
             this._border_vao.bind();
@@ -81,11 +55,6 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext> {
     setBorderColor(color: Color4D): void {
         this._border_color.setFrom(color);
         this._border_color.toArray(this._border_color_array);
-    }
-
-    setGridColor(color: Color4D): void {
-        this._grid_color.setFrom(color);
-        this._grid_color.toArray(this._grid_color_array);
     }
 
     update(): void {
@@ -143,6 +112,46 @@ export class GLOrthographicProjectionMatrix
     }
 }
 
+
+class GLGrid extends Grid {
+    protected readonly _world_to_clip_uniform: IGLUniform;
+    protected readonly _color_uniform: IGLUniform;
+    protected readonly _color_array = new Float32Array(4);
+
+    protected _program: GLProgram;
+    protected _vao: GLVertexArray;
+    protected _vbo: IGLBuffer;
+    protected _mode: GLenum;
+
+    constructor(
+        gl: WebGL2RenderingContext,
+        protected readonly _world_to_clip_array: Float32Array,
+        size: number = 20
+    ) {
+        super(size);
+
+        this._mode = gl.LINES;
+        this._program = new GLProgram(gl, GRID_VERTEX_SHADER, GRID_FRAGMENT_SHADER);
+        this._color.toArray(this._color_array);
+        this._color_uniform = this._program.uniforms.color;
+        this._world_to_clip_uniform = this._program.uniforms.world_to_clip;
+        this._vao = new GLVertexArray(gl, this._vertex_count, {
+            position: this._vertex_positions
+        }, this._program.locations);
+        this._vbo = this._vao.attributes.position;
+
+    }
+    get color(): Color4D {return this._color}
+    set color(color: Color4D) {this._color.setFrom(color).toArray(this._color_array)}
+
+    draw(): void {
+        this._program.use();
+        this._vao.bind();
+        this._color_uniform.load(this._color_array);
+        this._world_to_clip_uniform.load(this._world_to_clip_array);
+        this._vbo.draw(this._mode);
+    }
+}
 
 let n, f, d;
 

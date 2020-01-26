@@ -33,8 +33,8 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
 
         ray_direction_index = 0;
         pixel_index = y_start * width + x_start;
-        for (y = y_start; y < y_end; y++) {
-            for (x = x_start; x < x_end; x++) {
+        for (y = y_start; y <= y_end; y++) {
+            for (x = x_start; x <= x_end; x++) {
                 if (viewport.is_active)
                     render_target.putPixel(pixel_index,
                         (ray_x[ray_direction_index] + 5) / 10,
