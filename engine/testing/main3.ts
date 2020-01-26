@@ -12,3 +12,4 @@ g.geometry = g.engine.scene.mesh_geometries.addGeometry(g.mesh);
 g.geometry.material = g.engine.scene.addMaterial(GLMaterial);
 
 g.engine.start();
+

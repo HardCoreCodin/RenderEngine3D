@@ -116,7 +116,6 @@ export class GLOrthographicProjectionMatrix
 class GLGrid extends Grid {
     protected readonly _world_to_clip_uniform: IGLUniform;
     protected readonly _color_uniform: IGLUniform;
-    protected readonly _color_array = new Float32Array(4);
 
     protected _program: GLProgram;
     protected _vao: GLVertexArray;
@@ -130,7 +129,6 @@ class GLGrid extends Grid {
         super();
         this._mode = gl.LINES;
         this._program = new GLProgram(gl, GRID_VERTEX_SHADER, GRID_FRAGMENT_SHADER);
-        this._color.toArray(this._color_array);
         this._color_uniform = this._program.uniforms.color;
         this._world_to_clip_uniform = this._program.uniforms.world_to_clip;
         this._vao = new GLVertexArray(gl, this._vertex_count, {
@@ -138,9 +136,6 @@ class GLGrid extends Grid {
         }, this._program.locations);
         this._vbo = this._vao.attributes.position;
     }
-
-    get color(): Color4D {return this._color}
-    set color(color: Color4D) {this._color.setFrom(color).toArray(this._color_array)}
 
     get size(): number {return this._size}
     set size(size: number) {

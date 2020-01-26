@@ -1,6 +1,7 @@
 import {I2D, IColor} from "../../_interfaces/vectors.js";
 import {IViewport} from "../../_interfaces/render.js";
-import {IS_BIG_ENDIAN} from "../../../constants.js";
+import {drawPixel} from "../../../utils.js";
+import {drawLine2D} from "../raster/software/_core/line.js";
 
 
 export default class RenderTarget {
@@ -10,16 +11,16 @@ export default class RenderTarget {
     // protected _clamped_array: Uint8ClampedArray;
 
     constructor(
-        protected readonly _viewport: IViewport<CanvasRenderingContext2D>,
-        protected readonly _context = _viewport.context
+        readonly viewport: IViewport<CanvasRenderingContext2D>,
+        readonly context = viewport.context
     ) {}
 
     reset(): void {
-        this._image = this._context.getImageData(
-            this._viewport.x,
-            this._viewport.y,
-            this._viewport.width,
-            this._viewport.height
+        this._image = this.context.getImageData(
+            this.viewport.x,
+            this.viewport.y,
+            this.viewport.width,
+            this.viewport.height
         );
 
         // this._array_buffer = new ArrayBuffer(this._image.data.length);
@@ -29,29 +30,29 @@ export default class RenderTarget {
     }
 
     drawTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor) {
-        this._context.beginPath();
+        this.context.beginPath();
 
-        this._context.moveTo(v1.x, v1.y);
-        this._context.lineTo(v2.x, v2.y);
-        this._context.lineTo(v3.x, v3.y);
+        this.context.moveTo(v1.x, v1.y);
+        this.context.lineTo(v2.x, v2.y);
+        this.context.lineTo(v3.x, v3.y);
         // this.context.lineTo(v1.x, v1.y);
-        this._context.closePath();
+        this.context.closePath();
 
-        this._context.strokeStyle = `${color}`;
-        this._context.stroke();
+        this.context.strokeStyle = `${color}`;
+        this.context.stroke();
     }
 
     fillTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor) {
-        this._context.beginPath();
+        this.context.beginPath();
 
-        this._context.moveTo(v1.x, v1.y);
-        this._context.lineTo(v2.x, v2.y);
-        this._context.lineTo(v3.x, v3.y);
+        this.context.moveTo(v1.x, v1.y);
+        this.context.lineTo(v2.x, v2.y);
+        this.context.lineTo(v3.x, v3.y);
 
-        this._context.closePath();
+        this.context.closePath();
 
-        this._context.fillStyle = `${color}`;
-        this._context.fill();
+        this.context.fillStyle = `${color}`;
+        this.context.fill();
     }
 
     putPixel(
@@ -62,67 +63,34 @@ export default class RenderTarget {
         b: number,
         a: number = 1
     ) {
-        put_pixel_data(this._array, index, r, g, b, a);
+        drawPixel(this._array, index, r, g, b, a);
+    }
+
+    drawLine2D(
+        x1: number, y1: number,
+        x2: number, y2: number,
+
+        r: number,
+        g: number,
+        b: number,
+        a: number = 1
+    ) {
+        drawLine2D(this._array, this.viewport.width, this.viewport.height, x1, x2, y1, y2, r, g, b, a);
     }
 
     clear(): void {
-        this._context.clearRect(
-            this._viewport.x,
-            this._viewport.y,
-            this._viewport.width,
-            this._viewport.height
+        this.context.clearRect(
+            this.viewport.x,
+            this.viewport.y,
+            this.viewport.width,
+            this.viewport.height
         );
     }
 
     draw(): void {
         // this._image.data.set(this._clamped_array);
-        this._context.putImageData(this._image, this._viewport.x, this._viewport.y);
+        this.context.putImageData(this._image, this.viewport.x, this.viewport.y);
     }
 }
 
 
-const put_pixel_data = IS_BIG_ENDIAN ? (
-    data: Uint32Array,
-    index: number,
-
-    r: number,
-    g: number,
-    b: number,
-    a: number
-): void => {
-    data[index] = (
-        // red
-        (r * 255) << 24
-    ) | (
-        // green
-        (g * 255) << 16
-    ) | (
-        // blue
-        (b * 255) << 8
-    )  | (
-        // alpha
-        (a * 255)
-    );
-} : (
-    data: Uint32Array,
-    index: number,
-
-    r: number,
-    g: number,
-    b: number,
-    a: number
-): void => {
-    data[index] = (
-        // alpha
-        (a * 255) << 24
-    ) | (
-        // blue
-        (b * 255) << 16
-    ) | (
-        // green
-        (g * 255) << 8
-    )  | (
-        // red
-        (r * 255)
-    );
-};

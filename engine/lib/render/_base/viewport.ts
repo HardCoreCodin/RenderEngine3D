@@ -82,10 +82,11 @@ export default abstract class BaseViewport<
 export class Grid {
     display = true;
 
-    protected _size: number = 20;;
+    protected _size: number = 20;
     protected _color = rgba(1);
     protected _vertex_count: number;
     protected _vertex_positions: Float32Array;
+    protected readonly _color_array = Float32Array.of(1, 1, 1, 1);
 
     constructor(){this._reset()}
 
@@ -96,7 +97,7 @@ export class Grid {
     }
 
     get color(): Color4D {return this._color}
-    set color(color: Color4D) {this._color.setFrom(color)}
+    set color(color: Color4D) {this._color.setFrom(color).toArray(this._color_array)}
 
     get vertex_count(): number {return this._vertex_count}
     get vertex_positions(): Float32Array {return this._vertex_positions}

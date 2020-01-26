@@ -1,5 +1,5 @@
 import {TypedArray} from "./types.js";
-import {PIE, TWO_PIE} from "./constants.js";
+import {IS_BIG_ENDIAN, PIE, TWO_PIE} from "./constants.js";
 
 export const non_zero = _ => _ !== 0;
 
@@ -69,3 +69,48 @@ export function* zip<A, B, C>(
         i++;
     }
 }
+
+export const drawPixel = IS_BIG_ENDIAN ? (
+    pixels: Uint32Array,
+    index: number,
+
+    r: number,
+    g: number,
+    b: number,
+    a: number
+): void => {
+    pixels[index] = (
+        // red
+        (r * 255) << 24
+    ) | (
+        // green
+        (g * 255) << 16
+    ) | (
+        // blue
+        (b * 255) << 8
+    ) | (
+        // alpha
+        (a * 255)
+    );
+} : (
+    pixels: Uint32Array,
+    index: number,
+    r: number,
+    g: number,
+    b: number,
+    a: number
+): void => {
+    pixels[index] = (
+        // alpha
+        (a * 255) << 24
+    ) | (
+        // blue
+        (b * 255) << 16
+    ) | (
+        // green
+        (g * 255) << 8
+    ) | (
+        // red
+        (r * 255)
+    );
+};

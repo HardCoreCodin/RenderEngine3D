@@ -1,7 +1,19 @@
 import {Float2, Float3, Float4} from "../../../../../types.js";
 import {CULL, INSIDE, NDC} from "../../../../../constants.js";
 
-let i, flags, one_over_ws: number;
+let i, flags, one_over_ws, one_over_w: number;
+
+export const perspectiveDivideAllVertexPositions = (
+    [X, Y, Z, W]: Float32Array[]
+): void => {
+    for (const [i, w] of W.entries()) {
+        // Store reciprocals for use in rasterization:
+        W[i] = one_over_w = 1/w;
+        X[i] *= one_over_w;
+        Y[i] *= one_over_w;
+        Z[i] *= one_over_w;
+    }
+};
 
 const perspectiveDivideVertexPositions = (
     [X, Y, Z, W]: Float4,

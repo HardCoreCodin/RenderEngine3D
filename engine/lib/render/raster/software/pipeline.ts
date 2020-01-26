@@ -75,30 +75,30 @@ export default class Rasterizer
 
         render_target = viewport.render_target;
         render_target.clear();
-
-        width = viewport.width;
-        height = viewport.height;
-
-        y_start = viewport.y;
-        x_start = viewport.x;
-
-        y_end = y_start + height;
-        x_end = x_start + width;
-
-        pixel_index = y_start * width + x_start;
-        for (y = y_start; y < y_end; y++) {
-            for (x = x_start; x < x_end; x++) {
-                if (
-                    (x > (x_start + ((x_end - x_start) / 3))) && (x > (x_start + (((x_end - x_start) / 3)*2))) &&
-                    (y > (y_start + ((y_end - y_start) / 3))) && (y > (y_start + (((y_end - y_start) / 3)*2)))
-                    )
-                    render_target.putPixel(pixel_index, 1, 0, 0);
-
-                pixel_index++;
-            }
-        }
-
-        render_target.draw();
+        //
+        // width = viewport.width;
+        // height = viewport.height;
+        //
+        // y_start = viewport.y;
+        // x_start = viewport.x;
+        //
+        // y_end = y_start + height;
+        // x_end = x_start + width;
+        //
+        // pixel_index = y_start * width + x_start;
+        // for (y = y_start; y < y_end; y++) {
+        //     for (x = x_start; x < x_end; x++) {
+        //         if (
+        //             (x > (x_start + ((x_end - x_start) / 3))) && (x > (x_start + (((x_end - x_start) / 3)*2))) &&
+        //             (y > (y_start + ((y_end - y_start) / 3))) && (y > (y_start + (((y_end - y_start) / 3)*2)))
+        //             )
+        //             render_target.putPixel(pixel_index, 1, 0, 0);
+        //
+        //         pixel_index++;
+        //     }
+        // }
+        //
+        // render_target.draw();
 
         // render_target.drawTriangle(
         //     {x: 20, y: 20},
