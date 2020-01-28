@@ -40,11 +40,9 @@ export class VectorBuffer<VectorType extends Vector> extends FloatBuffer {
 
     constructor(
         protected readonly Vector: VectorConstructor<VectorType>,
-        allocator: IAllocator<Float32Array>,
-        length?: number,
-        arrays?: Float32Array[]
+        allocator: IAllocator<Float32Array>
     ) {
-        super(allocator, length, arrays);
+        super(allocator);
     }
 
     init(length: number, arrays?: Float32Array[]): this {
@@ -76,65 +74,29 @@ export class VectorBuffer<VectorType extends Vector> extends FloatBuffer {
 export class VectorBuffer2D<VectorType extends Vector2D>
     extends VectorBuffer<VectorType>
 {
-    constructor(
-        Vector: VectorConstructor<VectorType>,
-        length?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(Vector, VECTOR_2D_ALLOCATOR, length, arrays);
-    }
+    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_2D_ALLOCATOR)}
 }
 export class VectorBuffer3D<VectorType extends Vector3D>
     extends VectorBuffer<VectorType>
 {
-    constructor(
-        Vector: VectorConstructor<VectorType>,
-        length?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(Vector, VECTOR_3D_ALLOCATOR, length, arrays);
-    }
+    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_3D_ALLOCATOR)}
 }
 export class VectorBuffer4D<VectorType extends Vector4D>
     extends VectorBuffer<VectorType>
 {
-    constructor(
-        Vector: VectorConstructor<VectorType>,
-        length?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(Vector, VECTOR_4D_ALLOCATOR, length, arrays);
-    }
+    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_4D_ALLOCATOR)}
 }
 
-export class UVs2D extends VectorBuffer2D<UV2D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(UV2D, length, arrays);
-    }
-}
-export class UVs3D extends VectorBuffer3D<UV3D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(UV3D, length, arrays);
-    }
-}
+export class UVs2D extends VectorBuffer2D<UV2D> {constructor() {super(UV2D)}}
+export class UVs3D extends VectorBuffer3D<UV3D> {constructor() {super(UV3D)}}
 
 
-export class Colors3D extends VectorBuffer3D<Color3D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Color3D, length, arrays);
-    }
-}
-export class Colors4D extends VectorBuffer4D<Color4D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Color4D, length, arrays);
-    }
-}
+export class Colors3D extends VectorBuffer3D<Color3D> {constructor() {super(Color3D)}}
+export class Colors4D extends VectorBuffer4D<Color4D> {constructor() {super(Color4D)}}
 
 
 export class Directions2D extends VectorBuffer2D<Direction2D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Direction2D, length, arrays);
-    }
+    constructor() {super(Direction2D)}
 
     normalize(include?: Uint8Array[]): this {
         normalize2D(this.arrays, include);
@@ -165,9 +127,7 @@ export class Directions2D extends VectorBuffer2D<Direction2D> {
     }
 }
 export class Directions3D extends VectorBuffer3D<Direction3D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Direction3D, length, arrays);
-    }
+    constructor() {super(Direction3D)}
 
     normalize(include?: Uint8Array[]): this {
         normalize3D(this.arrays, include);
@@ -237,9 +197,7 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
     }
 }
 export class Directions4D extends VectorBuffer4D<Direction4D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Direction4D, length, arrays);
-    }
+    constructor() {super(Direction4D)}
 
     normalize(include?: Uint8Array[]): this {
         normalize4D(this.arrays, include);
@@ -272,9 +230,7 @@ export class Directions4D extends VectorBuffer4D<Direction4D> {
 
 
 export class Positions2D extends VectorBuffer2D<Position2D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Position2D, length, arrays);
-    }
+    constructor() {super(Position2D)}
 
     mul(matrix: Matrix2x2, out: this, include?: Uint8Array[]): this {
         multiply_2D_vectors_by_a_2x2_matrix_to_out(
@@ -300,9 +256,7 @@ export class Positions2D extends VectorBuffer2D<Position2D> {
     }
 }
 export class Positions3D extends VectorBuffer3D<Position3D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Position3D, length, arrays);
-    }
+    constructor() {super(Position3D)}
 
     mul<OutVector extends Position3D|Position4D, Out extends VectorBuffer<OutVector>>(
         matrix: Matrix3x3|Matrix4x4,
@@ -349,9 +303,7 @@ export class Positions3D extends VectorBuffer3D<Position3D> {
     }
 }
 export class Positions4D extends VectorBuffer4D<Position4D> {
-    constructor(length?: number, arrays?: Float32Array[]) {
-        super(Position4D, length, arrays);
-    }
+    constructor() {super(Position4D)}
 
     protected _post_init(): void {
         super._post_init();

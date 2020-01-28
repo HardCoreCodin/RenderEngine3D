@@ -6,9 +6,10 @@ import {ATTRIBUTE} from "../../../constants.js";
 import {loadVertices, pullVertices, pullFaces} from "./_core.js";
 import {randomize3D, randomize4D} from "../_core.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
+import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
-export class VertexColors3D extends Colors3D {
+export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D, ATTRIBUTE.color> {
     readonly attribute: ATTRIBUTE.color;
 
     protected _is_shared: boolean;
@@ -18,11 +19,15 @@ export class VertexColors3D extends Colors3D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -49,7 +54,7 @@ export class VertexColors3D extends Colors3D {
         return this;
     }
 }
-export class VertexColors4D extends Colors4D {
+export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D, ATTRIBUTE.color> {
     readonly attribute: ATTRIBUTE.color;
 
     protected _is_shared: boolean;
@@ -59,11 +64,15 @@ export class VertexColors4D extends Colors4D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -96,10 +105,14 @@ export class FaceColors3D extends Colors3D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(inputs: VertexColors3D): this {
@@ -117,10 +130,14 @@ export class FaceColors4D extends Colors4D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(inputs: VertexColors4D): this {

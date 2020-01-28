@@ -5,9 +5,11 @@ import {Positions2D, Positions3D, Positions4D} from "../vectors.js";
 import {ATTRIBUTE} from "../../../constants.js";
 import {loadVerticesSimple, pullFaces} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
+import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
-export class VertexPositions2D extends Positions2D {
+export class VertexPositions2D extends Positions2D implements IVertexAttribute<Position2D, ATTRIBUTE.position>
+{
     readonly attribute: ATTRIBUTE.position;
 
     protected _is_shared: boolean;
@@ -17,11 +19,15 @@ export class VertexPositions2D extends Positions2D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     protected _post_init(): void {
@@ -29,7 +35,10 @@ export class VertexPositions2D extends Positions2D {
         this.current_triangle = new Triangle(Position2D, this.arrays);
     }
 
-    get is_shared(): boolean {return this._is_shared}
+    get is_shared(): boolean {
+        return this._is_shared
+    }
+
     get triangles(): Generator<Triangle<Position2D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
     }
@@ -39,7 +48,7 @@ export class VertexPositions2D extends Positions2D {
         return this;
     }
 }
-export class VertexPositions3D extends Positions3D {
+export class VertexPositions3D extends Positions3D implements IVertexAttribute<Position3D, ATTRIBUTE.position> {
     readonly attribute: ATTRIBUTE.position;
 
     protected _is_shared: boolean;
@@ -49,11 +58,15 @@ export class VertexPositions3D extends Positions3D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -71,7 +84,7 @@ export class VertexPositions3D extends Positions3D {
         return this;
     }
 }
-export class VertexPositions4D extends Positions4D {
+export class VertexPositions4D extends Positions4D implements IVertexAttribute<Position4D, ATTRIBUTE.position> {
     readonly attribute: ATTRIBUTE.position;
 
     protected _is_shared: boolean;
@@ -81,11 +94,15 @@ export class VertexPositions4D extends Positions4D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -111,10 +128,14 @@ export class FacePositions2D extends Positions2D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(inputs: VertexPositions2D): this {
@@ -127,10 +148,14 @@ export class FacePositions3D extends Positions3D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(inputs: VertexPositions3D): this {
@@ -143,10 +168,14 @@ export class FacePositions4D extends Positions4D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(inputs: VertexPositions4D): this {

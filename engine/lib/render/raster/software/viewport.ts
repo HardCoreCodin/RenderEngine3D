@@ -1,11 +1,11 @@
+import Matrix3x3, {mat3} from "../../../accessors/matrix3x3.js";
+import Matrix4x4 from "../../../accessors/matrix4x4.js";
+import {Positions3D, Positions4D} from "../../../buffers/vectors.js";
 import {Grid} from "../../_base/viewport.js";
 import RasterViewport from "../_base/viewport.js";
 import RenderTarget from "../../_base/render_target.js";
-import Matrix3x3, {mat3} from "../../../accessors/matrix3x3.js";
-import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import {perspectiveDivideAllVertexPositions} from "./_core/half_space.js";
 import {zip} from "../../../../utils.js";
-import {Positions3D, Positions4D} from "../../../buffers/vectors.js";
 
 
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid>
@@ -88,10 +88,10 @@ class SWGrid extends Grid {
             }
         } else {
             this._nds_to_screen = new Matrix4x4().setToIdentity();
-            this.world_start_positions = new Positions3D(line_count);
-            this.world_end_positions = new Positions3D(line_count);
-            this.start_positions = new Positions4D(line_count);
-            this.end_positions = new Positions4D(line_count);
+            this.world_start_positions = new Positions3D().init(line_count);
+            this.world_end_positions = new Positions3D().init(line_count);
+            this.start_positions = new Positions4D().init(line_count);
+            this.end_positions = new Positions4D().init(line_count);
         }
 
         arrays = this.world_start_positions.arrays;

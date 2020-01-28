@@ -1,5 +1,4 @@
 import Buffer from "../memory/buffers.js";
-import {IFaceVertices, IFromToIndices, IVertexFaces} from "../_interfaces/buffers.js";
 import {InputPositions} from "./inputs.js";
 import {
     FACE_VERTICES_ALLOCATOR_INT16,
@@ -8,20 +7,11 @@ import {
     FROM_TO_INDICES_ALLOCATOR_INT16,
     FROM_TO_INDICES_ALLOCATOR_INT32,
     FROM_TO_INDICES_ALLOCATOR_INT8,
-    Int16Allocator1D,
-    Int16Allocator2D,
-    Int16Allocator3D,
-    Int32Allocator1D,
-    Int32Allocator2D,
-    Int32Allocator3D,
-    Int8Allocator1D,
-    Int8Allocator2D,
-    Int8Allocator3D,
     VERTEX_FACES_ALLOCATOR_INT16,
     VERTEX_FACES_ALLOCATOR_INT32,
     VERTEX_FACES_ALLOCATOR_INT8
 } from "../memory/allocators.js";
-import {IAllocator} from "../_interfaces/allocators.js";
+import {IFaceVertices, IFromToIndices, IVertexFaces} from "../_interfaces/buffers.js";
 
 
 abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
@@ -74,85 +64,40 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
 }
 
 export class FaceVerticesInt8 extends FaceVertices<Uint8Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint8Array[]
-    ) {
-        super(FACE_VERTICES_ALLOCATOR_INT8, length, arrays);
-    }
+    constructor() {super(FACE_VERTICES_ALLOCATOR_INT8)}
 }
 export class FaceVerticesInt16 extends FaceVertices<Uint16Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint16Array[]
-    ) {
-        super(FACE_VERTICES_ALLOCATOR_INT16, length, arrays);
-    }
+    constructor() {super(FACE_VERTICES_ALLOCATOR_INT16)}
 }
 export class FaceVerticesInt32 extends FaceVertices<Uint32Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint32Array[]
-    ) {
-        super(FACE_VERTICES_ALLOCATOR_INT32, length, arrays);
-    }
+    constructor() {super(FACE_VERTICES_ALLOCATOR_INT32)}
 }
 
 export class VertexFacesInt8 extends VertexFaces<Uint8Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint8Array[]
-    ) {
-        super(VERTEX_FACES_ALLOCATOR_INT8, length, arrays);
-    }
+    constructor() {super(VERTEX_FACES_ALLOCATOR_INT8)}
 }
 export class VertexFacesInt16 extends VertexFaces<Uint16Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint16Array[]
-    ) {
-        super(VERTEX_FACES_ALLOCATOR_INT16, length, arrays);
-    }
+    constructor() {super(VERTEX_FACES_ALLOCATOR_INT16)}
 }
 export class VertexFacesInt32 extends VertexFaces<Uint32Array> {
-    constructor(
-        length?: number,
-        arrays?: Uint32Array[]
-    ) {
-        super(VERTEX_FACES_ALLOCATOR_INT32, length, arrays);
-    }
+    constructor() {super(VERTEX_FACES_ALLOCATOR_INT32)}
 }
 
 export class FromToIndicesInt8
     extends Buffer<Uint8Array>
     implements IFromToIndices<Uint8Array>
 {
-    constructor(
-        length?: number,
-        arrays?: Uint8Array[]
-    ) {
-        super(FROM_TO_INDICES_ALLOCATOR_INT8, length, arrays);
-    }
+    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT8)}
 }
 export class FromToIndicesInt16
     extends Buffer<Uint16Array>
     implements IFromToIndices<Uint16Array>
 {
-    constructor(
-        length?: number,
-        arrays?: Uint16Array[]
-    ) {
-        super(FROM_TO_INDICES_ALLOCATOR_INT16, length, arrays);
-    }
+    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT16)}
 }
 export class FromToIndicesInt32
     extends Buffer<Uint32Array>
     implements IFromToIndices<Uint32Array>
 {
-    constructor(
-        length?: number,
-        arrays?: Uint32Array[]
-    ) {
-        super(FROM_TO_INDICES_ALLOCATOR_INT32, length, arrays);
-    }
+    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT32)}
 }

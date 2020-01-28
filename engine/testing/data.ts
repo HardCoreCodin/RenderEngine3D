@@ -4,10 +4,11 @@ import {FaceVerticesInt8} from "../lib/geometry/indices.js";
 import {VertexPositions3D} from "../lib/buffers/attributes/positions.js";
 import {VertexColors3D} from "../lib/buffers/attributes/colors.js";
 import {VertexUVs2D} from "../lib/buffers/attributes/uvs.js";
+import {DIM} from "../constants.js";
 
-const input_positions = new InputPositions();
-const input_colors = new InputColors();
-const input_uvs = new InputUVs();
+const input_positions = new InputPositions(DIM._3D);
+const input_colors = new InputColors(DIM._3D);
+const input_uvs = new InputUVs(DIM._2D);
 
 // Top
 input_positions.pushVertex([-1, 1, -1]),

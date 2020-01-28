@@ -1,11 +1,12 @@
 import {Vector} from "../../accessors/accessor.js";
 import {VectorConstructor} from "../../_interfaces/vectors.js";
+import {ITriangle} from "../../_interfaces/attributes.js";
 
 
-export class Triangle<VectorType extends Vector> {
-    public readonly a: VectorType;
-    public readonly b: VectorType;
-    public readonly c: VectorType;
+export class Triangle<VectorType extends Vector> implements ITriangle<VectorType> {
+    readonly a: VectorType;
+    readonly b: VectorType;
+    readonly c: VectorType;
 
     constructor(
         protected readonly Vector: VectorConstructor<VectorType>,

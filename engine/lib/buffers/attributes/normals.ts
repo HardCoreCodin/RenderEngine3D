@@ -8,9 +8,10 @@ import {randomize3D, randomize4D} from "../_core.js";
 import {loadVertices, pullVertices} from "./_core.js";
 import {zip} from "../../../utils.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
+import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
-export class VertexNormals3D extends Directions3D {
+export class VertexNormals3D extends Directions3D implements IVertexAttribute<Direction3D, ATTRIBUTE.normal> {
     readonly attribute: ATTRIBUTE.normal;
 
     protected _is_shared: boolean;
@@ -20,11 +21,15 @@ export class VertexNormals3D extends Directions3D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -46,7 +51,7 @@ export class VertexNormals3D extends Directions3D {
         pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
     }
 }
-export class VertexNormals4D extends Directions4D {
+export class VertexNormals4D extends Directions4D  implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
     readonly attribute: ATTRIBUTE.normal;
 
     protected _is_shared: boolean;
@@ -56,11 +61,15 @@ export class VertexNormals4D extends Directions4D {
         readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -89,15 +98,16 @@ export class FaceNormals3D extends Directions3D {
     constructor(
         readonly face_vertices: IFaceVertices,
         readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(vertex_positions: VertexPositions3D) {
-        const AB = dir3();
-        const AC = dir3();
-
         for (const [face_normal, triangle] of zip(this, vertex_positions.triangles)) {
             triangle.a.to(triangle.b, AB);
             triangle.a.to(triangle.c, AC);
@@ -115,23 +125,24 @@ export class FaceNormals4D extends Directions4D {
 
     constructor(
         readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(face_count, arrays);
+        super();
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this.face_count);
+        return this;
     }
 
     pull(vertex_positions: VertexPositions4D) {
-        const AB = dir4();
-        const AC = dir4();
+
 
         for (const [face_normal, triangle] of zip(this, vertex_positions.triangles)) {
-            triangle.a.to(triangle.b, AB);
-            triangle.a.to(triangle.c, AC);
-            AB.icross(AC).normalize(face_normal);
+            triangle.a.to(triangle.b, AB_4D);
+            triangle.a.to(triangle.c, AC_4D);
+            AB_4D.icross(AC_4D).normalize(face_normal);
         }
-
-
     }
 
     generate(): this {
@@ -139,3 +150,8 @@ export class FaceNormals4D extends Directions4D {
         return this;
     }
 }
+
+const AB = dir3();
+const AC = dir3();
+const AB_4D = dir4();
+const AC_4D = dir4();

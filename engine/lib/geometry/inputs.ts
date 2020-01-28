@@ -10,10 +10,13 @@ import {
 } from "../_interfaces/attributes.js";
 import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
 
-export class InputAttribute implements IInputAttribute {
-    readonly dim: DIM = DIM._3D;
+export class InputAttribute<Attribute extends ATTRIBUTE>
+    implements IInputAttribute<Attribute>
+{
+    public readonly attribute: Attribute;
 
     constructor(
+        readonly dim: DIM,
         public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
         public vertices?: number[][],
         public faces_vertices?: FaceInputs,
@@ -126,31 +129,30 @@ export class InputAttribute implements IInputAttribute {
     }
 }
 
-export class InputPositions extends InputAttribute implements IInputPositions {
-    public readonly id = ATTRIBUTE.position
+export class InputPositions extends InputAttribute<ATTRIBUTE.position> implements IInputPositions {
+    public readonly attribute = ATTRIBUTE.position
 }
 
-export class InputNormals extends InputAttribute implements IInputNormals {
-    public readonly id = ATTRIBUTE.normal
+export class InputNormals extends InputAttribute<ATTRIBUTE.normal> implements IInputNormals {
+    public readonly attribute = ATTRIBUTE.normal
 }
 
-export class InputColors extends InputAttribute implements IInputColors {
-    public readonly id = ATTRIBUTE.color
+export class InputColors extends InputAttribute<ATTRIBUTE.color> implements IInputColors {
+    public readonly attribute = ATTRIBUTE.color
 }
 
-export class InputUVs extends InputAttribute implements IInputUVs {
-    public readonly id = ATTRIBUTE.uv;
-    readonly dim = DIM._2D
+export class InputUVs extends InputAttribute<ATTRIBUTE.uv> implements IInputUVs {
+    public readonly attribute = ATTRIBUTE.uv;
 }
 
 export class MeshInputs implements IMeshInputs {
     constructor(
         public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
         readonly included: ATTRIBUTE = ATTRIBUTE.position,
-        readonly position: InputPositions = new InputPositions(face_type),
-        readonly normal: InputNormals = new InputNormals(face_type),
-        readonly color: InputColors = new InputColors(face_type),
-        readonly uv: InputUVs = new InputUVs(face_type)
+        readonly position: InputPositions = new InputPositions(DIM._3D, face_type),
+        readonly normal: InputNormals = new InputNormals(DIM._3D, face_type),
+        readonly color: InputColors = new InputColors(DIM._3D, face_type),
+        readonly uv: InputUVs = new InputUVs(DIM._2D, face_type)
     ) {}
 
     sanitize(): this {

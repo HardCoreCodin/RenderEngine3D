@@ -11,14 +11,7 @@ export default class Buffer<ArrayType extends TypedArray> implements IBuffer<Arr
 
     arrays: ArrayType[] = [];
 
-    constructor(
-        readonly allocator: IAllocator<ArrayType>,
-        length?: number,
-        arrays?: ArrayType[]
-    ) {
-        if (length)
-            this.init(length, arrays);
-    }
+    constructor(readonly allocator: IAllocator<ArrayType>) {}
 
     init(length: number, arrays?: ArrayType[]): this {
         this._length = length;
@@ -54,11 +47,5 @@ export default class Buffer<ArrayType extends TypedArray> implements IBuffer<Arr
 }
 
 export class FloatBuffer extends Buffer<Float32Array> implements IBuffer {
-    constructor(
-        allocator: IAllocator<Float32Array>,
-        length?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(allocator, length, arrays);
-    }
+    constructor(allocator: IAllocator<Float32Array>) {super(allocator)}
 }

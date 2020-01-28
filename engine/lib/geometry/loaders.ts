@@ -41,7 +41,7 @@ const setPositionAndColor = (inputs: MeshInputs, line_parts: string[]) : void =>
         inputs.color.pushVertex([r, g, b]);
 };
 
-const setAttribute = (attribute: InputAttribute, line_parts: string[]) : void => {
+const setAttribute = <Attribute extends ATTRIBUTE>(attribute: InputAttribute<Attribute>, line_parts: string[]) : void => {
     line_parts.shift();
     const [x, y, z] = line_parts;
 

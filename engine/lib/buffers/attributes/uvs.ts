@@ -5,9 +5,10 @@ import {InputUVs} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../../constants.js";
 import {loadVertices} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
+import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
-export class VertexUVs2D extends UVs2D {
+export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBUTE.uv> {
     readonly attribute: ATTRIBUTE.uv;
 
     protected _is_shared: boolean;
@@ -15,15 +16,18 @@ export class VertexUVs2D extends UVs2D {
     current_triangle: Triangle<UV2D>;
 
     constructor(
-        vertex_count: number,
+        readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
@@ -42,7 +46,7 @@ export class VertexUVs2D extends UVs2D {
     }
 }
 
-export class VertexUVs3D extends UVs3D {
+export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBUTE.uv> {
     readonly attribute: ATTRIBUTE.uv;
 
     protected _is_shared: boolean;
@@ -50,15 +54,18 @@ export class VertexUVs3D extends UVs3D {
     current_triangle: Triangle<UV3D>;
 
     constructor(
-        vertex_count: number,
+        readonly vertex_count: number,
         readonly face_vertices: IFaceVertices,
         is_shared: number | boolean = true,
-
-        readonly face_count: number = face_vertices.length,
-        arrays?: Float32Array[]
+        readonly face_count: number = face_vertices.length
     ) {
-        super(is_shared ? vertex_count : face_count * 3, arrays);
+        super();
         this._is_shared = !!is_shared;
+    }
+
+    autoInit(arrays?: Float32Array[]): this {
+        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+        return this;
     }
 
     get is_shared(): boolean {return this._is_shared}
