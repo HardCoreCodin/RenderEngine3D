@@ -1,6 +1,6 @@
 import {Position3D} from "./position.js";
 import {Direction3D} from "./direction.js";
-import {MathAccessor} from "./accessor.js";
+import {Accessor} from "./accessor.js";
 import {IMatrix, IRotationMatrix} from "../_interfaces/matrix.js";
 
 const cos = Math.cos;
@@ -8,8 +8,26 @@ const sin = Math.sin;
 
 let this_arrays, out_arrays: Float32Array[];
 
-export default abstract class Matrix extends MathAccessor implements IMatrix
+export default abstract class Matrix extends Accessor implements IMatrix
 {
+    protected abstract _add_number_in_place(num: number): void;
+    protected abstract _add_other_in_place(other: this): void;
+    protected abstract _add_number_to_out(v: number, out: this): void;
+    protected abstract _add_other_to_out(other: this, out: this): void;
+
+    protected abstract _sub_number_in_place(num: number): void;
+    protected abstract _sub_other_in_place(other: this): void;
+    protected abstract _sub_number_to_out(num: number, out: this): void;
+    protected abstract _sub_other_to_out(other: this, out: this): void;
+
+    protected abstract _mul_number_in_place(num: number): void;
+    protected abstract _mul_other_in_place(other: this): void;
+    protected abstract _mul_number_to_out(num: number, out: this): void;
+    protected abstract _mul_other_to_out(other: this, out: this): void;
+
+    protected abstract _div_number_in_place(num: number): void;
+    protected abstract _div_number_to_out(num: number, out: this): void;
+
     protected abstract _transpose_to_out(out: this): void;
     protected abstract _transpose_in_place(): void;
 
@@ -37,6 +55,117 @@ export default abstract class Matrix extends MathAccessor implements IMatrix
 
         this._invert_in_place();
         return this;
+    }
+
+    iadd(num: number): this;
+    iadd(other: this): this;
+    iadd(other_or_num: this|number): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num)
+                this._add_number_in_place(other_or_num);
+        } else
+            this._add_other_in_place(other_or_num);
+
+        return this;
+    }
+
+    add(num: number, out: this): this;
+    add(other: this, out: this): this;
+    add(other_or_num: this|number, out: this): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num)
+                this._add_number_to_out(other_or_num, out);
+        } else {
+            if (out.is(this))
+                return this.iadd(other_or_num);
+
+            this._add_other_to_out(other_or_num, out);
+        }
+
+        return out;
+    }
+
+    isub(num: number): this;
+    isub(other: this): this;
+    isub(other_or_num: this|number): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num)
+                this._sub_number_in_place(other_or_num);
+        } else {
+            if (other_or_num.is(this) || other_or_num.equals(this))
+                return this.setAllTo(0);
+
+            this._sub_other_in_place(other_or_num);
+        }
+
+        return this;
+    }
+
+    sub(num: number, out: this): this;
+    sub(other: this, out: this): this;
+    sub(other_or_num: this|number, out: this): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num !== 0)
+                this._sub_number_to_out(other_or_num, out);
+        } else {
+            if (other_or_num.is(this) || other_or_num.equals(this))
+                return out.setAllTo(0);
+
+            this._sub_other_to_out(other_or_num, out);
+        }
+
+        return out;
+    }
+
+    imul(num: number): this;
+    imul(other: this): this;
+    imul(other_or_num: this|number): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num)
+                this._mul_number_in_place(other_or_num);
+        } else
+            this._mul_other_in_place(other_or_num);
+
+        return this;
+    }
+
+    mul(num: number, out: this): this;
+    mul(other: this, out: this): this;
+    mul(other_or_num: this|number, out: this): this {
+        if (typeof other_or_num === "number") {
+            if (other_or_num)
+                this._mul_number_to_out(other_or_num, out);
+            else
+                return this.setAllTo(0);
+        } else {
+            if (other_or_num.is(this))
+                return this.imul(other_or_num);
+
+            this._mul_other_to_out(other_or_num, out);
+        }
+
+        return out;
+    }
+
+    idiv(denominator: number): this {
+        if (denominator === 0)
+            throw `Division by zero!`;
+        else if (denominator !== 1)
+            this._div_number_in_place(denominator);
+
+        return this;
+    }
+
+    div(denominator: number, out: this): this {
+        if (out.is(this))
+            return this.idiv(denominator);
+
+        if (denominator === 0)
+            throw `Division by zero!`;
+        else if (denominator !== 1)
+            this._div_number_to_out(denominator, out);
+
+        return out;
     }
 }
 
@@ -150,9 +279,9 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
             return out;
         }
 
-        if (x !== 1) this.x_axis.mul(x);
-        if (y !== 1) this.y_axis.mul(y);
-        if (z !== 1) this.z_axis.mul(z);
+        if (x !== 1) this.x_axis.imul(x);
+        if (y !== 1) this.y_axis.imul(y);
+        if (z !== 1) this.z_axis.imul(z);
         return this;
     }
 }

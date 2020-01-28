@@ -1,8 +1,7 @@
 import BaseViewport from "../_base/viewport.js";
 import RenderTarget from "../_base/render_target.js";
-import {Positions3D} from "../../attributes/vector/positions.js";
-import {Directions3D} from "../../attributes/vector/directions.js";
 import {generateRayDirections} from "./_core/ray_generation.js";
+import {Directions3D, Positions3D} from "../../buffers/vectors.js";
 
 
 export default class RayTraceViewport
@@ -14,11 +13,11 @@ export default class RayTraceViewport
     ray_directions_transformed: Directions3D;
 
     protected _updateRayPositions(): void {
-        this.ray_directions.mul4AsPos(this._controller.camera.transform.matrix, this.ray_positions);
+        this.ray_directions.mul(this._controller.camera.transform.matrix, this.ray_positions,true);
     }
 
     protected _updateRayDirections(): void {
-        this.ray_directions.mul4(this._controller.camera.transform.matrix, this.ray_directions_transformed);
+        this.ray_directions.mul(this._controller.camera.transform.matrix, this.ray_directions_transformed);
         this._updateRayPositions();
     }
 

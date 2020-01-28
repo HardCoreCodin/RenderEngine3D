@@ -1,6 +1,6 @@
 import Matrix from "./matrix.js";
 import {Direction2D} from "./direction.js";
-import {Float32Allocator4D, MATRIX_2X2_ALLOCATOR} from "../memory/allocators.js";
+import {MATRIX_2X2_ALLOCATOR} from "../memory/allocators.js";
 import {
     add_a_2x2_matrix_to_another_2x2_matrix_in_place,
     add_a_2x2_matrix_to_another_2x2_matrix_to_out,
@@ -41,15 +41,11 @@ let this_arrays,
     out_arrays: Float32Array[];
 
 export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
-    protected _getAllocator(): Float32Allocator4D {
-        return MATRIX_2X2_ALLOCATOR;
-    }
-
     readonly x_axis: Direction2D;
     readonly y_axis: Direction2D;
 
     constructor(id?: number, arrays?: Float4) {
-        super(id, arrays);
+        super(MATRIX_2X2_ALLOCATOR, id, arrays);
 
         this.x_axis = new Direction2D(this.id, [arrays[0], arrays[1]]);
         this.y_axis = new Direction2D(this.id, [arrays[2], arrays[3]]);
@@ -190,8 +186,8 @@ export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
             return out;
         }
 
-        if (x !== 1) this.x_axis.mul(x);
-        if (y !== 1) this.y_axis.mul(y);
+        if (x !== 1) this.x_axis.imul(x);
+        if (y !== 1) this.y_axis.imul(y);
         return this;
     }
 

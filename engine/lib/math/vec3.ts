@@ -585,6 +585,25 @@ export const cross_a_3D_direction_with_another_3D_direction_in_place = (
     Za[a] = t_x*Yb[b] - t_y*Xb[b];
 };
 
+export const multiply_a_3D_vector_by_a_3x3_matrix_in_place = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array
+) : void => {
+    t_x = Xa[a];
+    t_y = Ya[a];
+    t_z = Za[a];
+
+    Xa[a] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m];
+    Ya[a] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m];
+    Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
+};
 export const multiply_a_3D_vector_by_a_3x3_matrix_to_out = (
     a: number,
     Xa: Float32Array,
@@ -605,7 +624,33 @@ export const multiply_a_3D_vector_by_a_3x3_matrix_to_out = (
     Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
     Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
 };
-export const multiply_a_3D_vector_by_a_3x3_matrix_in_place = (
+export const multiply_a_3D_vector_by_a_4x3_matrix_to_out4 = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
+) : void => {
+    Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m];
+    Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
+    Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
+    Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m];
+};
+
+
+// POS:
+// ====
+export const multiply_a_3D_position_by_a_3x4_matrix_in_place = (
     a: number,
     Xa: Float32Array,
     Ya: Float32Array,
@@ -614,18 +659,39 @@ export const multiply_a_3D_vector_by_a_3x3_matrix_in_place = (
     m: number,
     M11: Float32Array, M12: Float32Array, M13: Float32Array,
     M21: Float32Array, M22: Float32Array, M23: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array,
 ) : void => {
     t_x = Xa[a];
     t_y = Ya[a];
     t_z = Za[a];
 
-    Xa[a] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m];
-    Ya[a] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m];
-    Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
+    Xa[a] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m] + M41[m];
+    Ya[a] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m] + M42[m];
+    Za[a] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m] + M43[m];
 };
+export const multiply_a_3D_position_by_a_3x4_matrix_to_out3 = (
+    a: number,
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-export const multiply_a_3D_position_by_a_4x4_matrix_to_out = (
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array,
+
+    o: number,
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
+) : void => {
+    Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m] + M41[m];
+    Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m] + M42[m];
+    Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m] + M43[m];
+};
+export const multiply_a_3D_position_by_a_4x4_matrix_to_out4 = (
     a: number,
     Xa: Float32Array,
     Ya: Float32Array,
@@ -649,50 +715,9 @@ export const multiply_a_3D_position_by_a_4x4_matrix_to_out = (
     Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m] + M44[m];
 };
 
-export const multiply_a_3D_direction_by_a_4x4_matrix_to_out = (
-    a: number,
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
 
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    o: number,
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array,
-    Wo: Float32Array
-) : void => {
-    Xo[o] = Xa[a]*M11[m] + Ya[a]*M21[m] + Za[a]*M31[m];
-    Yo[o] = Xa[a]*M12[m] + Ya[a]*M22[m] + Za[a]*M32[m];
-    Zo[o] = Xa[a]*M13[m] + Ya[a]*M23[m] + Za[a]*M33[m];
-    Wo[o] = Xa[a]*M14[m] + Ya[a]*M24[m] + Za[a]*M34[m];
-};
-
-export const multiply_all_3D_vectors_by_a_3x3_matrix_to_out = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array,
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array
-): void => {
-    for (let i = 0; i < Xa.length; i++) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
-    }
-};
+// ALL:
+// ====
 export const multiply_all_3D_vectors_by_a_3x3_matrix_in_place = (
     Xa: Float32Array,
     Ya: Float32Array,
@@ -713,8 +738,171 @@ export const multiply_all_3D_vectors_by_a_3x3_matrix_in_place = (
         Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
     }
 };
+export const multiply_all_3D_vectors_by_a_3x3_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
 
-export const multiply_all_3D_positions_by_a_4x4_matrix_to_out = (
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
+): void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+    }
+};
+// SOME:
+// =====
+export const multiply_some_3D_vectors_by_a_3x3_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+
+    include: Uint8Array[]
+): void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m];
+    }
+};
+export const multiply_some_3D_vectors_by_a_3x3_matrix_to_out = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+
+    include: Uint8Array[],
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
+): void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+    }
+};
+
+
+// ALL DIR:
+// ========
+export const multiply_all_3D_directions_by_a_4x3_matrix_to_out4 = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
+    }
+};
+// SOME DIR:
+// =========
+export const multiply_some_3D_directions_by_a_4x3_matrix_to_out4 = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
+
+    include: Uint8Array[],
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array,
+    Wo: Float32Array
+) : void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
+        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
+    }
+};
+
+
+// All POS:
+// ========
+export const multiply_all_3D_positions_by_a_3x4_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m] + M41[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m] + M42[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m] + M43[m];
+    }
+};
+export const multiply_all_3D_positions_by_a_3x4_matrix_to_out3 = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array,
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
+) : void => {
+    for (let i = 0; i < Xa.length; i++) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
+    }
+};
+export const multiply_all_3D_positions_by_a_4x4_matrix_to_out4 = (
     Xa: Float32Array,
     Ya: Float32Array,
     Za: Float32Array,
@@ -737,7 +925,55 @@ export const multiply_all_3D_positions_by_a_4x4_matrix_to_out = (
         Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m] + M44[m];
     }
 };
-export const multiply_some_3D_positions_by_a_4x4_matrix_to_out = (
+// SOME POS:
+// =========
+export const multiply_some_3D_positions_by_a_3x4_matrix_in_place = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array,
+
+    include: Uint8Array[]
+) : void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        t_x = Xa[i];
+        t_y = Ya[i];
+        t_z = Za[i];
+
+        Xa[i] = t_x*M11[m] + t_y*M21[m] + t_z*M31[m] + M41[m];
+        Ya[i] = t_x*M12[m] + t_y*M22[m] + t_z*M32[m] + M42[m];
+        Za[i] = t_x*M13[m] + t_y*M23[m] + t_z*M33[m] + M43[m];
+    }
+};
+export const multiply_some_3D_positions_by_a_3x4_matrix_to_out3 = (
+    Xa: Float32Array,
+    Ya: Float32Array,
+    Za: Float32Array,
+
+    m: number,
+    M11: Float32Array, M12: Float32Array, M13: Float32Array,
+    M21: Float32Array, M22: Float32Array, M23: Float32Array,
+    M31: Float32Array, M32: Float32Array, M33: Float32Array,
+    M41: Float32Array, M42: Float32Array, M43: Float32Array,
+
+    include: Uint8Array[],
+
+    Xo: Float32Array,
+    Yo: Float32Array,
+    Zo: Float32Array
+) : void => {
+    for (let i = 0; i < Xa.length; i++) if (include[i]) {
+        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
+        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
+        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
+    }
+};
+export const multiply_some_3D_positions_by_a_4x4_matrix_to_out4 = (
     Xa: Float32Array,
     Ya: Float32Array,
     Za: Float32Array,
@@ -760,143 +996,5 @@ export const multiply_some_3D_positions_by_a_4x4_matrix_to_out = (
         Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
         Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
         Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m] + M44[m];
-    }
-};
-
-export const multiply_all_3D_positions_by_a_4x4_matrix_to_out3 = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
-    }
-};
-export const multiply_some_3D_positions_by_a_4x4_matrix_to_out3 = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    include: Uint8Array[],
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) if (include[i]) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m] + M41[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m] + M42[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m] + M43[m];
-    }
-};
-
-export const multiply_all_3D_directions_by_a_4x4_matrix_to_out = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array,
-    Wo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
-        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
-    }
-};
-export const multiply_some_3D_directions_by_a_4x4_matrix_to_out = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    include: Uint8Array[],
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array,
-    Wo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) if (include[i]) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
-        Wo[i] = Xa[i]*M14[m] + Ya[i]*M24[m] + Za[i]*M34[m];
-    }
-};
-export const multiply_all_3D_directions_by_a_4x4_matrix_to_out3 = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
-    }
-};
-export const multiply_some_3D_directions_by_a_4x4_matrix_to_out3 = (
-    Xa: Float32Array,
-    Ya: Float32Array,
-    Za: Float32Array,
-
-    m: number,
-    M11: Float32Array, M12: Float32Array, M13: Float32Array, M14: Float32Array,
-    M21: Float32Array, M22: Float32Array, M23: Float32Array, M24: Float32Array,
-    M31: Float32Array, M32: Float32Array, M33: Float32Array, M34: Float32Array,
-    M41: Float32Array, M42: Float32Array, M43: Float32Array, M44: Float32Array,
-
-    include: Uint8Array[],
-
-    Xo: Float32Array,
-    Yo: Float32Array,
-    Zo: Float32Array
-) : void => {
-    for (let i = 0; i < Xa.length; i++) if (include[i]) {
-        Xo[i] = Xa[i]*M11[m] + Ya[i]*M21[m] + Za[i]*M31[m];
-        Yo[i] = Xa[i]*M12[m] + Ya[i]*M22[m] + Za[i]*M32[m];
-        Zo[i] = Xa[i]*M13[m] + Ya[i]*M23[m] + Za[i]*M33[m];
     }
 };

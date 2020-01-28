@@ -3,7 +3,7 @@ import Vector3D from "./vector3D.js";
 import {IUV2D, IUV3D} from "../_interfaces/vectors.js";
 
 
-export class UV2D extends Vector2D implements IUV2D
+export class UV2D extends Vector2D<UV2D> implements IUV2D
 {
     setTo(u: number, v: number): this {return super.setTo(u, v)}
     copy(out: UV2D = new UV2D()): UV2D {return out.setFrom(this)}
@@ -24,7 +24,7 @@ export class UV2D extends Vector2D implements IUV2D
     set vu(other: UV2D) {this.arrays[1][this.id] = other.arrays[0][other.id]; this.arrays[0][this.id] = other.arrays[1][other.id]}
 }
 
-export class UV3D extends Vector3D implements IUV3D
+export class UV3D extends Vector3D<UV3D> implements IUV3D
 {
     setTo(u: number, v: number, w: number): this {return super.setTo(u, v, w)}
     copy(out: UV3D = new UV3D()): UV3D {return out.setFrom(this)}

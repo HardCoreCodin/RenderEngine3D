@@ -5,7 +5,7 @@ import {IPosition3D, IPosition4D} from "./vectors.js";
 import {IFaceVertices, IVertexFaces} from "./buffers.js";
 import {IMeshInputs} from "./attributes.js";
 import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {VertexPositions3D, VertexPositions4D} from "../attributes/vertex/positions.js";
+import {VertexPositions3D, VertexPositions4D} from "../buffers/attributes/positions.js";
 import {Faces3D} from "../geometry/faces.js";
 import {Vertices3D} from "../geometry/vertices.js";
 

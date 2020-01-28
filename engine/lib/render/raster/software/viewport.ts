@@ -2,10 +2,10 @@ import {Grid} from "../../_base/viewport.js";
 import RasterViewport from "../_base/viewport.js";
 import RenderTarget from "../../_base/render_target.js";
 import Matrix3x3, {mat3} from "../../../accessors/matrix3x3.js";
-import {Positions3D, Positions4D} from "../../../attributes/vector/positions.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import {perspectiveDivideAllVertexPositions} from "./_core/half_space.js";
 import {zip} from "../../../../utils.js";
+import {Positions3D, Positions4D} from "../../../buffers/vectors.js";
 
 
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid>
@@ -64,15 +64,15 @@ class SWGrid extends Grid {
     constructor(protected readonly _render_target: RenderTarget) {super()}
 
     project(world_to_clip: Matrix4x4, ndc_to_screen: Matrix3x3): void {
-        this.world_start_positions.mul4(world_to_clip, this.start_positions);
-        this.world_end_positions.mul4(world_to_clip, this.end_positions);
+        this.world_start_positions.mul(world_to_clip, this.start_positions);
+        this.world_end_positions.mul(world_to_clip, this.end_positions);
 
         perspectiveDivideAllVertexPositions(this.start_positions.arrays);
         perspectiveDivideAllVertexPositions(this.end_positions.arrays);
 
         this._nds_to_screen.mat3.setFrom(ndc_to_screen);
-        this.start_positions.mul(this._nds_to_screen);
-        this.end_positions.mul(this._nds_to_screen);
+        this.start_positions.imul(this._nds_to_screen);
+        this.end_positions.imul(this._nds_to_screen);
     }
 
     protected _reset(): void {

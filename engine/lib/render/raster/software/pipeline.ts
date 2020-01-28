@@ -5,7 +5,7 @@ import SoftwareRasterViewport from "./viewport.js";
 import SoftwareRasterMaterial from "./materials/_base.js";
 import RenderTarget from "../../_base/render_target.js";
 import BaseRenderPipeline from "../../_base/pipelines.js";
-import {VertexPositions4D} from "../../../geometry/positions.js";
+import {VertexPositions4D} from "../../../buffers/attributes/positions.js";
 import {cube_face_vertices} from "../../../geometry/cube.js";
 import {VECTOR_4D_ALLOCATOR} from "../../../memory/allocators.js";
 import {T3, T4} from "../../../../types.js";

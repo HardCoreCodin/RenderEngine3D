@@ -3,7 +3,7 @@ import Vector4D from "./vector4D.js";
 import {IColor3D, IColor4D} from "../_interfaces/vectors.js";
 
 
-export class Color3D extends Vector3D implements IColor3D
+export class Color3D extends Vector3D<Color3D> implements IColor3D
 {
     copy(out: Color3D = new Color3D()): Color3D {return out.setFrom(this)}
     setTo(r: number, g: number, b: number): this {return super.setTo(r, g, b)}
@@ -55,7 +55,7 @@ export class Color3D extends Vector3D implements IColor3D
     set bgr(other: Color3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Color4D extends Vector4D implements IColor4D
+export class Color4D extends Vector4D<Color4D> implements IColor4D
 {
     copy(out: Color4D = new Color4D()): Color4D {return out.setFrom(this)}
     setTo(r: number, g: number, b: number, a: number): this {return super.setTo(r, g, b, a)}

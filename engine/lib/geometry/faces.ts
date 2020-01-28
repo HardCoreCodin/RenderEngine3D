@@ -1,10 +1,11 @@
 import {ATTRIBUTE} from "../../constants.js";
 import Matrix3x3 from "../accessors/matrix3x3.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
-import {FaceNormals3D, FaceNormals4D} from "../attributes/face/normals.js";
-import {FaceColors3D, FaceColors4D} from "../attributes/face/colors.js";
-import {FacePositions2D, FacePositions3D, FacePositions4D} from "../attributes/face/positions.js";
+import {FaceColors3D, FaceColors4D} from "../buffers/attributes/colors.js";
+import {FaceNormals3D, FaceNormals4D} from "../buffers/attributes/normals.js";
+import {FacePositions2D, FacePositions3D, FacePositions4D} from "../buffers/attributes/positions.js";
 import {IFaceVertices} from "../_interfaces/buffers.js";
+
 
 abstract class Faces {
     protected abstract _createPositions(face_vertices: IFaceVertices): FacePositions2D|FacePositions3D|FacePositions4D;
@@ -42,15 +43,15 @@ export class Faces3D extends Faces {
             return out;
         }
 
-        this.positions.mul(matrix);
-        this.normals!.mul(matrix);
+        this.positions.imul(matrix);
+        this.normals!.imul(matrix);
 
         return this;
     }
 
     mat4mul(matrix: Matrix4x4, out: Faces4D): Faces4D {
-        this.positions.mul4(matrix, out.positions);
-        this.normals.mul4(matrix, out.normals);
+        this.positions.mul(matrix, out.positions);
+        this.normals.mul(matrix, out.normals);
 
         return out;
     }
@@ -81,8 +82,8 @@ export class Faces4D extends Faces {
             return out;
         }
 
-        this.positions.mul(matrix);
-        this.normals!.mul(matrix);
+        this.positions.imul(matrix);
+        this.normals!.imul(matrix);
 
         return this;
     }

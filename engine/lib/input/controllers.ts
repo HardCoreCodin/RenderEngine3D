@@ -162,9 +162,9 @@ export class FPSController
                 this._matrix.x_axis.mul(this.movement_amount, this.right_movement);
 
                 if (this.pressed[this.keys.right])
-                    this._translation.add(this.right_movement);
+                    this._translation.iadd(this.right_movement);
                 else
-                    this._translation.sub(this.right_movement);
+                    this._translation.isub(this.right_movement);
             }
 
             if (this.pressed[this.keys.up] ||

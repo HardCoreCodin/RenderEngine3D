@@ -1,10 +1,14 @@
+import Vector2D from "./vector2D.js";
+import Vector3D from "./vector3D.js";
+import Vector4D from "./vector4D.js";
+import Matrix3x3 from "./matrix2x2.js";
+import Matrix2x2 from "./matrix2x2.js";
 import Matrix4x4 from "./matrix4x4.js";
-import {TransformableVector2D} from "./vector2D.js";
-import {TransformableVector3D} from "./vector3D.js";
-import {TransformableVector4D} from "./vector4D.js";
 import {
     compute_the_length_of_a_2D_direction,
     dot_a_2D_direction_with_another_2D_direction,
+    multiply_a_2D_vector_by_a_2x2_matrix_in_place,
+    multiply_a_2D_vector_by_a_2x2_matrix_to_out,
     negate_a_2D_direction_in_place,
     negate_a_2D_direction_to_out,
     normalize_a_2D_direction_in_place,
@@ -17,8 +21,9 @@ import {
     compute_the_length_of_a_3D_direction,
     cross_a_3D_direction_with_another_3D_direction_in_place,
     cross_a_3D_direction_with_another_3D_direction_to_out,
-    dot_a_3D_direction_with_another_3D_direction,
-    multiply_a_3D_direction_by_a_4x4_matrix_to_out,
+    dot_a_3D_direction_with_another_3D_direction, multiply_a_3D_vector_by_a_3x3_matrix_in_place,
+    multiply_a_3D_vector_by_a_3x3_matrix_to_out,
+    multiply_a_3D_vector_by_a_4x3_matrix_to_out4,
     negate_a_3D_direction_in_place,
     negate_a_3D_direction_to_out,
     normalize_a_3D_direction_in_place,
@@ -30,6 +35,8 @@ import {
 import {
     compute_the_length_of_a_4D_direction,
     dot_a_4D_direction_with_another_4D_direction,
+    multiply_a_4D_vector_by_a_4x4_matrix_in_place,
+    multiply_a_4D_vector_by_a_4x4_matrix_to_out,
     negate_a_4D_direction_in_place,
     negate_a_4D_direction_to_out,
     normalize_a_4D_direction_in_place,
@@ -45,9 +52,15 @@ let this_arrays,
     out_arrays: Float32Array[];
 
 
-export class Direction2D extends TransformableVector2D implements IDirection2D
+export class Direction2D extends Vector2D<Direction2D> implements IDirection2D
 {
     copy(out: Direction2D = new Direction2D()): Direction2D {return out.setFrom(this)}
+
+    get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
+    get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
+
+    get yx(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[0]])}
+    get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
 
     get is_normalized(): boolean {
         return this.length_squared === 1;
@@ -88,24 +101,8 @@ export class Direction2D extends TransformableVector2D implements IDirection2D
         )
     }
 
-    normalize(out?: this): this {
+    inormalize(): this {
         this_arrays = this.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            normalize_a_2D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1]
-            );
-
-            return out;
-        }
 
         normalize_a_2D_direction_in_place(
             this.id,
@@ -116,29 +113,29 @@ export class Direction2D extends TransformableVector2D implements IDirection2D
         return this;
     }
 
-    reflect(other: this, out?: this): this {
+    normalize(out: this): this {
+        if (out.is(this))
+            return this.inormalize();
+
+        this_arrays = this.arrays;
+        out_arrays = out.arrays;
+
+        normalize_a_2D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1]
+        );
+
+        return out;
+    }
+
+    ireflect(other: this): this {
         this_arrays = this.arrays;
         other_arrays = other.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            reflect_a_2D_vector_around_a_2D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-
-                other.id,
-                other_arrays[0],
-                other_arrays[1],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1]
-            );
-
-            return out;
-        }
 
         reflect_a_2D_vector_around_a_2D_direction_in_place(
             this.id,
@@ -153,24 +150,33 @@ export class Direction2D extends TransformableVector2D implements IDirection2D
         return this;
     }
 
-    negate(out?: this): this {
+    reflect(other: this, out: this): this {
+        if (out.is(this))
+            return this.ireflect(other);
+
         this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
 
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
+        reflect_a_2D_vector_around_a_2D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
 
-            negate_a_2D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
 
-                out.id,
-                out_arrays[0],
-                out_arrays[1]
-            );
+            out.id,
+            out_arrays[0],
+            out_arrays[1]
+        );
 
-            return out;
-        }
+        return out;
+    }
+
+    inegate(): this {
+        this_arrays = this.arrays;
 
         negate_a_2D_direction_in_place(
             this.id,
@@ -181,14 +187,64 @@ export class Direction2D extends TransformableVector2D implements IDirection2D
         return this;
     }
 
-    get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
-    get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}
+    negate(out: this): this {
+        if (out.is(this))
+            return this.inegate();
 
-    get yx(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[0]])}
-    get yy(): Direction2D {return new Direction2D(this.id, [this.arrays[1], this.arrays[1]])}
+        this_arrays = this.arrays;
+        out_arrays = out.arrays;
+
+        negate_a_2D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1]
+        );
+
+        return out;
+    }
+
+    imatmul(matrix: Matrix2x2): this {
+        other_arrays = matrix.arrays;
+
+        multiply_a_2D_vector_by_a_2x2_matrix_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1],
+            other_arrays[2], other_arrays[3]
+        );
+
+        return this;
+    }
+
+    matmul(matrix: Matrix2x2, out: this): this {
+        other_arrays = matrix.arrays;
+
+        multiply_a_2D_vector_by_a_2x2_matrix_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1],
+            other_arrays[2], other_arrays[3],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1]
+        );
+
+        return out;
+    }
 }
 
-export class Direction3D extends TransformableVector3D implements IDirection3D
+export class Direction3D extends Vector3D<Direction3D> implements IDirection3D
 {
     copy(out: Direction3D = new Direction3D()): Direction3D {return out.setFrom(this)}
 
@@ -235,7 +291,7 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         )
     }
 
-    normalizeInPlace(): this {
+    inormalize(): this {
         this_arrays = this.arrays;
 
         normalize_a_3D_direction_in_place(
@@ -248,63 +304,31 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         return this;
     }
 
-    normalize(out?: this): this {
+    normalize(out: this): this {
+        if (out.is(this))
+            return this.inormalize();
+
         this_arrays = this.arrays;
+        out_arrays = out.arrays;
 
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            normalize_a_3D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2]
-            );
-
-            return out;
-        }
-
-        normalize_a_3D_direction_in_place(
+        normalize_a_3D_direction_to_out(
             this.id,
             this_arrays[0],
             this_arrays[1],
-            this_arrays[2]
+            this_arrays[2],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2]
         );
 
-        return this;
+        return out;
     }
 
-    reflect(other: this, out?: this): this {
+    ireflect(other: this): this {
         this_arrays = this.arrays;
         other_arrays = other.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            reflect_a_3D_vector_around_a_3D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-
-                other.id,
-                other_arrays[0],
-                other_arrays[1],
-                other_arrays[2],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2]
-            );
-
-            return out;
-        }
 
         reflect_a_3D_vector_around_a_3D_direction_in_place(
             this.id,
@@ -321,26 +345,36 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         return this;
     }
 
-    negate(out?: this): this {
+    reflect(other: this, out: this): this {
+        if (out.is(this))
+            return this.ireflect(other);
+
         this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
 
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
+        reflect_a_3D_vector_around_a_3D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
 
-            negate_a_3D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
 
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2]
-            );
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2]
+        );
 
-            return out;
-        }
+        return out;
+    }
+
+    inegate(): this {
+        this_arrays = this.arrays;
 
         negate_a_3D_direction_in_place(
             this.id,
@@ -352,33 +386,31 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         return this;
     }
 
+    negate(out: this): this {
+        if (out.is(this))
+            return this.inegate();
 
-    cross(other: Direction3D, out?: this): this {
+        this_arrays = this.arrays;
+        out_arrays = out.arrays;
+
+        negate_a_3D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2]
+        );
+
+        return out;
+    }
+
+    icross(other: Direction3D): this {
         this_arrays = this.arrays;
         other_arrays = other.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            cross_a_3D_direction_with_another_3D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-
-                other.id,
-                other_arrays[0],
-                other_arrays[1],
-                other_arrays[2],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2]
-            );
-
-            return out;
-        }
 
         cross_a_3D_direction_with_another_3D_direction_in_place(
             this.id,
@@ -395,29 +427,131 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
         return this;
     };
 
-    mat4mul(matrix: Matrix4x4, out: Direction4D): Direction4D {
+    cross(other: Direction3D, out: this): this {
+        if (out.is(this))
+            return this.icross(other);
+
         this_arrays = this.arrays;
-        other_arrays = matrix.arrays;
+        other_arrays = other.arrays;
+
         out_arrays = out.arrays;
 
-        multiply_a_3D_direction_by_a_4x4_matrix_to_out(
+        cross_a_3D_direction_with_another_3D_direction_to_out(
             this.id,
             this_arrays[0],
             this_arrays[1],
             this_arrays[2],
 
-            matrix.id,
-            other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
-            other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[7],
-            other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
-            other_arrays[12], other_arrays[13], other_arrays[14], other_arrays[15],
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
 
             out.id,
             out_arrays[0],
             out_arrays[1],
-            out_arrays[2],
-            out_arrays[3]
+            out_arrays[2]
         );
+
+        return out;
+    }
+
+    imatmul(matrix: Matrix4x4): this;
+    imatmul(matrix: Matrix3x3): this;
+    imatmul(matrix: Matrix3x3|Matrix4x4): this {
+        this_arrays = this.arrays;
+        other_arrays = matrix.arrays;
+
+        if (matrix instanceof Matrix3x3)
+            multiply_a_3D_vector_by_a_3x3_matrix_in_place(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                matrix.id,
+                other_arrays[0], other_arrays[1], other_arrays[2],
+                other_arrays[3], other_arrays[4], other_arrays[5],
+                other_arrays[6], other_arrays[7], other_arrays[8]
+            );
+        else
+            multiply_a_3D_vector_by_a_3x3_matrix_in_place(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                matrix.id,
+                other_arrays[0], other_arrays[1], other_arrays[2],
+                other_arrays[4], other_arrays[5], other_arrays[6],
+                other_arrays[8], other_arrays[9], other_arrays[10]
+            );
+
+        return this;
+    }
+
+    matmul(matrix: Matrix3x3, out: Direction3D): Direction3D
+    matmul(matrix: Matrix4x4, out: Direction3D): Direction3D
+    matmul(matrix: Matrix4x4, out: Direction4D): Direction4D
+    matmul(matrix: Matrix3x3|Matrix4x4, out: Direction3D|Direction4D): Direction3D|Direction4D {
+        this_arrays = this.arrays;
+        other_arrays = matrix.arrays;
+        out_arrays = out.arrays;
+
+        if (out instanceof Direction3D) {
+            if (matrix instanceof Matrix3x3) {
+                multiply_a_3D_vector_by_a_3x3_matrix_to_out(
+                    this.id,
+                    this_arrays[0],
+                    this_arrays[1],
+                    this_arrays[2],
+
+                    matrix.id,
+                    other_arrays[0], other_arrays[1], other_arrays[2],
+                    other_arrays[3], other_arrays[4], other_arrays[5],
+                    other_arrays[6], other_arrays[7], other_arrays[8],
+
+                    out.id,
+                    out_arrays[0],
+                    out_arrays[1],
+                    out_arrays[2]
+                );
+            } else {
+                multiply_a_3D_vector_by_a_3x3_matrix_to_out(
+                    this.id,
+                    this_arrays[0],
+                    this_arrays[1],
+                    this_arrays[2],
+
+                    matrix.id,
+                    other_arrays[0], other_arrays[1], other_arrays[2],
+                    other_arrays[4], other_arrays[5], other_arrays[6],
+                    other_arrays[8], other_arrays[9], other_arrays[10],
+
+                    out.id,
+                    out_arrays[0],
+                    out_arrays[1],
+                    out_arrays[2]
+                );
+            }
+        } else
+            multiply_a_3D_vector_by_a_4x3_matrix_to_out4(
+                this.id,
+                this_arrays[0],
+                this_arrays[1],
+                this_arrays[2],
+
+                matrix.id,
+                other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
+                other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[7],
+                other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
+
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2],
+                out_arrays[3]
+            );
 
         return out;
     }
@@ -479,7 +613,7 @@ export class Direction3D extends TransformableVector3D implements IDirection3D
     set zyx(other: Direction3D) {this.arrays[2][this.id] = other.arrays[0][other.id]; this.arrays[1][this.id] = other.arrays[1][other.id]; this.arrays[0][this.id] = other.arrays[2][other.id]}
 }
 
-export class Direction4D extends TransformableVector4D implements IDirection4D
+export class Direction4D extends Vector4D<Direction4D> implements IDirection4D
 {
     copy(out: Direction4D = new Direction4D()): Direction4D {return out.setFrom(this)}
 
@@ -530,28 +664,8 @@ export class Direction4D extends TransformableVector4D implements IDirection4D
         )
     }
 
-    normalize(out?: this): this {
+    inormalize(): this {
         this_arrays = this.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            normalize_a_4D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-                this_arrays[3],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2],
-                out_arrays[3]
-            );
-
-            return out;
-        }
 
         normalize_a_4D_direction_in_place(
             this.id,
@@ -564,35 +678,33 @@ export class Direction4D extends TransformableVector4D implements IDirection4D
         return this;
     }
 
-    reflect(other: this, out?: this): this {
+    normalize(out: this): this {
+        if (out.is(this))
+            return this.inormalize();
+
+        this_arrays = this.arrays;
+        out_arrays = out.arrays;
+
+        normalize_a_4D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
+
+        return out;
+    }
+
+    ireflect(other: this): this {
         this_arrays = this.arrays;
         other_arrays = other.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            reflect_a_4D_vector_around_a_4D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-                this_arrays[3],
-
-                other.id,
-                other_arrays[0],
-                other_arrays[1],
-                other_arrays[2],
-                other_arrays[3],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2],
-                out_arrays[3]
-            );
-
-            return out;
-        }
 
         reflect_a_4D_vector_around_a_4D_direction_in_place(
             this.id,
@@ -611,28 +723,39 @@ export class Direction4D extends TransformableVector4D implements IDirection4D
         return this;
     }
 
-    negate(out?: this): this {
+    reflect(other: this, out: this): this {
+        if (out.is(this))
+            return this.ireflect(other);
+
         this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
 
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
+        reflect_a_4D_vector_around_a_4D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
 
-            negate_a_4D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-                this_arrays[3],
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+            other_arrays[3],
 
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2],
-                out_arrays[3]
-            );
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
 
-            return out;
-        }
+        return out;
+    }
+
+    inegate(): this {
+        this_arrays = this.arrays;
 
         negate_a_4D_direction_in_place(
             this.id,
@@ -645,32 +768,33 @@ export class Direction4D extends TransformableVector4D implements IDirection4D
         return this;
     }
 
-    cross(other: Direction4D, out?: this): this {
+    negate(out: this): this {
+        if (out.is(this))
+            return this.inegate();
+
+        this_arrays = this.arrays;
+        out_arrays = out.arrays;
+
+        negate_a_4D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
+
+        return out;
+    }
+
+    icross(other: Direction4D): this {
         this_arrays = this.arrays;
         other_arrays = other.arrays;
-
-        if (out && !out.is(this)) {
-            out_arrays = out.arrays;
-
-            cross_a_3D_direction_with_another_3D_direction_to_out(
-                this.id,
-                this_arrays[0],
-                this_arrays[1],
-                this_arrays[2],
-
-                other.id,
-                other_arrays[0],
-                other_arrays[1],
-                other_arrays[2],
-
-                out.id,
-                out_arrays[0],
-                out_arrays[1],
-                out_arrays[2]
-            );
-
-            return out;
-        }
 
         cross_a_3D_direction_with_another_3D_direction_in_place(
             this.id,
@@ -685,7 +809,81 @@ export class Direction4D extends TransformableVector4D implements IDirection4D
         );
 
         return this;
-    };
+    }
+
+    cross(other: Direction4D, out: this): this {
+        if (out.is(this))
+            return this.icross(other);
+
+        this_arrays = this.arrays;
+        other_arrays = other.arrays;
+        out_arrays = out.arrays;
+
+        cross_a_3D_direction_with_another_3D_direction_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2]
+        );
+
+        return out;
+    }
+
+    imatmul(matrix: Matrix4x4): this {
+        other_arrays = matrix.arrays;
+
+        multiply_a_4D_vector_by_a_4x4_matrix_in_place(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
+            other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[6],
+            other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
+            other_arrays[12], other_arrays[13], other_arrays[14], other_arrays[15]
+        );
+
+        return this;
+    }
+
+    matmul(matrix: Matrix4x4, out: this): this {
+        other_arrays = matrix.arrays;
+
+        multiply_a_4D_vector_by_a_4x4_matrix_to_out(
+            this.id,
+            this_arrays[0],
+            this_arrays[1],
+            this_arrays[2],
+            this_arrays[3],
+
+            matrix.id,
+            other_arrays[0], other_arrays[1], other_arrays[2], other_arrays[3],
+            other_arrays[4], other_arrays[5], other_arrays[6], other_arrays[6],
+            other_arrays[8], other_arrays[9], other_arrays[10], other_arrays[11],
+            other_arrays[12], other_arrays[13], other_arrays[14], other_arrays[15],
+
+            out.id,
+            out_arrays[0],
+            out_arrays[1],
+            out_arrays[2],
+            out_arrays[3]
+        );
+
+        return out;
+    }
 
     get xx(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[0]])}
     get xy(): Direction2D {return new Direction2D(this.id, [this.arrays[0], this.arrays[1]])}

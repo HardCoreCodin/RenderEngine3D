@@ -21,6 +21,7 @@ import {
     VERTEX_FACES_ALLOCATOR_INT32,
     VERTEX_FACES_ALLOCATOR_INT8
 } from "../memory/allocators.js";
+import {IAllocator} from "../_interfaces/allocators.js";
 
 
 abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
@@ -73,34 +74,52 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
 }
 
 export class FaceVerticesInt8 extends FaceVertices<Uint8Array> {
-    protected _getAllocator(): Int8Allocator3D {
-        return FACE_VERTICES_ALLOCATOR_INT8;
+    constructor(
+        length?: number,
+        arrays?: Uint8Array[]
+    ) {
+        super(FACE_VERTICES_ALLOCATOR_INT8, length, arrays);
     }
 }
 export class FaceVerticesInt16 extends FaceVertices<Uint16Array> {
-    protected _getAllocator(): Int16Allocator3D {
-        return FACE_VERTICES_ALLOCATOR_INT16;
+    constructor(
+        length?: number,
+        arrays?: Uint16Array[]
+    ) {
+        super(FACE_VERTICES_ALLOCATOR_INT16, length, arrays);
     }
 }
 export class FaceVerticesInt32 extends FaceVertices<Uint32Array> {
-    protected _getAllocator(): Int32Allocator3D {
-        return FACE_VERTICES_ALLOCATOR_INT32;
+    constructor(
+        length?: number,
+        arrays?: Uint32Array[]
+    ) {
+        super(FACE_VERTICES_ALLOCATOR_INT32, length, arrays);
     }
 }
 
 export class VertexFacesInt8 extends VertexFaces<Uint8Array> {
-    protected _getAllocator(): Int8Allocator1D {
-        return VERTEX_FACES_ALLOCATOR_INT8;
+    constructor(
+        length?: number,
+        arrays?: Uint8Array[]
+    ) {
+        super(VERTEX_FACES_ALLOCATOR_INT8, length, arrays);
     }
 }
 export class VertexFacesInt16 extends VertexFaces<Uint16Array> {
-    protected _getAllocator(): Int16Allocator1D {
-        return VERTEX_FACES_ALLOCATOR_INT16;
+    constructor(
+        length?: number,
+        arrays?: Uint16Array[]
+    ) {
+        super(VERTEX_FACES_ALLOCATOR_INT16, length, arrays);
     }
 }
 export class VertexFacesInt32 extends VertexFaces<Uint32Array> {
-    protected _getAllocator(): Int32Allocator1D {
-        return VERTEX_FACES_ALLOCATOR_INT32;
+    constructor(
+        length?: number,
+        arrays?: Uint32Array[]
+    ) {
+        super(VERTEX_FACES_ALLOCATOR_INT32, length, arrays);
     }
 }
 
@@ -108,23 +127,32 @@ export class FromToIndicesInt8
     extends Buffer<Uint8Array>
     implements IFromToIndices<Uint8Array>
 {
-    protected _getAllocator(): Int8Allocator2D {
-        return FROM_TO_INDICES_ALLOCATOR_INT8;
+    constructor(
+        length?: number,
+        arrays?: Uint8Array[]
+    ) {
+        super(FROM_TO_INDICES_ALLOCATOR_INT8, length, arrays);
     }
 }
 export class FromToIndicesInt16
     extends Buffer<Uint16Array>
     implements IFromToIndices<Uint16Array>
 {
-    protected _getAllocator(): Int16Allocator2D {
-        return FROM_TO_INDICES_ALLOCATOR_INT16;
+    constructor(
+        length?: number,
+        arrays?: Uint16Array[]
+    ) {
+        super(FROM_TO_INDICES_ALLOCATOR_INT16, length, arrays);
     }
 }
 export class FromToIndicesInt32
     extends Buffer<Uint32Array>
     implements IFromToIndices<Uint32Array>
 {
-    protected _getAllocator(): Int32Allocator2D {
-        return FROM_TO_INDICES_ALLOCATOR_INT32;
+    constructor(
+        length?: number,
+        arrays?: Uint32Array[]
+    ) {
+        super(FROM_TO_INDICES_ALLOCATOR_INT32, length, arrays);
     }
 }

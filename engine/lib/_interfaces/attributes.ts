@@ -1,9 +1,5 @@
 import {ATTRIBUTE, DIM, FACE_TYPE} from "../../constants.js";
-import {IAccessor, IAccessorConstructor} from "./accessors.js";
-import {IBuffer, IFaceVertices} from "./buffers.js";
 import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
-import {IVector,
-} from "./vectors.js";
 
 export interface IInputAttribute {
     dim: DIM;
@@ -25,16 +21,6 @@ export interface IInputPositions extends IInputAttribute {id: ATTRIBUTE.position
 export interface IInputNormals extends IInputAttribute {id: ATTRIBUTE.normal}
 export interface IInputColors extends IInputAttribute {id: ATTRIBUTE.color}
 export interface IInputUVs extends IInputAttribute {id: ATTRIBUTE.uv}
-
-export interface IAttribute<AccessorType extends IAccessor = IAccessor> extends IBuffer
-{
-    readonly face_vertices: IFaceVertices,
-    readonly face_count: number,
-    current: AccessorType;
-    Vector: IAccessorConstructor<AccessorType>;
-    [Symbol.iterator](): Generator<AccessorType>;
-    setFrom(other: IAttribute<IVector>): this;
-}
 
 export interface IMeshInputs {
     face_type: FACE_TYPE;

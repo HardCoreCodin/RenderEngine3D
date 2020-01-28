@@ -98,13 +98,13 @@ export class EulerRotation implements IEulerRotation {
 
     computeMatrix(): void {
         this.matrix.transpose();
-        this._result_matrix.mul(this.matrix);
+        this._result_matrix.imul(this.matrix);
 
         this.matrix.setRotationAroundZ(this._z_angle, true); // Roll
         this.matrix.rotateAroundX(this._x_angle); // Pitch
         this.matrix.rotateAroundY(this._y_angle); // Yaw
 
-        this._result_matrix.mul(this.matrix);
+        this._result_matrix.imul(this.matrix);
     }
 }
 
@@ -190,7 +190,7 @@ export class Scale implements IScale {
         if (this._x_scale &&
             this._x_scale !== 1 &&
             this._x_scale !== this._prior_x_scale
-        ) this._matrix.x_axis.mul(
+        ) this._matrix.x_axis.imul(
             this._prior_x_scale && this._prior_x_scale !== 1 ?
                 this._x_scale / this._prior_x_scale :
                 this._x_scale
@@ -199,7 +199,7 @@ export class Scale implements IScale {
         if (this._y_scale &&
             this._y_scale !== 1 &&
             this._y_scale !== this._prior_y_scale
-        ) this._matrix.y_axis.mul(
+        ) this._matrix.y_axis.imul(
             this._prior_y_scale && this._prior_y_scale !== 1 ?
                 this._y_scale / this._prior_y_scale :
                 this._y_scale
@@ -208,7 +208,7 @@ export class Scale implements IScale {
         if (this._z_scale &&
             this._z_scale !== 1 &&
             this._z_scale !== this._prior_z_scale
-        ) this._matrix.z_axis.mul(
+        ) this._matrix.z_axis.imul(
             this._prior_z_scale && this._prior_z_scale !== 1 ?
                 this._z_scale / this._prior_z_scale :
                 this._z_scale

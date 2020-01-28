@@ -1,9 +1,9 @@
 import {T3} from "../types.js";
 import {InputColors, InputPositions, InputUVs} from "../lib/geometry/inputs.js";
 import {FaceVerticesInt8} from "../lib/geometry/indices.js";
-import {VertexPositions3D} from "../lib/geometry/positions.js";
-import {VertexColors3D} from "../lib/geometry/colors.js";
-import {VertexUVs2D} from "../lib/geometry/uvs.js";
+import {VertexPositions3D} from "../lib/buffers/attributes/positions.js";
+import {VertexColors3D} from "../lib/buffers/attributes/colors.js";
+import {VertexUVs2D} from "../lib/buffers/attributes/uvs.js";
 
 const input_positions = new InputPositions();
 const input_colors = new InputColors();

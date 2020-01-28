@@ -2,7 +2,7 @@ import Matrix2x2 from "./matrix2x2.js";
 import {RotationMatrix} from "./matrix.js";
 import {Direction3D} from "./direction.js";
 import {Position2D, Position3D} from "./position.js";
-import {Float32Allocator9D, MATRIX_3X3_ALLOCATOR} from "../memory/allocators.js";
+import {MATRIX_3X3_ALLOCATOR} from "../memory/allocators.js";
 import {
     add_a_3x3_matrix_to_another_3x3_matrix_in_place,
     add_a_3x3_matrix_to_another_3x3_matrix_to_out,
@@ -48,10 +48,6 @@ let this_arrays,
     out_arrays: Float32Array[];
 
 export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
-    protected _getAllocator(): Float32Allocator9D {
-        return MATRIX_3X3_ALLOCATOR;
-    }
-
     readonly mat2: Matrix2x2;
     readonly translation2D: Position2D;
     readonly translation: Position3D;
@@ -63,7 +59,7 @@ export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
     arrays: Float9;
 
     constructor(id?: number, arrays?: Float9) {
-        super(id, arrays);
+        super(MATRIX_3X3_ALLOCATOR, id, arrays);
 
         this.mat2 = new Matrix2x2(this.id, [
             this.arrays[0], this.arrays[1],

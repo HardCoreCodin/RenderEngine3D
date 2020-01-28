@@ -1,33 +1,35 @@
-import {IMatrix} from "./matrix.js";
 import {IAccessor} from "./accessors.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D} from "../accessors/color.js";
-import {Vector} from "../accessors/accessor.js";
+import {Accessor, Vector} from "../accessors/accessor.js";
+import Matrix3x3 from "../accessors/matrix3x3.js";
+import Matrix2x2 from "../accessors/matrix2x2.js";
 
-export interface IMathAccessor extends IAccessor {
-    add(other: IAccessor|number, out?: IAccessor): this|typeof out;
-    sub(other: IAccessor|number, out?: IAccessor): this|typeof out;
-    mul(other: this|number, out?: this): this;
-    div(denominator: number, out?: this): this;
-}
 
-export interface IVector extends IMathAccessor
+export interface IVector<Other extends Accessor> extends IAccessor
 {
+    iadd(other: Other|number): this;
+    add(other: Other|number, out: this): this;
+
+    isub(other: Other|number): this;
+    sub(other: Other|number, out: this): this;
+
+    imul(other: this|number): this;
+    mul(other: this|number, out: this): this;
+
+    idiv(denominator: number): this;
+    div(denominator: number, out: this): this;
+
     lerp(to: this, by: number, out: this): this;
 }
 
-export type VectorConstructor<VectorType extends Vector> = new (
+export type VectorConstructor<VectorType extends Vector<Accessor>> = new (
     id?: number,
     arrays?: Float32Array[]
 ) => VectorType;
-
-export interface ITransformableVector<Matrix extends IMatrix = IMatrix> extends IVector
-{
-    mul(other: Matrix|this|number, out?: this): this;
-}
 
 export interface I2D {
     x: number;
@@ -42,20 +44,28 @@ export interface I4D extends I3D {
     w: number;
 }
 
-export type IVector2D = IVector & I2D;
-export type IVector3D = IVector & I3D;
-export type IVector4D = IVector & I4D;
+export type IVector2D<Other extends Accessor> = IVector<Other> & I2D;
+export type IVector3D<Other extends Accessor> = IVector<Other> & I3D;
+export type IVector4D<Other extends Accessor> = IVector<Other> & I4D;
+
 
 export interface IDirection2D
-    extends ITransformableVector, I2D
+    extends IVector2D<Direction2D>
 {
     length: number;
     length_squared: number;
     is_normalized: boolean;
 
     dot(other: this): number;
-    normalize(out?: this): this;
-    negate(out?: this): this;
+
+    inormalize(): this;
+    normalize(out: this): this;
+
+    inegate(): this;
+    negate(out: this): this;
+
+    imatmul(matrix: Matrix2x2): this;
+    matmul(matrix: Matrix2x2, out: this): this;
 
     xx: Direction2D;
     xy: Direction2D;
@@ -65,18 +75,25 @@ export interface IDirection2D
 }
 
 export interface IDirection3D
-    extends ITransformableVector, I3D
+    extends IVector3D<Direction3D>
 {
-    mat4mul(matrix: Matrix4x4, out: Direction4D): Direction4D;
-
     length: number;
     length_squared: number;
     is_normalized: boolean;
 
     dot(other: this): number;
-    cross(other: this, out?: this): this;
-    normalize(out?: this): this;
-    negate(out?: this): this;
+
+    icross(other: this): this;
+    cross(other: this, out: this): this;
+
+    inormalize(): this;
+    normalize(out: this): this;
+
+    inegate(): this;
+    negate(out: this): this;
+
+    imatmul(matrix: Matrix3x3|Matrix4x4): this;
+    matmul(matrix: Matrix3x3|Matrix4x4, out: Direction3D|Direction4D): Direction3D|Direction4D;
 
     xx: Direction2D;
     xy: Direction2D;
@@ -122,16 +139,25 @@ export interface IDirection3D
 }
 
 export interface IDirection4D
-    extends ITransformableVector, I4D
+    extends IVector4D<Direction4D>
 {
     length: number;
     length_squared: number;
     is_normalized: boolean;
 
     dot(other: this): number;
-    cross(other: this, out?: this): this;
-    normalize(out?: this): this;
-    negate(out?: this): this;
+
+    icross(other: this): this;
+    cross(other: this, out: this): this;
+
+    inormalize(): this;
+    normalize(out: this): this;
+
+    inegate(): this;
+    negate(out: this): this;
+
+    imatmul(matrix: Matrix4x4): this;
+    matmul(matrix: Matrix4x4, out: this): this;
 
     xx: Direction2D;
     xy: Direction2D;
@@ -177,11 +203,14 @@ export interface IDirection4D
 }
 
 export interface IPosition2D
-    extends ITransformableVector, I2D
+    extends IVector2D<Direction2D>
 {
-    to(other: this, out: IDirection2D): IDirection2D;
+    to(other: this, out: Direction2D): Direction2D;
     distanceTo(other: this): number;
     distanceSquaredTo(other: this): number;
+
+    imatmul(matrix: Matrix2x2): this;
+    matmul(matrix: Matrix2x2, out: this): this;
 
     xx: Position2D;
     xy: Position2D;
@@ -191,12 +220,14 @@ export interface IPosition2D
 }
 
 export interface IPosition3D
-    extends ITransformableVector, I3D
+    extends IVector3D<Direction3D>
 {
     to(other: this, out: Direction3D): Direction3D;
     distanceTo(other: this): number;
     distanceSquaredTo(other: this): number;
-    mat4mul(matrix: Matrix4x4, out: Position4D): Position4D;
+
+    imatmul(matrix: Matrix3x3|Matrix4x4): this;
+    matmul(matrix: Matrix3x3|Matrix4x4, out: Position3D|Position4D): Position3D|Position4D;
 
     xx: Position2D;
     xy: Position2D;
@@ -242,11 +273,14 @@ export interface IPosition3D
 }
 
 export interface IPosition4D
-    extends ITransformableVector, I4D
+    extends IVector4D<Direction4D>
 {
     to(other: this, out: Direction4D): Direction4D;
     distanceTo(other: this): number;
     distanceSquaredTo(other: this): number;
+
+    imatmul(matrix: Matrix4x4): this;
+    matmul(matrix: Matrix4x4, out: this): this;
 
     xx: Position2D;
     xy: Position2D;
@@ -291,7 +325,7 @@ export interface IPosition4D
     zzz: Position3D;
 }
 
-export interface IColor extends IVector {
+export interface IColor extends Vector<Accessor> {
     r: number;
     g: number;
     b: number;
@@ -369,7 +403,7 @@ export interface IColor4D extends IColor, I4D {
     bbb: Color3D;
 }
 
-export interface IUV extends IVector {
+export interface IUV extends Vector<Accessor> {
     u: number;
     v: number;
 }

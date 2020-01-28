@@ -2,15 +2,27 @@ import Matrix2x2 from "../accessors/matrix2x2.js";
 import Matrix3x3 from "../accessors/matrix3x3.js";
 import {Direction3D} from "../accessors/direction.js";
 import {Position2D, Position3D} from "../accessors/position.js";
-import {IMathAccessor} from "./vectors.js";
+import {IAccessor} from "./accessors.js";
 
-export interface IMatrix extends IMathAccessor
+export interface IMatrix extends IAccessor
 {
     is_identity: boolean;
 
     setToIdentity(): this;
     invert(out?: this): this;
     transpose(out?: this): this;
+
+    iadd(other: this|number): this;
+    add(other: this|number, out: this): this;
+
+    isub(other: this|number): this;
+    sub(other: this|number, out: this): this;
+
+    imul(other: this|number): this;
+    mul(other: this|number, out: this): this;
+
+    idiv(denominator: number): this;
+    div(denominator: number, out: this): this;
 }
 
 export interface IRotationMatrix extends IMatrix
