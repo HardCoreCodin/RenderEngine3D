@@ -1,11 +1,11 @@
 import {iterTriangles, Triangle} from "./_base.js";
 import {InputPositions} from "../../geometry/inputs.js";
 import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
-import {Positions2D, Positions3D, Positions4D} from "../vectors.js";
+import {Colors3D, Positions2D, Positions3D, Positions4D} from "../vectors.js";
 import {ATTRIBUTE} from "../../../constants.js";
 import {loadVerticesSimple, pullFaces} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
-import {IVertexAttribute} from "../../_interfaces/attributes.js";
+import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
 export class VertexPositions2D extends Positions2D implements IVertexAttribute<Position2D, ATTRIBUTE.position>
@@ -123,7 +123,7 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
 }
 
 
-export class FacePositions2D extends Positions2D {
+export class FacePositions2D extends Positions2D implements IFaceAttribute<Position2D, ATTRIBUTE.position>  {
     readonly attribute: ATTRIBUTE.position;
 
     constructor(
@@ -134,7 +134,7 @@ export class FacePositions2D extends Positions2D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 
@@ -143,7 +143,7 @@ export class FacePositions2D extends Positions2D {
         return this;
     }
 }
-export class FacePositions3D extends Positions3D {
+export class FacePositions3D extends Positions3D implements IFaceAttribute<Position3D, ATTRIBUTE.position> {
     readonly attribute: ATTRIBUTE.position;
 
     constructor(
@@ -154,7 +154,7 @@ export class FacePositions3D extends Positions3D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 
@@ -163,7 +163,7 @@ export class FacePositions3D extends Positions3D {
         return this;
     }
 }
-export class FacePositions4D extends Positions4D {
+export class FacePositions4D extends Positions4D implements IFaceAttribute<Position4D, ATTRIBUTE.position>  {
     readonly attribute: ATTRIBUTE.position;
 
     constructor(
@@ -174,7 +174,7 @@ export class FacePositions4D extends Positions4D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 

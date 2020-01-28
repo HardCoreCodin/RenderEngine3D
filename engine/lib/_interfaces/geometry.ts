@@ -3,11 +3,23 @@ import {IMatrix4x4} from "./matrix.js";
 import {IMaterial, IMeshCallback} from "./render.js";
 import {IPosition3D, IPosition4D} from "./vectors.js";
 import {IFaceVertices, IVertexFaces} from "./buffers.js";
-import {IMeshInputs} from "./attributes.js";
+import {
+    FaceColors,
+    FaceNormals,
+    FacePositions,
+    IMeshInputs,
+    VertexColors,
+    VertexNormals,
+    VertexPositions,
+    VertexUVs
+} from "./attributes.js";
 import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {VertexPositions3D, VertexPositions4D} from "../buffers/attributes/positions.js";
-import {Faces3D} from "../geometry/faces.js";
-import {Vertices3D} from "../geometry/vertices.js";
+import {FacePositions3D, VertexPositions3D, VertexPositions4D} from "../buffers/attributes/positions.js";
+import Faces from "../geometry/faces.js";
+import Vertices from "../geometry/vertices.js";
+import {FaceNormals3D, VertexNormals3D} from "../buffers/attributes/normals.js";
+import {FaceColors3D, VertexColors3D} from "../buffers/attributes/colors.js";
+import {VertexUVs2D} from "../buffers/attributes/uvs.js";
 
 
 export interface IMeshOptions {
@@ -43,9 +55,16 @@ export interface IBounds4D extends IBounds {
     readonly max: IPosition4D;
 }
 
-export interface IMesh {
-    faces: Faces3D;
-    vertices: Vertices3D;
+export interface IMesh<
+    VertexPositionsClass extends VertexPositions = VertexPositions3D,
+    VertexNormalsClass extends VertexNormals = VertexNormals3D,
+    VertexColorsClass extends VertexColors = VertexColors3D,
+    VertexUVsClass extends VertexUVs = VertexUVs2D,
+    FacePositionsClass extends FacePositions = FacePositions3D,
+    FaceNormalsClass extends FaceNormals= FaceNormals3D,
+    FaceColorsClass extends FaceColors = FaceColors3D> {
+    faces: Faces<FacePositionsClass, FaceNormalsClass, FaceColorsClass>;
+    vertices: Vertices<VertexPositionsClass, VertexNormalsClass, VertexColorsClass, VertexUVsClass>;
 
     readonly face_count: number;
     readonly vertex_count: number;
@@ -75,3 +94,4 @@ export interface IGeometry<
 
     postWorldMatrixRefresh(): void;
 }
+

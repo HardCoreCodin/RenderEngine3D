@@ -1,13 +1,13 @@
 import {Bounds3D} from "./bounds.js";
-import {Faces3D} from "./faces.js";
-import {Vertices} from "./vertices.js";
+import Faces from "./faces.js";
+import Vertices from "./vertices.js";
 import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
 import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {VertexPositions3D} from "../buffers/attributes/positions.js";
-import {VertexNormals3D} from "../buffers/attributes/normals.js";
-import {VertexColors3D} from "../buffers/attributes/colors.js";
+import {FacePositions3D, VertexPositions3D} from "../buffers/attributes/positions.js";
+import {FaceNormals3D, VertexNormals3D} from "../buffers/attributes/normals.js";
+import {FaceColors3D, VertexColors3D} from "../buffers/attributes/colors.js";
 import {VertexUVs2D} from "../buffers/attributes/uvs.js";
 import {IMesh} from "../_interfaces/geometry.js";
 import {IMeshCallback} from "../_interfaces/render.js";
@@ -15,7 +15,7 @@ import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 
 
 export default class Mesh implements IMesh {
-    readonly faces = new Faces3D();
+    readonly faces = new Faces(FacePositions3D, FaceNormals3D, FaceColors3D);
     readonly vertices = new Vertices(VertexPositions3D, VertexNormals3D, VertexColors3D, VertexUVs2D);
     readonly bbox = new Bounds3D();
     readonly on_mesh_loaded = new Set<IMeshCallback>();

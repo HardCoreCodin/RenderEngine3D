@@ -1,6 +1,7 @@
 import {Triangle, iterTriangles} from "./_base.js";
 import {ATTRIBUTE} from "../../../constants.js";
 import {InputNormals} from "../../geometry/inputs.js";
+import {Position3D, Position4D} from "../../accessors/position.js";
 import {Direction3D, Direction4D, dir3, dir4} from "../../accessors/direction.js";
 import {Directions3D, Directions4D} from "../vectors.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
@@ -8,7 +9,7 @@ import {randomize3D, randomize4D} from "../_core.js";
 import {loadVertices, pullVertices} from "./_core.js";
 import {zip} from "../../../utils.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
-import {IVertexAttribute} from "../../_interfaces/attributes.js";
+import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
 export class VertexNormals3D extends Directions3D implements IVertexAttribute<Direction3D, ATTRIBUTE.normal> {
@@ -51,7 +52,7 @@ export class VertexNormals3D extends Directions3D implements IVertexAttribute<Di
         pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
     }
 }
-export class VertexNormals4D extends Directions4D  implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
+export class VertexNormals4D extends Directions4D implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
     readonly attribute: ATTRIBUTE.normal;
 
     protected _is_shared: boolean;
@@ -92,7 +93,9 @@ export class VertexNormals4D extends Directions4D  implements IVertexAttribute<D
     }
 }
 
-export class FaceNormals3D extends Directions3D {
+export class FaceNormals3D extends Directions3D
+    implements IFaceAttribute<Direction3D, ATTRIBUTE.normal, Position3D, ATTRIBUTE.position>
+{
     readonly attribute: ATTRIBUTE.normal;
 
     constructor(
@@ -103,16 +106,18 @@ export class FaceNormals3D extends Directions3D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 
-    pull(vertex_positions: VertexPositions3D) {
+    pull(vertex_positions: VertexPositions3D): this {
         for (const [face_normal, triangle] of zip(this, vertex_positions.triangles)) {
             triangle.a.to(triangle.b, AB);
             triangle.a.to(triangle.c, AC);
             AB.icross(AC).normalize(face_normal);
         }
+
+        return this;
     }
 
     generate(): this {
@@ -120,7 +125,9 @@ export class FaceNormals3D extends Directions3D {
         return this;
     }
 }
-export class FaceNormals4D extends Directions4D {
+export class FaceNormals4D extends Directions4D
+    implements IFaceAttribute<Direction4D, ATTRIBUTE.normal, Position4D, ATTRIBUTE.position>
+{
     readonly attribute: ATTRIBUTE.normal;
 
     constructor(
@@ -135,14 +142,14 @@ export class FaceNormals4D extends Directions4D {
         return this;
     }
 
-    pull(vertex_positions: VertexPositions4D) {
-
-
+    pull(vertex_positions: VertexPositions4D): this {
         for (const [face_normal, triangle] of zip(this, vertex_positions.triangles)) {
             triangle.a.to(triangle.b, AB_4D);
             triangle.a.to(triangle.c, AC_4D);
             AB_4D.icross(AC_4D).normalize(face_normal);
         }
+
+        return this;
     }
 
     generate(): this {

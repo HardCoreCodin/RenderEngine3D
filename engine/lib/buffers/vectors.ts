@@ -139,19 +139,10 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
     (
         matrix: Matrix3x3|Matrix4x4,
         out: Out,
-        as_positions: boolean = false,
         include?: Uint8Array[]
     ): typeof out {
         if (matrix instanceof Matrix3x3)
             multiply_3D_vectors_by_a_3x3_matrix_to_out(
-                this.arrays,
-                matrix.arrays,
-                matrix.id,
-                out.arrays,
-                include
-            );
-        else if (as_positions)
-            multiply_3D_positions_by_a_4x4_matrix_to_out(
                 this.arrays,
                 matrix.arrays,
                 matrix.id,
@@ -170,16 +161,12 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
         return out;
     }
 
-    imul(matrix: Matrix3x3|Matrix4x4, as_positions: boolean = false, include?: Uint8Array[]): this {
+    imul(
+        matrix: Matrix3x3|Matrix4x4,
+        include?: Uint8Array[])
+        : this {
         if (matrix instanceof Matrix3x3)
             multiply_3D_vectors_by_a_3x3_matrix_in_place(
-                this.arrays,
-                matrix.arrays,
-                matrix.id,
-                include
-            );
-        else if (as_positions)
-            multiply_3D_positions_by_a_4x4_matrix_in_place(
                 this.arrays,
                 matrix.arrays,
                 matrix.id,

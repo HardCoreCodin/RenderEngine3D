@@ -3,10 +3,10 @@ import {Color3D, Color4D} from "../../accessors/color.js";
 import {Colors3D, Colors4D} from "../vectors.js";
 import {InputColors} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {loadVertices, pullVertices, pullFaces} from "./_core.js";
+import {loadVertices, pullFaces, pullVertices} from "./_core.js";
 import {randomize3D, randomize4D} from "../_core.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
-import {IVertexAttribute} from "../../_interfaces/attributes.js";
+import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
 
 export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D, ATTRIBUTE.color> {
@@ -100,7 +100,7 @@ export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D
     }
 }
 
-export class FaceColors3D extends Colors3D {
+export class FaceColors3D extends Colors3D implements IFaceAttribute<Color3D, ATTRIBUTE.color> {
     readonly attribute: ATTRIBUTE.color;
 
     constructor(
@@ -111,7 +111,7 @@ export class FaceColors3D extends Colors3D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 
@@ -125,7 +125,7 @@ export class FaceColors3D extends Colors3D {
         return this;
     }
 }
-export class FaceColors4D extends Colors4D {
+export class FaceColors4D extends Colors4D implements IFaceAttribute<Color4D, ATTRIBUTE.color>  {
     readonly attribute: ATTRIBUTE.color;
 
     constructor(
@@ -136,7 +136,7 @@ export class FaceColors4D extends Colors4D {
     }
 
     autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+        this.init(this.face_count, arrays);
         return this;
     }
 

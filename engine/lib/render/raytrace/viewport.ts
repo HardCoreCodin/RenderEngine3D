@@ -13,7 +13,7 @@ export default class RayTraceViewport
     ray_directions_transformed: Directions3D;
 
     protected _updateRayPositions(): void {
-        this.ray_directions.mul(this._controller.camera.transform.matrix, this.ray_positions,true);
+        this.ray_positions.setFrom(this.ray_directions).imul(this._controller.camera.transform.matrix);
     }
 
     protected _updateRayDirections(): void {
