@@ -1,7 +1,7 @@
 import Mesh from "../lib/geometry/mesh.js";
 import {MeshInputs} from "../lib/geometry/inputs.js";
-import {ATTRIBUTE, FACE_TYPE} from "../constants.js";
 import {MeshOptions} from "../lib/geometry/options.js";
+import {ATTRIBUTE} from "../constants.js";
 
 import GLRenderEngine from "../lib/render/raster/hardware/engine.js";
 import {rgba} from "../lib/accessors/color.js";
@@ -13,7 +13,7 @@ globalThis.b = rgba(0, 0 ,1, 1);
 
 const engine = globalThis.engine = new GLRenderEngine();
 const mesh_options = new MeshOptions(1, 0,0, true);
-const mesh_inputs = new MeshInputs(FACE_TYPE.TRIANGLE, ATTRIBUTE.position|ATTRIBUTE.uv);
+const mesh_inputs = new MeshInputs(ATTRIBUTE.position|ATTRIBUTE.uv);
 const input_positions = mesh_inputs.position;
 const input_uvs = mesh_inputs.uv;
 
@@ -49,8 +49,10 @@ camera.transform.translation.y = 1;
         vertex_uv_offset += 2;
         vertex_position_offset += 3;
     }
-    for (const face of susan.faces)
+    for (const face of susan.faces) {
         input_positions.pushFace(face);
+        input_uvs.pushFace(face);
+    }
 
     const mesh = new Mesh(mesh_inputs, mesh_options).load();
     // g.geometry = g.engine.scene.mesh_geometries.addGeometry(g.mesh);

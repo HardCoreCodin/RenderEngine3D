@@ -417,14 +417,17 @@ export const normalize_a_3D_direction_to_out = (
     Zo: Float32Array
 ) : void => {
     t_n = Xa[a]**2 + Ya[a]**2 + Za[a]**2;
-    if (t_n === 1)
-        return;
+    if (t_n === 1) {
+        Xo[o] = Xa[a];
+        Yo[o] = Ya[a];
+        Zo[o] = Za[a];
+    } else {
+        t_n = 1 / sqrt(t_n);
 
-    t_n = 1 / sqrt(t_n);
-
-    Xo[o] = Xa[a] * t_n;
-    Yo[o] = Ya[a] * t_n;
-    Zo[o] = Za[a] * t_n;
+        Xo[o] = Xa[a] * t_n;
+        Yo[o] = Ya[a] * t_n;
+        Zo[o] = Za[a] * t_n;
+    }
 };
 
 export const normalize_a_3D_direction_in_place = (

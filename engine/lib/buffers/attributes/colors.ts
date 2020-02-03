@@ -11,33 +11,25 @@ import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js"
 
 export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D, ATTRIBUTE.color> {
     readonly attribute: ATTRIBUTE.color;
-
-    protected _is_shared: boolean;
     current_triangle: Triangle<Color3D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
         return this;
     }
 
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
     get is_shared(): boolean {return this._is_shared}
+
     get triangles(): Generator<Triangle<Color3D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
-    }
-
-    protected _post_init(): void {
-        super._post_init();
-        this.current_triangle = new Triangle(Color3D, this.arrays);
     }
 
     load(inputs: InputColors): this {
@@ -53,36 +45,33 @@ export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D
         randomize3D(this.arrays);
         return this;
     }
-}
-export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D, ATTRIBUTE.color> {
-    readonly attribute: ATTRIBUTE.color;
-
-    protected _is_shared: boolean;
-    current_triangle: Triangle<Color4D>;
-
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
-
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
-        return this;
-    }
-
-    get is_shared(): boolean {return this._is_shared}
-    get triangles(): Generator<Triangle<Color4D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
-    }
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Color4D, this.arrays);
+        this.current_triangle = new Triangle(Color3D, this.arrays);
+    }
+}
+export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D, ATTRIBUTE.color> {
+    readonly attribute: ATTRIBUTE.color;
+    current_triangle: Triangle<Color4D>;
+
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
+
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
+        return this;
+    }
+
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
+    get is_shared(): boolean {return this._is_shared}
+
+    get triangles(): Generator<Triangle<Color4D>> {
+        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
     }
 
     load(inputs: InputColors): this {
@@ -98,20 +87,24 @@ export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D
         randomize4D(this.arrays);
         return this;
     }
+
+    protected _post_init(): void {
+        super._post_init();
+        this.current_triangle = new Triangle(Color4D, this.arrays);
+    }
 }
 
 export class FaceColors3D extends Colors3D implements IFaceAttribute<Color3D, ATTRIBUTE.color> {
     readonly attribute: ATTRIBUTE.color;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 
@@ -128,15 +121,14 @@ export class FaceColors3D extends Colors3D implements IFaceAttribute<Color3D, AT
 export class FaceColors4D extends Colors4D implements IFaceAttribute<Color4D, ATTRIBUTE.color>  {
     readonly attribute: ATTRIBUTE.color;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 

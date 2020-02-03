@@ -8,124 +8,151 @@ import {
     IInputUVs,
     IMeshInputs
 } from "../_interfaces/attributes.js";
-import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../../types.js";
+import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputs, VertexInputStr} from "../../types.js";
+
 
 export class InputAttribute<Attribute extends ATTRIBUTE>
     implements IInputAttribute<Attribute>
 {
-    public readonly attribute: Attribute;
+    vertices: VertexInputs;
+    faces_vertices: FaceInputs;
 
-    constructor(
-        readonly dim: DIM,
-        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
-        public vertices?: number[][],
-        public faces_vertices?: FaceInputs,
-    ) {
-        if (!faces_vertices) switch (face_type) {
-            case FACE_TYPE.TRIANGLE:
-                this.faces_vertices = num3();
-                break;
-            case FACE_TYPE.QUAD:
-                this.faces_vertices = num4();
-                break;
-            default:
-                throw `Invalid face type ${face_type}! Only supports triangles and quads.`;
-        }
+    protected _dim: DIM;
+    protected _face_type: FACE_TYPE;
 
-        if (!vertices)
-            this.vertices = Array<number[]>(this.dim);
-
-        switch (this.dim) {
-            case DIM._2D:
-                this.vertices = num2();
-                break;
-            case DIM._3D:
-                this.vertices = num3();
-                break;
-            default:
-                throw `Invalid vertex dimension ${this.dim}! Only supports 2D or 3D.`;
-        }
-    }
-
-    get vertex_count(): number {
-        return this.vertices[0].length;
-    }
-
-    get face_count(): number {
-        return this.faces_vertices[0].length;
-    }
+    readonly attribute: Attribute;
+    get dim(): DIM {return this._dim}
+    get face_type(): number {return this._face_type}
+    get face_count(): number {return this.faces_vertices[0].length}
+    get vertex_count(): number {return this.vertices[0].length}
 
     triangulate(): this {
-        if (this.face_type === FACE_TYPE.TRIANGLE)
+        if (this._face_type === FACE_TYPE.TRIANGLE)
             return;
 
-        const v4 = this.faces_vertices.pop();
+        const [v1, v2, v3, v4] = this.faces_vertices;
         const quad_count = v4.length;
         const triangle_count = quad_count * 2;
-        const [v1, v2, v3] = this.faces_vertices;
 
-        v1.length = v2.length = v3.length = triangle_count;
+        const new_v1 = Array(triangle_count);
+        const new_v2 = Array(triangle_count);
+        const new_v3 = Array(triangle_count);
 
-        let doubled, shifted: number;
-        for (let quad_id = quad_count - 1; quad_id > 0; quad_id--) {
-            doubled = quad_id + quad_id;
-            shifted = doubled - 1;
+        let second_index = quad_count;
+        for (let first_index = 0; first_index < quad_count; first_index++) {
+            new_v1[first_index] = v1[first_index];
+            new_v2[first_index] = v2[first_index];
+            new_v3[first_index] = v3[first_index];
 
-            v1.copyWithin(quad_id, shifted, shifted);
-            v2.copyWithin(quad_id, shifted, shifted);
-            v3.copyWithin(quad_id, shifted, shifted);
+            new_v1[second_index] = v1[first_index];
+            new_v2[second_index] = v3[first_index];
+            new_v3[second_index] = v4[first_index];
 
-            v1[doubled] = v1[quad_id];
-            v2[doubled] = v3[quad_id];
-            v3[doubled] = v4[quad_id];
+            second_index++;
         }
 
-        this.face_type = FACE_TYPE.TRIANGLE;
+        this.faces_vertices = [new_v1, new_v2, new_v3];
+        this._face_type = FACE_TYPE.TRIANGLE;
 
         return this;
     }
 
-    getValue(value: number | string, is_index: boolean): number {
-        let error: string;
-        if (typeof value === "number") {
-            if (Number.isFinite(value)) {
-                if (is_index) {
-                    if (Number.isInteger(value))
-                        return value;
-                    else
-                        error = `${value} is not an integer`
-                } else
-                    return value;
-            } else
-                error = `${value} is not a finite number`;
-        } else if (typeof value === "string")
-            return this.getValue(+value, is_index);
-        else
-            error = `Got ${typeof value} ${value} instead or a number or a string`;
-
-        throw `Invalid ${this} ${is_index ? 'index' : 'value'}! ${error}`;
-    }
-
-    checkInputSize(input_size: number, is_index: boolean) {
-        const required_size = is_index ? this.face_type : this.dim;
-        if (input_size !== required_size)
-            throw `Invalid ${this} ${
-                is_index ? 'index_arrays' : 'values'
-                } input! Got ${input_size} ${
-                is_index ? 'vertices per face' : 'dimensions'
-                } instead of ${required_size}`;
-    }
-
     pushVertex(vertex: VertexInputNum | VertexInputStr) {
-        this.checkInputSize(vertex.length, false);
+        this._initVertices(vertex);
         for (const [component_num, component_value] of vertex.entries())
-            this.vertices[component_num].push(this.getValue(component_value, false));
+            this.vertices[component_num].push(this._getVertexComponent(component_value));
     }
 
     pushFace(face: FaceInputNum | FaceInputStr) {
-        this.checkInputSize(face.length, true);
+        this._initFaces(face);
         for (const [vertex_num, vertex_index] of face.entries())
-            this.faces_vertices[vertex_num].push(this.getValue(vertex_index, true));
+            this.faces_vertices[vertex_num].push(this._getVertexIndex(vertex_index));
+    }
+
+    _initFaces(face: FaceInputNum | FaceInputStr): void {
+        if (this.faces_vertices) {
+            if (face.length === this.faces_vertices.length)
+                return;
+
+            throw `Invalid face length: Expected ${this.faces_vertices.length} got ${face.length}!`;
+        }
+
+        switch (face.length) {
+            case DIM._3D: {
+                this._face_type = FACE_TYPE.TRIANGLE;
+                this.faces_vertices = num3();
+                break;
+            }
+            case DIM._4D: {
+                this._face_type = FACE_TYPE.QUAD;
+                this.faces_vertices = num4();
+                break;
+            }
+            default:
+                throw `Invalid face length: Expected 2 or 3, got ${face.length}!`;
+        }
+    }
+
+    _initVertices(vertex: VertexInputNum | VertexInputStr): void {
+        if (this.vertices) {
+            if (vertex.length === this.vertices.length)
+                return;
+
+            throw `Invalid vertex length: Expected ${this.vertices.length} got ${vertex.length}!`;
+        }
+
+        switch (vertex.length) {
+            case DIM._2D: {
+                this._dim = DIM._2D;
+                this.vertices = num2();
+                break;
+            }
+            case DIM._3D: {
+                this._dim = DIM._3D;
+                this.vertices = num3();
+                break;
+            }
+            case DIM._4D: {
+                this._dim = DIM._4D;
+                this.vertices = num4();
+                break;
+            }
+            default:
+                throw `Invalid vertex length: Expected 2-4, got ${vertex.length}!`;
+        }
+    }
+
+    _getVertexComponent(vertex_component: number|string): number {
+        if (typeof vertex_component === "string")
+            return this._getVertexComponent(vertex_component);
+
+        if (typeof vertex_component === "number") {
+            if (Number.isFinite(vertex_component))
+                return vertex_component;
+
+            throw `Invalid ${this} vertex component}: ${vertex_component} is not a finite number!`;
+        }
+
+        throw `Invalid ${this} component: Got ${typeof vertex_component} is not a number/string!`;
+    }
+
+    _getVertexIndex(vertex_index: number|string): number {
+        if (typeof vertex_index === "string")
+            return this._getVertexIndex(vertex_index);
+
+        if (typeof vertex_index === "number") {
+            if (Number.isFinite(vertex_index)) {
+                if (Number.isInteger(vertex_index))
+                    return vertex_index;
+
+
+                throw `Invalid ${this} vertex index}: ${vertex_index} is not an integer!`;
+            }
+
+            throw `Invalid ${this} vertex index}: ${vertex_index} is not a finite number!`;
+        }
+
+        throw `Invalid ${this} index: Got ${typeof vertex_index} is not a number/string!`;
     }
 }
 
@@ -147,22 +174,25 @@ export class InputUVs extends InputAttribute<ATTRIBUTE.uv> implements IInputUVs 
 
 export class MeshInputs implements IMeshInputs {
     constructor(
-        public face_type: FACE_TYPE = FACE_TYPE.TRIANGLE,
         readonly included: ATTRIBUTE = ATTRIBUTE.position,
-        readonly position: InputPositions = new InputPositions(DIM._3D, face_type),
-        readonly normal: InputNormals = new InputNormals(DIM._3D, face_type),
-        readonly color: InputColors = new InputColors(DIM._3D, face_type),
-        readonly uv: InputUVs = new InputUVs(DIM._2D, face_type)
+        readonly position: InputPositions = new InputPositions(),
+        readonly normal: InputNormals = included & ATTRIBUTE.normal ? new InputNormals() : null,
+        readonly color: InputColors = included & ATTRIBUTE.color ? new InputColors() : null,
+        readonly uv: InputUVs = included & ATTRIBUTE.uv ? new InputUVs() : null
     ) {}
 
     sanitize(): this {
-        if (this.face_type === FACE_TYPE.QUAD) {
+        if (this.position.face_type === FACE_TYPE.QUAD) {
             this.position.triangulate();
-            if (this.included & ATTRIBUTE.normal) this.normal.triangulate();
-            if (this.included & ATTRIBUTE.color) this.color.triangulate();
-            if (this.included & ATTRIBUTE.uv) this.uv.triangulate();
 
-            this.face_type = FACE_TYPE.TRIANGLE;
+            if (this.normal)
+                this.normal.triangulate();
+
+            if (this.color)
+                this.color.triangulate();
+
+            if (this.uv)
+                this.uv.triangulate();
         }
 
         return this;

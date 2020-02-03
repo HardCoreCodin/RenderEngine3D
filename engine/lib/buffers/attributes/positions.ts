@@ -1,9 +1,9 @@
 import {iterTriangles, Triangle} from "./_base.js";
 import {InputPositions} from "../../geometry/inputs.js";
 import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
-import {Colors3D, Positions2D, Positions3D, Positions4D} from "../vectors.js";
+import {Positions2D, Positions3D, Positions4D} from "../vectors.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {loadVerticesSimple, pullFaces} from "./_core.js";
+import {loadVertices, loadVerticesSimple, pullFaces} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
@@ -11,22 +11,29 @@ import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js"
 export class VertexPositions2D extends Positions2D implements IVertexAttribute<Position2D, ATTRIBUTE.position>
 {
     readonly attribute: ATTRIBUTE.position;
-
-    protected _is_shared: boolean;
     current_triangle: Triangle<Position2D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
+
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
+        return this;
     }
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
+    get is_shared(): boolean {return this._is_shared}
+
+    get triangles(): Generator<Triangle<Position2D>> {
+        return iterTriangles(this.current_triangle, this._face_vertices.arrays, this.face_count, this._is_shared);
+    }
+
+    load(inputs: InputPositions): this {
+        loadVerticesSimple(this.arrays, inputs.vertices);
         return this;
     }
 
@@ -34,91 +41,78 @@ export class VertexPositions2D extends Positions2D implements IVertexAttribute<P
         super._post_init();
         this.current_triangle = new Triangle(Position2D, this.arrays);
     }
+}
+export class VertexPositions3D extends Positions3D implements IVertexAttribute<Position3D, ATTRIBUTE.position> {
+    readonly attribute: ATTRIBUTE.position;
+    current_triangle: Triangle<Position3D>;
 
-    get is_shared(): boolean {
-        return this._is_shared
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
+
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
+        return this;
     }
 
-    get triangles(): Generator<Triangle<Position2D>> {
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
+    get is_shared(): boolean {return this._is_shared}
+
+    get triangles(): Generator<Triangle<Position3D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
     }
 
     load(inputs: InputPositions): this {
-        loadVerticesSimple(this.arrays, inputs.vertices);
+        if (this._is_shared)
+            loadVerticesSimple(this.arrays, inputs.vertices);
+        else
+            loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, false);
         return this;
-    }
-}
-export class VertexPositions3D extends Positions3D implements IVertexAttribute<Position3D, ATTRIBUTE.position> {
-    readonly attribute: ATTRIBUTE.position;
-
-    protected _is_shared: boolean;
-    current_triangle: Triangle<Position3D>;
-
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
-
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
-        return this;
-    }
-
-    get is_shared(): boolean {return this._is_shared}
-    get triangles(): Generator<Triangle<Position3D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
     }
 
     protected _post_init(): void {
         super._post_init();
         this.current_triangle = new Triangle(Position3D, this.arrays);
     }
-
-    load(inputs: InputPositions): this {
-        loadVerticesSimple(this.arrays, inputs.vertices);
-        return this;
-    }
 }
 export class VertexPositions4D extends Positions4D implements IVertexAttribute<Position4D, ATTRIBUTE.position> {
     readonly attribute: ATTRIBUTE.position;
-
-    protected _is_shared: boolean;
     current_triangle: Triangle<Position4D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
         return this;
     }
 
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
     get is_shared(): boolean {return this._is_shared}
+
     get triangles(): Generator<Triangle<Position4D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+    }
+
+    load(inputs: InputPositions): this {
+        if (this._is_shared)
+            loadVerticesSimple(this.arrays, inputs.vertices);
+        else
+            loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, false);
+        this.arrays[3].fill(1);
+        return this;
     }
 
     protected _post_init(): void {
         super._post_init();
         this.current_triangle = new Triangle(Position4D, this.arrays);
-    }
-
-    load(inputs: InputPositions): this {
-        loadVerticesSimple(this.arrays, inputs.vertices);
-        this.arrays[3].fill(1);
-        return this;
     }
 }
 
@@ -126,15 +120,14 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
 export class FacePositions2D extends Positions2D implements IFaceAttribute<Position2D, ATTRIBUTE.position>  {
     readonly attribute: ATTRIBUTE.position;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 
@@ -146,15 +139,14 @@ export class FacePositions2D extends Positions2D implements IFaceAttribute<Posit
 export class FacePositions3D extends Positions3D implements IFaceAttribute<Position3D, ATTRIBUTE.position> {
     readonly attribute: ATTRIBUTE.position;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 
@@ -166,15 +158,14 @@ export class FacePositions3D extends Positions3D implements IFaceAttribute<Posit
 export class FacePositions4D extends Positions4D implements IFaceAttribute<Position4D, ATTRIBUTE.position>  {
     readonly attribute: ATTRIBUTE.position;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 

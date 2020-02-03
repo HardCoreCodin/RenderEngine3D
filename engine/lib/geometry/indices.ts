@@ -39,7 +39,8 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
         let offset = 0;
         const array = this.arrays[0];
         for (const [vertex_index, face_indices] of vertex_face_indices.entries()) {
-            this.indices[vertex_index] = array.subarray(offset, face_indices.length) as ArrayType;
+            this.indices[vertex_index] = array.subarray(offset, offset+face_indices.length) as ArrayType;
+            this.indices[vertex_index].set(face_indices);
             offset += face_indices.length;
         }
 

@@ -10,76 +10,68 @@ import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
 export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBUTE.uv> {
     readonly attribute: ATTRIBUTE.uv;
-
-    protected _is_shared: boolean;
-
     current_triangle: Triangle<UV2D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
         return this;
     }
 
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
     get is_shared(): boolean {return this._is_shared}
+
     get triangles(): Generator<Triangle<UV2D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+    }
+
+    load(inputs: InputUVs): this {
+        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        return this;
     }
 
     protected _post_init(): void {
         super._post_init();
         this.current_triangle = new Triangle(UV2D, this.arrays);
     }
-
-    load(inputs: InputUVs): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
-        return this;
-    }
 }
 
 export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBUTE.uv> {
     readonly attribute: ATTRIBUTE.uv;
-
-    protected _is_shared: boolean;
-
     current_triangle: Triangle<UV3D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
         return this;
     }
 
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
     get is_shared(): boolean {return this._is_shared}
+
     get triangles(): Generator<Triangle<UV3D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+    }
+
+    load(inputs: InputUVs): this {
+        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        return this;
     }
 
     protected _post_init(): void {
         super._post_init();
         this.current_triangle = new Triangle(UV3D, this.arrays);
-    }
-
-    load(inputs: InputUVs): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
-        return this;
     }
 }

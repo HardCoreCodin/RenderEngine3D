@@ -1,22 +1,19 @@
-import {ATTRIBUTE, FACE_TYPE} from "../../constants.js";
+import Mesh from "./mesh.js";
 import {MeshOptions} from "./options.js";
 import {InputAttribute, MeshInputs} from "./inputs.js";
-import Mesh from "./mesh.js";
+import {ATTRIBUTE} from "../../constants.js";
+
 
 const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()): Mesh => {
     if (!has_positions.test(obj))
         throw `Invalid obj file sting - no vertex positions found!`;
-
-    const face_type = has_quads.test(obj) ?
-        FACE_TYPE.QUAD :
-        FACE_TYPE.TRIANGLE;
 
     let included = ATTRIBUTE.position;
     if (has_normals.test(obj)) included |= ATTRIBUTE.normal;
     if (has_colors.test(obj)) included |= ATTRIBUTE.color;
     if (has_uvs.test(obj)) included |= ATTRIBUTE.uv;
 
-    const inputs = new MeshInputs(face_type, included);
+    const inputs = new MeshInputs(included);
 
     for (const line of obj.split('\n'))
         if (position_and_color.test(line)) setPositionAndColor(inputs, position_and_color.exec(line));
@@ -28,6 +25,7 @@ const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()):
 
     return new Mesh(inputs, options);
 };
+
 
 const setPositionAndColor = (inputs: MeshInputs, line_parts: string[]) : void => {
     line_parts.shift();
@@ -67,7 +65,6 @@ const has_uvs = /^vt\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_normals = /^vn\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_colors = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_positions = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
-const has_quads = /^f\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)$/m;
 
 const position_and_color = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
 const position = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;

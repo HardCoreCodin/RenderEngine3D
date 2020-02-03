@@ -63,10 +63,10 @@ export type Float4 = T4<FloatArray>;
 export type Float9 = T9<FloatArray>;
 export type Float16 = T16<FloatArray>;
 
-export type PositionInputs = NumArrays3
-export type NormalInputs = NumArrays3;
-export type ColorInputs = NumArrays3;
-export type UVInputs = NumArrays2;
+export type PositionInputs = NumArrays2|NumArrays3|NumArrays4
+export type NormalInputs = NumArrays3|NumArrays4;
+export type ColorInputs = NumArrays3|NumArrays4;
+export type UVInputs = NumArrays2|NumArrays3;
 
 export type QuadInputs = NumArrays4;
 export type TriangleInputs = NumArrays3;

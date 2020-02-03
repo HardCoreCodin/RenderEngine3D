@@ -1,12 +1,9 @@
+import Mesh from "./mesh.js";
 import { MeshOptions } from "./options.js";
 import { MeshInputs } from "./inputs.js";
-import Mesh from "./mesh.js";
 const loadMeshFromObj = (obj, options = new MeshOptions()) => {
     if (!has_positions.test(obj))
         throw `Invalid obj file sting - no vertex positions found!`;
-    const face_type = has_quads.test(obj) ?
-        4 /* QUAD */ :
-        3 /* TRIANGLE */;
     let included = 1 /* position */;
     if (has_normals.test(obj))
         included |= 2 /* normal */;
@@ -14,7 +11,7 @@ const loadMeshFromObj = (obj, options = new MeshOptions()) => {
         included |= 4 /* color */;
     if (has_uvs.test(obj))
         included |= 8 /* uv */;
-    const inputs = new MeshInputs(face_type, included);
+    const inputs = new MeshInputs(included);
     for (const line of obj.split('\n'))
         if (position_and_color.test(line))
             setPositionAndColor(inputs, position_and_color.exec(line));
@@ -56,7 +53,6 @@ const has_uvs = /^vt\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_normals = /^vn\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_colors = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
 const has_positions = /^v\s+-*\d+\.\d+\s+-*\d+\.\d+\s+-*\d+\.\d+/m;
-const has_quads = /^f\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)\s+(\d+)\/(\d*)\/(\d*)$/m;
 const position_and_color = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
 const position = /v\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;
 const normal = /vn\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)\s+(-*\d+\.\d+)/;

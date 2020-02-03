@@ -8,21 +8,19 @@ import {IFaceVertices} from "./buffers.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D, Color4D} from "../accessors/color.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
-import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
+import {Direction3D, Direction4D} from "../accessors/direction.js";
 
 export interface IInputAttribute<Attribute extends ATTRIBUTE> {
-    dim: DIM;
-    attribute: Attribute;
-    face_type: FACE_TYPE;
-    vertices?: number[][];
-    faces_vertices?: FaceInputs;
+    vertices: number[][];
+    faces_vertices: FaceInputs;
 
+    readonly dim: DIM;
+    readonly attribute: Attribute;
+    readonly face_type: FACE_TYPE;
     readonly face_count: number;
     readonly vertex_count: number;
 
     triangulate(): void;
-    getValue(value: number | string, is_index: boolean): number;
-    checkInputSize(input_size: number, is_index: boolean): void;
     pushVertex(vertex: VertexInputNum | VertexInputStr): void;
     pushFace(face: FaceInputNum | FaceInputStr): void;
 }
@@ -33,7 +31,6 @@ export interface IInputColors extends IInputAttribute<ATTRIBUTE.color> {attribut
 export interface IInputUVs extends IInputAttribute<ATTRIBUTE.uv> {attribute: ATTRIBUTE.uv}
 
 export interface IMeshInputs {
-    face_type: FACE_TYPE;
     readonly included: ATTRIBUTE;
     readonly position: IInputPositions;
     readonly normal: IInputNormals;
@@ -60,7 +57,7 @@ export interface IVertexAttribute<VectorType extends Vector, Attribute extends A
     readonly is_shared: boolean;
     readonly triangles: Generator<Triangle<VectorType>>;
 
-    autoInit(arrays?: Float32Array[]): this;
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared?: boolean | number): this;
     load<Inputs extends InputAttribute<Attribute> = InputAttribute<Attribute>>(inputs: Inputs): this;
 }
 
@@ -71,29 +68,41 @@ export interface IMulVertexAttribute<VectorType extends Vector, Attribute extend
     imul(matrix: Matrix, include?: Uint8Array[]): this;
 }
 
-export type VertexPositions = IMulVertexAttribute<Position2D | Position3D | Position4D, ATTRIBUTE.position>;
-export type VertexPositionsConstructor<VertexPositionsClass extends VertexPositions> = new (
+export type VertexPositions<Position extends Position2D | Position3D | Position4D> = IMulVertexAttribute<Position, ATTRIBUTE.position>;
+export type VertexPositionsConstructor<
+    Position extends Position2D | Position3D | Position4D,
+    VertexPositionsClass extends VertexPositions<Position>
+    > = new (
     vertex_count: number,
     face_vertices: IFaceVertices,
     is_shared?: number | boolean,
     face_count?: number
 ) => VertexPositionsClass;
-export type VertexNormals = IMulVertexAttribute<Direction3D | Direction4D, ATTRIBUTE.normal>;
-export type VertexNormalsConstructor<VertexNormalsClass extends VertexNormals> = new (
+export type VertexNormals<Direction extends Direction3D | Direction4D> = IMulVertexAttribute<Direction, ATTRIBUTE.normal>;
+export type VertexNormalsConstructor<
+    Direction extends Direction3D | Direction4D,
+    VertexNormalsClass extends VertexNormals<Direction>
+    > = new (
     vertex_count: number,
     face_vertices: IFaceVertices,
     is_shared?: number | boolean,
     face_count?: number
 ) => VertexNormalsClass;
-export type VertexColors = IVertexAttribute<Color3D | Color4D, ATTRIBUTE.color>;
-export type VertexColorsConstructor<VertexColorsClass extends VertexColors> = new (
+export type VertexColors<Color extends Color3D | Color4D> = IVertexAttribute<Color, ATTRIBUTE.color>;
+export type VertexColorsConstructor<
+    Color extends Color3D | Color4D,
+    VertexColorsClass extends VertexColors<Color>
+    > = new (
     vertex_count: number,
     face_vertices: IFaceVertices,
     is_shared?: number | boolean,
     face_count?: number
 ) => VertexColorsClass;
-export type VertexUVs = IVertexAttribute<UV2D | UV3D, ATTRIBUTE.uv>;
-export type VertexUVsConstructor<VertexUVsClass extends VertexUVs> = new (
+export type VertexUVs<UV extends UV2D | UV3D> = IVertexAttribute<UV, ATTRIBUTE.uv>;
+export type VertexUVsConstructor<
+    UV extends UV2D | UV3D,
+    VertexUVsClass extends VertexUVs<UV>
+    > = new (
     vertex_count: number,
     face_vertices: IFaceVertices,
     is_shared?: number | boolean,
@@ -109,7 +118,7 @@ export interface IFaceAttribute<
     readonly face_vertices: IFaceVertices;
     readonly face_count: number;
 
-    autoInit(arrays?: Float32Array[]): this;
+    autoInit(face_vertices: IFaceVertices): this;
 
     pull(inputs: IVertexAttribute<PullVectorType, PullAttribute>): this;
 }
@@ -125,19 +134,29 @@ export interface IMulFaceAttribute<
     imul(matrix: Matrix, include?: Uint8Array[]): this;
 }
 
-export type FacePositions = IMulFaceAttribute<Position2D | Position3D | Position4D, ATTRIBUTE.position>;
-export type FacePositionsConstructor<FacePositionsClass extends FacePositions> = new (
+export type FacePositions<Position extends Position2D | Position3D | Position4D> = IMulFaceAttribute<Position, ATTRIBUTE.position>;
+export type FacePositionsConstructor<
+    Position extends Position2D | Position3D | Position4D,
+    FacePositionsClass extends FacePositions<Position>
+    > = new (
     face_vertices: IFaceVertices,
     face_count?: number
 ) => FacePositionsClass;
 
-export type FaceNormals = IMulFaceAttribute<Direction3D | Direction4D, ATTRIBUTE.normal, Position3D | Position4D, ATTRIBUTE.position>;
-export type FaceNormalsConstructor<FaceNormalsClass extends FaceNormals> = new (
+export type FaceNormals<
+    Direction extends Direction3D | Direction4D,
+    Position extends Position3D | Position4D
+    > = IMulFaceAttribute<Direction, ATTRIBUTE.normal, Position, ATTRIBUTE.position>;
+export type FaceNormalsConstructor<
+    Direction extends Direction3D | Direction4D,
+    Position extends Position3D | Position4D,
+    FaceNormalsClass extends FaceNormals<Direction, Position>
+    > = new (
     face_vertices: IFaceVertices,
     face_count?: number
 ) => FaceNormalsClass;
-export type FaceColors = IFaceAttribute<Color3D | Color4D, ATTRIBUTE.color>;
-export type FaceColorsConstructor<FaceColorsClass extends FaceColors> = new (
+export type FaceColors<Color extends Color3D | Color4D> = IFaceAttribute<Color, ATTRIBUTE.color>;
+export type FaceColorsConstructor<Color extends Color3D | Color4D, FaceColorsClass extends FaceColors<Color>> = new (
     face_vertices: IFaceVertices,
     face_count?: number
 ) => FaceColorsClass;

@@ -58,7 +58,7 @@ export class MeshOptions implements IMeshOptions {
             }
         }
 
-        if (!(inputs.included & ATTRIBUTE.normal)) {
+        if (!(inputs.included & ATTRIBUTE.color)) {
             switch (this.color) {
                 case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
                 case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:

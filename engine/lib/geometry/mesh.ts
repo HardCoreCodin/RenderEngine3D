@@ -4,19 +4,17 @@ import Vertices from "./vertices.js";
 import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
-import {COLOR_SOURCING, NORMAL_SOURCING} from "../../constants.js";
-import {FacePositions3D, VertexPositions3D} from "../buffers/attributes/positions.js";
-import {FaceNormals3D, VertexNormals3D} from "../buffers/attributes/normals.js";
-import {FaceColors3D, VertexColors3D} from "../buffers/attributes/colors.js";
-import {VertexUVs2D} from "../buffers/attributes/uvs.js";
+import {ATTRIBUTE, COLOR_SOURCING, DIM, NORMAL_SOURCING} from "../../constants.js";
 import {IMesh} from "../_interfaces/geometry.js";
 import {IMeshCallback} from "../_interfaces/render.js";
 import {IFaceVertices, IVertexFaces} from "../_interfaces/buffers.js";
 
 
-export default class Mesh implements IMesh {
-    readonly faces = new Faces(FacePositions3D, FaceNormals3D, FaceColors3D);
-    readonly vertices = new Vertices(VertexPositions3D, VertexNormals3D, VertexColors3D, VertexUVs2D);
+export default class Mesh
+    implements IMesh
+{
+    readonly faces = new Faces();
+    readonly vertices = new Vertices();
     readonly bbox = new Bounds3D();
     readonly on_mesh_loaded = new Set<IMeshCallback>();
 
@@ -42,8 +40,23 @@ export default class Mesh implements IMesh {
 
     load(): this {
         this.options.sanitize(this.inputs);
-        this.faces.init(this.face_vertices, this.options.face_attributes);
-        this.vertices.init(this.face_vertices, this.options.vertex_attributes, this.options.share, this.vertex_count);
+
+        const face_attrs = this.options.face_attributes;
+        const vertex_attrs = this.options.vertex_attributes;
+
+        const pd = this.inputs.position.dim;
+        const nd = this.inputs.normal ? this.inputs.normal.dim : 0;
+        const cd = this.inputs.color ? this.inputs.color.dim : 0;
+        const ud = this.inputs.uv ? this.inputs.uv.dim : 0;
+
+        const fnd = nd || face_attrs & ATTRIBUTE.normal ? pd : undefined;
+        const fcd = cd || face_attrs & ATTRIBUTE.color ? DIM._3D : undefined;
+
+        const vnd = nd || vertex_attrs & ATTRIBUTE.normal ? pd : undefined;
+        const vcd = cd || vertex_attrs & ATTRIBUTE.color ? DIM._3D : undefined;
+
+        this.faces.init(this.face_vertices, face_attrs, pd, fnd, fcd);
+        this.vertices.init(this.face_vertices, vertex_attrs, this.options.share, this.vertex_count, pd, vnd, vcd, ud);
 
         this.vertices.positions.load(this.inputs.position);
         this.bbox.load(this.vertices.positions);
@@ -55,18 +68,18 @@ export default class Mesh implements IMesh {
             case NORMAL_SOURCING.NO_VERTEX__NO_FACE:
                 break;
             case NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE:
-                this.faces.normals.pull(this.vertices.positions);
+                this.faces.pullNormalsFrom(this.vertices.positions);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__NO_FACE:
                 this.vertices.normals.load(this.inputs.normal);
                 break;
             case NORMAL_SOURCING.LOAD_VERTEX__GENERATE_FACE:
                 this.vertices.normals.load(this.inputs.normal);
-                this.faces.normals.pull(this.vertices.positions);
+                this.faces.pullNormalsFrom(this.vertices.positions);
                 break;
             case NORMAL_SOURCING.GATHER_VERTEX__GENERATE_FACE:
-                this.faces.normals.pull(this.vertices.positions);
-                this.vertices.normals.pull(this.faces.normals, this.vertex_faces);
+                this.faces.pullNormalsFrom(this.vertices.positions);
+                this.vertices.pullNormalsFrom(this.faces.normals, this.vertex_faces);
                 break;
         }
 
@@ -85,11 +98,11 @@ export default class Mesh implements IMesh {
                 break;
             case COLOR_SOURCING.GATHER_VERTEX__GENERATE_FACE:
                 this.faces.colors.generate();
-                this.vertices.colors.pull(this.faces.colors, this.vertex_faces);
+                this.vertices.pullColorsFrom(this.faces.colors, this.vertex_faces);
                 break;
             case COLOR_SOURCING.GENERATE_VERTEX__GATHER_FACE:
                 this.vertices.colors.generate();
-                this.faces.colors.pull(this.vertices.colors);
+                this.faces.pullColorsFrom(this.vertices.colors);
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__NO_FACE:
                 this.vertices.colors.load(this.inputs.color);
@@ -100,7 +113,7 @@ export default class Mesh implements IMesh {
                 break;
             case COLOR_SOURCING.LOAD_VERTEX__GATHER_FACE:
                 this.vertices.colors.load(this.inputs.color);
-                this.faces.colors.pull(this.vertices.colors);
+                this.faces.pullColorsFrom(this.vertices.colors);
         }
 
         if (this.on_mesh_loaded.size)

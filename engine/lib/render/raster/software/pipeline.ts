@@ -29,7 +29,7 @@ export default class Rasterizer
     protected vertex_flags: Uint8Array;
     protected face_flags: Uint8Array;
 
-    protected readonly clip_space_vertex_positions = new VertexPositions4D(8, cube_face_vertices);
+    protected readonly clip_space_vertex_positions = new VertexPositions4D().autoInit(8, cube_face_vertices);
 
 
     protected _updateClippingBuffers(): void {

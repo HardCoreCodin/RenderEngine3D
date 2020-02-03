@@ -14,33 +14,25 @@ import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js"
 
 export class VertexNormals3D extends Directions3D implements IVertexAttribute<Direction3D, ATTRIBUTE.normal> {
     readonly attribute: ATTRIBUTE.normal;
-
-    protected _is_shared: boolean;
     current_triangle: Triangle<Direction3D>;
 
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
         return this;
     }
 
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
     get is_shared(): boolean {return this._is_shared}
+
     get triangles(): Generator<Triangle<Direction3D>> {
         return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
-    }
-
-    protected _post_init(): void {
-        super._post_init();
-        this.current_triangle = new Triangle(Direction3D, this.arrays);
     }
 
     load(inputs: InputNormals): this {
@@ -51,36 +43,33 @@ export class VertexNormals3D extends Directions3D implements IVertexAttribute<Di
     pull(input: FaceNormals3D, vertex_faces: IVertexFaces): void {
         pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
     }
-}
-export class VertexNormals4D extends Directions4D implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
-    readonly attribute: ATTRIBUTE.normal;
-
-    protected _is_shared: boolean;
-    current_triangle: Triangle<Direction4D>;
-
-    constructor(
-        readonly vertex_count: number,
-        readonly face_vertices: IFaceVertices,
-        is_shared: number | boolean = true,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-        this._is_shared = !!is_shared;
-    }
-
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this._is_shared ? this.vertex_count : this.face_count * 3, arrays);
-        return this;
-    }
-
-    get is_shared(): boolean {return this._is_shared}
-    get triangles(): Generator<Triangle<Direction4D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
-    }
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Direction4D, this.arrays);
+        this.current_triangle = new Triangle(Direction3D, this.arrays);
+    }
+}
+export class VertexNormals4D extends Directions4D implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
+    readonly attribute: ATTRIBUTE.normal;
+    current_triangle: Triangle<Direction4D>;
+
+    protected _is_shared: boolean;
+    protected _face_vertices: IFaceVertices;
+
+    autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
+        this._is_shared = !!is_shared;
+        this._face_vertices = face_vertices;
+        this.init(is_shared ? vertex_count : this.face_count * 3);
+        return this;
+    }
+
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this._face_vertices.length}
+    get vertex_count(): number {return this.length}
+    get is_shared(): boolean {return this._is_shared}
+
+    get triangles(): Generator<Triangle<Direction4D>> {
+        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
     }
 
     load(inputs: InputNormals): this {
@@ -91,6 +80,11 @@ export class VertexNormals4D extends Directions4D implements IVertexAttribute<Di
     pull(input: FaceNormals4D, vertex_faces: IVertexFaces): void {
         pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
     }
+
+    protected _post_init(): void {
+        super._post_init();
+        this.current_triangle = new Triangle(Direction4D, this.arrays);
+    }
 }
 
 export class FaceNormals3D extends Directions3D
@@ -98,15 +92,14 @@ export class FaceNormals3D extends Directions3D
 {
     readonly attribute: ATTRIBUTE.normal;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length,
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count, arrays);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 
@@ -130,15 +123,14 @@ export class FaceNormals4D extends Directions4D
 {
     readonly attribute: ATTRIBUTE.normal;
 
-    constructor(
-        readonly face_vertices: IFaceVertices,
-        readonly face_count: number = face_vertices.length
-    ) {
-        super();
-    }
+    protected _face_vertices: IFaceVertices;
 
-    autoInit(arrays?: Float32Array[]): this {
-        this.init(this.face_count);
+    get face_vertices(): IFaceVertices {return this._face_vertices}
+    get face_count(): number {return this.length}
+
+    autoInit(face_vertices: IFaceVertices): this {
+        this._face_vertices = face_vertices;
+        this.init(face_vertices.length);
         return this;
     }
 
