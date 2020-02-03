@@ -43,6 +43,7 @@ export function* zip(a, b, c) {
         i++;
     }
 }
+export const hash = s => s.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0);
 export const drawPixel = IS_BIG_ENDIAN ? (pixels, index, r, g, b, a) => {
     pixels[index] = (
     // red

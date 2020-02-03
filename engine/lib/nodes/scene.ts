@@ -19,20 +19,14 @@ export default class Scene<
 
     constructor(
         public context: Context,
-        protected readonly Material: IMaterialConstructor<Context, MaterialType>
+        DefaultMaterialClass: IMaterialConstructor<Context, MaterialType>
     ) {
         super();
         this.mesh_geometries = new MeshGeometries(this);
-        this.default_material = this.addMaterial() as MaterialType;
+        this.default_material = new DefaultMaterialClass(this);
     }
 
     addCamera(): Camera {
         return new Camera(this)
-    }
-
-    addMaterial(
-        MaterialClass: IMaterialConstructor<Context, IMaterial<Context>> = this.Material
-    ): IMaterial<Context> {
-        return new MaterialClass(this);
     }
 }

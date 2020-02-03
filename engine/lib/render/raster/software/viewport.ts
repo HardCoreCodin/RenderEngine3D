@@ -1,14 +1,14 @@
 import Matrix3x3, {mat3} from "../../../accessors/matrix3x3.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import {Positions3D, Positions4D} from "../../../buffers/vectors.js";
-import {Grid} from "../../_base/viewport.js";
+import {Border, Grid} from "../../_base/viewport.js";
 import RasterViewport from "../_base/viewport.js";
 import RenderTarget from "../../_base/render_target.js";
 import {perspectiveDivideAllVertexPositions} from "./_core/half_space.js";
 import {zip} from "../../../../utils.js";
 
 
-export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid>
+export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid, SWBorder>
 {
     ndc_to_screen: Matrix3x3;
     render_target: RenderTarget;
@@ -43,8 +43,8 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
         return new SWGrid(this.render_target);
     }
 
-    _drawOverlay(): void {
-        if (this.grid.display) this.grid.draw();
+    protected _getBorder(): SWBorder {
+        return new SWBorder();
     }
 
     protected _init(): void {
@@ -54,7 +54,13 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
     }
 }
 
-class SWGrid extends Grid {
+export class SWBorder extends Border {
+    draw(): void {
+
+    }
+}
+
+export class SWGrid extends Grid {
     protected _nds_to_screen: Matrix4x4;
     public world_start_positions: Positions3D;
     public world_end_positions: Positions3D;
@@ -78,7 +84,7 @@ class SWGrid extends Grid {
     protected _reset(): void {
         super._reset();
 
-        line_count = this._vertex_count >>> 1;
+        line_count = this.vertex_count >>> 1;
         if (this.world_start_positions) {
             if (this.world_start_positions.length !== line_count) {
                 this.world_start_positions.init(line_count);
@@ -104,7 +110,7 @@ class SWGrid extends Grid {
         ey = arrays[1];
         ez = arrays[2];
 
-        array = this._vertex_positions;
+        array = this.vertex_positions;
         component_index = 0;
         for (line_index = 0; line_index < line_count; line_index++) {
             sx[line_index] = array[component_index++];

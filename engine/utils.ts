@@ -70,6 +70,8 @@ export function* zip<A, B, C>(
     }
 }
 
+export const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0)
+
 export const drawPixel = IS_BIG_ENDIAN ? (
     pixels: Uint32Array,
     index: number,

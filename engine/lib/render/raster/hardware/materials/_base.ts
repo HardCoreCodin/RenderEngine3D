@@ -1,26 +1,24 @@
+import Scene from "../../../../nodes/scene.js";
 import GLProgram from "../_core/program.js";
 import GLMeshBuffers from "../_core/mesh_buffers.js";
 import GLRenderPipeline from "../pipeline.js";
 import BaseMaterial from "../../../_base/material.js";
 import {IMesh} from "../../../../_interfaces/geometry.js";
 import {IMatrix4x4} from "../../../../_interfaces/matrix.js";
-import Scene from "../../../../nodes/scene.js";
 
 
 export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLRenderPipeline>
 {
-    readonly program: GLProgram;
-
     protected _model_to_clip = new Float32Array(16);
     protected _mesh_buffers: GLMeshBuffers;
 
-    constructor(scene: Scene<WebGL2RenderingContext>) {
+    constructor(
+        scene: Scene<WebGL2RenderingContext>,
+        vertex_shader_source: string = VERTEX_SHADER_SOURCE,
+        fragment_shader_source: string = FRAGMENT_SHADER_SOURCE,
+        readonly program: GLProgram = GLProgram.Compile(scene.context, vertex_shader_source, fragment_shader_source)
+    ) {
         super(scene);
-        this.program = new GLProgram(
-            scene.context,
-            this._getVertexShaderCode(),
-            this._getFragmentShaderShaderCode()
-        );
     }
 
     prepareMeshForDrawing(mesh: IMesh, render_pipeline: GLRenderPipeline): void {
@@ -40,23 +38,28 @@ export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLR
 
         this._mesh_buffers.index_buffer.draw();
     }
-
-    protected _getVertexShaderCode(): string {
-        return BASE_VERTEX_SHADER_CODE;
-    };
-
-    protected _getFragmentShaderShaderCode(): string {
-        return BASE_FRAGMENT_SHADER_CODE;
-    };
 }
 
-let BASE_VERTEX_SHADER_CODE: string;
-let BASE_FRAGMENT_SHADER_CODE: string;
 
-for (const script of document.scripts)
-    if (script.type.startsWith('x-shader')) {
-        if (script.type.endsWith('vertex'))
-            BASE_VERTEX_SHADER_CODE = script.text;
-        if (script.type.endsWith('fragment'))
-            BASE_FRAGMENT_SHADER_CODE = script.text;
-    }
+const VERTEX_SHADER_SOURCE = `#version 300 es
+
+in vec3 position;
+in vec2 uv;
+out vec2 f_uv;
+uniform mat4 model_to_clip;
+
+void main() {
+    f_uv = uv;
+    gl_Position = model_to_clip * vec4(position, 1.0);
+}
+`;
+
+const FRAGMENT_SHADER_SOURCE = `#version 300 es
+precision mediump float;
+
+out vec4 color;
+
+void main() {
+    color = vec4(1.0, 1.0, 1.0, 1.0);
+}
+`;

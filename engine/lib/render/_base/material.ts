@@ -7,7 +7,8 @@ import {IMaterial, IRenderPipeline} from "../../_interfaces/render.js";
 
 export default class BaseMaterial<Context extends RenderingContext,
     RenderPipelineType extends IRenderPipeline<Context>>
-    implements IMaterial<Context> {
+    implements IMaterial<Context>
+{
     static LAST_ID = 0;
 
     prepareMeshForDrawing(mesh: Mesh, render_pipeline: RenderPipelineType): void {

@@ -6,7 +6,8 @@ import {IController} from "../../_interfaces/input.js";
 
 export default abstract class BaseViewport<
     Context extends RenderingContext,
-    GridType extends Grid = Grid>
+    GridType extends Grid,
+    BorderType extends Border>
     extends Rectangle
     implements IViewport<Context, GridType>
 {
@@ -15,12 +16,12 @@ export default abstract class BaseViewport<
     readonly context: Context;
 
     grid: GridType;
-    protected _getGrid(): GridType {return new Grid() as GridType}
+    border: BorderType;
+
+    protected abstract _getGrid(): GridType;
+    protected abstract _getBorder(): BorderType;
 
     abstract update(): void;
-
-    protected readonly _border_color = rgba();
-    protected _drawOverlay(): void {};
 
     constructor(
         protected _controller: IController,
@@ -35,15 +36,16 @@ export default abstract class BaseViewport<
 
     protected _initOverlay(): void {
         this.grid = this._getGrid();
+        this.border = this._getBorder();
     };
 
     protected _init(): void {
         this.reset(this._display.width, this._display.height, this._display.x, this._display.y);
     }
 
-    display_border: boolean = true;
-    setBorderColor(color: Color4D): void {
-        this._border_color.setFrom(color);
+    protected _drawOverlay(): void {
+        if (this.grid.display) this.grid.draw();
+        if (this.border.display) this.border.draw();
     }
 
     setFrom(other: this): void {
@@ -79,28 +81,46 @@ export default abstract class BaseViewport<
     }
 }
 
-export class Grid {
+export abstract class Overlay {
     display = true;
 
-    protected _size: number = 20;
-    protected _color = rgba(1);
-    protected _vertex_count: number;
-    protected _vertex_positions: Float32Array;
-    protected readonly _color_array = Float32Array.of(1, 1, 1, 1);
+    vertex_count: number;
+    vertex_positions: Float32Array;
 
-    constructor(){this._reset()}
+    readonly color_array = Float32Array.of(1, 1, 1, 1);
+    protected _color = rgba(1);
 
     setFrom(other: this): void {
-        this.size = other.size;
         this.color = other.color;
         this.display = other.display;
     }
 
     get color(): Color4D {return this._color}
-    set color(color: Color4D) {this._color.setFrom(color).toArray(this._color_array)}
+    set color(color: Color4D) {this._color.setFrom(color).toArray(this.color_array)}
 
-    get vertex_count(): number {return this._vertex_count}
-    get vertex_positions(): Float32Array {return this._vertex_positions}
+    abstract draw(): void;
+}
+
+export abstract class Border extends Overlay {
+    constructor() {
+        super();
+        this.vertex_count = 4;
+        this.vertex_positions = Float32Array.of(-1,-1,  1,-1,  1,1,  -1,1)
+    }
+}
+
+export abstract class Grid extends Overlay {
+    protected constructor(
+        protected _size: number = 20
+    ) {
+        super();
+        this._reset();
+    }
+
+    setFrom(other: this): void {
+        super.setFrom(other);
+        this.size = other.size;
+    }
 
     get size(): number {return this._size}
     set size(size: number) {
@@ -111,8 +131,8 @@ export class Grid {
     protected _reset(): void {
         right_and_front = this._size >>> 1;
         left_and_back = -right_and_front;
-        this._vertex_count = 2 * (this._size + 1) * 2;
-        grid = this._vertex_positions = new Float32Array(this._vertex_count * 3);
+        this.vertex_count = 2 * (this._size + 1) * 2;
+        grid = this.vertex_positions = new Float32Array(this.vertex_count * 3);
         v = 2 * (this._size + 1) * 3;
         offset = 0;
         for (i = left_and_back; i <= right_and_front; i++) {

@@ -2,10 +2,11 @@ import BaseViewport from "../_base/viewport.js";
 import RenderTarget from "../_base/render_target.js";
 import {generateRayDirections} from "./_core/ray_generation.js";
 import {Directions3D, Positions3D} from "../../buffers/vectors.js";
+import {SWBorder, SWGrid} from "../raster/software/viewport.js";
 
 
 export default class RayTraceViewport
-    extends BaseViewport<CanvasRenderingContext2D>
+    extends BaseViewport<CanvasRenderingContext2D, SWGrid, SWBorder>
 {
     render_target: RenderTarget;
     ray_positions: Positions3D;
@@ -74,6 +75,14 @@ export default class RayTraceViewport
         this.ray_directions_transformed = new Directions3D();
         this.render_target = new RenderTarget(this);
         super._init();
+    }
+
+    protected _getGrid(): SWGrid {
+        return new SWGrid(this.render_target);
+    }
+
+    protected _getBorder(): SWBorder {
+        return new SWBorder();
     }
 }
 

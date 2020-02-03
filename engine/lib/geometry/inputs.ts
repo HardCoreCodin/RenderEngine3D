@@ -57,13 +57,13 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
         return this;
     }
 
-    pushVertex(vertex: VertexInputNum | VertexInputStr) {
+    addVertex(...vertex: VertexInputNum | VertexInputStr) {
         this._initVertices(vertex);
         for (const [component_num, component_value] of vertex.entries())
             this.vertices[component_num].push(this._getVertexComponent(component_value));
     }
 
-    pushFace(face: FaceInputNum | FaceInputStr) {
+    addFace(...face: FaceInputNum | FaceInputStr) {
         this._initFaces(face);
         for (const [vertex_num, vertex_index] of face.entries())
             this.faces_vertices[vertex_num].push(this._getVertexIndex(vertex_index));

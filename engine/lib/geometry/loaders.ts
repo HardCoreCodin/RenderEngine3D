@@ -34,16 +34,19 @@ const setPositionAndColor = (inputs: MeshInputs, line_parts: string[]) : void =>
         r, g, b,
     ] = line_parts;
 
-    inputs.position.pushVertex([x, y, z]);
+    inputs.position.addVertex(x, y, z);
     if (r !== undefined)
-        inputs.color.pushVertex([r, g, b]);
+        inputs.color.addVertex(r, g, b);
 };
 
 const setAttribute = <Attribute extends ATTRIBUTE>(attribute: InputAttribute<Attribute>, line_parts: string[]) : void => {
     line_parts.shift();
     const [x, y, z] = line_parts;
 
-    attribute.pushVertex(z !== undefined ? [x, y, z] : [x, y]);
+    if (z === undefined)
+        attribute.addVertex(x, y);
+    else
+        attribute.addVertex(x, y, z);
 };
 
 const setFace = (inputs: MeshInputs, line_parts: string[]) : void => {
@@ -54,11 +57,18 @@ const setFace = (inputs: MeshInputs, line_parts: string[]) : void => {
         p3, uv3, n3,
         p4, uv4, n4
     ] = line_parts;
-    const is_quad = p4 !== undefined;
 
-    inputs.position.pushFace(is_quad ? [p1, p2, p3, p4] : [p1, p2, p3]);
-    if (n1 !== '') inputs.normal.pushFace(is_quad ? [n1, n2, n3, n4] : [n1, n2, n3]);
-    if (uv1 !== '') inputs.uv.pushFace(is_quad ? [uv1, uv2, uv3, uv4] : [uv1, uv2, uv3]);
+    if (p4 === undefined) {
+        // Triangle:
+        inputs.position.addFace(p1, p2, p3);
+        if (n1) inputs.normal.addFace(n1, n2, n3);
+        if (uv1) inputs.uv.addFace(uv1, uv2, uv3);
+    } else {
+        // Quad:
+        inputs.position.addFace(p1, p2, p3, p4);
+        if (n1) inputs.normal.addFace(n1, n2, n3, n4);
+        if (uv1) inputs.uv.addFace(uv1, uv2, uv3, uv4);
+    }
 };
 
 const has_uvs = /^vt\s+-*\d+\.\d+\s+-*\d+\.\d+/m;

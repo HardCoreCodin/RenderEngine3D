@@ -7,31 +7,31 @@ export const inputs = new MeshInputs(1 /* position */ | 8 /* uv */);
 // X coordinates (0 = left, 1 = right)
 // Y coordinates (0 = bottom, 1 = top)
 // Z coordinates (0 = front, 1 = back)
-inputs.position.pushVertex([0, 0, 0]);
-inputs.position.pushVertex([1, 0, 0]);
-inputs.position.pushVertex([1, 1, 0]);
-inputs.position.pushVertex([0, 1, 0]);
-inputs.position.pushVertex([0, 0, 1]);
-inputs.position.pushVertex([1, 0, 1]);
-inputs.position.pushVertex([1, 1, 1]);
-inputs.position.pushVertex([0, 1, 1]);
-inputs.position.pushFace([0, 1, 2, 3]);
-inputs.position.pushFace([1, 5, 6, 2]);
-inputs.position.pushFace([5, 4, 7, 6]);
-inputs.position.pushFace([4, 0, 3, 7]);
-inputs.position.pushFace([3, 2, 6, 7]);
-inputs.position.pushFace([1, 0, 4, 5]);
+inputs.position.addVertex(0, 0, 0);
+inputs.position.addVertex(1, 0, 0);
+inputs.position.addVertex(1, 1, 0);
+inputs.position.addVertex(0, 1, 0);
+inputs.position.addVertex(0, 0, 1);
+inputs.position.addVertex(1, 0, 1);
+inputs.position.addVertex(1, 1, 1);
+inputs.position.addVertex(0, 1, 1);
+inputs.position.addFace(0, 1, 2, 3);
+inputs.position.addFace(1, 5, 6, 2);
+inputs.position.addFace(5, 4, 7, 6);
+inputs.position.addFace(4, 0, 3, 7);
+inputs.position.addFace(3, 2, 6, 7);
+inputs.position.addFace(1, 0, 4, 5);
 // UVs:
-inputs.uv.pushVertex([0, 0]);
-inputs.uv.pushVertex([0, 1]);
-inputs.uv.pushVertex([1, 1]);
-inputs.uv.pushVertex([1, 0]);
-inputs.uv.pushFace([0, 1, 2, 3]);
-inputs.uv.pushFace([0, 1, 2, 3]);
-inputs.uv.pushFace([0, 1, 2, 3]);
-inputs.uv.pushFace([0, 1, 2, 3]);
-inputs.uv.pushFace([0, 1, 2, 3]);
-inputs.uv.pushFace([0, 1, 2, 3]);
+inputs.uv.addVertex(0, 0);
+inputs.uv.addVertex(0, 1);
+inputs.uv.addVertex(1, 1);
+inputs.uv.addVertex(1, 0);
+inputs.uv.addFace(0, 1, 2, 3);
+inputs.uv.addFace(0, 1, 2, 3);
+inputs.uv.addFace(0, 1, 2, 3);
+inputs.uv.addFace(0, 1, 2, 3);
+inputs.uv.addFace(0, 1, 2, 3);
+inputs.uv.addFace(0, 1, 2, 3);
 inputs.sanitize();
 // Cube inputs:
 // =====================

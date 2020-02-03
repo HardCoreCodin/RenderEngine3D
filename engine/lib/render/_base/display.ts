@@ -35,7 +35,7 @@ export default class Display<Context extends RenderingContext>
         this._canvas = context.canvas as HTMLCanvasElement;
         this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
         this.active_viewport = this.addViewport();
-        this._active_viewport.display_border = false;
+        this._active_viewport.border.display = false;
     }
 
     get active_viewport_border_color(): Color4D {return this._active_viewport_border_color}
@@ -43,14 +43,14 @@ export default class Display<Context extends RenderingContext>
 
     set active_viewport_border_color(color: Color4D) {
         this._active_viewport_border_color.setFrom(color);
-        this._active_viewport.setBorderColor(color);
+        this._active_viewport.border.color = color;
     }
 
     set inactive_viewport_border_color(color: Color4D) {
         this._inactive_viewport_border_color.setFrom(color);
         for (const viewport of this._viewports)
             if (!Object.is(viewport, this._active_viewport))
-                viewport.setBorderColor(color);
+                viewport.border.color = color;
     }
 
     refresh() {
@@ -136,7 +136,7 @@ export default class Display<Context extends RenderingContext>
             const new_width = Math.round(old_width / 2);
             const left_over = old_width - new_width;
             this._active_viewport.width = new_width;
-            this._active_viewport.display_border = true;
+            this._active_viewport.border.display = true;
             this._active_viewport.update();
             viewport.setFrom(this._active_viewport);
             viewport.reset(left_over, viewport.height, this.active_viewport.x + new_width, viewport.y);
@@ -160,7 +160,7 @@ export default class Display<Context extends RenderingContext>
         this._viewports.delete(viewport);
         this.active_viewport = [...this._viewports][0];
         if (this._viewports.size === 1)
-            this._active_viewport.display_border = false;
+            this._active_viewport.border.display = false;
     }
 
     get active_viewport(): IViewport<Context> {
@@ -173,12 +173,12 @@ export default class Display<Context extends RenderingContext>
 
         this._active_viewport.is_active = false;
         viewport.is_active = true;
-        viewport.setBorderColor(this._active_viewport_border_color);
+        viewport.border.color = this._active_viewport_border_color;
         this._active_viewport = viewport;
 
         for (const other_viewport of this._viewports)
             if (!Object.is(viewport, other_viewport))
-                other_viewport.setBorderColor(this._inactive_viewport_border_color);
+                other_viewport.border.color = this._inactive_viewport_border_color;
     }
 
     setViewportAt(x: number, y: number): void {
@@ -189,6 +189,6 @@ export default class Display<Context extends RenderingContext>
             if (!Object.is(viewport, this._active_viewport) && viewport.is_inside(x, y))
                 this.active_viewport = viewport;
             else
-                viewport.setBorderColor(this._inactive_viewport_border_color);
+                viewport.border.color = this._inactive_viewport_border_color;
     }
 }

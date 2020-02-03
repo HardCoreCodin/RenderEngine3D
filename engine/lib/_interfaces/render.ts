@@ -1,4 +1,4 @@
-import {Grid} from "../render/_base/viewport.js";
+import {Border, Grid} from "../render/_base/viewport.js";
 import {ProjectionMatrix, ViewFrustum} from "../render/raster/_base/viewport.js";
 import {IScene} from "./nodes.js";
 import {I2D, IColor4D} from "./vectors.js";
@@ -89,18 +89,16 @@ export interface IRasterRenderPipeline<
 
 export interface IViewport<
     Context extends RenderingContext = RenderingContext,
-    GridType extends Grid = Grid>
+    GridType extends Grid = Grid,
+    BorderType extends Border = Border>
     extends IRectangle
 {
     readonly grid: GridType;
+    readonly border: BorderType;
     readonly context: Context;
 
-    display_border: boolean;
-    setBorderColor(color: IColor4D): void;
-
-    render_pipeline: IRenderPipeline<Context>;
-
     controller: IController;
+    render_pipeline: IRenderPipeline<Context>;
 
     is_active: boolean;
     is_inside(x: number, y: number): boolean;
@@ -121,8 +119,9 @@ export type IViewportConstructor<Context extends RenderingContext> = new (
 
 export interface IRasterViewport<
     Context extends RenderingContext,
-    GridType extends Grid = Grid>
-    extends IViewport<Context, GridType>
+    GridType extends Grid = Grid,
+    BorderType extends Border = Border>
+    extends IViewport<Context, GridType, BorderType>
 {
     readonly view_frustum: ViewFrustum<Context>;
     readonly projection_matrix: ProjectionMatrix<Context>;

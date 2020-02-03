@@ -1,57 +1,29 @@
-import {IGLAttributeLocations, IGLUniforms} from "./types.js";
+import GLShader from "./shader.js";
 import GLUniform from "./uniform.js";
+import {IGLAttributeLocations, IGLUniforms} from "./types.js";
 
-let gl: WebGL2RenderingContext;
 
 export default class GLProgram {
     readonly uniforms: IGLUniforms = {};
-    protected readonly _id: WebGLProgram;
     protected readonly _locations: IGLAttributeLocations = {};
 
     constructor(
-        readonly _contex: WebGL2RenderingContext,
-        vertex_shader_code?: string,
-        fragment_shader_code?: string
+        readonly gl: WebGL2RenderingContext,
+        vertex_shader_source: string,
+        fragment_shader_source: string,
+
+        readonly vertex = GLShader.Compile(gl, gl.VERTEX_SHADER, vertex_shader_source),
+        readonly fragment = GLShader.Compile(gl, gl.FRAGMENT_SHADER, fragment_shader_source),
+
+        protected readonly program: WebGLProgram = gl.createProgram()
     ) {
-        this._id = _contex.createProgram();
 
-        if (vertex_shader_code && fragment_shader_code)
-            this.init(vertex_shader_code, fragment_shader_code);
-    }
-
-    init(vertex_shader_code: string, fragment_shader_code: string) {
-        gl = this._contex;
-        const program = this._id;
-
-        const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
-        gl.shaderSource(vertex_shader, vertex_shader_code);
-        gl.compileShader(vertex_shader);
-        if (!gl.getShaderParameter(vertex_shader, gl.COMPILE_STATUS)) {
-            const vertex_shader_error = gl.getShaderInfoLog(vertex_shader);
-            console.error('ERROR compiling vertex shader!', vertex_shader_error);
-            gl.deleteShader(vertex_shader);
-            throw vertex_shader_error;
-        }
-
-        const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(fragment_shader, fragment_shader_code);
-        gl.compileShader(fragment_shader);
-        if (!gl.getShaderParameter(fragment_shader, gl.COMPILE_STATUS)) {
-            const fragment_shader_error = gl.getShaderInfoLog(fragment_shader);
-            console.error('ERROR compiling fragment shader!', fragment_shader_error);
-            gl.deleteShader(vertex_shader);
-            gl.deleteShader(fragment_shader);
-            throw fragment_shader_error;
-        }
-
-        gl.attachShader(program, vertex_shader);
-        gl.attachShader(program, fragment_shader);
+        gl.attachShader(program, vertex.shader);
+        gl.attachShader(program, fragment.shader);
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
             const link_error = gl.getProgramInfoLog(program);
             console.error('ERROR linking program!', link_error);
-            gl.deleteShader(vertex_shader);
-            gl.deleteShader(fragment_shader);
             gl.deleteProgram(program);
             throw link_error;
         }
@@ -60,17 +32,11 @@ export default class GLProgram {
         if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
             const validation_error = gl.getProgramInfoLog(program);
             console.error('ERROR validating program!', validation_error);
-            gl.deleteShader(vertex_shader);
-            gl.deleteShader(fragment_shader);
             gl.deleteProgram(program);
             throw validation_error;
         }
 
-        // The shaders are already compiled into the probram at this point:
-        gl.deleteShader(vertex_shader);
-        gl.deleteShader(fragment_shader);
-
-        gl.useProgram(this._id);
+        gl.useProgram(program);
 
         let i, count: number;
         let info: WebGLActiveInfo;
@@ -84,10 +50,10 @@ export default class GLProgram {
                 break;
         }
 
-        for (let i = 0; i < gl.getProgramParameter(this._id, gl.ACTIVE_ATTRIBUTES); ++i) {
-            info = gl.getActiveAttrib(this._id, i);
+        for (let i = 0; i < gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES); ++i) {
+            info = gl.getActiveAttrib(program, i);
             if (info)
-                this._locations[info.name] = gl.getAttribLocation(this._id, info.name);
+                this._locations[info.name] = gl.getAttribLocation(program, info.name);
             else
                 break;
         }
@@ -95,6 +61,27 @@ export default class GLProgram {
 
     get locations(): IGLAttributeLocations {return this._locations}
 
-    use(): void {this._contex.useProgram(this._id)}
-    delete(): void {this._contex.deleteProgram(this._id)}
+    use(): void {this.gl.useProgram(this.program)}
+    delete(): void {this.gl.deleteProgram(this.program)}
+
+    private static __cache = new Map<string, GLProgram>();
+
+    static getCacheKey(
+        vertex_shader_source: string,
+        fragment_shader_source: string
+    ): string {
+        return GLShader.getCacheKey(vertex_shader_source) + GLShader.getCacheKey(fragment_shader_source);
+    }
+
+    static Compile(
+        gl: WebGL2RenderingContext,
+        vertex_shader_source: string,
+        fragment_shader_source: string
+    ): GLProgram {
+        const key = this.getCacheKey(vertex_shader_source, fragment_shader_source);
+        if (!this.__cache.has(key))
+            this.__cache.set(key, new GLProgram(gl, vertex_shader_source, fragment_shader_source));
+
+        return this.__cache.get(key);
+    }
 }

@@ -1,16 +1,17 @@
 import {Lense} from "../../../nodes/camera.js";
-import BaseViewport, {Grid} from "../../_base/viewport.js";
+import BaseViewport, {Border, Grid} from "../../_base/viewport.js";
 import Matrix4x4, {mat4} from "../../../accessors/matrix4x4.js";
-import {IRasterViewport} from "../../../_interfaces/render.js";
 import {DEFAULT_FAR_CLIPPING_PLANE_DISTANCE, DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE} from "../../../../constants.js";
+import {IRasterViewport} from "../../../_interfaces/render.js";
 import {Float16} from "../../../../types.js";
 
 
-export default class RasterViewport<
+export default abstract class RasterViewport<
     Context extends RenderingContext,
-    GridType extends Grid = Grid>
-    extends BaseViewport<Context, GridType>
-    implements IRasterViewport<Context, GridType>
+    GridType extends Grid,
+    BorderType extends Border>
+    extends BaseViewport<Context, GridType, BorderType>
+    implements IRasterViewport<Context, GridType, BorderType>
 {
     protected _perspective_projection_matrix: ProjectionMatrix<Context>;
     protected _orthographic_projection_matrix: ProjectionMatrix<Context>;

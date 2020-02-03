@@ -15,8 +15,8 @@ import {rgb} from "../../../accessors/color.js";
 
 
 export default class Rasterizer
-    extends BaseRenderPipeline<CanvasRenderingContext2D, RasterViewport<CanvasRenderingContext2D>>
-    implements IRasterRenderPipeline<CanvasRenderingContext2D, RasterViewport<CanvasRenderingContext2D>> {
+    extends BaseRenderPipeline<CanvasRenderingContext2D, SoftwareRasterViewport>
+    implements IRasterRenderPipeline<CanvasRenderingContext2D, SoftwareRasterViewport> {
     readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
     cull_back_faces: boolean = false;

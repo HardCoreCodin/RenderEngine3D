@@ -21,8 +21,8 @@ export interface IInputAttribute<Attribute extends ATTRIBUTE> {
     readonly vertex_count: number;
 
     triangulate(): void;
-    pushVertex(vertex: VertexInputNum | VertexInputStr): void;
-    pushFace(face: FaceInputNum | FaceInputStr): void;
+    addVertex(...vertex: VertexInputNum | VertexInputStr): void;
+    addFace(...face: FaceInputNum | FaceInputStr): void;
 }
 
 export interface IInputPositions extends IInputAttribute<ATTRIBUTE.position> {attribute: ATTRIBUTE.position}
