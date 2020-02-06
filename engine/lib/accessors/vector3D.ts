@@ -31,12 +31,7 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
     extends Vector<Other>
     implements IVector3D<Other>
 {
-    constructor(
-        id?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(VECTOR_3D_ALLOCATOR, id, arrays);
-    }
+    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
 
     set x(x: number) {this.arrays[0][this.id] = x}
     set y(y: number) {this.arrays[1][this.id] = y}
@@ -181,10 +176,10 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
                 other_arrays[1],
                 other_arrays[2],
 
-                other_or_num.id,
-                other_arrays[0],
-                other_arrays[1],
-                other_arrays[2],
+                out.id,
+                out_arrays[0],
+                out_arrays[1],
+                out_arrays[2],
             );
         }
 

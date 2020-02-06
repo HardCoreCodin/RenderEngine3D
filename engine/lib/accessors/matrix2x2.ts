@@ -44,8 +44,10 @@ export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
     readonly x_axis: Direction2D;
     readonly y_axis: Direction2D;
 
+    protected _getAllocator() {return MATRIX_2X2_ALLOCATOR}
+
     constructor(id?: number, arrays?: Float4) {
-        super(MATRIX_2X2_ALLOCATOR, id, arrays);
+        super(id, arrays);
 
         this.x_axis = new Direction2D(this.id, [arrays[0], arrays[1]]);
         this.y_axis = new Direction2D(this.id, [arrays[2], arrays[3]]);

@@ -1,4 +1,5 @@
 import Node3D from "./_base.js";
+import Scene from "./scene.js";
 import {
     DEFAULT_FOCAL_LENGTH,
     DEFAULT_ZOOM,
@@ -9,7 +10,6 @@ import {
     MIN_ZOOM,
     RADIANS_TO_DEGREES_FACTOR
 } from "../../constants.js";
-import {IScene} from "../_interfaces/nodes.js";
 
 
 export default class Camera
@@ -18,7 +18,7 @@ export default class Camera
     is_perspective: boolean = true;
     readonly lense: Lense = new Lense();
 
-    constructor(readonly scene: IScene) {
+    constructor(readonly scene: Scene) {
         super(scene);
         scene.cameras.add(this)
     }

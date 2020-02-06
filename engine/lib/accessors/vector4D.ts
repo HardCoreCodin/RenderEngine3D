@@ -31,12 +31,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
     extends Vector<Other>
     implements IVector4D<Other>
 {
-    constructor(
-        id?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(VECTOR_4D_ALLOCATOR, id, arrays);
-    }
+    protected _getAllocator() {return VECTOR_4D_ALLOCATOR}
 
     set x(x: number) {this.arrays[0][this.id] = x}
     set y(y: number) {this.arrays[1][this.id] = y}

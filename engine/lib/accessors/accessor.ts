@@ -7,11 +7,14 @@ export abstract class Accessor implements IAccessor
     id: number;
     readonly arrays: Float32Array[];
 
+    protected abstract _getAllocator(): Allocator<Float32Array>;
+    readonly allocator: Allocator<Float32Array>;
+
     constructor(
-        readonly allocator: Allocator<Float32Array>,
         id?: number,
         arrays?: Float32Array[]
     ) {
+        this.allocator = this._getAllocator();
         if (arrays) {
             this.arrays = arrays;
             this.id = id;

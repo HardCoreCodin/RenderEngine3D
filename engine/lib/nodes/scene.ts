@@ -1,17 +1,17 @@
 import Camera from "./camera.js";
 import {Parent} from "./_base.js";
-import {MeshGeometries} from "./geometry.js";
-import {IScene} from "../_interfaces/nodes.js";
+import {ImplicitGeometries, MeshGeometries} from "./geometry.js";
 import {IMaterial, IMaterialConstructor} from "../_interfaces/render.js";
 
 
 export default class Scene<
-    Context extends RenderingContext,
+    Context extends RenderingContext = RenderingContext,
     MaterialType extends IMaterial<Context> = IMaterial<Context>>
     extends Parent
-    implements IScene<Context, MaterialType>
 {
     readonly mesh_geometries: MeshGeometries;
+    readonly implicit_geometries: ImplicitGeometries;
+
     readonly cameras = new Set<Camera>();
     readonly materials = new Set<IMaterial<Context>>();
 
@@ -22,6 +22,7 @@ export default class Scene<
         DefaultMaterialClass: IMaterialConstructor<Context, MaterialType>
     ) {
         super();
+        this.implicit_geometries = new ImplicitGeometries(this);
         this.mesh_geometries = new MeshGeometries(this);
         this.default_material = new DefaultMaterialClass(this);
     }

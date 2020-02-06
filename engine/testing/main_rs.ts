@@ -1,20 +1,19 @@
 import {rgba} from "../lib/accessors/color.js";
-import RayTraceEngine from "../lib/render/raytrace/engine.js";
+import RasterEngine from "../lib/render/raster/software/engine.js";
 import RayTracer from "../lib/render/raytrace/pipeline.js";
 import RayTraceViewport from "../lib/render/raytrace/viewport.js";
-import Sphere from "../lib/geometry/implicit_surfaces/sphere.js";
 
 globalThis.rgba = rgba;
 globalThis.r = rgba(1, 0 ,0, 1);
 globalThis.g = rgba(0, 1 ,0, 1);
 globalThis.b = rgba(0, 0 ,1, 1);
 
+globalThis.RasterEngine = RasterEngine;
 globalThis.RayTracer = RayTracer;
-globalThis.RayTraceEngine = RayTraceEngine;
 globalThis.RayTraceViewport = RayTraceViewport;
 
 
-const engine = globalThis.engine = new RayTraceEngine();
+const engine = globalThis.engine = new RasterEngine();
 const context = globalThis.context = engine.context;
 const display = globalThis.display = engine.display;
 const vp1 = display.active_viewport;
@@ -28,17 +27,8 @@ camera.transform.translation.y = 10;
 camera.transform.translation.z = 10;
 camera.transform.rotation.x = -1;
 camera.transform.rotation.y = 2.3;
-vp1.render_pipeline.on_mesh_removed_callback
-for (let i=0; i < 3; i++)
-    for (let j=0; j < 3; j++) {
-        let geo = new Sphere(engine.scene);
-        geo.transform.translation.x = i*3;
-        geo.transform.translation.z = j*3;
-        // geo.transform.scale.x = geo.transform.scale.y = geo.transform.scale.z = 0.1;
-        engine.scene.implicit_geometries.add(geo);
-    }
-
 engine.start();
+
 
 
 // ray_tracer = new RayTracer(context, engine.scene);

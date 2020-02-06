@@ -54,8 +54,10 @@ export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
     readonly y_axis: Direction3D;
     readonly z_axis: Direction3D;
 
+    protected _getAllocator() {return MATRIX_4X4_ALLOCATOR}
+
     constructor(id?: number, arrays?: Float16) {
-        super(MATRIX_4X4_ALLOCATOR, id, arrays);
+        super(id, arrays);
 
         this.x_axis = new Direction3D(this.id, [this.arrays[0], this.arrays[1], this.arrays[2]]);
         this.y_axis = new Direction3D(this.id, [this.arrays[4], this.arrays[5], this.arrays[6]]);

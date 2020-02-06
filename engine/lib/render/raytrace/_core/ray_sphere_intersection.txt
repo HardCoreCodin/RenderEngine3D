@@ -1,113 +1,300 @@
+Ray:
+====
+
+Define a 3D ray as:
+1. A 3D position O representing the ray's "origin".
+2. A 3D direction D representing it's "direction".
+
+Every 3D point along the ray can be defined as the ray's origin "displaced" by some amount in the ray's direction:
+
+O + tD
+
+
 Ray/Sphere Intersection:
 ==========================
+Given a sphere as position S and a radius r, a ray could intersect it at 0, 1 or 2 positions.
 
-Define a 3D ray as a 3D ray-origin position P and a 3D ray-direction D:
+Define a vector OS from the ray's origin to the sphere's center:
 
-Eq.1:    P = [Px, Py, Pz]
-Eq.2:    D = [Dx, Dy, Dz]
-
-
-Define a 3D point I of "possible" intersection with the triangle:
-
-Eq.3:    I = [Ix, Iy, Iz]
+OS = S - O
 
 
-This point can be "parameterized", as being the ray-origin
-position, "displaced" by "some" scalar-multiple of the ray-direction:
+There are then 2 commonly known approaches to find the intersection point(s):
 
-Eq.4:    I = P + t*D
+| Approach 1:
+==============
+Define a position C along the ray, which is the closest to the sphere's center.
+
+C = O + ocD
+
+The distance oc is the projection of OS onto the ray direction D:
+
+oc = OS⋅D
+
+If this distance is not positive it means that C is 'behind' the ray's origin.
+In other words, marching along the ray towards it from the ray's origin,
+would be going "backwards" in the opposite direction of the ray direction D.
+Only intersections in-front of the ray are valid so this case needs to be checked for.
 
 
-Given a sphere represented as a center position C and a 'scalar' radius R:
+Define a vector from C to the sphere's center S:
 
-Eq.5:    C = [Px, Py, Pz]
-Eq.6:    R = r (scalar)
+CS = S - C
 
 
-There could be 0, 1 or 2 points of intersection with the sphere.
-For a point I to be intersecting the sphere, it's distance from it's center is it's radius:
+It's length is the distance from C to the sphere's center S:
 
-Eq.7:    |I - C| = R
+cs = ||CS||
 
+
+Squaring that vector's length is equivalent to dotting it with itself:
+
+cs² = ||CS||²
+    = CS⋅CS
+
+Define a delta d as the difference of squares of r and cs:
+
+d = r² - cs²
+r² = d + cs²
+
+Position C could either be 'on' the sphere, 'inside' of it or 'outside' of it.
+The sign of d can be used to determine which case applies, as follows:
+
+
+1. C is outside the sphere:
+---------------------------
+The ray does not intersect the sphere.
+The sphere's radius is smaller than it's distance of the closest position along the ray:
+
+r < cs
 
 Squaring both sides gives:
+r² < cs²
+d + cs² < cs²
+d < cs² - cs²
+d < 0
 
-Eq.8:    |I - C|² = R²
-
-
-Substituting the squared-length of the vector (I -C), by a dot-product with itself, gives:
-
-Eq.9:    (I - C).(I -C) = R²
-
-
-Substituting I for it's parameterized form gives:
-
-Eq.10:   (P + t*D - C).(P + t*D - C) = R²
+And so if d is negative, there is no intersection.
 
 
-Re-arranging terms, the expression P - C can be defined as a vector V:
+2. C is on the sphere:
+----------------------
+The ray is tangent to the sphere's surface intersecting it at C.
+The sphere's radius is it's distance of the closest position along the ray:
 
-Eq.11:   (t*D + P - C).(t*D + P - C) = R²
-         (t*D + (P-C)).(t*D + (P-C)) = R²
-         (t*D + V).(t*D + V) = R²
+r = cs
+r² = cs²
+d + cs² = cs²
+d = cs² - cs²
+d = 0
 
-
-Expanding the dot product gives:
-
-Eq.12:   (t*D).(t*D) + (t*D).(V) + (V).(t*D) + (V).(V) = R²
-         t*t*D.D + 2(t*D).(V)  + V.V = R²
-         t²*D.D + 2t*D.V + V.V = R²
-         t²*D.D + t*2*D.V + V.V - R² = 0
-
-
-Defining constants:
-
-Eq.13:   a = D.D
-         b = 2*D.V
-         c = V.V - R²
+If d is zero, there is one intersection at C.
 
 
-Gives:
+3. Inside:
+----------
+The distance of the closest position along the ray to the sphere's center is smaller than it's radius:
 
-Eq.14:   t²a + tb + c = 0
+cs < r
+cs² < r²
+
+The ray intersects the sphere at 2 positions.
+The sphere's radius is greater than it's distance of the closest position along the ray:
+
+r > cs
+r² > cs²
+d + cs² > cs²
+d > cs² - cs²
+d > 0
+
+If d is positive there are 2 intersections.
+
+The 2 intersection positions are at equidistant from C along the ray forming right triangles with the sphere's center.
+Define a distance ci from C to an intersection position I (using the pythagorean theorem):
+
+r² = ci² + cs²
+ci² = r² - cs²
+ci² = d
+ci = ±√d
+
+These positive/negative distances along the ray, are from C towards each of the 2 intersection positions:
+One going further along the ray from C, and the other going backwards along it from C by the same amount.
+This delta can be defined as the absolute of distances ci:
+
+|ci| = |±√d|
+     = √d
+
+Thus the distances of the 2 intersection positions are the the distance to C added/subtracted with this delta:
+
+oi1 = oc + |ci|
+oi2 = oc - |ci|
+
+oi1 = oc + √d
+oi2 = oc - √d
+
+Either of these 2 intersection positions could be in front of the ray's origin, behind it or on it.
+This will be reflected by either of the oi distances being positive, negative or zero.
+Typically only intersection positions that are "in front" of the ray's position are of interest.
+So only ones with positive distances can be considered.
+If both are positive, the 'smaller' of them corresponds to the 'closest' intersection position,
+which is typically the only one that matters (unless the sphere is transparent/translucent).
+Additionally, if one of the distances oi1 and oi2 is positive but the other is negative,
+it means that the ray origin itself is inside the sphere.
+In that case, the positive distance is of an intersection tha hits the sphere's surface from the inside.
+Typically this intersection is not desirable, and so there should "effectively" be no intersection.
+Ultimately, the only valid case of an intersection, in when 'both' distances oi1 and oi2 are positive,
+and it would be the smaller of the two (the closer intersection position).
+The intersection position would then be:
+
+I = O + min(oi1, oi2)D
 
 
-Define discriminant d:
+Optimization:
+-------------
+Squaring that vector's length is equivalent to dotting it with itself:
 
-Eq.15:   d = b² - 4ac
+cs² = ||CS||²
+    = CS⋅CS
+
+And so:
+
+d = r² - CS⋅CS
+
+An optimized algorithm could first compute: oc, C and CS (all of which are cheap).
+Then compute: r², CS⋅CS then d (which are also cheap).
+
+Then:
+If d is negative, bail out early as there are no intersections.
+If d is zero, bail out early, either returning C as the intersection (if oc is positive) or nothing otherwise.
+if d is positive, take the square root of d and compute oi1 and oi2, then only if both are positive,
+return an intersection position using the smaller one - otherwise return nothing.
 
 
-Gives the quadratic solution:
+| Approach 2:
+=============
+Define an intersection position at some distance di from the ray origin:
 
-Eq.16:    t1,2 = (±√d - b) / 2a
+I = O + diD
 
+Define a vector Ic from it to the sphere's center:
 
-For a negative discriminant, there are no roots, implying there is no intersection.
-
-For a zero discriminant, there is a single root:
-
-Eq.17:   t = -b/2a
-
-
-This implies a "single tangential" intersection (the ray is tangent to the sphere's surface):
-
-Eq.18:   I = P + t*D = P - b/2a*D
+Ic = Sc - I
+   = Sc - (O + diD)
+   = Sc - O - diD
+   = Sc - O - diD
+   = OS - diD
 
 
-If the root is negative, the sphere is "behind" the ray origin position.
-If the root is positive, the sphere is "in front" of the ray.
-If the root is zero, the ray position is "on" the sphere's surface (I = P).
+It's length is the distance to the center of the sphere, which is always the sphere's radius:
 
-For a positive discriminant, there are 2 roots:
+||Ic|| = r
 
-Eq.19:   t1 = (+√d - b)/2a = -(b - √d)/2a
-         t2 = (-√d - b)/2a = -(b + √d)/2a
+Squaring both sides, then substituting the square of a vector-length by it's dot product with itself, gives:
 
+||Ic||² = r²
+Ic⋅Ic = r²
+
+Substituting Ic and expanding gives:
+
+(OS - diD)⋅(OS - diD) = r²
+OS⋅OS - diD⋅OS - OS⋅diD + diD⋅diD = r²
+diD⋅diD - 2di(D⋅OS) + OS⋅OS = r²
+di²(D⋅D) - 2di(OS⋅D) + OS⋅OS = r²
+(D⋅D)di² + (-2OS⋅D)di + (OS⋅OS - r²) = 0
+(D⋅D)di² + (-2OS⋅D)di + (||OS||² - r²) = 0
+
+This is a quadratic equation for di:
+
+(a)di² + (b)di + (c) = 0
+
+Where:
+
+a = D⋅D
+b = -2(OS⋅D)
+c = ||OS||² - r²
+
+The ray direction D it typically normalized.
+Dotting it with itself is equivalent to squaring it's length which is 1:
+
+a = D⋅D
+  = ||D||²
+  = 1²
+  = 1
+
+Giving:
+
+(a)di² + (b)di + (c) = 0
+(1)di² + (b)di + (c) = 0
+di² + (b)di + c = 0
+
+This quadratic equation has solution:
+
+di = (-b ±√(b² - 4ac)) / 2a
+   = (-b ±√(b² - 4c)) / 2
+
+
+Define a discriminant:
+
+d = b² - 4c
+
+di = (-b ±√d) / 2
+   = -b/2 ±√d/2
+   = -(-2(OS⋅D))/2 ±√d/2
+   = 2(OS⋅D)/2 ±√d/2
+   = (OS⋅D)2/2 ±√d/2
+   = OS⋅D ±√d/2
+
+For a negative discriminant there are no solutions implying no intersection.
+For a zero discriminant there is a single solution implying an intersection:
+
+di = OS⋅D ±√0/2
+   = OS⋅D
+
+This gives the same intersection as with approach 1:
+
+I = O + diD
+  = O + (OS⋅D)D
+  = O + ((Sc - O)⋅D)D
+
+For a positive discriminant there are 2 solutions:
+
+di1 = OS⋅D + √d/2
+di2 = OS⋅D - √d/2
+
+√d/2 = b² - 4c
+     = √( (-2(OS⋅D))(-2(OS⋅D)) - 4c )/2
+     = √( (-2)(-2)(OS⋅D)(OS⋅D) - 4c )/2
+     = √( 4((OS⋅D)²) - 4c )/2
+     = √( 4( (OS⋅D)² - c) )/2
+     = √4√( (OS⋅D)² - c )/2
+     = √( (OS⋅D)² - c )√4/2
+     = √( (OS⋅D)² - c )2/2
+     = √( (OS⋅D)² - c )
+     = √( (OS⋅D)² - (||OS||² - r²) )
+     = √( (OS⋅D)² - ||OS||² + r² )
+
+         di1 = OS⋅D + √(4*((OS⋅D)² - c))/2
+         di2 = OS⋅D - √(4*((OS⋅D)² - c))/2
+
+         di1 = OS⋅D + √4*√((OS⋅D)² - c)/2
+         di2 = OS⋅D - √4*√((OS⋅D)² - c)/2
+
+         di1 = OS⋅D + 2*√((OS⋅D)² - c)/2
+         di2 = OS⋅D - 2*√((OS⋅D)² - c)/2
+
+         di1 = OS⋅D + √((OS⋅D)² - c)*2/2
+         di2 = OS⋅D - √((OS⋅D)² - c)*2/2
+
+         di1 = OS⋅D + √((OS⋅D)² - c)
+         di2 = OS⋅D - √((OS⋅D)² - c)
+
+         di1 = OS⋅D + √((OS⋅D)² - OS⋅OS + r²)
+         di2 = OS⋅D - √((OS⋅D)² - OS⋅OS + r²)
 
 This implies 2 points of intersection:
 
-Eq.20:   I1 = P - (b - √d)/2a*D
-         I2 = P - (b + √d)/2a*D
+Eq.27:   I1 = O + (b - √d)/-2*D
+         I2 = O + (b + √d)/-2*D
 
 If both roots are negative, the sphere intersects "behind" the ray origin position.
 If one root is positive and the other negative, the ray origin position is "inside" the sphere.

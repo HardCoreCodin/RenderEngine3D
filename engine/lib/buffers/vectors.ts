@@ -7,16 +7,18 @@ import Matrix2x2 from "../accessors/matrix2x2.js";
 import Matrix3x3 from "../accessors/matrix3x3.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 
-import {FloatBuffer} from "../memory/buffers.js";
+import Buffer from "../memory/buffers.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D, Color4D} from "../accessors/color.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
-
-import {IAllocator} from "../_interfaces/allocators.js";
 import {VectorConstructor} from "../_interfaces/vectors.js";
-import {VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../memory/allocators.js";
 
+import {
+    VECTOR_2D_ALLOCATOR,
+    VECTOR_3D_ALLOCATOR,
+    VECTOR_4D_ALLOCATOR
+} from "../memory/allocators.js";
 import {zip} from "../../utils.js";
 import {
     multiply_2D_vectors_by_a_2x2_matrix_in_place,
@@ -35,15 +37,10 @@ import {
 } from "./_core.js";
 
 
-export class VectorBuffer<VectorType extends Vector> extends FloatBuffer {
+export abstract class VectorBuffer<VectorType extends Vector> extends Buffer<Float32Array> {
     current: VectorType;
 
-    constructor(
-        protected readonly Vector: VectorConstructor<VectorType>,
-        allocator: IAllocator<Float32Array>
-    ) {
-        super(allocator);
-    }
+    constructor(protected readonly Vector: VectorConstructor<VectorType>) {super()}
 
     init(length: number, arrays?: Float32Array[]): this {
         super.init(length, arrays);
@@ -74,17 +71,17 @@ export class VectorBuffer<VectorType extends Vector> extends FloatBuffer {
 export class VectorBuffer2D<VectorType extends Vector2D>
     extends VectorBuffer<VectorType>
 {
-    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_2D_ALLOCATOR)}
+    protected  _getAllocator() {return VECTOR_2D_ALLOCATOR}
 }
 export class VectorBuffer3D<VectorType extends Vector3D>
     extends VectorBuffer<VectorType>
 {
-    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_3D_ALLOCATOR)}
+    protected  _getAllocator() {return VECTOR_3D_ALLOCATOR}
 }
 export class VectorBuffer4D<VectorType extends Vector4D>
     extends VectorBuffer<VectorType>
 {
-    constructor(Vector: VectorConstructor<VectorType>) {super(Vector, VECTOR_4D_ALLOCATOR)}
+    protected  _getAllocator() {return VECTOR_4D_ALLOCATOR}
 }
 
 export class UVs2D extends VectorBuffer2D<UV2D> {constructor() {super(UV2D)}}

@@ -31,12 +31,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
     extends Vector<Other>
     implements IVector2D<Other>
 {
-    constructor(
-        id?: number,
-        arrays?: Float32Array[]
-    ) {
-        super(VECTOR_2D_ALLOCATOR, id, arrays);
-    }
+    protected _getAllocator() {return VECTOR_2D_ALLOCATOR}
 
     set x(x: number) {this.arrays[0][this.id] = x}
     set y(y: number) {this.arrays[1][this.id] = y}

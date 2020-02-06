@@ -1,8 +1,6 @@
 import Faces from "../geometry/faces.js";
 import Vertices from "../geometry/vertices.js";
-import {INode3D, IScene} from "./nodes.js";
-import {IMatrix4x4} from "./matrix.js";
-import {IMaterial, IMeshCallback} from "./render.js";
+import {IMeshCallback} from "./render.js";
 import {IPosition3D, IPosition4D} from "./vectors.js";
 import {IFaceVertices, IVertexFaces} from "./buffers.js";
 import {IMeshInputs} from "./attributes.js";
@@ -60,20 +58,3 @@ export interface IMesh
 
     load(): this;
 }
-
-export interface IGeometry<
-    Context extends RenderingContext = RenderingContext
-    > extends INode3D {
-    readonly id: number;
-    readonly scene: IScene;
-    readonly world_to_model: IMatrix4x4;
-
-    is_rigid: boolean;
-    is_renderable: boolean;
-
-    mesh: IMesh;
-    material: IMaterial<Context>;
-
-    postWorldMatrixRefresh(): void;
-}
-

@@ -65,40 +65,40 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
 }
 
 export class FaceVerticesInt8 extends FaceVertices<Uint8Array> {
-    constructor() {super(FACE_VERTICES_ALLOCATOR_INT8)}
+    protected  _getAllocator() {return FACE_VERTICES_ALLOCATOR_INT8}
 }
 export class FaceVerticesInt16 extends FaceVertices<Uint16Array> {
-    constructor() {super(FACE_VERTICES_ALLOCATOR_INT16)}
+    protected  _getAllocator() {return FACE_VERTICES_ALLOCATOR_INT16}
 }
 export class FaceVerticesInt32 extends FaceVertices<Uint32Array> {
-    constructor() {super(FACE_VERTICES_ALLOCATOR_INT32)}
+    protected  _getAllocator() {return FACE_VERTICES_ALLOCATOR_INT32}
 }
 
 export class VertexFacesInt8 extends VertexFaces<Uint8Array> {
-    constructor() {super(VERTEX_FACES_ALLOCATOR_INT8)}
+    protected  _getAllocator() {return VERTEX_FACES_ALLOCATOR_INT8}
 }
 export class VertexFacesInt16 extends VertexFaces<Uint16Array> {
-    constructor() {super(VERTEX_FACES_ALLOCATOR_INT16)}
+    protected  _getAllocator() {return VERTEX_FACES_ALLOCATOR_INT16}
 }
 export class VertexFacesInt32 extends VertexFaces<Uint32Array> {
-    constructor() {super(VERTEX_FACES_ALLOCATOR_INT32)}
+    protected  _getAllocator() {return VERTEX_FACES_ALLOCATOR_INT32}
 }
 
 export class FromToIndicesInt8
     extends Buffer<Uint8Array>
     implements IFromToIndices<Uint8Array>
 {
-    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT8)}
+    protected  _getAllocator() {return FROM_TO_INDICES_ALLOCATOR_INT8}
 }
 export class FromToIndicesInt16
     extends Buffer<Uint16Array>
     implements IFromToIndices<Uint16Array>
 {
-    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT16)}
+    protected  _getAllocator() {return FROM_TO_INDICES_ALLOCATOR_INT16}
 }
 export class FromToIndicesInt32
     extends Buffer<Uint32Array>
     implements IFromToIndices<Uint32Array>
 {
-    constructor() {super(FROM_TO_INDICES_ALLOCATOR_INT32)}
+    protected  _getAllocator() {return FROM_TO_INDICES_ALLOCATOR_INT32}
 }

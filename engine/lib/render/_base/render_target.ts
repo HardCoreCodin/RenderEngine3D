@@ -79,12 +79,13 @@ export default class RenderTarget {
     }
 
     clear(): void {
-        this.context.clearRect(
-            this.viewport.x,
-            this.viewport.y,
-            this.viewport.width,
-            this.viewport.height
-        );
+        this._array.fill(0);
+        // this.context.clearRect(
+        //     this.viewport.x,
+        //     this.viewport.y,
+        //     this.viewport.width,
+        //     this.viewport.height
+        // );
     }
 
     draw(): void {

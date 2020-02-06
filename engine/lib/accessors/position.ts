@@ -178,15 +178,16 @@ export class Position3D extends Vector3D<Direction3D> implements IPosition3D
         out_arrays = out.arrays;
 
         subtract_a_3D_vector_from_another_3D_vector_to_out(
+            other.id,
+            other_arrays[0],
+            other_arrays[1],
+            other_arrays[2],
+
             this.id,
             this_arrays[0],
             this_arrays[1],
             this_arrays[2],
 
-            other.id,
-            other_arrays[0],
-            other_arrays[1],
-            other_arrays[2],
 
             out.id,
             out_arrays[0],

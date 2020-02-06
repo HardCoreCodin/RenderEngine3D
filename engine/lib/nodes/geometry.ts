@@ -1,35 +1,114 @@
 import Node3D from "./_base.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
-import {IMaterial, IMeshCallback, IMeshGeometries} from "../_interfaces/render.js";
-import {IGeometry, IMesh} from "../_interfaces/geometry.js";
-import {IScene} from "../_interfaces/nodes.js";
+import Scene from "./scene.js";
+import Mesh from "../geometry/mesh.js";
+// import ImplicitSurface from "../geometry/implicit_surfaces/_base.js";
+import {IImplicitGeometryCallback, IMaterial, IMeshCallback} from "../_interfaces/render.js";
+import {Ray, RayHit} from "../buffers/rays.js";
 
 
-export default class Geometry<Context extends RenderingContext = RenderingContext>
-    extends Node3D implements IGeometry<Context>
+abstract class BaseGeometry<Context extends RenderingContext = RenderingContext>
+    extends Node3D
 {
     static LAST_ID = 0;
+    readonly id: number;
     protected _material: IMaterial<Context>;
     readonly world_to_model = new Matrix4x4();
 
     constructor(
-        readonly scene: IScene<Context>,
-        protected _mesh: IMesh,
+        readonly scene: Scene<Context>,
         public is_rigid: boolean = true,
-        public is_renderable: boolean = true,
-        readonly id: number = Geometry.LAST_ID++
+        public is_renderable: boolean = true
     ) {
         super(scene);
-        scene.mesh_geometries.addGeometry(this);
-        this.material = scene.default_material;
-    }
-
-    get mesh(): IMesh {
-        return this._mesh;
+        this.id = Geometry.LAST_ID++;
     }
 
     get material(): IMaterial<Context> {
         return this._material;
+    }
+
+    set material(material: IMaterial<Context>) {
+        if (this._material && Object.is(this._material, material))
+            return;
+
+        this._material = material;
+    }
+
+    postWorldMatrixRefresh(): void {
+        this.model_to_world.invert(this.world_to_model);
+    }
+}
+
+export abstract class ImplicitGeometry<Context extends RenderingContext = RenderingContext>
+    extends BaseGeometry<Context>
+{
+    constructor(
+        scene: Scene<Context>,
+        is_rigid: boolean = true,
+        is_renderable: boolean = true
+    ) {
+        super(scene, is_rigid, is_renderable);
+        scene.implicit_geometries.add(this);
+        this.material = scene.default_material;
+    }
+
+    abstract intersect(ray: Ray, intersection: RayHit): boolean;
+}
+
+export class ImplicitGeometries {
+    readonly on_added = new Set<IImplicitGeometryCallback>();
+    readonly on_removed = new Set<IImplicitGeometryCallback>();
+
+    constructor(readonly scene: Scene) {}
+
+    protected readonly _set = new Set<ImplicitGeometry>();
+
+    get count(): number {return this._set.size}
+
+    add(geo: ImplicitGeometry): ImplicitGeometry {
+        if (!this._set.has(geo)) {
+            this._set.add(geo);
+
+            if (this.on_added.size)
+                for (const on_added of this.on_added)
+                    on_added(geo);
+        }
+
+        return geo;
+    }
+
+    remove(geo: ImplicitGeometry) {
+        if (this._set.has(geo)) {
+            this._set.delete(geo);
+            if (this.on_removed.size)
+                for (const on_removed of this.on_removed)
+                    on_removed(geo);
+        }
+    }
+
+    *[Symbol.iterator](): Generator<ImplicitGeometry> {
+        for (const geo of this._set)
+            yield geo
+    }
+}
+
+export default class Geometry<Context extends RenderingContext = RenderingContext>
+    extends BaseGeometry
+{
+    constructor(
+        scene: Scene<Context>,
+        protected _mesh: Mesh,
+        is_rigid: boolean = true,
+        is_renderable: boolean = true
+    ) {
+        super(scene, is_rigid, is_renderable);
+        scene.mesh_geometries.addGeometry(this);
+        this.material = scene.default_material;
+    }
+
+    get mesh(): Mesh {
+        return this._mesh;
     }
 
     set material(material: IMaterial<Context>) {
@@ -44,7 +123,7 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
         this._material = material;
     }
 
-    set mesh(mesh: IMesh) {
+    set mesh(mesh: Mesh) {
         if (Object.is(mesh, this._mesh))
             return;
 
@@ -56,35 +135,32 @@ export default class Geometry<Context extends RenderingContext = RenderingContex
         if (this._material)
             this._material.mesh_geometries.addGeometry(this);
     }
-
-    postWorldMatrixRefresh(): void {
-        this.model_to_world.invert(this.world_to_model);
-    }
 }
 
-export class MeshGeometries implements IMeshGeometries {
+
+export class MeshGeometries {
     readonly on_mesh_added = new Set<IMeshCallback>();
     readonly on_mesh_removed= new Set<IMeshCallback>();
 
-    constructor(readonly scene: IScene) {}
+    constructor(readonly scene: Scene) {}
 
-    protected readonly _map = new Map<IMesh, Set<Geometry>>();
+    protected readonly _map = new Map<Mesh, Set<Geometry>>();
 
-    get meshes(): Generator<IMesh> {return this._iterMeshes()}
+    get meshes(): Generator<Mesh> {return this._iterMeshes()}
     get mesh_count(): number {return this._map.size}
 
-    hasMesh(mesh: IMesh): boolean {return this._map.has(mesh)}
+    hasMesh(mesh: Mesh): boolean {return this._map.has(mesh)}
     hasGeometry(geometry: Geometry): boolean {
         const geometries = this._map.get(geometry.mesh);
         return geometries ? geometries.has(geometry) : false;
     }
 
-    getGeometries(mesh: IMesh): Generator<Geometry> {return this._iterGeometries(mesh)}
-    getGeometryCount(mesh: IMesh): number {return this._map.has(mesh) ? this._map.get(mesh).size : 0}
+    getGeometries(mesh: Mesh): Generator<Geometry> {return this._iterGeometries(mesh)}
+    getGeometryCount(mesh: Mesh): number {return this._map.has(mesh) ? this._map.get(mesh).size : 0}
 
-    addGeometry(mesh: IMesh): Geometry;
+    addGeometry(mesh: Mesh): Geometry;
     addGeometry(geometry: Geometry): Geometry;
-    addGeometry(mesh_or_geometry: Geometry | IMesh): Geometry {
+    addGeometry(mesh_or_geometry: Geometry | Mesh): Geometry {
         const geometry = mesh_or_geometry instanceof Geometry ?
             mesh_or_geometry :
             new Geometry(this.scene, mesh_or_geometry);
@@ -121,13 +197,13 @@ export class MeshGeometries implements IMeshGeometries {
         }
     }
 
-    protected *_iterGeometries(mesh: IMesh): Generator<Geometry> {
+    protected *_iterGeometries(mesh: Mesh): Generator<Geometry> {
         if (this._map.has(mesh))
             for (const geometry of this._map.get(mesh))
                 yield geometry
     }
 
-    protected *_iterMeshes(): Generator<IMesh> {
+    protected *_iterMeshes(): Generator<Mesh> {
         for (const mesh of this._map.keys())
             yield mesh;
     }

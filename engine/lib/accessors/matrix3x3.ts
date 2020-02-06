@@ -58,8 +58,10 @@ export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
 
     arrays: Float9;
 
+    protected _getAllocator() {return MATRIX_3X3_ALLOCATOR}
+
     constructor(id?: number, arrays?: Float9) {
-        super(MATRIX_3X3_ALLOCATOR, id, arrays);
+        super(id, arrays);
 
         this.mat2 = new Matrix2x2(this.id, [
             this.arrays[0], this.arrays[1],

@@ -1,53 +1,44 @@
 import RayTraceViewport from "./viewport.js";
 import BaseRenderPipeline from "../_base/pipelines.js";
-import RenderTarget from "../_base/render_target.js";
+import {RayHit} from "../../buffers/rays.js";
+import {pos3} from "../../accessors/position.js";
+import {dir3} from "../../accessors/direction.js";
 
+const MAX_DISTANCE = Number.MAX_SAFE_INTEGER;
 
 export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext2D, RayTraceViewport>
 {
-    render(viewport: RayTraceViewport): void {
-        // if (!this.scene.mesh_geometries.mesh_count)
-        //     return;
+    protected readonly _closest_normal = dir3();
+    protected readonly _hit = new RayHit(pos3(), dir3());
 
-        render_target = viewport.render_target;
+    render(viewport: RayTraceViewport): void {
+        if (!this.scene.implicit_geometries.count)
+            return;
+
+        const hit = this._hit;
+        const closest_normal = this._closest_normal;
+        const hit_normal = hit.surface_normal;
+
+        let any_hit: boolean;
+
+        const render_target = viewport.render_target;
         render_target.clear();
 
-        width = viewport.width;
-        height = viewport.height;
+        for (const ray of viewport.rays) {
+            ray.closest_distance_squared = MAX_DISTANCE;
+            any_hit = false;
 
-        y_start = viewport.y;
-        x_start = viewport.x;
+            for (const geo of this.scene.implicit_geometries)
+                if (geo.intersect(ray, hit))
+                    any_hit = true;
 
-        y_end = y_start + height;
-        x_end = x_start + width;
-
-        if (viewport.is_active) {
-            ray_x = viewport.ray_positions.arrays[0];
-            ray_y = viewport.ray_positions.arrays[1];
-            ray_z = viewport.ray_positions.arrays[2];
-        } else {
-            ray_x = viewport.ray_directions_transformed.arrays[0];
-            ray_y = viewport.ray_directions_transformed.arrays[1];
-            ray_z = viewport.ray_directions_transformed.arrays[2];
-        }
-
-        ray_direction_index = 0;
-        pixel_index = y_start * width + x_start;
-        for (y = y_start; y <= y_end; y++) {
-            for (x = x_start; x <= x_end; x++) {
-                if (viewport.is_active)
-                    render_target.putPixel(pixel_index,
-                        (ray_x[ray_direction_index] + 5) / 10,
-                        (ray_y[ray_direction_index] + 5) / 10,
-                        (ray_z[ray_direction_index] + 5) / 10);
-                else
-                    render_target.putPixel(pixel_index,
-                        (ray_x[ray_direction_index] + 1) / 2,
-                        (ray_y[ray_direction_index] + 1) / 2,
-                        (ray_z[ray_direction_index] + 1) / 2);
-
-                ray_direction_index++;
-                pixel_index++;
+            if (any_hit) {
+                closest_normal.setFrom(hit_normal).iadd(1).idiv(2);
+                render_target.putPixel(ray.pixel_index,
+                    closest_normal.x,
+                    closest_normal.y,
+                    closest_normal.z
+                );
             }
         }
 
@@ -56,17 +47,19 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
 }
 
 
-let render_target: RenderTarget;
 
-let ray_x,
-    ray_y,
-    ray_z: Float32Array;
 
-let width,
-    height,
 
-    x, x_start, x_end,
-    y, y_start, y_end,
 
-    pixel_index,
-    ray_direction_index: number;
+// hit_mask: Uint8Array;
+// hits: Array<RayHit>;
+//
+// protected _reset_hits(): void {
+//     const length = this.scene.implicit_geometries.count;
+//     if (length !== this.hits.length) {
+//
+//     }
+// }
+//
+// on_implicit_geometry_added(geo: ImplicitGeometry) {this._reset_hits()}
+// on_implicit_geometry_removed(geo: ImplicitGeometry) {this._reset_hits()}

@@ -1,10 +1,11 @@
+import Scene from "../nodes/scene.js";
+import Geometry, {ImplicitGeometry, MeshGeometries} from "../nodes/geometry.js";
 import {Border, Grid} from "../render/_base/viewport.js";
 import {ProjectionMatrix, ViewFrustum} from "../render/raster/_base/viewport.js";
-import {IScene} from "./nodes.js";
-import {I2D, IColor4D} from "./vectors.js";
+import {I2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
-import {IGeometry, IMesh} from "./geometry.js";
+import {IMesh} from "./geometry.js";
 
 export interface ISize {
     width: number,
@@ -20,8 +21,8 @@ export interface IRectangle extends ISize, I2D {
 export interface IMaterial<Context extends RenderingContext>
 {
     readonly id: number;
-    readonly scene: IScene<Context>;
-    readonly mesh_geometries: IMeshGeometries;
+    readonly scene: Scene<Context>;
+    readonly mesh_geometries: MeshGeometries;
 
     prepareMeshForDrawing(mesh: IMesh, render_pipeline: IRenderPipeline<Context>): void;
     drawMesh(mesh: IMesh, matrix: IMatrix4x4): any;
@@ -30,35 +31,17 @@ export interface IMaterial<Context extends RenderingContext>
 export type IMaterialConstructor<
     Context extends RenderingContext,
     Instance extends IMaterial<Context> = IMaterial<Context>
-    > = new (scene: IScene<Context>) => Instance;
+    > = new (scene: Scene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
-
-export interface IMeshGeometries {
-    readonly scene: IScene;
-    readonly meshes: Generator<IMesh>;
-    readonly mesh_count: number;
-    readonly on_mesh_added: Set<IMeshCallback>;
-    readonly on_mesh_removed: Set<IMeshCallback>;
-
-    hasMesh(mesh: IMesh): boolean;
-    hasGeometry(geometry: IGeometry): boolean;
-
-    getGeometryCount(mesh: IMesh): number;
-    getGeometries(mesh: IMesh): Generator<IGeometry>;
-
-    addGeometry(mesh: IMesh): IGeometry;
-    addGeometry(geometry: IGeometry): IGeometry;
-    addGeometry(mesh_or_geometry: IGeometry | IMesh): IGeometry;
-    removeGeometry(geometry: IGeometry): void;
-}
+export type IImplicitGeometryCallback = (geometry: ImplicitGeometry) => void;
 
 export interface IRenderPipeline<
     Context extends RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>>
 {
     readonly context: Context;
-    readonly scene: IScene<Context>;
+    readonly scene: Scene<Context>;
 
     delete(): void;
     render(viewport: ViewportType): void;
@@ -76,7 +59,7 @@ export type IRenderPipelineConstructor<
     Context extends RenderingContext,
     ViewportType extends IViewport<Context> = IViewport<Context>> = new (
     context: Context,
-    scene: IScene<Context>
+    scene: Scene<Context>
 ) => IRenderPipeline<Context, ViewportType>;
 
 export interface IRasterRenderPipeline<
@@ -168,7 +151,7 @@ export interface IRenderEngine<Context extends RenderingContext>
     readonly keys: IRenderEngineKeys;
     readonly pressed: Uint8Array;
 
-    scene: IScene<Context>;
+    scene: Scene<Context>;
     display: IDisplay<Context>;
 
     readonly is_active: boolean;

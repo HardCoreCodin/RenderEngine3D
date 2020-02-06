@@ -8,9 +8,8 @@ import BaseRenderPipeline from "../../_base/pipelines.js";
 import {VertexPositions4D} from "../../../buffers/attributes/positions.js";
 import {cube_face_vertices} from "../../../geometry/cube.js";
 import {VECTOR_4D_ALLOCATOR} from "../../../memory/allocators.js";
-import {T3, T4} from "../../../../types.js";
+import {T4} from "../../../../types.js";
 import {IRasterRenderPipeline} from "../../../_interfaces/render.js";
-import {IGeometry, IMesh} from "../../../_interfaces/geometry.js";
 import {rgb} from "../../../accessors/color.js";
 
 
