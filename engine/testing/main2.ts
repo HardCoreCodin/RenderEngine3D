@@ -7,9 +7,9 @@ import GLRenderEngine from "../lib/render/raster/hardware/engine.js";
 import {rgba} from "../lib/accessors/color.js";
 
 globalThis.rgba = rgba;
-globalThis.r = rgba(1, 0 ,0, 1);
-globalThis.g = rgba(0, 1 ,0, 1);
-globalThis.b = rgba(0, 0 ,1, 1);
+// globalThis.r = rgba(1, 0 ,0, 1);
+// globalThis.g = rgba(0, 1 ,0, 1);
+// globalThis.b = rgba(0, 0 ,1, 1);
 
 const engine = globalThis.engine = new GLRenderEngine();
 const mesh_options = new MeshOptions(1, 0,0, true);

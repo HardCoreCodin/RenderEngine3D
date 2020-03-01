@@ -11,20 +11,15 @@ export class Ray {
         this.origin = _rays.origin;
         this.direction = _rays.directions.current;
     }
-
-    get pixel_index(): number {
-        return this._rays.pixel_indices[this.direction.id];
-    }
 }
 
 export default class Rays {
     current: Ray;
-    pixel_indices: Uint32Array;
+
     readonly directions = new Directions3D();
     constructor(readonly origin: Position3D) {}
 
     init(length: number, arrays?: Float32Array[]): this {
-        this.pixel_indices = new Uint32Array(length);
         this.directions.init(length, arrays);
         this.current = new Ray(this);
 

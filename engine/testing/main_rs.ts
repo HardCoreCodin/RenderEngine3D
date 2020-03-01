@@ -4,9 +4,9 @@ import RayTracer from "../lib/render/raytrace/pipeline.js";
 import RayTraceViewport from "../lib/render/raytrace/viewport.js";
 
 globalThis.rgba = rgba;
-globalThis.r = rgba(1, 0 ,0, 1);
-globalThis.g = rgba(0, 1 ,0, 1);
-globalThis.b = rgba(0, 0 ,1, 1);
+// globalThis.r = rgba(1, 0 ,0, 1);
+// globalThis.g = rgba(0, 1 ,0, 1);
+// globalThis.b = rgba(0, 0 ,1, 1);
 
 globalThis.RasterEngine = RasterEngine;
 globalThis.RayTracer = RayTracer;

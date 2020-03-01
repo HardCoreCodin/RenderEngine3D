@@ -4,45 +4,44 @@ import {RayHit} from "../../buffers/rays.js";
 import {pos3} from "../../accessors/position.js";
 import {dir3} from "../../accessors/direction.js";
 
-const MAX_DISTANCE = Number.MAX_SAFE_INTEGER;
-
 export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext2D, RayTraceViewport>
 {
-    protected readonly _closest_normal = dir3();
     protected readonly _hit = new RayHit(pos3(), dir3());
 
     render(viewport: RayTraceViewport): void {
-        if (!this.scene.implicit_geometries.count)
-            return;
+        // if (!this.scene.implicit_geometry_array.length)
+        //     return;
 
+        const pixels = viewport.pixels;
+        const rays = viewport.rays;
+        const ray = rays.current;
+        const ray_direction = ray.direction;
+        const ray_directions = rays.directions;
+
+        const geos = this.scene.implicit_geometry_array;
         const hit = this._hit;
-        const closest_normal = this._closest_normal;
         const hit_normal = hit.surface_normal;
 
         let any_hit: boolean;
+        const ray_count = ray_directions.length;
 
-        const render_target = viewport.render_target;
-        render_target.clear();
-
-        for (const ray of viewport.rays) {
-            ray.closest_distance_squared = MAX_DISTANCE;
+        for (let i = 0; i < ray_count; i++) {
+            ray_direction.id = i;
+            ray.closest_distance_squared = 10000;
             any_hit = false;
 
-            for (const geo of this.scene.implicit_geometries)
+            for (const geo of geos)
                 if (geo.intersect(ray, hit))
                     any_hit = true;
 
-            if (any_hit) {
-                closest_normal.setFrom(hit_normal).iadd(1).idiv(2);
-                render_target.putPixel(ray.pixel_index,
-                    closest_normal.x,
-                    closest_normal.y,
-                    closest_normal.z
-                );
-            }
+            if (any_hit)
+                pixels[i] = (
+                    255 << 24 )|(  // alpha
+                    ((hit_normal.z + 1) * 127.5) << 16 )|(  // blue
+                    ((hit_normal.y + 1) * 127.5) << 8  )|(  // green
+                    ((hit_normal.x + 1) * 127.5)            // red
+            );
         }
-
-        render_target.draw();
     }
 }
 

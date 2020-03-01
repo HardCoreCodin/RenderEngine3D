@@ -20,9 +20,9 @@ import Cube from "../lib/geometry/cube.js";
 import {ATTRIBUTE} from "../constants.js";
 
 globalThis.rgba = rgba;
-globalThis.r = rgba(1, 0 ,0, 1);
-globalThis.g = rgba(0, 1 ,0, 1);
-globalThis.b = rgba(0, 0 ,1, 1);
+// globalThis.r = rgba(1, 0 ,0, 1);
+// globalThis.g = rgba(0, 1 ,0, 1);
+// globalThis.b = rgba(0, 0 ,1, 1);
 
 const engine = globalThis.engine = new GLRenderEngine();
 const display = engine.display;

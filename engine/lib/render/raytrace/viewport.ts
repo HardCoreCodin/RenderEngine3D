@@ -11,6 +11,7 @@ export default class RayTraceViewport
 {
     render_target: RenderTarget;
     rays: Rays;
+    pixels: Uint32Array;
     protected _source_ray_directions: Directions3D;
     protected _source_ray_directions_x: Float32Array;
     protected _source_ray_directions_y: Float32Array;
@@ -52,7 +53,6 @@ export default class RayTraceViewport
             this._source_ray_directions_x,
             this._source_ray_directions_y,
             this._source_ray_directions_z,
-            this.rays.pixel_indices
         );
 
         this._updateRayDirections();
@@ -62,8 +62,16 @@ export default class RayTraceViewport
         super.reset(width, height, x, y);
         this._resetRays();
         this.render_target.reset();
+        this.pixels = new Uint32Array(this.render_target.array.length);
     }
 
+    refresh() {
+        this.pixels.fill(0);
+        this._render_pipeline.render(this);
+        this.render_target.array.set(this.pixels);
+        this.context.putImageData(this.render_target.image, this._position.x, this._position.y);
+        // this._drawOverlay();
+    }
     protected _getGrid(): SWGrid {
         return new SWGrid(this.render_target);
     }
@@ -72,5 +80,3 @@ export default class RayTraceViewport
         return new SWBorder();
     }
 }
-
-let pixel_count, width, height: number;

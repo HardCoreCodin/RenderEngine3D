@@ -5,8 +5,8 @@ import {drawLine2D} from "../raster/software/_core/line.js";
 
 
 export default class RenderTarget {
-    protected _image: ImageData;
-    protected _array: Uint32Array;
+    image: ImageData;
+    array: Uint32Array;
     // protected _array_buffer: ArrayBuffer;
     // protected _clamped_array: Uint8ClampedArray;
 
@@ -16,7 +16,7 @@ export default class RenderTarget {
     ) {}
 
     reset(): void {
-        this._image = this.context.getImageData(
+        this.image = this.context.getImageData(
             this.viewport.x,
             this.viewport.y,
             this.viewport.width,
@@ -26,7 +26,7 @@ export default class RenderTarget {
         // this._array_buffer = new ArrayBuffer(this._image.data.length);
         // this._clamped_array = new Uint8ClampedArray(this._array_buffer);
         // this._array = new Uint32Array(this._array_buffer);
-        this._array = new Uint32Array(this._image.data.buffer);
+        this.array = new Uint32Array(this.image.data.buffer);
     }
 
     drawTriangle(v1: I2D, v2: I2D, v3: I2D, color: IColor) {
@@ -63,7 +63,7 @@ export default class RenderTarget {
         b: number,
         a: number = 1
     ) {
-        drawPixel(this._array, index, r, g, b, a);
+        drawPixel(this.array, index, r, g, b, a);
     }
 
     drawLine2D(
@@ -75,11 +75,11 @@ export default class RenderTarget {
         b: number,
         a: number = 1
     ) {
-        drawLine2D(this._array, this.viewport.width, this.viewport.height, x1, x2, y1, y2, r, g, b, a);
+        drawLine2D(this.array, this.viewport.width, this.viewport.height, x1, x2, y1, y2, r, g, b, a);
     }
 
     clear(): void {
-        this._array.fill(0);
+        this.array.fill(0);
         // this.context.clearRect(
         //     this.viewport.x,
         //     this.viewport.y,
@@ -90,7 +90,7 @@ export default class RenderTarget {
 
     draw(): void {
         // this._image.data.set(this._clamped_array);
-        this.context.putImageData(this._image, this.viewport.x, this.viewport.y);
+        this.context.putImageData(this.image, this.viewport.x, this.viewport.y);
     }
 }
 

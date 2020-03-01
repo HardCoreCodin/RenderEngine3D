@@ -5,9 +5,9 @@ import RayTraceViewport from "../lib/render/raytrace/viewport.js";
 import Sphere from "../lib/geometry/implicit_surfaces/sphere.js";
 
 globalThis.rgba = rgba;
-globalThis.r = rgba(1, 0 ,0, 1);
-globalThis.g = rgba(0, 1 ,0, 1);
-globalThis.b = rgba(0, 0 ,1, 1);
+// globalThis.r = rgba(1, 0 ,0, 1);
+// globalThis.g = rgba(0, 1 ,0, 1);
+// globalThis.b = rgba(0, 0 ,1, 1);
 
 globalThis.RayTracer = RayTracer;
 globalThis.RayTraceEngine = RayTraceEngine;
@@ -29,13 +29,13 @@ camera.transform.translation.z = 10;
 camera.transform.rotation.x = -1;
 camera.transform.rotation.y = 2.3;
 vp1.render_pipeline.on_mesh_removed_callback
-for (let i=0; i < 3; i++)
-    for (let j=0; j < 3; j++) {
+for (let i=0; i < 5; i++)
+    for (let j=0; j < 5; j++) {
         let geo = new Sphere(engine.scene);
         geo.transform.translation.x = i*3;
         geo.transform.translation.z = j*3;
         // geo.transform.scale.x = geo.transform.scale.y = geo.transform.scale.z = 0.1;
-        engine.scene.implicit_geometries.add(geo);
+        engine.scene.implicit_geometry_array.push(geo);
     }
 
 engine.start();
