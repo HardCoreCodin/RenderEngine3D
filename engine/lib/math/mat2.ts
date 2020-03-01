@@ -1,29 +1,3 @@
-export const set_the_components_of_a_2x2_matrix = (
-    a: Float32Array,
-    m11: number, m12: number,
-    m21: number, m22: number
-): void => {
-    a[0] = m11;  a[1] = m12;
-    a[2] = m21;  a[3] = m22;
-};
-
-export const set_all_components_of_a_2x2_matrix_to_a_number = (
-    a: Float32Array,
-
-    value: number
-): void => {
-    a[0] = a[1] =
-    a[2] = a[3] = value;
-};
-
-export const set_a_2x2_matrix_from_another_2x2_matrix = (
-    a: Float32Array,
-    o: Float32Array,
-): void => {
-    a[0] = o[0];  a[1] = o[1];
-    a[2] = o[2];  a[3] = o[3];
-};
-
 export const set_a_2x2_matrix_to_the_identity_matrix = (
     a: Float32Array,
 ) : void => {

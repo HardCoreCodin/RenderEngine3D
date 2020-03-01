@@ -48,7 +48,7 @@
 // const BBOX_VERTEX_COUNT = 8;
 // const BBOX_BOUNDS = new Bounds4D();
 // const BBOX_POSISTIONS = BBOX_BOUNDS.vertex_positions;
-// const BBOX_POSISTIONS_ARRAYS = BBOX_POSISTIONS.arrays;
-// const BBOX_FACE_VERTICES = BBOX_POSISTIONS.face_vertices.arrays;
+// const BBOX_POSISTIONS_ARRAYS = BBOX_POSISTIONS.array;
+// const BBOX_FACE_VERTICES = BBOX_POSISTIONS.face_vertices.array;
 // const BBOX_FACE_FLAGS = new Uint8Array(BBOX_FACE_COUNT);
 // const BBOX_VERTEX_FLAGS = new Uint8Array(BBOX_VERTEX_COUNT);

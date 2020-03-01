@@ -1,7 +1,5 @@
-import Matrix2x2 from "../accessors/matrix2x2.js";
-import Matrix3x3 from "../accessors/matrix3x3.js";
 import {Direction3D} from "../accessors/direction.js";
-import {Position2D, Position3D} from "../accessors/position.js";
+import {Position3D} from "../accessors/position.js";
 import {IAccessor} from "./accessors.js";
 
 export interface IMatrix extends IAccessor
@@ -28,7 +26,6 @@ export interface IMatrix extends IAccessor
 export interface IRotationMatrix extends IMatrix
 {
     readonly translation: Position3D;
-    readonly scale: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
@@ -64,10 +61,7 @@ export interface IMatrix2x2 extends IMatrix
 
 export interface IMatrix3x3 extends IRotationMatrix
 {
-    readonly mat2: Matrix2x2;
-    readonly translation2D: Position2D;
     readonly translation: Position3D;
-    readonly scale: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
@@ -91,9 +85,7 @@ export interface IMatrix3x3 extends IRotationMatrix
 export interface IMatrix4x4
     extends IRotationMatrix
 {
-    readonly mat3: Matrix3x3;
     readonly translation: Position3D;
-    readonly scale: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;

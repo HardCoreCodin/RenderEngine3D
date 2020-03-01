@@ -1,27 +1,3 @@
-export const set_the_components_of_a_2D_vector = (
-    a: Float32Array,
-    x: number,
-    y: number,
-): void => {
-    a[0] = x;
-    a[1] = y;
-};
-
-export const set_all_components_of_a_2D_vector_to_a_number = (
-    a: Float32Array,
-    value: number
-): void => {
-    a[0] = a[1] = value;
-};
-
-export const set_a_2D_vector_from_another_2D_vector = (
-    a: Float32Array,
-    o: Float32Array
-): void => {
-    a[0] = o[0];
-    a[1] = o[1];
-};
-
 export const check_if_two_2D_vectrs_are_equal = (
     a: Float32Array,
     b: Float32Array

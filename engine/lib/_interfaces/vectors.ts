@@ -2,7 +2,7 @@ import {IAccessor} from "./accessors.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
-import {UV2D, UV3D} from "../accessors/uv.js";
+import {UV2D} from "../accessors/uv.js";
 import {Color3D} from "../accessors/color.js";
 import {Accessor, Vector} from "../accessors/accessor.js";
 import Matrix3x3 from "../accessors/matrix3x3.js";
@@ -27,8 +27,7 @@ export interface IVector<Other extends Accessor> extends IAccessor
 }
 
 export type VectorConstructor<VectorType extends Vector<Accessor>> = new (
-    id?: number,
-    arrays?: Float32Array[]
+    array?: Float32Array
 ) => VectorType;
 
 export interface I2D {
@@ -66,12 +65,6 @@ export interface IDirection2D
 
     imatmul(matrix: Matrix2x2): this;
     matmul(matrix: Matrix2x2, out: this): this;
-
-    xx: Direction2D;
-    xy: Direction2D;
-
-    yx: Direction2D;
-    yy: Direction2D;
 }
 
 export interface IDirection3D
@@ -95,47 +88,8 @@ export interface IDirection3D
     imatmul(matrix: Matrix3x3|Matrix4x4): this;
     matmul(matrix: Matrix3x3|Matrix4x4, out: Direction3D|Direction4D): Direction3D|Direction4D;
 
-    xx: Direction2D;
     xy: Direction2D;
-    xz: Direction2D;
-
-    yx: Direction2D;
-    yy: Direction2D;
     yz: Direction2D;
-
-    zx: Direction2D;
-    zy: Direction2D;
-    zz: Direction2D;
-
-    xxx: Direction3D;
-    xxy: Direction3D;
-    xxz: Direction3D;
-    xyx: Direction3D;
-    xyy: Direction3D;
-    xyz: Direction3D;
-    xzx: Direction3D;
-    xzy: Direction3D;
-    xzz: Direction3D;
-
-    yxx: Direction3D;
-    yxy: Direction3D;
-    yxz: Direction3D;
-    yyx: Direction3D;
-    yyy: Direction3D;
-    yyz: Direction3D;
-    yzx: Direction3D;
-    yzy: Direction3D;
-    yzz: Direction3D;
-
-    zxx: Direction3D;
-    zxy: Direction3D;
-    zxz: Direction3D;
-    zyx: Direction3D;
-    zyy: Direction3D;
-    zyz: Direction3D;
-    zzx: Direction3D;
-    zzy: Direction3D;
-    zzz: Direction3D;
 }
 
 export interface IDirection4D
@@ -159,47 +113,12 @@ export interface IDirection4D
     imatmul(matrix: Matrix4x4): this;
     matmul(matrix: Matrix4x4, out: this): this;
 
-    xx: Direction2D;
     xy: Direction2D;
-    xz: Direction2D;
-
-    yx: Direction2D;
-    yy: Direction2D;
     yz: Direction2D;
+    zw: Direction2D;
 
-    zx: Direction2D;
-    zy: Direction2D;
-    zz: Direction2D;
-
-    xxx: Direction3D;
-    xxy: Direction3D;
-    xxz: Direction3D;
-    xyx: Direction3D;
-    xyy: Direction3D;
     xyz: Direction3D;
-    xzx: Direction3D;
-    xzy: Direction3D;
-    xzz: Direction3D;
-
-    yxx: Direction3D;
-    yxy: Direction3D;
-    yxz: Direction3D;
-    yyx: Direction3D;
-    yyy: Direction3D;
-    yyz: Direction3D;
-    yzx: Direction3D;
-    yzy: Direction3D;
-    yzz: Direction3D;
-
-    zxx: Direction3D;
-    zxy: Direction3D;
-    zxz: Direction3D;
-    zyx: Direction3D;
-    zyy: Direction3D;
-    zyz: Direction3D;
-    zzx: Direction3D;
-    zzy: Direction3D;
-    zzz: Direction3D;
+    yzw: Direction3D;
 }
 
 export interface IPosition2D
@@ -211,12 +130,6 @@ export interface IPosition2D
 
     imatmul(matrix: Matrix2x2): this;
     matmul(matrix: Matrix2x2, out: this): this;
-
-    xx: Position2D;
-    xy: Position2D;
-
-    yx: Position2D;
-    yy: Position2D;
 }
 
 export interface IPosition3D
@@ -229,47 +142,8 @@ export interface IPosition3D
     imatmul(matrix: Matrix3x3|Matrix4x4): this;
     matmul(matrix: Matrix3x3|Matrix4x4, out: Position3D|Position4D): Position3D|Position4D;
 
-    xx: Position2D;
     xy: Position2D;
-    xz: Position2D;
-
-    yx: Position2D;
-    yy: Position2D;
     yz: Position2D;
-
-    zx: Position2D;
-    zy: Position2D;
-    zz: Position2D;
-
-    xxx: Position3D;
-    xxy: Position3D;
-    xxz: Position3D;
-    xyx: Position3D;
-    xyy: Position3D;
-    xyz: Position3D;
-    xzx: Position3D;
-    xzy: Position3D;
-    xzz: Position3D;
-
-    yxx: Position3D;
-    yxy: Position3D;
-    yxz: Position3D;
-    yyx: Position3D;
-    yyy: Position3D;
-    yyz: Position3D;
-    yzx: Position3D;
-    yzy: Position3D;
-    yzz: Position3D;
-
-    zxx: Position3D;
-    zxy: Position3D;
-    zxz: Position3D;
-    zyx: Position3D;
-    zyy: Position3D;
-    zyz: Position3D;
-    zzx: Position3D;
-    zzy: Position3D;
-    zzz: Position3D;
 }
 
 export interface IPosition4D
@@ -282,47 +156,12 @@ export interface IPosition4D
     imatmul(matrix: Matrix4x4): this;
     matmul(matrix: Matrix4x4, out: this): this;
 
-    xx: Position2D;
     xy: Position2D;
-    xz: Position2D;
-
-    yx: Position2D;
-    yy: Position2D;
     yz: Position2D;
+    zw: Position2D;
 
-    zx: Position2D;
-    zy: Position2D;
-    zz: Position2D;
-
-    xxx: Position3D;
-    xxy: Position3D;
-    xxz: Position3D;
-    xyx: Position3D;
-    xyy: Position3D;
     xyz: Position3D;
-    xzx: Position3D;
-    xzy: Position3D;
-    xzz: Position3D;
-
-    yxx: Position3D;
-    yxy: Position3D;
-    yxz: Position3D;
-    yyx: Position3D;
-    yyy: Position3D;
-    yyz: Position3D;
-    yzx: Position3D;
-    yzy: Position3D;
-    yzz: Position3D;
-
-    zxx: Position3D;
-    zxy: Position3D;
-    zxz: Position3D;
-    zyx: Position3D;
-    zyy: Position3D;
-    zyz: Position3D;
-    zzx: Position3D;
-    zzy: Position3D;
-    zzz: Position3D;
+    yzw: Position3D;
 }
 
 export interface IColor extends Vector<Accessor> {
@@ -335,36 +174,6 @@ export interface IColor extends Vector<Accessor> {
 
 export interface IColor3D extends IColor, I3D {
     setTo(r: number, g: number, b: number): this;
-
-    rrr: Color3D;
-    rrg: Color3D;
-    rrb: Color3D;
-    rgr: Color3D;
-    rgg: Color3D;
-    rgb: Color3D;
-    rbr: Color3D;
-    rbg: Color3D;
-    rbb: Color3D;
-
-    grr: Color3D;
-    grg: Color3D;
-    grb: Color3D;
-    ggr: Color3D;
-    ggg: Color3D;
-    ggb: Color3D;
-    gbr: Color3D;
-    gbg: Color3D;
-    gbb: Color3D;
-
-    brr: Color3D;
-    brg: Color3D;
-    brb: Color3D;
-    bgr: Color3D;
-    bgg: Color3D;
-    bgb: Color3D;
-    bbr: Color3D;
-    bbg: Color3D;
-    bbb: Color3D;
 }
 
 export interface IColor4D extends IColor, I4D {
@@ -372,35 +181,7 @@ export interface IColor4D extends IColor, I4D {
 
     setTo(r: number, g: number, b: number, a: number): this;
 
-    rrr: Color3D;
-    rrg: Color3D;
-    rrb: Color3D;
-    rgr: Color3D;
-    rgg: Color3D;
     rgb: Color3D;
-    rbr: Color3D;
-    rbg: Color3D;
-    rbb: Color3D;
-
-    grr: Color3D;
-    grg: Color3D;
-    grb: Color3D;
-    ggr: Color3D;
-    ggg: Color3D;
-    ggb: Color3D;
-    gbr: Color3D;
-    gbg: Color3D;
-    gbb: Color3D;
-
-    brr: Color3D;
-    brg: Color3D;
-    brb: Color3D;
-    bgr: Color3D;
-    bgg: Color3D;
-    bgb: Color3D;
-    bbr: Color3D;
-    bbg: Color3D;
-    bbb: Color3D;
 }
 
 export interface IUV extends Vector<Accessor> {
@@ -410,12 +191,6 @@ export interface IUV extends Vector<Accessor> {
 
 export interface IUV2D extends IUV, I2D {
     setTo(u: number, v: number): this;
-
-    uu: UV2D;
-    uv: UV2D;
-
-    vu: UV2D;
-    vv: UV2D;
 }
 
 export interface IUV3D extends IUV, I3D {
@@ -423,45 +198,6 @@ export interface IUV3D extends IUV, I3D {
 
     setTo(u: number, v: number, w: number): this;
 
-    uu: UV2D;
     uv: UV2D;
-    uw: UV2D;
-
-    vu: UV2D;
-    vv: UV2D;
     vw: UV2D;
-
-    wu: UV2D;
-    wv: UV2D;
-    ww: UV2D;
-
-    uuu: UV3D;
-    uuv: UV3D;
-    uuw: UV3D;
-    uvu: UV3D;
-    uvv: UV3D;
-    uvw: UV3D;
-    ubu: UV3D;
-    ubv: UV3D;
-    ubw: UV3D;
-
-    vuu: UV3D;
-    vuv: UV3D;
-    vuw: UV3D;
-    vvu: UV3D;
-    vvv: UV3D;
-    vvw: UV3D;
-    vbu: UV3D;
-    vbv: UV3D;
-    vbw: UV3D;
-
-    wuu: UV3D;
-    wuv: UV3D;
-    wuw: UV3D;
-    wvu: UV3D;
-    wvv: UV3D;
-    wvw: UV3D;
-    wbu: UV3D;
-    wbv: UV3D;
-    wbw: UV3D;
 }

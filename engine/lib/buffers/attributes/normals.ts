@@ -5,8 +5,12 @@ import {Position3D, Position4D} from "../../accessors/position.js";
 import {Direction3D, Direction4D, dir3, dir4} from "../../accessors/direction.js";
 import {Directions3D, Directions4D} from "../vectors.js";
 import {VertexPositions3D, VertexPositions4D} from "./positions.js";
-import {randomize3D, randomize4D} from "../_core.js";
-import {loadVertices, pullVertices} from "./_core.js";
+import {
+    loadSharedVertices,
+    loadUnsharedVertices,
+    pullSharedVertices,
+    pullUnsharedVertices,
+} from "./_core.js";
 import {zip} from "../../../utils.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
@@ -36,12 +40,18 @@ export class VertexNormals3D extends Directions3D implements IVertexAttribute<Di
     }
 
     load(inputs: InputNormals): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
         return this;
     }
 
-    pull(input: FaceNormals3D, vertex_faces: IVertexFaces): void {
-        pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
+    pull(faces: FaceNormals3D, vertex_faces: IVertexFaces): void {
+        if (this._is_shared)
+            pullSharedVertices(faces.arrays, this.arrays, vertex_faces.arrays);
+        else
+            pullUnsharedVertices(faces.arrays, this.arrays);
     }
 
     protected _post_init(): void {
@@ -73,12 +83,19 @@ export class VertexNormals4D extends Directions4D implements IVertexAttribute<Di
     }
 
     load(inputs: InputNormals): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 
-    pull(input: FaceNormals4D, vertex_faces: IVertexFaces): void {
-        pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
+    pull(faces: FaceNormals4D, vertex_faces: IVertexFaces): void {
+        if (this._is_shared)
+            pullSharedVertices(faces.arrays, this.arrays, vertex_faces.arrays);
+        else
+            pullUnsharedVertices(faces.arrays, this.arrays);
     }
 
     protected _post_init(): void {
@@ -114,7 +131,7 @@ export class FaceNormals3D extends Directions3D
     }
 
     generate(): this {
-        randomize3D(this.arrays);
+        this._randomize();
         return this;
     }
 }
@@ -145,7 +162,7 @@ export class FaceNormals4D extends Directions4D
     }
 
     generate(): this {
-        randomize4D(this.arrays);
+        this._randomize();
         return this;
     }
 }

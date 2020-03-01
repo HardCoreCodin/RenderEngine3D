@@ -4,24 +4,14 @@ import {IVector} from "../_interfaces/vectors.js";
 
 export abstract class Accessor implements IAccessor
 {
-    id: number;
-    readonly arrays: Float32Array[];
+    array: Float32Array;
 
     protected abstract _getAllocator(): Allocator<Float32Array>;
     readonly allocator: Allocator<Float32Array>;
 
-    constructor(
-        id?: number,
-        arrays?: Float32Array[]
-    ) {
+    constructor(array?: Float32Array) {
         this.allocator = this._getAllocator();
-        if (arrays) {
-            this.arrays = arrays;
-            this.id = id;
-        } else {
-            this.arrays = Array<Float32Array>(this.allocator.dim);
-            this.id = this.allocator.allocate(this.arrays);
-        }
+        this.array = array || this.allocator.allocate();
     }
 
     abstract setTo(...values: number[]): this;
@@ -31,22 +21,7 @@ export abstract class Accessor implements IAccessor
     abstract copy(out?: IAccessor): IAccessor;
 
     is(other: IAccessor): boolean {
-        return Object.is(this, other) || (
-            this.id === other.id && (
-                Object.is(this.arrays, other.arrays) ||
-                this.arrays.every(
-                    (array, index) => Object.is(array, other.arrays[index])
-                )
-            )
-        );
-    }
-
-    toArray(array: Float32Array = new Float32Array(this.allocator.dim)): Float32Array {
-        const id = this.id;
-        for (const [i, a] of this.arrays.entries())
-            array[i] = a[id];
-
-        return array;
+        return Object.is(this, other) || (Object.is(this.array, other.array));
     }
 }
 

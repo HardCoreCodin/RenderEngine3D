@@ -29,16 +29,16 @@
 //     {
 //         if (Object.is(out, from)) {
 //             this._.linearly_interpolate_in_place_all(
-//                 this.arrays,
-//                 from.arrays as Arrays,
-//                 to.arrays as Arrays,
+//                 this.array,
+//                 from.array as Arrays,
+//                 to.array as Arrays,
 //             );
 //         } else {
 //             this._.linearly_interpolate_all(
-//                 this.arrays,
-//                 from.arrays as Arrays,
-//                 to.arrays as Arrays,
-//                 out.arrays as Arrays
+//                 this.array,
+//                 from.array as Arrays,
+//                 to.array as Arrays,
+//                 out.array as Arrays
 //             );
 //         }
 //
@@ -56,19 +56,19 @@
 //         if (Object.is(out, from)) {
 //             this._.linearly_interpolate_in_place_some(
 //                 flags,
-//                 from_to_indices.arrays as Int2,
-//                 this.arrays,
-//                 from.arrays as Arrays,
-//                 to.arrays as Arrays,
+//                 from_to_indices.array as Int2,
+//                 this.array,
+//                 from.array as Arrays,
+//                 to.array as Arrays,
 //             );
 //         } else {
 //             this._.linearly_interpolate_some(
 //                 flags,
-//                 from_to_indices.arrays as Int2,
-//                 this.arrays,
-//                 from.arrays as Arrays,
-//                 to.arrays as Arrays,
-//                 out.arrays as Arrays
+//                 from_to_indices.array as Int2,
+//                 this.array,
+//                 from.array as Arrays,
+//                 to.array as Arrays,
+//                 out.array as Arrays
 //             );
 //         }
 //
@@ -100,19 +100,19 @@
 //     {
 //         if (out) {
 //             this._.barycentric_interpolate_all(
-//                 this.arrays,
-//                 from.arrays as Arrays,
-//                 to.arrays as Arrays,
-//                 out.arrays as Arrays
+//                 this.array,
+//                 from.array as Arrays,
+//                 to.array as Arrays,
+//                 out.array as Arrays
 //             );
 //
 //             return out;
 //         }
 //
 //         this._.barycentric_interpolate_in_place_all(
-//             this.arrays,
-//             from.arrays as Arrays,
-//             to.arrays as Arrays,
+//             this.array,
+//             from.array as Arrays,
+//             to.array as Arrays,
 //         );
 //
 //         return from;

@@ -87,53 +87,53 @@
 //
 // const barycentric_interpolate = (
 //     w: number, [w1, w2, w3]: Float3,
-//     a: number, arrays: Arrays,
+//     a: number, array: Arrays,
 //     o: number, out: Arrays,
 // ): void => {
-//     for (i = 0; i < arrays.length; i++)
+//     for (i = 0; i < array.length; i++)
 //         out[i][o] = (
-//             w1[i][w] * arrays[i][a] +
-//             w2[i][w] * arrays[i][a] +
-//             w3[i][w] * arrays[i][a]
+//             w1[i][w] * array[i][a] +
+//             w2[i][w] * array[i][a] +
+//             w3[i][w] * array[i][a]
 //         );
 // };
 //
 // const barycentric_interpolate_in_place = (
 //     w: number, [w1, w2, w3]: Float3,
-//     a: number, arrays: Arrays,
+//     a: number, array: Arrays,
 // ): void => {
-//     for (i = 0; i < arrays.length; i++)
-//         arrays[i][a] = (
-//             w1[i][w] * arrays[i][a] +
-//             w2[i][w] * arrays[i][a] +
-//             w3[i][w] * arrays[i][a]
+//     for (i = 0; i < array.length; i++)
+//         array[i][a] = (
+//             w1[i][w] * array[i][a] +
+//             w2[i][w] * array[i][a] +
+//             w3[i][w] * array[i][a]
 //         );
 // };
 //
 // const barycentric_interpolate_all = (
 //     [w1, w2, w3]: Float3,
-//     arrays: Arrays,
+//     array: Arrays,
 //     out: Arrays,
 // ): void => {
-//     for (j = 0; j < arrays[0].length; j++)
-//         for (i = 0; i < arrays.length; i++)
+//     for (j = 0; j < array[0].length; j++)
+//         for (i = 0; i < array.length; i++)
 //             out[i][j] = (
-//                 w1[i][j] * arrays[i][j] +
-//                 w2[i][j] * arrays[i][j] +
-//                 w3[i][j] * arrays[i][j]
+//                 w1[i][j] * array[i][j] +
+//                 w2[i][j] * array[i][j] +
+//                 w3[i][j] * array[i][j]
 //             );
 // };
 //
 // const barycentric_interpolate_in_place_all = (
 //     [w1, w2, w3]: Float3,
-//     arrays: Arrays,
+//     array: Arrays,
 // ): void => {
-//     for (j = 0; j < arrays[0].length; j++)
-//         for (i = 0; i < arrays.length; i++)
-//             arrays[i][j] = (
-//                 w1[i][j] * arrays[i][j] +
-//                 w2[i][j] * arrays[i][j] +
-//                 w3[i][j] * arrays[i][j]
+//     for (j = 0; j < array[0].length; j++)
+//         for (i = 0; i < array.length; i++)
+//             array[i][j] = (
+//                 w1[i][j] * array[i][j] +
+//                 w2[i][j] * array[i][j] +
+//                 w3[i][j] * array[i][j]
 //             );
 // };
 //

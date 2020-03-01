@@ -1,37 +1,3 @@
-export const set_the_components_of_a_4x4_matrix = (
-    a: Float32Array,
-
-    m11: number, m12: number, m13: number, m14: number,
-    m21: number, m22: number, m23: number, m24: number,
-    m31: number, m32: number, m33: number, m34: number,
-    m41: number, m42: number, m43: number, m44: number
-): void => {
-    a[0] = m11;  a[1] = m12;  a[2] = m13;  a[3] = m14;
-    a[4] = m21;  a[5] = m22;  a[6] = m23;  a[7] = m24;
-    a[8] = m31;  a[9] = m32;  a[10] = m33;  a[11] = m34;
-    a[12] = m41;  a[13] = m42;  a[14] = m43;  a[15] = m44;
-};
-
-export const set_all_components_of_a_4x4_matrix_to_a_number = (
-    a: Float32Array,
-    value: number
-): void => {
-    a[0] = a[1] = a[2] = a[3] =
-    a[4] = a[5] = a[6] = a[7] =
-    a[8] = a[9] = a[10] = a[11] =
-    a[12] = a[13] = a[14] = a[15] = value;
-};
-
-export const set_a_4x4_matrix_from_another_4x4_matrix = (
-    a: Float32Array,
-    o: Float32Array
-): void => {
-    a[0] = o[0];  a[1] = o[1];  a[2] = o[2];  a[3] = o[3];
-    a[4] = o[4];  a[5] = o[5];  a[6] = o[6];  a[7] = o[7];
-    a[8] = o[8];  a[9] = o[9];  a[10] = o[10];  a[11] = o[11];
-    a[12] = o[12];  a[13] = o[13];  a[14] = o[14];  a[15] = o[15];
-};
-
 export const set_a_4x4_matrix_to_the_identity_matrix = (
     a: Float32Array
 ) : void => {

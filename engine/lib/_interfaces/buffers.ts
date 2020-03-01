@@ -5,10 +5,9 @@ export interface IBuffer<ArrayType extends TypedArray = Float32Array>
 {
     allocator: IAllocator<ArrayType>;
     length: number;
+    array: ArrayType;
     arrays: ArrayType[];
-    toArray(array?: ArrayType): ArrayType;
     init(length: number): void;
-    values(): Generator<number[]>;
 }
 
 export interface IFaceVertices<ArrayType extends TypedArray = Uint8Array|Uint16Array|Uint32Array>

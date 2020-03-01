@@ -3,7 +3,7 @@ import {UV2D, UV3D} from "../../accessors/uv.js";
 import {UVs2D, UVs3D} from "../vectors.js";
 import {InputUVs} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {loadVertices} from "./_core.js";
+import {loadSharedVertices, loadUnsharedVertices} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
 import {IVertexAttribute} from "../../_interfaces/attributes.js";
 
@@ -32,7 +32,11 @@ export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBU
     }
 
     load(inputs: InputUVs): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 
@@ -66,7 +70,11 @@ export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBU
     }
 
     load(inputs: InputUVs): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 

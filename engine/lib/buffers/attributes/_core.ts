@@ -1,151 +1,86 @@
 import {zip} from "../../../utils.js";
-import {FaceInputs} from "../../../types.js";
-
-
-const loadSharedVertices = (
-    values: Float32Array[],
-    inputs: number[][],
-
-    input_indices_v1: number[],
-    input_indices_v2: number[],
-    input_indices_v3: number[],
-
-    indices_v1: Indices,
-    indices_v2: Indices,
-    indices_v3: Indices,
-): void => {
-    for ([vertex_component_values, input_component_values] of zip(values, inputs)) {
-        for ([index, input_index] of zip(indices_v1, input_indices_v1)) vertex_component_values[index] = input_component_values[input_index];
-        for ([index, input_index] of zip(indices_v2, input_indices_v2)) vertex_component_values[index] = input_component_values[input_index];
-        for ([index, input_index] of zip(indices_v3, input_indices_v3)) vertex_component_values[index] = input_component_values[input_index];
-    }
-};
-const loadUnsharedVertices = (
-    values: Float32Array[],
-    inputs: number[][],
-
-    input_indices_v1: number[],
-    input_indices_v2: number[],
-    input_indices_v3: number[],
-
-    face_count: number
-): void => {
-    for ([vertex_component_values, input_component_values] of zip(values, inputs)) {
-        offset = 0;
-        for (face_index = 0; face_index < face_count; face_index++) {
-            vertex_component_values[offset++] = input_component_values[input_indices_v1[face_index]];
-            vertex_component_values[offset++] = input_component_values[input_indices_v2[face_index]];
-            vertex_component_values[offset++] = input_component_values[input_indices_v3[face_index]];
-        }
-    }
-};
-export const loadVerticesSimple = (
-    values: Float32Array[],
-    inputs: number[][]
-): void => {
-    for ([vertex_component_values, input_component_values] of zip(values, inputs))
-        vertex_component_values.set(input_component_values);
-};
-export const loadVertices = (
-    values: Float32Array[],
-    inputs: number[][],
-
-    indices: Indices[],
-    input_indices: FaceInputs,
-
-    face_count: number,
-    shared: boolean
-): void => shared ?
-    loadSharedVertices(values, inputs, input_indices[0], input_indices[1], input_indices[2], indices[0], indices[1], indices[2]) :
-    loadUnsharedVertices(values, inputs, input_indices[0], input_indices[1], input_indices[2], face_count);
-
-
-const pullSharedVertices = (
-    values: Float32Array[],
-    inputs: Float32Array[],
-    indices: Indices[],
-    face_count: number
-): void => {
-    // Average vertex-attribute values from their related face's attribute values:
-    for ([vertex_component_values, face_component_values] of zip(values, inputs))
-        for ([vertex_id, face_ids] of indices.entries()) {
-            // For each component 'accumulate-in' the face-value of all the faces_vertices of this vertex:
-            accumulated = 0;
-            for (face_id of face_ids)
-                accumulated += face_component_values[face_id];
-
-            vertex_component_values[vertex_id] = accumulated / face_count;
-        }
-};
-const pullUnsharedVertices = (
-    values: Float32Array[],
-    inputs: Float32Array[]
-): void => {
-    offset = 0;
-    // Copy over face-attribute values to their respective vertex-attribute values:
-    for ([vertex_component_values, face_component_values] of zip(values, inputs)) {
-        vertex_component_values.set(face_component_values, offset++);
-        vertex_component_values.set(face_component_values, offset++);
-        vertex_component_values.set(face_component_values, offset++);
-    }
-};
-export const pullVertices = (
-    values: Float32Array[],
-    inputs: Float32Array[],
-    indices: Indices[],
-    face_count: number,
-    shared: boolean
-): void => shared ?
-    pullSharedVertices(values, inputs, indices, face_count) :
-    pullUnsharedVertices(values, inputs);
-
-
-const pullFaceWithSharedVertices = (
-    values: Float32Array[],
-    inputs: Float32Array[],
-
-    indices_v1: Indices,
-    indices_v2: Indices,
-    indices_v3: Indices,
-
-    face_count: number
-): void => {
-    for ([face_component_values, vertex_component_values] of zip(values, inputs))
-        for (face_index = 0; face_index < face_count; face_index++)
-            face_component_values[face_index] = (
-                vertex_component_values[indices_v1[face_index]] +
-                vertex_component_values[indices_v2[face_index]] +
-                vertex_component_values[indices_v3[face_index]]
-            ) / 3;
-};
-
-const pullFacesWithUnsharedVertices = (
-    values: Float32Array[],
-    inputs: Float32Array[],
-    face_count: number
-): void => {
-    for (const [face_component, vertex_component] of zip(values, inputs))
-        for (face_index = 0; face_index < face_count; face_index++)
-            face_component[face_index] = (
-                vertex_component[face_index] +
-                vertex_component[face_index] +
-                vertex_component[face_index]
-            ) / 3;
-};
-
-export const pullFaces = (
-    values: Float32Array[],
-    inputs: Float32Array[],
-    indices: Indices[],
-    face_count: number,
-    shared: boolean
-): void => shared ?
-    pullFaceWithSharedVertices(values, inputs, indices[0], indices[1], indices[2], face_count) :
-    pullFacesWithUnsharedVertices(values, inputs, face_count);
-
 
 type Indices = Uint8Array | Uint16Array | Uint32Array;
-let face_ids: Indices;
-let input_component_values: number[];
-let vertex_component_values, face_component_values: Float32Array;
-let face_id, vertex_id, face_index, offset, accumulated, input_index, index: number;
+
+export const loadSharedVertices = (
+    input_vertices: number[][],
+    input_faces: number[][],
+    output_vertices: Float32Array[],
+    output_faces: Indices[],
+): void => {
+    for (const [input_face, output_face] of zip(input_faces, output_faces))
+        for (const [input_vertex, output_vertex] of zip(input_face, output_face))
+            output_vertices[output_vertex].set(input_vertices[input_vertex]);
+};
+
+export const loadUnsharedVertices = (
+    input_vertices: number[][],
+    input_faces: number[][],
+    output_vertices: Float32Array[]
+): void => {
+    let output_vertex = 0;
+    for (const input_face of input_faces)
+        for (const input_vertex of input_face)
+            output_vertices[output_vertex++].set(input_vertices[input_vertex]);
+};
+
+export const loadVerticesSimple = (
+    input_vertices: number[][],
+    output_vertices: Float32Array[]
+): void => {
+    for (const [input_vertex, output_vertex] of zip(input_vertices, output_vertices))
+        output_vertex.set(input_vertex);
+};
+
+export const pullSharedVertices = (
+    faces: Float32Array[],
+    vertices: Float32Array[],
+    vertex_face_ids: Indices[]
+): void => {
+    let accumulated, face_id: number;
+    // For each component 'accumulate-in' the face-value of all the faces_vertices of this vertex:
+    for (let component_index = 0; component_index < faces[0].length; component_index++) {
+
+        // Average vertex-attribute values from their related face's attribute values:
+        for (const [vertex_id, face_ids] of vertex_face_ids.entries()) {
+            accumulated = 0;
+            for (face_id of face_ids)
+                accumulated += faces[face_id][component_index];
+
+            vertices[vertex_id][component_index] = accumulated / face_ids.length;
+        }
+    }
+};
+
+export const pullUnsharedVertices = (
+    faces: Float32Array[],
+    vertices: Float32Array[]
+): void => {
+    let vertex = 0;
+    // Copy over face-attribute values to their respective vertex-attribute values:
+    for (const face of faces) {
+        vertices[vertex++].set(face);
+        vertices[vertex++].set(face);
+        vertices[vertex++].set(face);
+    }
+};
+
+export const pullFaceWithSharedVertices = (
+    vertices: Float32Array[],
+    faces: Float32Array[],
+    indices: Indices[]
+): void => {
+    for (const [face, [vi1, vi2, vi3]] of zip(faces, indices))
+        for (const [v1, v2, v3, comp] of zip(vertices[vi1], vertices[vi2], vertices[vi3]))
+            face[comp] = (v1 + v2 + v3) / 3;
+};
+
+export const pullFacesWithUnsharedVertices = (
+    faces: Float32Array[],
+    vertices: Float32Array[]
+): void => {
+    let vertex = 0;
+    for (const face of faces)
+        for (const [v1, v2, v3, comp] of zip(vertices[vertex++], vertices[vertex++], vertices[vertex++]))
+            face[comp] = (v1 + v2 + v3) / 3;
+};

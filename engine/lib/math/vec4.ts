@@ -1,33 +1,3 @@
-export const set_the_components_of_a_4D_vector = (
-    a: Float32Array,
-    x: number,
-    y: number,
-    z: number,
-    w: number
-): void => {
-    a[0] = x;
-    a[1] = y;
-    a[2] = z;
-    a[3] = w;
-};
-
-export const set_all_components_of_a_4D_vector_to_a_number = (
-    a: Float32Array,
-    value: number
-): void => {
-    a[0] = a[1] = a[2] = a[3] = value;
-};
-
-export const set_a_4D_vector_from_another_4D_vector = (
-    a: Float32Array,
-    o: Float32Array
-): void => {
-    a[0] = o[0];
-    a[1] = o[1];
-    a[2] = o[2];
-    a[3] = o[3];
-};
-
 export const check_if_two_4D_vectros_are_equal = (
     a: Float32Array,
     b: Float32Array
@@ -316,7 +286,6 @@ export const normalize_all_4D_directions_in_place = (
 
 export const normalize_some_4D_directions_in_place = (
     a: Float32Array,
-
     include: Uint8Array[]
 ) : void => {
     let id = 0;
@@ -405,7 +374,6 @@ export const multiply_a_4D_vector_by_a_4x4_matrix_in_place = (
 export const multiply_a_4D_vector_by_a_4x4_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
-
     o: Float32Array
 ) : void => {
     o[0] = a[0]*m[0] + a[1]*m[4] + a[2]*m[8] + a[3]*m[12];
@@ -436,8 +404,8 @@ export const multiply_all_4D_vectors_by_a_4x4_matrix_to_out = (
 
 export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
     a: Float32Array,
-    include: Uint8Array[],
     m: Float32Array,
+    include: Uint8Array[],
     o: Float32Array
 ) : void => {
     let j = 1;
@@ -483,8 +451,8 @@ export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = (
 
 export const multiply_some_4D_vectors_by_a_4x4_matrix_in_place = (
     a: Float32Array,
-    include: Uint8Array[],
-    m: Float32Array
+    m: Float32Array,
+    include: Uint8Array[]
 ) : void => {
     let id = 0;
     let j = 1;

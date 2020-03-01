@@ -3,8 +3,14 @@ import {Color3D, Color4D} from "../../accessors/color.js";
 import {Colors3D, Colors4D} from "../vectors.js";
 import {InputColors} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {loadVertices, pullFaces, pullVertices} from "./_core.js";
-import {randomize3D, randomize4D} from "../_core.js";
+import {
+    loadSharedVertices,
+    loadUnsharedVertices,
+    pullSharedVertices,
+    pullUnsharedVertices,
+    pullFacesWithUnsharedVertices,
+    pullFaceWithSharedVertices
+} from "./_core.js";
 import {IFaceVertices, IVertexFaces} from "../../_interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
@@ -29,20 +35,32 @@ export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Color3D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return iterTriangles(
+            this.current_triangle,
+            this._face_vertices.arrays,
+            this._face_vertices.length,
+            this._is_shared
+        );
     }
 
     load(inputs: InputColors): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 
-    pull(input: FaceColors3D, vertex_faces: IVertexFaces): void {
-        pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
+    pull(faces: FaceColors3D, vertex_faces: IVertexFaces): void {
+        if (this._is_shared)
+            pullSharedVertices(faces.arrays, this.arrays, vertex_faces.arrays);
+        else
+            pullUnsharedVertices(faces.arrays, this.arrays);
     }
 
     generate(): this {
-        randomize3D(this.arrays);
+        this._randomize();
         return this;
     }
 
@@ -75,16 +93,23 @@ export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D
     }
 
     load(inputs: InputColors): this {
-        loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, this._is_shared);
+        if (this._is_shared)
+            loadSharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays, this._face_vertices.arrays);
+        else
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 
-    pull(input: FaceColors4D, vertex_faces: IVertexFaces): void {
-        pullVertices(this.arrays, input.arrays, vertex_faces.arrays, this.face_count, this._is_shared);
+    pull(faces: FaceColors4D, vertex_faces: IVertexFaces): void {
+        if (this._is_shared)
+            pullSharedVertices(faces.arrays, this.arrays, vertex_faces.arrays);
+        else
+            pullUnsharedVertices(faces.arrays, this.arrays);
     }
 
     generate(): this {
-        randomize4D(this.arrays);
+        this._randomize();
         return this;
     }
 
@@ -108,13 +133,17 @@ export class FaceColors3D extends Colors3D implements IFaceAttribute<Color3D, AT
         return this;
     }
 
-    pull(inputs: VertexColors3D): this {
-        pullFaces(this.arrays, inputs.arrays, this.face_vertices.arrays, this.face_count, inputs.is_shared);
+    pull(vertices: VertexColors3D): this {
+        if (vertices.is_shared)
+            pullFaceWithSharedVertices(vertices.arrays, this.arrays, this._face_vertices.arrays);
+        else
+            pullFacesWithUnsharedVertices(vertices.arrays, this.arrays);
+
         return this;
     }
 
     generate(): this {
-        randomize3D(this.arrays);
+        this._randomize();
         return this;
     }
 }
@@ -132,13 +161,17 @@ export class FaceColors4D extends Colors4D implements IFaceAttribute<Color4D, AT
         return this;
     }
 
-    pull(inputs: VertexColors4D): this {
-        pullFaces(this.arrays, inputs.arrays, this.face_vertices.arrays, this.face_count, inputs.is_shared);
+    pull(vertices: VertexColors4D): this {
+        if (vertices.is_shared)
+            pullFaceWithSharedVertices(vertices.arrays, this.arrays, this._face_vertices.arrays);
+        else
+            pullFacesWithUnsharedVertices(vertices.arrays, this.arrays);
+
         return this;
     }
 
     generate(): this {
-        randomize4D(this.arrays);
+        this._randomize();
         return this;
     }
 }

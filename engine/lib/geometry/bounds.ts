@@ -27,8 +27,8 @@ abstract class Bounds implements IBounds {
 export class Bounds3D extends Bounds implements IBounds3D {
     constructor(
         readonly vertex_positions = new VertexPositions3D().autoInit(cube_vertex_count, cube_face_vertices),
-        readonly min = new Position3D(0, vertex_positions.arrays),
-        readonly max = new Position3D(6, vertex_positions.arrays)
+        readonly min = new Position3D(vertex_positions.arrays[0]),
+        readonly max = new Position3D(vertex_positions.arrays[6])
     ) {
         super();
     }
@@ -37,8 +37,8 @@ export class Bounds3D extends Bounds implements IBounds3D {
 export class Bounds4D extends Bounds implements IBounds4D {
     constructor(
         readonly vertex_positions = new VertexPositions4D().autoInit(cube_vertex_count, cube_face_vertices),
-        readonly min = new Position4D(0, vertex_positions.arrays),
-        readonly max = new Position4D(6, vertex_positions.arrays)
+        readonly min = new Position4D(vertex_positions.arrays[0]),
+        readonly max = new Position4D(vertex_positions.arrays[6])
     ) {
         super();
     }

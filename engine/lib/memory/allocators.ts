@@ -1,142 +1,61 @@
-import {CACHE_LINE_BYTES, DIM} from "../../constants.js";
-import {IAllocator, IArraysBlock, IArraysBlocksAllocator} from "../_interfaces/allocators.js";
-import {AnyConstructor, TypedArray, TypedArrayConstructor} from "../../types.js";
+import {DIM} from "../../constants.js";
+import {IAllocator} from "../_interfaces/allocators.js";
+import {TypedArray, TypedArrayConstructor} from "../../types.js";
 
-export class ArraysBlock<ArrayType extends TypedArray>
-    implements IArraysBlock<ArrayType>
-{
-    protected _holes: number[] = [];
-    protected _cursor: number = 0;
-    protected _is_full: boolean;
+const MEMORY_SIZE = 2**30;
+const __memory = new ArrayBuffer(MEMORY_SIZE);
+let __offset = 0;
 
-    constructor(
-        readonly dim: DIM,
-        readonly length: number,
-        readonly buffer: ArrayType,
-        readonly arrays: ArrayType[] = Array<ArrayType>(dim)
-    ) {
-        let start = 0;
-        let end = length;
-        for (let i = 0; i < this.dim; i++) {
-            this.arrays[i] = this.buffer.subarray(start, end) as ArrayType;
-            start += length;
-            end += length;
-        }
-    }
+const __allocate = (size: number): number => {
+    let offset = __offset;
+    __offset += size;
+    if (__offset > __offset)
+        throw 'Buffer overflow!';
 
-    get is_full(): boolean {
-        return this._is_full;
-    }
-
-    allocate(): number {
-        if (this._is_full)
-            throw `Blcok is full!`;
-
-        if (this._cursor === this.length) {
-            if (this._holes.length === 1)
-                this._is_full = true;
-
-            return this._holes.pop();
-        } else if (this._cursor + 1 === this.length)
-            this._is_full = true;
-
-        return this._cursor++;
-    }
-
-    deallocate(index: number): void {
-        this._holes.push(index);
-    }
-}
-
-export class ArraysBlocksAllocator<ArrayType extends TypedArray = Float32Array>
-    implements IArraysBlocksAllocator<ArrayType>
-{
-    protected readonly _block_length: number;
-    protected readonly _cache_lines: number = 16;
-    protected readonly _array_blocks: ArraysBlock<ArrayType>[] = [];
-
-    constructor(
-        readonly dim: DIM,
-        readonly ArrayConstructor: TypedArrayConstructor<ArrayType>
-    ) {
-        this._block_length = this._cache_lines * CACHE_LINE_BYTES / this.ArrayConstructor.BYTES_PER_ELEMENT;
-    }
-
-    allocate(arrays?: ArrayType[]): number {
-        for (const block of this._array_blocks) {
-            if (!block.is_full) {
-                if (arrays) {
-                    for (const [i, array] of block.arrays.entries())
-                        arrays[i] = array;
-                }
-                return block.allocate();
-            }
-        }
-
-        const new_block = new ArraysBlock<ArrayType>(
-            this.dim,
-            this._block_length,
-            new this.ArrayConstructor(this._block_length * this.dim)
-        );
-        this._array_blocks.unshift(new_block);
-
-        if (arrays) {
-            for (const [i, array] of new_block.arrays.entries())
-                arrays[i] = array;
-        }
-
-        return new_block.allocate();
-    }
-
-    deallocate(array: ArrayType, index: number): void {
-        for (const block of this._array_blocks) {
-            if (block.arrays.indexOf(array) >= 0) {
-                block.deallocate(index);
-                return;
-            }
-        }
-
-        throw `Could not find array in block!`;
-    }
-}
+    return offset;
+};
 
 export abstract class Allocator<ArrayType extends TypedArray>
     implements IAllocator<ArrayType>
 {
-    protected abstract _getArrayConstructor(): AnyConstructor<ArrayType>;
+    protected abstract _getArrayConstructor(): TypedArrayConstructor<ArrayType>;
 
-    readonly blocks: ArraysBlocksAllocator<ArrayType>;
-    readonly ArrayConstructor: AnyConstructor<ArrayType>;
+    readonly ArrayConstructor: TypedArrayConstructor<ArrayType>;
 
     protected constructor(readonly dim: DIM) {
         this.ArrayConstructor = this._getArrayConstructor();
-        this.blocks = new ArraysBlocksAllocator<ArrayType>(
-            dim, this.ArrayConstructor as TypedArrayConstructor<ArrayType>
-        );
     }
 
-    allocate(arrays?: ArrayType[]): number {
-        return this.blocks.allocate(arrays);
+    allocate(): ArrayType {
+        const size = this.dim * this.ArrayConstructor.BYTES_PER_ELEMENT;
+        const offset =  __allocate(size);
+        return new this.ArrayConstructor(__memory, offset, this.dim);
     }
 
-    allocateBuffer(length: number): ArrayType[] {
-        const arrays = Array<ArrayType>(this.dim) as ArrayType[];
-        const buffer = new this.ArrayConstructor(length * this.dim);
+    allocateBuffer(length: number): [ArrayType, ArrayType[]] {
+        const count = length * this.dim;
+        const size = count * this.ArrayConstructor.BYTES_PER_ELEMENT;
+        const offset =  __allocate(size);
+        const buffer = new this.ArrayConstructor(__memory, offset, count);
 
+        if (this.dim === 1)
+            return [buffer, [buffer]];
+
+        const arrays = Array<ArrayType>(length) as ArrayType[];
         let start = 0;
-        let end = length;
-        for (let i = 0; i < this.dim; i++) {
+        let end = this.dim;
+        for (let i = 0; i < length; i++) {
             arrays[i] = buffer.subarray(start, end) as ArrayType;
-            start += length;
-            end += length;
+            start += this.dim;
+            end += this.dim;
         }
 
-        return arrays;
+        return [buffer, arrays];
     }
 }
 
 export class Float32Allocator extends Allocator<Float32Array> {
-    protected _getArrayConstructor(): AnyConstructor<Float32Array> {return Float32Array}
+    protected _getArrayConstructor(): TypedArrayConstructor<Float32Array> {return Float32Array}
 }
 export class Float32Allocator2D extends Float32Allocator {constructor() {super(DIM._2D)}}
 export class Float32Allocator3D extends Float32Allocator {constructor() {super(DIM._3D)}}
@@ -145,28 +64,28 @@ export class Float32Allocator9D extends Float32Allocator {constructor() {super(D
 export class Float32Allocator16D extends Float32Allocator {constructor() {super(DIM._16D)}}
 
 export abstract class Int8Allocator extends Allocator<Uint8Array> {
-    protected _getArrayConstructor(): AnyConstructor<Uint8Array> {return Uint8Array}
+    protected _getArrayConstructor(): TypedArrayConstructor<Uint8Array> {return Uint8Array}
 }
 export class Int8Allocator1D extends Int8Allocator {constructor() {super(DIM._1D)}}
 export class Int8Allocator2D extends Int8Allocator {constructor() {super(DIM._2D)}}
 export class Int8Allocator3D extends Int8Allocator {constructor() {super(DIM._3D)}}
 
 export abstract class Int16Allocator extends Allocator<Uint16Array> {
-    protected _getArrayConstructor(): AnyConstructor<Uint16Array> {return Uint16Array}
+    protected _getArrayConstructor(): TypedArrayConstructor<Uint16Array> {return Uint16Array}
 }
 export class Int16Allocator1D extends Int16Allocator {constructor() {super(DIM._1D)}}
 export class Int16Allocator2D extends Int16Allocator {constructor() {super(DIM._2D)}}
 export class Int16Allocator3D extends Int16Allocator {constructor() {super(DIM._3D)}}
 
 export abstract class Int32Allocator extends Allocator<Uint32Array> {
-    protected _getArrayConstructor(): AnyConstructor<Uint32Array> {return Uint32Array}
+    protected _getArrayConstructor(): TypedArrayConstructor<Uint32Array> {return Uint32Array}
 }
 export class Int32Allocator1D extends Int32Allocator {constructor() {super(DIM._1D)}}
 export class Int32Allocator2D extends Int32Allocator {constructor() {super(DIM._2D)}}
 export class Int32Allocator3D extends Int32Allocator {constructor() {super(DIM._3D)}}
 
 export abstract class Uint8ClampedAllocator extends Allocator<Uint8ClampedArray> {
-    protected _getArrayConstructor(): AnyConstructor<Uint8ClampedArray> {return Uint8ClampedArray}
+    protected _getArrayConstructor(): TypedArrayConstructor<Uint8ClampedArray> {return Uint8ClampedArray}
 }
 export class Uint8ClampedAllocator1D extends Uint8ClampedAllocator {constructor() {super(DIM._1D)}}
 

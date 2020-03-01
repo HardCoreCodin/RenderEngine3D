@@ -3,7 +3,12 @@ import {InputPositions} from "../../geometry/inputs.js";
 import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
 import {Positions2D, Positions3D, Positions4D} from "../vectors.js";
 import {ATTRIBUTE} from "../../../constants.js";
-import {loadVertices, loadVerticesSimple, pullFaces} from "./_core.js";
+import {
+    loadUnsharedVertices,
+    loadVerticesSimple,
+    pullFacesWithUnsharedVertices,
+    pullFaceWithSharedVertices
+} from "./_core.js";
 import {IFaceVertices} from "../../_interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../_interfaces/attributes.js";
 
@@ -33,7 +38,7 @@ export class VertexPositions2D extends Positions2D implements IVertexAttribute<P
     }
 
     load(inputs: InputPositions): this {
-        loadVerticesSimple(this.arrays, inputs.vertices);
+        loadVerticesSimple(inputs.vertices, this.arrays);
         return this;
     }
 
@@ -67,9 +72,10 @@ export class VertexPositions3D extends Positions3D implements IVertexAttribute<P
 
     load(inputs: InputPositions): this {
         if (this._is_shared)
-            loadVerticesSimple(this.arrays, inputs.vertices);
+            loadVerticesSimple(inputs.vertices, this.arrays);
         else
-            loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, false);
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         return this;
     }
 
@@ -103,10 +109,12 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
 
     load(inputs: InputPositions): this {
         if (this._is_shared)
-            loadVerticesSimple(this.arrays, inputs.vertices);
+            loadVerticesSimple(inputs.vertices, this.arrays);
         else
-            loadVertices(this.arrays, inputs.vertices, this.face_vertices.arrays, inputs.faces_vertices, this.face_count, false);
+            loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
+
         this.arrays[3].fill(1);
+
         return this;
     }
 
@@ -131,8 +139,12 @@ export class FacePositions2D extends Positions2D implements IFaceAttribute<Posit
         return this;
     }
 
-    pull(inputs: VertexPositions2D): this {
-        pullFaces(this.arrays, inputs.arrays, this.face_vertices.arrays, this.face_count, inputs.is_shared);
+    pull(vertices: VertexPositions2D): this {
+        if (vertices.is_shared)
+            pullFaceWithSharedVertices(vertices.arrays, this.arrays, this._face_vertices.arrays);
+        else
+            pullFacesWithUnsharedVertices(vertices.arrays, this.arrays);
+
         return this;
     }
 }
@@ -150,8 +162,12 @@ export class FacePositions3D extends Positions3D implements IFaceAttribute<Posit
         return this;
     }
 
-    pull(inputs: VertexPositions3D): this {
-        pullFaces(this.arrays, inputs.arrays, this.face_vertices.arrays, this.face_count, inputs.is_shared);
+    pull(vertices: VertexPositions3D): this {
+        if (vertices.is_shared)
+            pullFaceWithSharedVertices(vertices.arrays, this.arrays, this._face_vertices.arrays);
+        else
+            pullFacesWithUnsharedVertices(vertices.arrays, this.arrays);
+
         return this;
     }
 }
@@ -169,8 +185,12 @@ export class FacePositions4D extends Positions4D implements IFaceAttribute<Posit
         return this;
     }
 
-    pull(inputs: VertexPositions4D): this {
-        pullFaces(this.arrays, inputs.arrays, this.face_vertices.arrays, this.face_count, inputs.is_shared);
+    pull(vertices: VertexPositions4D): this {
+        if (vertices.is_shared)
+            pullFaceWithSharedVertices(vertices.arrays, this.arrays, this._face_vertices.arrays);
+        else
+            pullFacesWithUnsharedVertices(vertices.arrays, this.arrays);
+
         return this;
     }
 }

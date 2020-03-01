@@ -18,12 +18,12 @@ export default class Sphere extends ImplicitGeometry
             this.radius,
             ray.closest_distance_squared,
 
-            this.center.id, this.center.arrays,
-            ray.origin.id, ray.origin.arrays,
-            ray.direction.id, ray.direction.arrays,
+            this.center.id, this.center.array,
+            ray.origin.id, ray.origin.array,
+            ray.direction.id, ray.direction.array,
 
-            hit.position.id, hit.position.arrays,
-            hit.surface_normal.id, hit.surface_normal.arrays
+            hit.position.id, hit.position.array,
+            hit.surface_normal.id, hit.surface_normal.array
         );
 
         if (distance) {
@@ -186,11 +186,11 @@ export default class Sphere extends ImplicitGeometry
 //     n = hit.surface_normal;
 //     s = this.transform.translation;
 //
-//     O = o.arrays;
-//     D = d.arrays;
-//     P = p.arrays;
-//     N = n.arrays;
-//     S = s.arrays;
+//     O = o.array;
+//     D = d.array;
+//     P = p.array;
+//     N = n.array;
+//     S = s.array;
 //
 //     return intersectSphere(this.radius,
 //         S[0][s.id], S[1][s.id], S[2][s.id],
@@ -210,11 +210,11 @@ export default class Sphere extends ImplicitGeometry
 // n = intersection.surface_normal;
 // s = this.transform.translation;
 //
-// O = o.arrays;
-// D = d.arrays;
-// P = p.arrays;
-// N = n.arrays;
-// S = s.arrays;
+// O = o.array;
+// D = d.array;
+// P = p.array;
+// N = n.array;
+// S = s.array;
 //
 // return intersectSphere(this.radius,
 //     S[0][s.id], S[1][s.id], S[2][s.id],

@@ -6,7 +6,7 @@ import {FaceVerticesInt8, VertexFacesInt8} from "./indices.js";
 
 export const inputs = new MeshInputs(ATTRIBUTE.position|ATTRIBUTE.uv);
 
-// Quads vertex/index arrays (CCW LH):
+// Quads vertex/index array (CCW LH):
 // X coordinates (0 = left, 1 = right)
 // Y coordinates (0 = bottom, 1 = top)
 // Z coordinates (0 = front, 1 = back)

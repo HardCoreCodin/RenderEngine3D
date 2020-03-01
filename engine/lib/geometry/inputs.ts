@@ -8,7 +8,15 @@ import {
     IInputUVs,
     IMeshInputs
 } from "../_interfaces/attributes.js";
-import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputs, VertexInputStr} from "../../types.js";
+import {
+    FaceInputNum,
+    FaceInputs,
+    FaceInputStr, Num2,
+    Num3, Num4,
+    VertexInputNum,
+    VertexInputs,
+    VertexInputStr
+} from "../../types.js";
 
 
 export class InputAttribute<Attribute extends ATTRIBUTE>
@@ -23,15 +31,26 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
     readonly attribute: Attribute;
     get dim(): DIM {return this._dim}
     get face_type(): number {return this._face_type}
-    get face_count(): number {return this.faces_vertices[0].length}
-    get vertex_count(): number {return this.vertices[0].length}
+    get face_count(): number {return this.faces_vertices.length}
+    get vertex_count(): number {return this.vertices.length}
 
     triangulate(): this {
         if (this._face_type === FACE_TYPE.TRIANGLE)
             return;
 
-        const [v1, v2, v3, v4] = this.faces_vertices;
-        const quad_count = v4.length;
+        const quad_count = this.faces_vertices.length;
+        const v1 = Array<number>(quad_count);
+        const v2 = Array<number>(quad_count);
+        const v3 = Array<number>(quad_count);
+        const v4 = Array<number>(quad_count);
+
+        for (const [face_id, [v1_index, v2_index, v3_index, v4_index]] of this.faces_vertices.entries()) {
+            v1[face_id] = v1_index;
+            v2[face_id] = v2_index;
+            v3[face_id] = v3_index;
+            v4[face_id] = v4_index;
+        }
+
         const triangle_count = quad_count * 2;
 
         const new_v1 = Array(triangle_count);
@@ -51,41 +70,46 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
             second_index++;
         }
 
-        this.faces_vertices = [new_v1, new_v2, new_v3];
+        this.faces_vertices = Array<Num3>(triangle_count);
+        for (let face_id = 0; face_id < triangle_count; face_id++)
+            this.faces_vertices[face_id] = [
+                new_v1[face_id],
+                new_v2[face_id],
+                new_v3[face_id],
+            ];
+
         this._face_type = FACE_TYPE.TRIANGLE;
 
         return this;
     }
 
-    addVertex(...vertex: VertexInputNum | VertexInputStr) {
+    addVertex(...vertex: Array<string|number>) {
         this._initVertices(vertex);
-        for (const [component_num, component_value] of vertex.entries())
-            this.vertices[component_num].push(this._getVertexComponent(component_value));
+        this.vertices.push(vertex.map(this._getVertexComponent) as VertexInputNum);
     }
 
-    addFace(...face: FaceInputNum | FaceInputStr) {
+    addFace(...face: Array<string|number>) {
         this._initFaces(face);
-        for (const [vertex_num, vertex_index] of face.entries())
-            this.faces_vertices[vertex_num].push(this._getVertexIndex(vertex_index));
+        this.faces_vertices.push(face.map(this._getVertexIndex) as FaceInputNum);
     }
 
-    _initFaces(face: FaceInputNum | FaceInputStr): void {
+    _initFaces(face: Array<string|number>): void {
         if (this.faces_vertices) {
-            if (face.length === this.faces_vertices.length)
+            if (face.length === this.faces_vertices[0].length)
                 return;
 
-            throw `Invalid face length: Expected ${this.faces_vertices.length} got ${face.length}!`;
+            throw `Invalid face length: Expected ${this.faces_vertices[0].length} got ${face.length}!`;
         }
 
         switch (face.length) {
             case DIM._3D: {
                 this._face_type = FACE_TYPE.TRIANGLE;
-                this.faces_vertices = num3();
+                this.faces_vertices = Array<Num3>();
                 break;
             }
             case DIM._4D: {
                 this._face_type = FACE_TYPE.QUAD;
-                this.faces_vertices = num4();
+                this.faces_vertices = Array<Num4>();
                 break;
             }
             default:
@@ -93,28 +117,28 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
         }
     }
 
-    _initVertices(vertex: VertexInputNum | VertexInputStr): void {
+    _initVertices(vertex: Array<string|number>): void {
         if (this.vertices) {
-            if (vertex.length === this.vertices.length)
+            if (vertex.length === this.vertices[0].length)
                 return;
 
-            throw `Invalid vertex length: Expected ${this.vertices.length} got ${vertex.length}!`;
+            throw `Invalid vertex length: Expected ${this.vertices[0].length} got ${vertex.length}!`;
         }
 
         switch (vertex.length) {
             case DIM._2D: {
                 this._dim = DIM._2D;
-                this.vertices = num2();
+                this.vertices = Array<Num2>();
                 break;
             }
             case DIM._3D: {
                 this._dim = DIM._3D;
-                this.vertices = num3();
+                this.vertices = Array<Num3>();
                 break;
             }
             case DIM._4D: {
                 this._dim = DIM._4D;
-                this.vertices = num4();
+                this.vertices = Array<Num4>();
                 break;
             }
             default:

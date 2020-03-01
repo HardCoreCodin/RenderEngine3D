@@ -35,14 +35,14 @@ console.log(`internal: ${performance.now() - now}`);
 
 
 // const add_object = (
-//     a: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]},
-//     b: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]},
-//     o: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]}
+//     a: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
+//     b: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
+//     o: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]}
 // ): void => {
-//     o.arrays[o.id][0] = b.arrays[b.id][0] + b.arrays[b.id][0];
-//     o.arrays[o.id][1] = b.arrays[b.id][1] + b.arrays[b.id][1];
-//     o.arrays[o.id][2] = b.arrays[b.id][2] + b.arrays[b.id][2];
-//     o.arrays[o.id][3] = b.arrays[b.id][3] + b.arrays[b.id][3];
+//     o.array[o.id][0] = b.array[b.id][0] + b.array[b.id][0];
+//     o.array[o.id][1] = b.array[b.id][1] + b.array[b.id][1];
+//     o.array[o.id][2] = b.array[b.id][2] + b.array[b.id][2];
+//     o.array[o.id][3] = b.array[b.id][3] + b.array[b.id][3];
 // };
 
 const add_array_of_arrays = (
@@ -79,9 +79,9 @@ const add_AoS_arrays = (
 };
 
 // const vec4_addition_passed_as_objects = (
-//     a: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]},
-//     b: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]},
-//     o: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]},
+//     a: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
+//     b: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
+//     o: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
 //     num_iterations: number = 10000
 // ): void => {
 //     for (let i = 0; i < num_iterations; i++)
@@ -219,9 +219,9 @@ for (i = 0; i < arrays_count; i++) {
 }*/
 
 //
-// const a: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 1, arrays: a_arrays};
-// const b: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 2, arrays: b_arrays};
-// const o: {id: number, arrays: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 3, arrays: o_arrays};
+// const a: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 1, array: a_arrays};
+// const b: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 2, array: b_arrays};
+// const o: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]} = {id: 3, array: o_arrays};
 
 //
 // now = performance.now();

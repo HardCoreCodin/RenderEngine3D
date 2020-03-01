@@ -3,11 +3,6 @@ import {Direction3D} from "./direction.js";
 import {Accessor} from "./accessor.js";
 import {IMatrix, IRotationMatrix} from "../_interfaces/matrix.js";
 
-const cos = Math.cos;
-const sin = Math.sin;
-
-let this_arrays, out_arrays: Float32Array[];
-
 export default abstract class Matrix extends Accessor implements IMatrix
 {
     protected abstract _add_number_in_place(num: number): void;
@@ -184,38 +179,38 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     protected abstract _rotate_around_z_to_out(sin: number, cos: number, out: this): void;
 
     readonly abstract translation: Position3D;
-    readonly abstract scale: Direction3D;
+
     readonly abstract x_axis: Direction3D;
     readonly abstract y_axis: Direction3D;
     readonly abstract z_axis: Direction3D;
 
     rotateAroundX(angle: number, out?: this): this {
         if (out && !out.is(this)) {
-            this._rotate_around_x_to_out(sin(angle), cos(angle), out);
+            this._rotate_around_x_to_out(Math.sin(angle), Math.cos(angle), out);
             return out;
         }
 
-        this._rotate_around_x_in_place(sin(angle), cos(angle));
+        this._rotate_around_x_in_place(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
     rotateAroundY(angle: number, out?: this): this {
         if (out && !out.is(this)) {
-            this._rotate_around_y_to_out(sin(angle), cos(angle), out);
+            this._rotate_around_y_to_out(Math.sin(angle), Math.cos(angle), out);
             return out;
         }
 
-        this._rotate_around_y_in_place(sin(angle), cos(angle));
+        this._rotate_around_y_in_place(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
     rotateAroundZ(angle: number, out?: this): this {
         if (out && !out.is(this)) {
-            this._rotate_around_z_to_out(sin(angle), cos(angle), out);
+            this._rotate_around_z_to_out(Math.sin(angle), Math.cos(angle), out);
             return out;
         }
 
-        this._rotate_around_z_in_place(sin(angle), cos(angle));
+        this._rotate_around_z_in_place(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
@@ -223,7 +218,7 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
         if (reset)
             this.setToIdentity();
 
-        this._set_rotation_around_x(sin(angle), cos(angle));
+        this._set_rotation_around_x(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
@@ -231,7 +226,7 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
         if (reset)
             this.setToIdentity();
 
-        this._set_rotation_around_y(sin(angle), cos(angle));
+        this._set_rotation_around_y(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
@@ -239,25 +234,22 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
         if (reset)
             this.setToIdentity();
 
-        this._set_rotation_around_z(sin(angle), cos(angle));
+        this._set_rotation_around_z(Math.sin(angle), Math.cos(angle));
         return this;
     }
 
     translateBy(x: number, y: number = 0, z: number = 0, out?: this): this {
-        this_arrays = this.translation.arrays;
-        out_arrays = out.translation.arrays;
-
         if (out && !out.is(this)) {
-            if (x) out_arrays[0][out.id] = x + this_arrays[0][this.id];
-            if (y) out_arrays[1][out.id] = y + this_arrays[1][this.id];
-            if (z) out_arrays[2][out.id] = z + this_arrays[2][this.id];
+            if (x) out.translation.array[0] = x + this.translation.array[0];
+            if (y) out.translation.array[1] = y + this.translation.array[1];
+            if (z) out.translation.array[2] = z + this.translation.array[2];
 
             return out;
         }
 
-        if (x) this_arrays[0][this.id] += x;
-        if (y) this_arrays[1][this.id] += y;
-        if (z) this_arrays[2][this.id] += z;
+        if (x) this.translation.array[0] += x;
+        if (y) this.translation.array[1] += y;
+        if (z) this.translation.array[2] += z;
 
         return this;
     }

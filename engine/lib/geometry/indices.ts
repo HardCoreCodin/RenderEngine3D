@@ -27,19 +27,17 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
             vertex_face_indices[i] = [];
 
         let length = 0;
-        for (const face_vertex_ids of face_vertices.arrays) {
-            for (let face_id = 0; face_id < face_vertex_ids.length; face_id++) {
-                vertex_face_indices[face_vertex_ids[face_id]].push(face_id);
-                length++
-            }
+        for (const [face_id, vertex_ids] of face_vertices.arrays.entries()) {
+            vertex_face_indices[vertex_ids[0]].push(face_id);
+            vertex_face_indices[vertex_ids[1]].push(face_id);
+            vertex_face_indices[vertex_ids[2]].push(face_id);
         }
 
         this.init(length);
 
         let offset = 0;
-        const array = this.arrays[0];
         for (const [vertex_index, face_indices] of vertex_face_indices.entries()) {
-            this.indices[vertex_index] = array.subarray(offset, offset+face_indices.length) as ArrayType;
+            this.indices[vertex_index] = this.array.subarray(offset, offset+face_indices.length) as ArrayType;
             this.indices[vertex_index].set(face_indices);
             offset += face_indices.length;
         }
@@ -56,9 +54,12 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
         if (this.length !== inputs.face_count)
             this.init(inputs.face_count);
 
-        this.arrays[0].set(inputs.faces_vertices[0]);
-        this.arrays[1].set(inputs.faces_vertices[1]);
-        this.arrays[2].set(inputs.faces_vertices[2]);
+        for (let i = 0; i < inputs.faces_vertices[0].length; i++)
+            this.arrays[i].set([
+                inputs.faces_vertices[0][i],
+                inputs.faces_vertices[1][i],
+                inputs.faces_vertices[2][i],
+            ]);
 
         return this;
     }

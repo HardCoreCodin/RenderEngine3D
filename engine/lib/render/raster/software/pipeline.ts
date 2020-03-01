@@ -119,7 +119,7 @@ export default class Rasterizer
         // const world_to_clip = viewport.world_to_clip;
         // const model_to_clip = this.model_to_clip;
         // const clip_positions = this.clip_space_vertex_positions;
-        // const cp = clip_positions.arrays;
+        // const cp = clip_positions.array;
         //
         // const vf = this.vertex_flags;
         // const ff = this.face_flags;
@@ -139,7 +139,7 @@ export default class Rasterizer
         //     // mesh_shader = material.mesh_shader;
         //
         //     for (mesh of material.mesh_geometries.meshes) {
-        //         // fv = mesh.face_vertices.arrays;
+        //         // fv = mesh.face_vertices.array;
         //         vc = mesh.vertex_count;
         //         fc = mesh.face_count;
         //
@@ -168,24 +168,24 @@ export default class Rasterizer
         //             // for (vertex_attribute of this.material.vertex_attributes) {
         //             //     if (vertex_attribute.is_shared)
         //             //         clipSharedAttribute(
-        //             //             vertex_attribute.arrays,
+        //             //             vertex_attribute.array,
         //             //
         //             //             this.src_trg_indices,
         //             //             this.src_trg_numbers,
         //             //             this.interpolations,
         //             //             this.face_flags,
         //             //
-        //             //             clipped_vertex_attribute.arrays
+        //             //             clipped_vertex_attribute.array
         //             //         );
         //             //     else
         //             //         clipUnsharedAttribute(
-        //             //             vertex_attribute.arrays,
+        //             //             vertex_attribute.array,
         //             //
         //             //             this.src_trg_numbers,
         //             //             this.interpolations,
         //             //             this.face_flags,
         //             //
-        //             //             clipped_vertex_attribute.arrays
+        //             //             clipped_vertex_attribute.array
         //             //         );
         //             // }
         //
@@ -247,10 +247,10 @@ let render_target: RenderTarget;
 //         // Do the frustum check again, this time with the full mesh:
 //         this.local_positions.mat4mul(this.local_to_clip, this.clip_space_positions);
 //         this.result_flags = cullAndClip(
-//             this.clip_space_positions.arrays,
-//             this.ndc_space_positions.arrays,
-//             this.new_faces_positions.arrays,
-//             this.face_vertices.arrays,
+//             this.clip_space_positions.array,
+//             this.ndc_space_positions.array,
+//             this.new_faces_positions.array,
+//             this.face_vertices.array,
 //             this.vertex_flags,
 //             this.face_flags,
 //             this.face_areas,

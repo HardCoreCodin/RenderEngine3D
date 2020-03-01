@@ -1,32 +1,3 @@
-export const set_the_components_of_a_3x3_matrix = (
-    a: Float32Array,
-    m11: number, m12: number, m13: number,
-    m21: number, m22: number, m23: number,
-    m31: number, m32: number, m33: number
-): void => {
-    a[0] = m11;  a[1] = m12;  a[2] = m13;
-    a[3] = m21;  a[4] = m22;  a[5] = m23;
-    a[6] = m31;  a[7] = m32;  a[8] = m33;
-};
-
-export const set_all_components_of_a_3x3_matrix_to_a_number = (
-    a: Float32Array,
-    value: number
-): void => {
-    a[0] = a[1] = a[2] =
-    a[3] = a[4] = a[5] =
-    a[6] = a[7] = a[8] = value;
-};
-
-export const set_a_3x3_matrix_from_another_3x3_matrix = (
-    a: Float32Array,
-    o: Float32Array
-): void => {
-    a[0] = o[0];  a[1] = o[1];  a[2] = o[2];
-    a[3] = o[3];  a[4] = o[4];  a[5] = o[5];
-    a[6] = o[6];  a[7] = o[7];  a[8] = o[8];
-};
-
 export const set_a_3x3_matrix_to_the_identity_matrix = (
     a: Float32Array,
 ) : void => {
@@ -46,20 +17,12 @@ export const set_a_3x3_matrix_to_a_cross_product_matrix_for_a_3D_direction_in_pl
 
 export const set_a_3x3_matrix_to_an_outer_product_matrix_for_two_3D_directions_in_place = (
     a: Float32Array,
-
-    v1: number,
-    X1: Float32Array,
-    Y1: Float32Array,
-    Z1: Float32Array,
-
-    v2: number,
-    X2: Float32Array,
-    Y2: Float32Array,
-    Z2: Float32Array
+    v1: Float32Array,
+    v2: Float32Array
 ) : void => {
-    a[0] = X1[v1] * X2[v2];  a[1] = Y1[v1] * X2[v2];  a[2] = Z1[v1] * X2[v2];
-    a[3] = X1[v1] * Y2[v2];  a[4] = Y1[v1] * Y2[v2];  a[5] = Z1[v1] * Y2[v2];
-    a[6] = X1[v1] * Z2[v2];  a[7] = Y1[v1] * Z2[v2];  a[8] = Z1[v1] * Z2[v2];
+    a[0] = v1[0]*v2[0];  a[1] = v1[1]*v2[0];  a[2] = v1[2]*v2[0];
+    a[3] = v1[0]*v2[1];  a[4] = v1[1]*v2[1];  a[5] = v1[2]*v2[1];
+    a[6] = v1[0]*v2[2];  a[7] = v1[1]*v2[2];  a[8] = v1[2]*v2[2];
 };
 
 export const invert_a_3x3_matrix_to_out = (
