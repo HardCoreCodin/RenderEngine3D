@@ -1,4 +1,3 @@
-
 export const set_the_components_of_a_4D_vector = (
     a: Float32Array,
     x: number,
