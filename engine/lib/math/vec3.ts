@@ -1,4 +1,3 @@
-
 export const check_if_two_3D_vectors_are_equal = (
     a: Float32Array,
     b: Float32Array
@@ -381,12 +380,14 @@ export const multiply_a_3D_position_by_a_4x4_matrix_to_out4 = (
 // ====
 export const multiply_all_3D_vectors_by_a_3x3_matrix_in_place = (
     a: Float32Array,
-    m: Float32Array
+    m: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
-    let k = 2;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
-    for (let i = 0; i < a.length; i+=3) {
+    for (let i = start; i < end; i+=3) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -402,11 +403,13 @@ export const multiply_all_3D_vectors_by_a_3x3_matrix_in_place = (
 export const multiply_all_3D_vectors_by_a_3x3_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
-    let k = 2;
-    for (let i = 0; i < a.length; i+=3) {
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) {
         o[i] = a[i]*m[0] + a[j]*m[3] + a[k]*m[6];
         o[j] = a[i]*m[1] + a[j]*m[4] + a[k]*m[7];
         o[k] = a[i]*m[2] + a[j]*m[5] + a[k]*m[8];
@@ -420,14 +423,16 @@ export const multiply_all_3D_vectors_by_a_3x3_matrix_to_out = (
 export const multiply_some_3D_vectors_by_a_3x3_matrix_in_place = (
     a: Float32Array,
     m: Float32Array,
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
 
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    for (let i = start; i < end; i+=3) if (include[id]) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -445,12 +450,14 @@ export const multiply_some_3D_vectors_by_a_3x3_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
     include: Uint8Array[],
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    let id = start;
+    let j = start + 1;
+    let k = start +2;
+    for (let i = start; i < end; i+=3) if (include[id]) {
         o[i] = a[i]*m[0] + a[j]*m[3] + a[k]*m[6];
         o[j] = a[i]*m[1] + a[j]*m[4] + a[k]*m[7];
         o[k] = a[i]*m[2] + a[j]*m[5] + a[k]*m[8];
@@ -466,12 +473,14 @@ export const multiply_some_3D_vectors_by_a_3x3_matrix_to_out = (
 // ========
 export const multiply_all_3D_directions_by_a_4x4_matrix_in_place = (
     a: Float32Array,
-    m: Float32Array
+    m: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
-    let k = 2;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
-    for (let i = 0; i < a.length; i+=3) {
+    for (let i = start; i < end; i+=3) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -488,11 +497,13 @@ export const multiply_all_3D_directions_by_a_4x4_matrix_to_out3 = (
     a: Float32Array,
     m: Float32Array,
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
+    let j = start + 1;
+    let k = start + 2;
 
-    for (let i = 0; i < a.length; i+=3) {
+    for (let i = start; i < end; i+=3) {
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
@@ -504,11 +515,13 @@ export const multiply_all_3D_directions_by_a_4x4_matrix_to_out4 = (
     a: Float32Array,
     m: Float32Array,
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 0;
-    for (let i = 0; i < a.length; i+=3) {
+    let l = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) {
         o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
         o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
         o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
@@ -518,13 +531,15 @@ export const multiply_all_3D_directions_by_a_4x4_matrix_to_out4 = (
     }
 };
 export const normalize_all_3D_directions_in_place = (
-    a: Float32Array
+    a: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
     let t_n: number;
-    let j = 1;
-    let k = 2;
+    let j = start + 1;
+    let k = start + 2;
     const sqrt = Math.sqrt;
-    for (let i = 0; i < a.length; i+=3) {
+    for (let i = start; i < end; i+=3) {
         t_n = a[i]**2 + a[j]**2 + a[k]**2;
         if (t_n === 1)
             continue;
@@ -544,14 +559,16 @@ export const normalize_all_3D_directions_in_place = (
 export const multiply_some_3D_directions_by_a_4x4_matrix_in_place = (
     a: Float32Array,
     m: Float32Array,
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
 
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    for (let i = start; i < end; i+=3) if (include[id]) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -570,11 +587,13 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out3 = (
     m: Float32Array,
     include: Uint8Array[],
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = 0; i < end; i+=3) if (include[id]) {
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
@@ -588,12 +607,14 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out4 = (
     m: Float32Array,
     include: Uint8Array[],
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    let l = 0;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    let id = start;
+    let l = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) if (include[id]) {
         o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
         o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
         o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
@@ -605,15 +626,16 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out4 = (
 };
 export const normalize_some_3D_directions_in_place = (
     a: Float32Array,
-
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ) : void => {
     let t_n: number;
-    let id = 0;
-    let j = 1;
-    let k = 2;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
     const sqrt = Math.sqrt;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    for (let i = start; i < end; i+=3) if (include[id]) {
         t_n = a[i]**2 + a[j]**2 + a[k]**2;
         if (t_n === 1)
             continue;
@@ -634,12 +656,14 @@ export const normalize_some_3D_directions_in_place = (
 // ========
 export const multiply_all_3D_positions_by_a_4x4_matrix_in_place = (
     a: Float32Array,
-    m: Float32Array
+    m: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
-    for (let i = 0; i < a.length; i+=3) {
+    for (let i = start; i < end; i+=3) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -654,11 +678,13 @@ export const multiply_all_3D_positions_by_a_4x4_matrix_in_place = (
 export const multiply_all_3D_positions_by_a_4x4_matrix_to_out3 = (
     a: Float32Array,
     m: Float32Array,
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    for (let i = 0; i < a.length; i+=3) {
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) {
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + m[12];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + m[13];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + m[14];
@@ -670,11 +696,13 @@ export const multiply_all_3D_positions_by_a_4x4_matrix_to_out4 = (
     a: Float32Array,
     m: Float32Array,
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 0;
-    for (let i = 0; i < a.length; i+=3) {
+    let l = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) {
         o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + m[12];
         o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + m[13];
         o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + m[14];
@@ -688,14 +716,15 @@ export const multiply_all_3D_positions_by_a_4x4_matrix_to_out4 = (
 export const multiply_some_3D_positions_by_a_4x4_matrix_in_place = (
     a: Float32Array,
     m: Float32Array,
-
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
     let x, y, z: number;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    for (let i = start; i < end; i+=3) if (include[id]) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -712,15 +741,15 @@ export const multiply_some_3D_positions_by_a_4x4_matrix_in_place = (
 export const multiply_some_3D_positions_by_a_4x4_matrix_to_out3 = (
     a: Float32Array,
     m: Float32Array,
-
     include: Uint8Array[],
-
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) if (include[id]) {
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + m[12];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + m[13];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + m[14];
@@ -734,12 +763,14 @@ export const multiply_some_3D_positions_by_a_4x4_matrix_to_out4 = (
     m: Float32Array,
     include: Uint8Array[],
     o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    let l = 0;
-    for (let i = 0; i < a.length; i+=3) if (include[id]) {
+    let id = start;
+    let l = start;
+    let j = start + 1;
+    let k = start + 2;
+    for (let i = start; i < end; i+=3) if (include[id]) {
         o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + m[12];
         o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + m[13];
         o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + m[14];

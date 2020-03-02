@@ -1,4 +1,3 @@
-
 export const check_if_two_2D_vectrs_are_equal = (
     a: Float32Array,
     b: Float32Array
@@ -212,12 +211,14 @@ export const normalize_a_2D_direction_in_place = (
 };
 
 export const normalize_all_2D_directions_in_place = (
-    a: Float32Array
+    a: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
+    let j = start + 1;
     let n: number;
     const sqrt = Math.sqrt;
-    for (let i = 0; i < a.length; i+=2) {
+    for (let i = start; i < end; i+=2) {
         n = a[i]**2 + a[j]**2;
         if (n === 1)
             continue;
@@ -233,14 +234,15 @@ export const normalize_all_2D_directions_in_place = (
 
 export const normalize_some_2D_directions_in_place = (
     a: Float32Array,
-
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
+    let id = start;
+    let j = start + 1;
     let n: number;
     const sqrt = Math.sqrt;
-    for (let i = 0; i < a.length; i+=2) if (include[id]) {
+    for (let i = start; i < end; i+=2) if (include[id]) {
         n = a[i]**2 + a[j]**2;
         if (n === 1)
             continue;
@@ -304,10 +306,12 @@ export const multiply_a_2D_vector_by_a_2x2_matrix_in_place = (
 export const multiply_all_2D_vectors_by_a_2x2_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
-    for (let i = 0; i < a.length; i+=2) {
+    let j = start + 1;
+    for (let i = start; i < end; i+=2) {
         o[i] = a[i]*m[0] + a[j]*m[4];
         o[j] = a[i]*m[1] + a[j]*m[3];
 
@@ -316,11 +320,13 @@ export const multiply_all_2D_vectors_by_a_2x2_matrix_to_out = (
 };
 export const multiply_all_2D_vectors_by_a_2x2_matrix_in_place = (
     a: Float32Array,
-    m: Float32Array
+    m: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
+    let j = start + 1;
     let x, y: number;
-    for (let i = 0; i < a.length; i+=2) {
+    for (let i = start; i < end; i+=2) {
         x = a[i];
         y = a[j];
 
@@ -335,11 +341,13 @@ export const multiply_some_2D_vectors_by_a_2x2_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
     include: Uint8Array[],
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let id = 0;
-    let j = 1;
-    for (let i = 0; i < a.length; i+=2) if (include[id]) {
+    let id = start;
+    let j = start + 1;
+    for (let i = start; i < end; i+=2) if (include[id]) {
         o[i] = a[i]*m[0] + a[j]*m[2];
         o[j] = a[i]*m[1] + a[j]*m[3];
 
@@ -351,13 +359,14 @@ export const multiply_some_2D_vectors_by_a_2x2_matrix_to_out = (
 export const multiply_some_2D_vectors_by_a_2x2_matrix_in_place = (
     a: Float32Array,
     m: Float32Array,
-
     include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ): void => {
-    let j = 1;
-    let id = 0;
+    let id = start;
+    let j = start + 1;
     let x, y: number;
-    for (let i = 0; i < a.length; i+=2) if (include[id]) {
+    for (let i = start; i < end; i+=2) if (include[id]) {
         x = a[i];
         y = a[j];
 

@@ -57,6 +57,7 @@ export abstract class Allocator<ArrayType extends TypedArray>
 export class Float32Allocator extends Allocator<Float32Array> {
     protected _getArrayConstructor(): TypedArrayConstructor<Float32Array> {return Float32Array}
 }
+export class Float32Allocator1D extends Float32Allocator {constructor() {super(DIM._1D)}}
 export class Float32Allocator2D extends Float32Allocator {constructor() {super(DIM._2D)}}
 export class Float32Allocator3D extends Float32Allocator {constructor() {super(DIM._3D)}}
 export class Float32Allocator4D extends Float32Allocator {constructor() {super(DIM._4D)}}

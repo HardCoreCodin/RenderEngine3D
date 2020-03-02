@@ -1,4 +1,3 @@
-
 export const check_if_two_4D_vectros_are_equal = (
     a: Float32Array,
     b: Float32Array
@@ -260,14 +259,16 @@ export const normalize_a_4D_direction_in_place = (
 };
 
 export const normalize_all_4D_directions_in_place = (
-    a: Float32Array
+    a: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 3;
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
     const sqrt = Math.sqrt;
     let n: number;
-    for (let i = 0; i < a.length; i+=4) {
+    for (let i = start; i < end; i+=4) {
         n = a[i]**2 + a[j]**2 + a[k]**2 + a[l]**2;
         if (n === 1)
             continue;
@@ -287,15 +288,17 @@ export const normalize_all_4D_directions_in_place = (
 
 export const normalize_some_4D_directions_in_place = (
     a: Float32Array,
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    let l = 3;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
     let n: number;
     const sqrt = Math.sqrt;
-    for (let i = 0; i < a.length; i+=4) if (include[id]) {
+    for (let i = start; i < end; i+=4) if (include[id]) {
         n = a[i]**2 + a[j]**2 + a[k]**2 + a[l]**2;
         if (n === 1)
             continue;
@@ -386,12 +389,14 @@ export const multiply_a_4D_vector_by_a_4x4_matrix_to_out = (
 export const multiply_all_4D_vectors_by_a_4x4_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 3;
-    for (let i = 0; i < a.length; i+=4) {
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
+    for (let i = start; i < end; i+=4) {
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + a[l]*m[12];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + a[l]*m[13];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + a[l]*m[14];
@@ -407,13 +412,15 @@ export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
     a: Float32Array,
     m: Float32Array,
     include: Uint8Array[],
-    o: Float32Array
+    o: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 3;
-    let id = 0;
-    for (let i = 0; i < a.length; i+=4) if (include[id]){
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
+    for (let i = start; i < end; i+=4) if (include[id]){
         o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8] + a[l]*m[12];
         o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9] + a[l]*m[13];
         o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10] + a[l]*m[14];
@@ -427,13 +434,15 @@ export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
 
 export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = (
     a: Float32Array,
-    m: Float32Array
+    m: Float32Array,
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let j = 1;
-    let k = 2;
-    let l = 3;
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
     let x, y, z, w: number;
-    for (let i = 0; i < a.length; i+=4) {
+    for (let i = start; i < end; i+=4) {
         x = a[i];
         y = a[j];
         z = a[k];
@@ -453,15 +462,17 @@ export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = (
 export const multiply_some_4D_vectors_by_a_4x4_matrix_in_place = (
     a: Float32Array,
     m: Float32Array,
-    include: Uint8Array[]
+    include: Uint8Array[],
+    start: number = 0,
+    end: number = a.length
 ) : void => {
-    let id = 0;
-    let j = 1;
-    let k = 2;
-    let l = 3;
+    let id = start;
+    let j = start + 1;
+    let k = start + 2;
+    let l = start + 3;
 
     let x, y, z, w: number;
-    for (let i = 0; i < a.length; i+=4) if (include[id]) {
+    for (let i = start; i < end; i+=4) if (include[id]) {
         x = a[i];
         y = a[j];
         z = a[k];

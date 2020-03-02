@@ -57,4 +57,5 @@ export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;
 const __array = new Uint8Array(4);
 const __view = new Uint32Array(__array.buffer);
 export const IS_BIG_ENDIAN = !((__view[0] = 1) & __array[0]);
+export const MAX_RENDER_TARGET_SIZE = 3840 * 2160;
 //# sourceMappingURL=constants.js.map

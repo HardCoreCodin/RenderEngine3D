@@ -1,13 +1,8 @@
 export const generateRayDirections = (
+    ray_directions: Float32Array,
     focal_length: number,
-
-    viewport_x: number,
-    viewport_y: number,
-
     width: number,
-    height: number,
-
-    ray_directions: Float32Array
+    height: number
 ): void => {
     const sqrt = Math.sqrt;
     const squared_focal_length = focal_length * focal_length;
@@ -17,7 +12,7 @@ export const generateRayDirections = (
     let x, x_dir, x_dir_squared;
     let y, y_dir, y_dir_squared;
 
-    for (y = 0; y < height; y++) {
+    for (y = height; y !== 0; y--) {
         y_dir = ((y + 0.5) * one_over_width) - 0.5;
         y_dir_squared = y_dir * y_dir;
 
