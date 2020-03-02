@@ -272,6 +272,26 @@ export const multiply_a_4x4_matrix_by_another_4x4_matrix_in_place = (
     a[11] = t31*b[3] + t32*b[7] + t33*b[11] + t34*b[15]; // Row 3 | Column 4
     a[15] = t41*b[3] + t42*b[7] + t43*b[11] + t44*b[15]; // Row 4 | Column 4
 };
+export const multiply_a_4x4_matrix_by_a_3x3_matrix_in_place = (
+    a: Float32Array,
+    b: Float32Array
+) : void => {
+    const t11 = a[0];  const t12 = a[1];  const t13 = a[2];
+    const t21 = a[4];  const t22 = a[5];  const t23 = a[6];
+    const t31 = a[8];  const t32 = a[9];  const t33 = a[10];
+
+    a[0] = t11*b[0] + t12*b[3] + t13*b[6]; // Row 1 | Column 1
+    a[4] = t21*b[0] + t22*b[3] + t23*b[6]; // Row 2 | Column 1
+    a[8] = t31*b[0] + t32*b[3] + t33*b[6]; // Row 3 | Column 1
+
+    a[1] = t11*b[1] + t12*b[4] + t13*b[7]; // Row 1 | Column 2
+    a[5] = t21*b[1] + t22*b[4] + t23*b[7]; // Row 2 | Column 2
+    a[9] = t31*b[1] + t32*b[4] + t33*b[7]; // Row 3 | Column 2
+
+    a[2] = t11*b[2] + t12*b[5] + t13*b[8]; // Row 1 | Column 3
+    a[6] = t21*b[2] + t22*b[5] + t23*b[8]; // Row 2 | Column 3
+    a[10] = t31*b[2] + t32*b[5] + t33*b[8]; // Row 3 | Column 3
+};
 
 export const set_a_4x4_matrix_to_a_rotation_around_x_in_place = (
     a: Float32Array,
@@ -359,6 +379,17 @@ export const rotate_a_4x4_matrix_around_x_to_out = (
     o[8] = a[8];  o[9] = a[10]*sin + a[9]*cos;  o[10] = a[10]*cos - a[9]*sin;  o[11] = a[11];
     o[12] = a[12];  o[13] = a[14]*sin + a[13]*cos;  o[14] = a[14]*cos - a[13]*sin;  o[15] = a[15];
 };
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_x_to_out = (
+    a: Float32Array,
+    sin: number,
+    cos: number,
+    o: Float32Array
+) : void => {
+    o[0] = a[0];  o[1] = a[2]*sin + a[1]*cos;  o[2] = a[2]*cos - a[1]*sin;  o[3] = a[3];
+    o[4] = a[4];  o[5] = a[6]*sin + a[5]*cos;  o[6] = a[6]*cos - a[5]*sin;  o[7] = a[7];
+    o[8] = a[8];  o[9] = a[10]*sin + a[9]*cos;  o[10] = a[10]*cos - a[9]*sin;  o[11] = a[11];
+    o[12] = a[12];  o[13] = a[13];  o[14] = a[14];  o[15] = a[15];
+};
 
 export const rotate_a_4x4_matrix_around_x_in_place = (
     a: Float32Array,
@@ -420,6 +451,20 @@ export const rotate_a_4x4_matrix_around_x_in_place = (
     a[9] = t32*cos + t33*sin;  a[10] = t33*cos - t32*sin;
     a[13] = t42*cos + t43*sin;  a[14] = t43*cos - t42*sin;
 };
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_x_in_place = (
+    a: Float32Array,
+    sin: number,
+    cos: number
+) : void => {
+    const t12 = a[1];  const t13 = a[2];
+    const t22 = a[5];  const t23 = a[6];
+    const t32 = a[9];  const t33 = a[10];
+
+    a[1] = t12*cos + t13*sin;  a[2] = t13*cos - t12*sin;
+    a[5] = t22*cos + t23*sin;  a[6] = t23*cos - t22*sin;
+    a[9] = t32*cos + t33*sin;  a[10] = t33*cos - t32*sin;
+};
+
 
 export const rotate_a_4x4_matrix_around_y_to_out = (
     a: Float32Array,
@@ -477,6 +522,18 @@ export const rotate_a_4x4_matrix_around_y_to_out = (
     o[8] = a[8]*cos - a[10]*sin;  o[9] = a[9];  o[10] = a[8]*sin + a[10]*cos;  o[11] = a[11];
     o[12] = a[12]*cos - a[14]*sin;  o[13] = a[13];  o[14] = a[12]*sin + a[14]*cos;  o[15] = a[15];
 };
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_y_to_out = (
+    a: Float32Array,
+    sin: number,
+    cos: number,
+    o: Float32Array
+) : void => {
+    o[0] = a[0]*cos - a[2]*sin;  o[1] = a[1];  o[2] = a[0]*sin + a[2]*cos;  o[3] = a[3];
+    o[4] = a[4]*cos - a[6]*sin;  o[5] = a[5];  o[6] = a[4]*sin + a[6]*cos;  o[7] = a[7];
+    o[8] = a[8]*cos - a[10]*sin;  o[9] = a[9];  o[10] = a[8]*sin + a[10]*cos;  o[11] = a[11];
+    o[12] = a[12];  o[13] = a[13];  o[14] = a[14];  o[15] = a[15];
+};
+
 
 export const rotate_a_4x4_matrix_around_y_in_place = (
     a: Float32Array,
@@ -538,6 +595,19 @@ export const rotate_a_4x4_matrix_around_y_in_place = (
     a[8] = t31*cos - t33*sin;  a[10] = t31*sin + t33*cos;
     a[12] = t41*cos - t43*sin;  a[14] = t41*sin + t43*cos;
 };
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_y_in_place = (
+    a: Float32Array,
+    sin: number,
+    cos: number
+) : void => {
+    const t11 = a[0];  const t13 = a[2];
+    const t21 = a[4];  const t23 = a[6];
+    const t31 = a[8];  const t33 = a[10];
+
+    a[0] = t11*cos - t13*sin;  a[2] = t11*sin + t13*cos;
+    a[4] = t21*cos - t23*sin;  a[6] = t21*sin + t23*cos;
+    a[8] = t31*cos - t33*sin;  a[10] = t31*sin + t33*cos;
+};
 
 export const rotate_a_4x4_matrix_around_z_to_out = (
     a: Float32Array,
@@ -594,6 +664,17 @@ export const rotate_a_4x4_matrix_around_z_to_out = (
     o[4] = a[4]*cos + a[5]*sin;  o[5] = a[5]*cos - a[4]*sin;  o[6] = a[6];  o[7] = a[7];
     o[8] = a[8]*cos + a[9]*sin;  o[9] = a[9]*cos - a[8]*sin;  o[10] = a[10];  o[11] = a[11];
     o[12] = a[12]*cos + a[13]*sin;  o[13] = a[13]*cos - a[12]*sin;  o[14] = a[14];  o[15] = a[15];
+};
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_z_to_out = (
+    a: Float32Array,
+    sin: number,
+    cos: number,
+    o: Float32Array
+) : void => {
+    o[0] = a[0]*cos + a[1]*sin;  o[1] = a[1]*cos - a[0]*sin;  o[2] = a[2];  o[3] = a[3];
+    o[4] = a[4]*cos + a[5]*sin;  o[5] = a[5]*cos - a[4]*sin;  o[6] = a[6];  o[7] = a[7];
+    o[8] = a[8]*cos + a[9]*sin;  o[9] = a[9]*cos - a[8]*sin;  o[10] = a[10];  o[11] = a[11];
+    o[12] = a[12];  o[13] = a[13];  o[14] = a[14];  o[15] = a[15];
 };
 
 export const rotate_a_4x4_matrix_around_z_in_place = (
@@ -655,4 +736,17 @@ export const rotate_a_4x4_matrix_around_z_in_place = (
     a[4] = t21*cos + t22*sin;  a[5] = t22*cos - t21*sin;
     a[8] = t31*cos + t32*sin;  a[9] = t32*cos - t31*sin;
     a[12] = t41*cos + t42*sin;  a[13] = t42*cos - t41*sin;
+};
+export const rotate_a_3x3_portion_of_a_4x4_matrix_around_z_in_place = (
+    a: Float32Array,
+    sin: number,
+    cos: number
+) : void => {
+    const t11 = a[0];  const t12 = a[1];
+    const t21 = a[4];  const t22 = a[5];
+    const t31 = a[8];  const t32 = a[9];
+
+    a[0] = t11*cos + t12*sin;  a[1] = t12*cos - t11*sin;
+    a[4] = t21*cos + t22*sin;  a[5] = t22*cos - t21*sin;
+    a[8] = t31*cos + t32*sin;  a[9] = t32*cos - t31*sin;
 };

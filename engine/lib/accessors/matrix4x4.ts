@@ -12,11 +12,17 @@ import {
     divide_a_4x4_matrix_by_a_number_in_place,
     divide_a_4x4_matrix_by_a_number_to_out,
     invert_a_4x4_matrix_in_place,
-    invert_a_4x4_matrix_to_out,
+    invert_a_4x4_matrix_to_out, multiply_a_4x4_matrix_by_a_3x3_matrix_in_place,
     multiply_a_4x4_matrix_by_a_number_in_place,
     multiply_a_4x4_matrix_by_a_number_to_out,
     multiply_a_4x4_matrix_by_another_4x4_matrix_in_place,
     multiply_a_4x4_matrix_by_another_4x4_matrix_to_out,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_x_in_place,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_x_to_out,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_y_in_place,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_y_to_out,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_z_in_place,
+    rotate_a_3x3_portion_of_a_4x4_matrix_around_z_to_out,
     rotate_a_4x4_matrix_around_x_in_place,
     rotate_a_4x4_matrix_around_x_to_out,
     rotate_a_4x4_matrix_around_y_in_place,
@@ -35,6 +41,7 @@ import {
     transpose_a_4x4_matrix_to_out
 } from "../math/mat4.js";
 import {IMatrix4x4} from "../_interfaces/matrix.js";
+import Matrix3x3 from "./matrix3x3.js";
 
 export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
     readonly translation: Position3D;
@@ -49,10 +56,10 @@ export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
         super(array);
 
         this.x_axis = new Direction3D(this.array.subarray(0, 3));
-        this.y_axis = new Direction3D(this.array.subarray(3, 6));
-        this.z_axis = new Direction3D(this.array.subarray(6, 9));
+        this.y_axis = new Direction3D(this.array.subarray(4, 7));
+        this.z_axis = new Direction3D(this.array.subarray(8, 11));
 
-        this.translation = new Position3D(this.z_axis.array);
+        this.translation = new Position3D(this.array.subarray(12, 15));
     }
 
     set m11(m11: number) {this.array[0] = m11}
@@ -173,8 +180,11 @@ export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
         multiply_a_4x4_matrix_by_a_number_in_place(this.array, num);
     }
 
-    protected _mul_other_in_place(other: this): void {
-        multiply_a_4x4_matrix_by_another_4x4_matrix_in_place(this.array, other.array);
+    protected _mul_other_in_place(other: Matrix3x3|Matrix4x4): void {
+        if (other instanceof Matrix4x4)
+            multiply_a_4x4_matrix_by_another_4x4_matrix_in_place(this.array, other.array);
+        else
+            multiply_a_4x4_matrix_by_a_3x3_matrix_in_place(this.array, other.array);
     }
 
     protected _mul_number_to_out(num: number, out: this): void {
@@ -244,6 +254,30 @@ export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
 
     protected _rotate_around_z_to_out(sin: number, cos: number, out: this): void {
         rotate_a_4x4_matrix_around_z_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_x_in_place(sin: number, cos: number): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_x_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_y_in_place(sin: number, cos: number): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_y_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_z_in_place(sin: number, cos: number): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_z_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_x_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_x_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_y_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_y_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_z_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_3x3_portion_of_a_4x4_matrix_around_z_to_out(this.array, sin, cos, out.array);
     }
 
     toString(): string {

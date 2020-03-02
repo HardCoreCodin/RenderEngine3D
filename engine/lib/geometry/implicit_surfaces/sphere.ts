@@ -18,12 +18,12 @@ export default class Sphere extends ImplicitGeometry
             this.radius,
             ray.closest_distance_squared,
 
-            this.center.id, this.center.array,
-            ray.origin.id, ray.origin.array,
-            ray.direction.id, ray.direction.array,
+            this.center.array,
+            ray.origin.array,
+            ray.direction.array,
 
-            hit.position.id, hit.position.array,
-            hit.surface_normal.id, hit.surface_normal.array
+            hit.position.array,
+            hit.surface_normal.array
         );
 
         if (distance) {

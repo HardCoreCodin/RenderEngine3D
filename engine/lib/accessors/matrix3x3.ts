@@ -17,6 +17,12 @@ import {
     multiply_a_3x3_matrix_by_a_number_to_out,
     multiply_a_3x3_matrix_by_another_3x3_matrix_in_place,
     multiply_a_3x3_matrix_by_another_3x3_matrix_to_out,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_x_in_place,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_x_to_out,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_y_in_place,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_y_to_out,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_z_in_place,
+    rotate_a_2x2_portion_of_a_3x3_matrix_around_z_to_out,
     rotate_a_3x3_matrix_around_x_in_place,
     rotate_a_3x3_matrix_around_x_to_out,
     rotate_a_3x3_matrix_around_y_in_place,
@@ -249,6 +255,30 @@ export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
 
     protected _rotate_around_z_to_out(sin: number, cos: number, out: this): void {
         rotate_a_3x3_matrix_around_z_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_x_in_place(sin: number, cos: number): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_x_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_y_in_place(sin: number, cos: number): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_y_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_z_in_place(sin: number, cos: number): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_z_in_place(this.array, sin, cos);
+    }
+
+    protected _inner_rotate_around_x_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_x_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_y_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_y_to_out(this.array, sin, cos, out.array);
+    }
+
+    protected _inner_rotate_around_z_to_out(sin: number, cos: number, out: this): void {
+        rotate_a_2x2_portion_of_a_3x3_matrix_around_z_to_out(this.array, sin, cos, out.array);
     }
 }
 

@@ -2,26 +2,26 @@ export const intersectSphere = (
     radius: number,
     closest_distance_squared: number,
 
-    center_id: number, center: Float32Array[],
-    origin_id: number, origin: Float32Array[],
-    raydir_id: number, raydir: Float32Array[],
+    center: Float32Array,
+    origin: Float32Array,
+    raydir: Float32Array,
 
-    hitpos_id: number, hitpos: Float32Array[],
-    normal_id: number, normal: Float32Array[]
+    hitpos: Float32Array,
+    normal: Float32Array
 ) : number => {
     const squared_sphere_radius = radius * radius;
 
-    const center_x = center[0][center_id];
-    const center_y = center[1][center_id];
-    const center_z = center[2][center_id];
+    const center_x = center[0];
+    const center_y = center[1];
+    const center_z = center[2];
 
-    const origin_x = origin[0][origin_id];
-    const origin_y = origin[1][origin_id];
-    const origin_z = origin[2][origin_id];
+    const origin_x = origin[0];
+    const origin_y = origin[1];
+    const origin_z = origin[2];
 
-    const raydir_x = raydir[0][raydir_id];
-    const raydir_y = raydir[1][raydir_id];
-    const raydir_z = raydir[2][raydir_id];
+    const raydir_x = raydir[0];
+    const raydir_y = raydir[1];
+    const raydir_z = raydir[2];
 
     const distance_from_origin_to_closest_position = (
         (center_x - origin_x) * raydir_x +
@@ -68,19 +68,19 @@ export const intersectSphere = (
         hit_z = origin_z + distance_to_intersection * raydir_z;
     }
 
-    hitpos[0][hitpos_id] = hit_x;
-    hitpos[1][hitpos_id] = hit_y;
-    hitpos[2][hitpos_id] = hit_z;
+    hitpos[0] = hit_x;
+    hitpos[1] = hit_y;
+    hitpos[2] = hit_z;
 
     if (radius === 1) {
-        normal[0][normal_id] = hit_x - center_x;
-        normal[1][normal_id] = hit_y - center_y;
-        normal[2][normal_id] = hit_z - center_z;
+        normal[0] = hit_x - center_x;
+        normal[1] = hit_y - center_y;
+        normal[2] = hit_z - center_z;
     } else {
         const one_over_radius = 1 / radius;
-        normal[0][normal_id] = (hit_x - center_x) * one_over_radius;
-        normal[1][normal_id] = (hit_y - center_y) * one_over_radius;
-        normal[2][normal_id] = (hit_z - center_z) * one_over_radius;
+        normal[0] = (hit_x - center_x) * one_over_radius;
+        normal[1] = (hit_y - center_y) * one_over_radius;
+        normal[2] = (hit_z - center_z) * one_over_radius;
     }
 
     return origin_to_closest_minus_squared_delta;

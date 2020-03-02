@@ -1,4 +1,4 @@
-import {iterTriangles, Triangle} from "./_base.js";
+import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./_base.js";
 import {UV2D, UV3D} from "../../accessors/uv.js";
 import {UVs2D, UVs3D} from "../vectors.js";
 import {InputUVs} from "../../geometry/inputs.js";
@@ -28,7 +28,9 @@ export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBU
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<UV2D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputUVs): this {
@@ -42,7 +44,7 @@ export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBU
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(UV2D, this.arrays);
+        this.current_triangle = new Triangle(UV2D, this.arrays[0]);
     }
 }
 
@@ -66,7 +68,9 @@ export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBU
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<UV3D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputUVs): this {
@@ -80,6 +84,6 @@ export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBU
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(UV3D, this.arrays);
+        this.current_triangle = new Triangle(UV3D, this.arrays[0]);
     }
 }

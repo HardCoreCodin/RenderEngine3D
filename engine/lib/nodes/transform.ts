@@ -1,16 +1,15 @@
-import Matrix3x3 from "../accessors/matrix3x3.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
-
 import {I2D, I3D} from "../_interfaces/vectors.js";
 import {IEulerRotation, IScale, ITransform} from "../_interfaces/transform.js";
+import {mat3} from "../accessors/matrix3x3.js";
 
 
 export default class Transform implements ITransform {
     constructor(
         readonly matrix: Matrix4x4 = new Matrix4x4(),
         readonly translation = matrix.translation,
-        readonly rotation = new EulerRotation(matrix.mat3),
-        readonly scale = new Scale(matrix.mat3)
+        readonly rotation = new EulerRotation(matrix),
+        readonly scale = new Scale(matrix)
     ) {
         matrix.setToIdentity();
     }
@@ -23,26 +22,20 @@ export default class Transform implements ITransform {
 }
 
 export class EulerRotation implements IEulerRotation {
-    computeEagerly = true;
+    protected _x_angle = 0;
+    protected _y_angle = 0;
+    protected _z_angle = 0;
 
-    constructor(
-        // Overall rotation matrix:
-        protected readonly _result_matrix: Matrix3x3 = new Matrix3x3(),
-        public readonly matrix: Matrix3x3 = new Matrix3x3(),
+    protected _rotation = mat3().setToIdentity();
 
-        protected _x_angle: number = 0,
-        protected _y_angle: number = 0,
-        protected _z_angle: number = 0
-    ) {
-        matrix.setToIdentity();
-    }
+    constructor(protected readonly _transform: Matrix4x4) {}
 
     setFrom(other: this): void {
         this._x_angle = other._x_angle;
         this._y_angle = other._y_angle;
         this._z_angle = other._z_angle;
-        this.matrix.setFrom(other.matrix);
-        this._result_matrix.setFrom(other._result_matrix);
+
+        this._transform.setFrom(other._transform);
     }
 
     get x(): number {return this._x_angle}
@@ -51,68 +44,59 @@ export class EulerRotation implements IEulerRotation {
 
     set x(x: number) {
         this._x_angle = x;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set y(y: number) {
         this._y_angle = y;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set z(z: number) {
         this._z_angle = z;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set xy(xy: I2D) {
         this._x_angle = xy.x;
         this._y_angle = xy.y;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set xz(xz: I3D) {
         this._x_angle = xz.x;
         this._z_angle = xz.z;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set yz(yz: I3D) {
         this._y_angle = yz.y;
         this._z_angle = yz.z;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
     set xyz(xyz: I3D) {
         this._x_angle = xyz.x;
         this._y_angle = xyz.y;
         this._z_angle = xyz.z;
-        if (this.computeEagerly)
-            this.computeMatrix();
+        this._updateTransform();
     }
 
-    computeMatrix(): void {
-        this.matrix.transpose();
-        this._result_matrix.imul(this.matrix);
+    protected _updateTransform(): void {
+        this._rotation.transpose();
+        this._transform.imul(this._rotation);
 
-        this.matrix.setRotationAroundZ(this._z_angle, true); // Roll
-        this.matrix.rotateAroundX(this._x_angle); // Pitch
-        this.matrix.rotateAroundY(this._y_angle); // Yaw
+        this._rotation.setRotationAroundZ(this._z_angle, true); // Roll
+        this._rotation.rotateAroundX(this._x_angle); // Pitch
+        this._rotation.rotateAroundY(this._y_angle); // Yaw
 
-        this._result_matrix.imul(this.matrix);
+        this._transform.imul(this._rotation);
     }
 }
 
 export class Scale implements IScale {
-    applyEagerly = true;
-
     constructor(
-        protected readonly _matrix: Matrix3x3 = new Matrix3x3(),
+        protected readonly _matrix: Matrix4x4 = new Matrix4x4(),
         protected _prior_x_scale: number = 0,
         protected _prior_y_scale: number = 0,
         protected _prior_z_scale: number = 0,
@@ -141,52 +125,45 @@ export class Scale implements IScale {
 
     set x(x: number) {
         this._x_scale = x;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set y(y: number) {
         this._y_scale = y;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set z(z: number) {
         this._z_scale = z;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set xy(xy: I2D) {
         this._x_scale= xy.x;
         this._y_scale = xy.y;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set xz(xz: I3D) {
         this._x_scale = xz.x;
         this._z_scale = xz.z;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set yz(yz: I3D) {
         this._y_scale = yz.y;
         this._z_scale = yz.z;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
     set xyz(xyz: I3D) {
         this._x_scale = xyz.x;
         this._y_scale = xyz.y;
         this._z_scale = xyz.z;
-        if (this.applyEagerly)
-            this.apply();
+        this._updateTransform();
     }
 
-    apply(): void {
+    protected _updateTransform(): void {
         if (this._x_scale &&
             this._x_scale !== 1 &&
             this._x_scale !== this._prior_x_scale

@@ -6,18 +6,16 @@ import RasterViewport, {
     PerspectiveProjectionMatrix
 } from "../_base/viewport.js";
 import {IGLBuffer, IGLUniform} from "./_core/types.js";
+import Matrix4x4 from "../../../accessors/matrix4x4";
 
 
 export default class GLViewport extends RasterViewport<WebGL2RenderingContext, GLGrid, GLBorder> {
-    protected _world_to_clip_array: Float32Array;
-
     protected _init(): void {
         super._init();
-        this._world_to_clip_array = new Float32Array(16);
     }
 
     protected _getGrid(): GLGrid {
-        return new GLGrid(this.context, this._world_to_clip_array);
+        return new GLGrid(this.context, this.world_to_clip);
     }
 
     protected _getBorder(): GLBorder {
@@ -26,7 +24,6 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
 
     update(): void {
         super.update();
-        this.world_to_clip.toArray(this._world_to_clip_array);
     }
 
     refresh() {
@@ -60,7 +57,7 @@ export class GLPerspectiveProjectionMatrix
         f = this.view_frustum.far;
         d = this.view_frustum.one_over_depth_span;
 
-        this.scale.z       =     (f + n) * d;
+        this.z_axis.z      =     (f + n) * d;
         this.translation.z = -2 * f * n  * d;
     }
 }
@@ -74,7 +71,7 @@ export class GLOrthographicProjectionMatrix
         f = this.view_frustum.far;
         d = this.view_frustum.one_over_depth_span;
 
-        this.scale.z =  -2 * d;
+        this.z_axis.z      =  -2 * d;
         this.translation.z = d * (f + n) ;
     }
 }
@@ -92,20 +89,20 @@ class GLOverlay {
         readonly program = GLProgram.Compile(overlay.gl, vertex_shader_source, fragment_shader_source)
     ) {
         this._color_uniform = program.uniforms.color;
-        this._vao = new GLVertexArray(overlay.gl, overlay.vertex_count, {
-            position: overlay.vertex_positions
+        this._vao = new GLVertexArray(overlay.gl, overlay.vertex_positions.vertex_count, {
+            position: overlay.vertex_positions.array
         }, this.program.locations);
         this._vbo = this._vao.attributes.position;
     }
 
     load(): void {
-        this._vbo.load(this.overlay.vertex_positions, this.overlay.vertex_count);
+        this._vbo.load(this.overlay.vertex_positions.array, this.overlay.vertex_positions.vertex_count);
     }
 
     pre_draw(): void {
         this.program.use();
         this._vao.bind();
-        this._color_uniform.load(this.overlay.color_array);
+        this._color_uniform.load(this.overlay.color.array);
     }
 
     draw(mode: GLenum): void {
@@ -133,7 +130,7 @@ class GLGrid extends Grid {
 
     constructor(
         readonly gl: WebGL2RenderingContext,
-        protected readonly _world_to_clip_array: Float32Array
+        protected readonly _world_to_clip: Matrix4x4
     ) {
         super();
         this._overlay = new GLOverlay(this, GRID_VERTEX_SHADER, GRID_FRAGMENT_SHADER);
@@ -148,7 +145,7 @@ class GLGrid extends Grid {
 
     draw(): void {
         this._overlay.pre_draw();
-        this._world_to_clip_uniform.load(this._world_to_clip_array);
+        this._world_to_clip_uniform.load(this._world_to_clip.array);
         this._overlay.draw(this.gl.LINES);
     }
 }

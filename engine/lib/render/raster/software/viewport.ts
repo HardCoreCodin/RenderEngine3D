@@ -19,8 +19,8 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
 
         // Scale the normalized screen to the pixel size:
         // (from normalized size of -1->1 horizontally and vertically having a width and height of 2)
-        this.ndc_to_screen.scale.x = half_width;
-        this.ndc_to_screen.scale.y = -half_height;
+        this.ndc_to_screen.x_axis.x = half_width;
+        this.ndc_to_screen.y_axis.y = -half_height;
         // Note: HTML5 Canvas element has a coordinate system that goes top-to-bottom vertically.
 
         // Move the screen up and to the right appropriately,
@@ -76,7 +76,9 @@ export class SWGrid extends Grid {
         perspectiveDivideAllVertexPositions(this.start_positions.arrays);
         perspectiveDivideAllVertexPositions(this.end_positions.arrays);
 
-        this._nds_to_screen.mat3.setFrom(ndc_to_screen);
+        this._nds_to_screen.x_axis.setFrom(ndc_to_screen.x_axis);
+        this._nds_to_screen.y_axis.setFrom(ndc_to_screen.y_axis);
+        this._nds_to_screen.z_axis.setFrom(ndc_to_screen.z_axis);
         this.start_positions.imul(this._nds_to_screen);
         this.end_positions.imul(this._nds_to_screen);
     }
@@ -84,7 +86,7 @@ export class SWGrid extends Grid {
     protected _reset(): void {
         super._reset();
 
-        line_count = this.vertex_count >>> 1;
+        const line_count = this.vertex_positions.vertex_count / 2;
         if (this.world_start_positions) {
             if (this.world_start_positions.length !== line_count) {
                 this.world_start_positions.init(line_count);
@@ -100,26 +102,14 @@ export class SWGrid extends Grid {
             this.end_positions = new Positions4D().init(line_count);
         }
 
-        arrays = this.world_start_positions.arrays;
-        sx = arrays[0];
-        sy = arrays[1];
-        sz = arrays[2];
-
-        arrays = this.world_end_positions.arrays;
-        ex = arrays[0];
-        ey = arrays[1];
-        ez = arrays[2];
-
-        array = this.vertex_positions;
-        component_index = 0;
-        for (line_index = 0; line_index < line_count; line_index++) {
-            sx[line_index] = array[component_index++];
-            sy[line_index] = array[component_index++];
-            sz[line_index] = array[component_index++];
-
-            ex[line_index] = array[component_index++];
-            ey[line_index] = array[component_index++];
-            ez[line_index] = array[component_index++];
+        let start_index = 0;
+        let end_index = 1;
+        const pos = this.vertex_positions.arrays;
+        for (const [start, end] of zip(this.world_start_positions.arrays, this.world_end_positions.arrays)) {
+            start.set(pos[start_index]);
+            end.set(pos[end_index]);
+            start_index += 2;
+            end_index += 2;
         }
     }
 
@@ -129,12 +119,12 @@ export class SWGrid extends Grid {
         // b = this._color_array[2];
         // a = this._color_array[3];
 
-        context = this._render_target.context;
+        const context = this._render_target.context;
         context.beginPath();
 
-        for (const [start, end] of zip(this.start_positions, this.end_positions)) {
-            context.moveTo(start.x, start.y);
-            context.lineTo(end.x, end.y);
+        for (const [start, end] of zip(this.start_positions.arrays, this.end_positions.arrays)) {
+            context.moveTo(start[0], start[1]);
+            context.lineTo(end[0], end[1]);
 
             // this._render_target.drawLine2D(start.x, start.y, end.x, end.y, r, g, b, a);
         }
@@ -144,11 +134,3 @@ export class SWGrid extends Grid {
         context.stroke();
     }
 }
-
-let context: CanvasRenderingContext2D;
-let array, sx, sy, sz, ex, ey, ez: Float32Array;
-let arrays: Float32Array[];
-let x1, y1, x2, y2, r, g, b, a,
-    line_count,
-    line_index,
-    component_index: number;

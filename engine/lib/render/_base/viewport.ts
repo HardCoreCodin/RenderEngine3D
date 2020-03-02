@@ -1,8 +1,8 @@
 import Rectangle from "./rectangle.js";
-import {Color4D, rgba} from "../../accessors/color.js";
+import {rgba} from "../../accessors/color.js";
 import {IRenderPipeline, IDisplay, IViewport} from "../../_interfaces/render.js";
 import {IController} from "../../_interfaces/input.js";
-
+import {VertexPositions2D, VertexPositions3D} from "../../buffers/attributes/positions.js";
 
 export default abstract class BaseViewport<
     Context extends RenderingContext,
@@ -83,33 +83,29 @@ export default abstract class BaseViewport<
 
 export abstract class Overlay {
     display = true;
-
-    vertex_count: number;
-    vertex_positions: Float32Array;
-
-    readonly color_array = Float32Array.of(1, 1, 1, 1);
-    protected _color = rgba(1);
+    color = rgba(1);
 
     setFrom(other: this): void {
-        this.color = other.color;
+        this.color.setFrom(other.color);
         this.display = other.display;
     }
-
-    get color(): Color4D {return this._color}
-    set color(color: Color4D) {this._color.setFrom(color).toArray(this.color_array)}
 
     abstract draw(): void;
 }
 
 export abstract class Border extends Overlay {
+    vertex_positions = new VertexPositions2D();
+
     constructor() {
         super();
-        this.vertex_count = 4;
-        this.vertex_positions = Float32Array.of(-1,-1,  1,-1,  1,1,  -1,1)
+        this.vertex_positions.init(4);
+        this.vertex_positions.array.set([-1,-1,  1,-1,  1,1,  -1,1]);
     }
 }
 
 export abstract class Grid extends Overlay {
+    vertex_positions = new VertexPositions3D();
+
     protected constructor(
         protected _size: number = 20
     ) {
@@ -129,13 +125,13 @@ export abstract class Grid extends Overlay {
     }
 
     protected _reset(): void {
-        right_and_front = this._size >>> 1;
-        left_and_back = -right_and_front;
-        this.vertex_count = 2 * (this._size + 1) * 2;
-        grid = this.vertex_positions = new Float32Array(this.vertex_count * 3);
-        v = 2 * (this._size + 1) * 3;
-        offset = 0;
-        for (i = left_and_back; i <= right_and_front; i++) {
+        this.vertex_positions.init(2 * (this._size + 1) * 2);
+        const grid = this.vertex_positions.array;
+        const right_and_front = this._size >>> 1;
+        const left_and_back = -right_and_front;
+        const v = 2 * (this._size + 1) * 3;
+        let offset = 0;
+        for (let i = left_and_back; i <= right_and_front; i++) {
             grid[offset    ] = grid[offset + 3] = grid[offset + v + 2] = grid[offset + v + 5] = i;
             grid[offset + 2] = grid[offset + v    ] = right_and_front;
             grid[offset + 5] = grid[offset + v + 3] = left_and_back;
@@ -143,8 +139,3 @@ export abstract class Grid extends Overlay {
         }
     }
 }
-
-let grid: Float32Array;
-let right_and_front,
-    left_and_back,
-    i, offset, v: number;

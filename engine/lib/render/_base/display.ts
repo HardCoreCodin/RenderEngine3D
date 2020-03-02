@@ -31,7 +31,7 @@ export default class Display<Context extends RenderingContext>
         protected readonly Controller: ControllerConstructor,
         public context: Context = _scene.context
     ) {
-        super();
+        super({width: context.canvas.width, height: context.canvas.height}, {x: 0, y: 0});
         this._canvas = context.canvas as HTMLCanvasElement;
         this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
         this.active_viewport = this.addViewport();

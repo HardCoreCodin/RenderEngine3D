@@ -39,6 +39,10 @@ export interface IRotationMatrix extends IMatrix
     rotateAroundY(angle: number, out?: this): this;
     rotateAroundZ(angle: number, out?: this): this;
 
+    innerRotateAroundX(angle: number, out?: this): this;
+    innerRotateAroundY(angle: number, out?: this): this;
+    innerRotateAroundZ(angle: number, out?: this): this;
+
     translateBy(x: number, y?: number, z?: number, out?: this): this;
     rotateBy(x: number, y?: number, z?: number, out?: this): this;
     scaleBy(x: number, y?: number, z?: number, out?: this): this;

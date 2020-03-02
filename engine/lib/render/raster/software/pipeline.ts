@@ -51,7 +51,10 @@ export default class Rasterizer
             this.current_max_face_count = max_face_count;
 
             this.face_flags = new Uint8Array(max_face_count);
-            this.clip_space_vertex_positions.arrays = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count) as T4<Float32Array>;
+            [
+                this.clip_space_vertex_positions.array,
+                this.clip_space_vertex_positions.arrays
+            ] = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count);
 
             this.src_trg_numbers = new Uint8Array(max_face_count);
 

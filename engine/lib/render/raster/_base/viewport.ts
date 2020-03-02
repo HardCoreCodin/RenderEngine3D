@@ -3,7 +3,6 @@ import BaseViewport, {Border, Grid} from "../../_base/viewport.js";
 import Matrix4x4, {mat4} from "../../../accessors/matrix4x4.js";
 import {DEFAULT_FAR_CLIPPING_PLANE_DISTANCE, DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE} from "../../../../constants.js";
 import {IRasterViewport} from "../../../_interfaces/render.js";
-import {Float16} from "../../../../types.js";
 
 
 export default abstract class RasterViewport<
@@ -142,10 +141,9 @@ export abstract class ProjectionMatrix<Context extends RenderingContext>
     constructor(
         readonly lense: Lense,
         readonly view_frustum: ViewFrustum<Context>,
-        id?: number,
-        arrays?: Float16
+        array?: Float32Array
     ) {
-        super(id, arrays);
+        super(array);
         this.setToIdentity();
         this.updateW();
     }
@@ -157,11 +155,11 @@ export abstract class ProjectionMatrix<Context extends RenderingContext>
     }
 
     updateZ(): void {
-        n = this.view_frustum.near;
-        f = this.view_frustum.far;
-        d = this.view_frustum.one_over_depth_span;
+        const n = this.view_frustum.near;
+        const f = this.view_frustum.far;
+        const d = this.view_frustum.one_over_depth_span;
 
-        this.scale.z = f * d;
+        this.z_axis.z = f * d;
         this.translation.z *= -n * d;
     }
 }
@@ -175,8 +173,8 @@ export class PerspectiveProjectionMatrix<Context extends RenderingContext>
     }
 
     updateXY(): void {
-        this.scale.x = this.lense.focal_length;
-        this.scale.y = this.lense.focal_length * this.view_frustum.aspect_ratio;
+        this.x_axis.x = this.lense.focal_length;
+        this.y_axis.y = this.lense.focal_length * this.view_frustum.aspect_ratio;
     }
 }
 
@@ -189,9 +187,7 @@ export class OrthographicProjectionMatrix<Context extends RenderingContext>
     }
 
     updateXY(): void {
-        this.scale.x = this.lense.zoom;
-        this.scale.y = this.lense.zoom * this.view_frustum.aspect_ratio;
+        this.x_axis.x = this.lense.zoom;
+        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
     }
 }
-
-let n, f, d;

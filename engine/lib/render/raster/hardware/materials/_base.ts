@@ -5,11 +5,12 @@ import GLRenderPipeline from "../pipeline.js";
 import BaseMaterial from "../../../_base/material.js";
 import {IMesh} from "../../../../_interfaces/geometry.js";
 import {IMatrix4x4} from "../../../../_interfaces/matrix.js";
+import Matrix4x4 from "../../../../accessors/matrix4x4";
 
 
 export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLRenderPipeline>
 {
-    protected _model_to_clip = new Float32Array(16);
+    protected _model_to_clip: Matrix4x4;
     protected _mesh_buffers: GLMeshBuffers;
 
     constructor(
@@ -28,11 +29,11 @@ export default class GLMaterial extends BaseMaterial<WebGL2RenderingContext, GLR
     }
 
     uploadUniforms(): void {
-        this.program.uniforms.model_to_clip.load(this._model_to_clip);
+        this.program.uniforms.model_to_clip.load(this._model_to_clip.array);
     }
 
-    drawMesh(mesh: IMesh, model_to_clip: IMatrix4x4) {
-        model_to_clip.toArray(this._model_to_clip);
+    drawMesh(mesh: IMesh, model_to_clip: Matrix4x4) {
+        this._model_to_clip = model_to_clip;
 
         this.uploadUniforms();
 

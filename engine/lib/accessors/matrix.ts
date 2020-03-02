@@ -3,7 +3,7 @@ import {Direction3D} from "./direction.js";
 import {Accessor} from "./accessor.js";
 import {IMatrix, IRotationMatrix} from "../_interfaces/matrix.js";
 
-export default abstract class Matrix extends Accessor implements IMatrix
+export default abstract class Matrix<Other extends IMatrix = IMatrix> extends Accessor implements IMatrix
 {
     protected abstract _add_number_in_place(num: number): void;
     protected abstract _add_other_in_place(other: this): void;
@@ -16,9 +16,9 @@ export default abstract class Matrix extends Accessor implements IMatrix
     protected abstract _sub_other_to_out(other: this, out: this): void;
 
     protected abstract _mul_number_in_place(num: number): void;
-    protected abstract _mul_other_in_place(other: this): void;
+    protected abstract _mul_other_in_place(other: Other): void;
     protected abstract _mul_number_to_out(num: number, out: this): void;
-    protected abstract _mul_other_to_out(other: this, out: this): void;
+    protected abstract _mul_other_to_out(other: Other, out: this): void;
 
     protected abstract _div_number_in_place(num: number): void;
     protected abstract _div_number_to_out(num: number, out: this): void;
@@ -113,8 +113,8 @@ export default abstract class Matrix extends Accessor implements IMatrix
     }
 
     imul(num: number): this;
-    imul(other: this): this;
-    imul(other_or_num: this|number): this {
+    imul(other: Other): this;
+    imul(other_or_num: Other|number): this {
         if (typeof other_or_num === "number") {
             if (other_or_num)
                 this._mul_number_in_place(other_or_num);
@@ -125,8 +125,8 @@ export default abstract class Matrix extends Accessor implements IMatrix
     }
 
     mul(num: number, out: this): this;
-    mul(other: this, out: this): this;
-    mul(other_or_num: this|number, out: this): this {
+    mul(other: Other, out: this): this;
+    mul(other_or_num: Other|number, out: this): this {
         if (typeof other_or_num === "number") {
             if (other_or_num)
                 this._mul_number_to_out(other_or_num, out);
@@ -178,13 +178,51 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     protected abstract _rotate_around_y_to_out(sin: number, cos: number, out: this): void;
     protected abstract _rotate_around_z_to_out(sin: number, cos: number, out: this): void;
 
+    protected abstract _inner_rotate_around_x_in_place(sin: number, cos: number): void;
+    protected abstract _inner_rotate_around_y_in_place(sin: number, cos: number): void;
+    protected abstract _inner_rotate_around_z_in_place(sin: number, cos: number): void;
+
+    protected abstract _inner_rotate_around_x_to_out(sin: number, cos: number, out: this): void;
+    protected abstract _inner_rotate_around_y_to_out(sin: number, cos: number, out: this): void;
+    protected abstract _inner_rotate_around_z_to_out(sin: number, cos: number, out: this): void;
+
     readonly abstract translation: Position3D;
 
     readonly abstract x_axis: Direction3D;
     readonly abstract y_axis: Direction3D;
     readonly abstract z_axis: Direction3D;
 
-    rotateAroundX(angle: number, out?: this): this {
+    innerRotateAroundX(angle: number, out?: this): this {
+        if (out && !out.is(this)) {
+            this._inner_rotate_around_x_to_out(Math.sin(angle), Math.cos(angle), out);
+            return out;
+        }
+
+        this._inner_rotate_around_x_in_place(Math.sin(angle), Math.cos(angle));
+        return this;
+    }
+
+    innerRotateAroundY(angle: number, out?: this): this {
+        if (out && !out.is(this)) {
+            this._inner_rotate_around_y_to_out(Math.sin(angle), Math.cos(angle), out);
+            return out;
+        }
+
+        this._inner_rotate_around_y_in_place(Math.sin(angle), Math.cos(angle));
+        return this;
+    }
+
+    innerRotateAroundZ(angle: number, out?: this): this {
+        if (out && !out.is(this)) {
+            this._inner_rotate_around_z_to_out(Math.sin(angle), Math.cos(angle), out);
+            return out;
+        }
+
+        this._inner_rotate_around_z_in_place(Math.sin(angle), Math.cos(angle));
+        return this;
+    }
+
+    rotateAroundX(angle: number, out?: this, include_translation: boolean = true): this {
         if (out && !out.is(this)) {
             this._rotate_around_x_to_out(Math.sin(angle), Math.cos(angle), out);
             return out;

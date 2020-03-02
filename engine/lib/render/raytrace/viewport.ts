@@ -13,9 +13,6 @@ export default class RayTraceViewport
     rays: Rays;
     pixels: Uint32Array;
     protected _source_ray_directions: Directions3D;
-    protected _source_ray_directions_x: Float32Array;
-    protected _source_ray_directions_y: Float32Array;
-    protected _source_ray_directions_z: Float32Array;
 
     protected _init(): void {
         this._source_ray_directions = new Directions3D();
@@ -31,6 +28,7 @@ export default class RayTraceViewport
     }
 
     protected _updateRayDirections(): void {
+        // this.rays.directions.array.set(this._source_ray_directions.array);
         this._source_ray_directions.mul(this._controller.camera.transform.matrix, this.rays.directions);
     }
 
@@ -41,18 +39,15 @@ export default class RayTraceViewport
         if (pixel_count !== this.rays.directions.length) {
             this.rays.init(pixel_count);
             this._source_ray_directions.init(pixel_count);
-            this._source_ray_directions_x = this._source_ray_directions.arrays[0];
-            this._source_ray_directions_y = this._source_ray_directions.arrays[1];
-            this._source_ray_directions_z = this._source_ray_directions.arrays[2];
         }
 
         generateRayDirections(
             this._controller.camera.lense.focal_length,
             this._position.x,
-            this._position.y, width, height,
-            this._source_ray_directions_x,
-            this._source_ray_directions_y,
-            this._source_ray_directions_z,
+            this._position.y,
+            width,
+            height,
+            this._source_ray_directions.array,
         );
 
         this._updateRayDirections();

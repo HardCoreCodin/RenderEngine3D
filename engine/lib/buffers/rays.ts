@@ -19,16 +19,16 @@ export default class Rays {
     readonly directions = new Directions3D();
     constructor(readonly origin: Position3D) {}
 
-    init(length: number, arrays?: Float32Array[]): this {
-        this.directions.init(length, arrays);
+    init(length: number): this {
+        this.directions.init(length);
         this.current = new Ray(this);
 
         return this;
     }
 
     *[Symbol.iterator](): Generator<Ray> {
-        for (let id = 0; id < this.directions.length; id++) {
-            this.current.direction.id = id;
+        for (const array of this.directions.arrays) {
+            this.current.direction.array = array;
             yield this.current;
         }
     }

@@ -12,6 +12,7 @@ import {
     VERTEX_FACES_ALLOCATOR_INT8
 } from "../memory/allocators.js";
 import {IFaceVertices, IFromToIndices, IVertexFaces} from "../_interfaces/buffers.js";
+import {zip} from "../../utils.js";
 
 
 abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Array>
@@ -26,14 +27,13 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
         for (let i = 0; i < vertex_count; i++)
             vertex_face_indices[i] = [];
 
-        let length = 0;
         for (const [face_id, vertex_ids] of face_vertices.arrays.entries()) {
             vertex_face_indices[vertex_ids[0]].push(face_id);
             vertex_face_indices[vertex_ids[1]].push(face_id);
             vertex_face_indices[vertex_ids[2]].push(face_id);
         }
 
-        this.init(length);
+        this.init(face_vertices.arrays.length * 3);
 
         let offset = 0;
         for (const [vertex_index, face_indices] of vertex_face_indices.entries()) {
@@ -51,15 +51,11 @@ abstract class FaceVertices<ArrayType extends Uint8Array | Uint16Array | Uint32A
     implements IFaceVertices
 {
     load(inputs: InputPositions): this {
-        if (this.length !== inputs.face_count)
+        if (this._length !== inputs.faces_vertices.length)
             this.init(inputs.face_count);
 
-        for (let i = 0; i < inputs.faces_vertices[0].length; i++)
-            this.arrays[i].set([
-                inputs.faces_vertices[0][i],
-                inputs.faces_vertices[1][i],
-                inputs.faces_vertices[2][i],
-            ]);
+        for (const [input, array] of zip(inputs.faces_vertices, this.arrays))
+            array.set(input);
 
         return this;
     }

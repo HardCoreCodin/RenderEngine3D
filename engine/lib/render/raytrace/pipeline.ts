@@ -13,20 +13,17 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
         //     return;
 
         const pixels = viewport.pixels;
-        const rays = viewport.rays;
-        const ray = rays.current;
-        const ray_direction = ray.direction;
-        const ray_directions = rays.directions;
-
         const geos = this.scene.implicit_geometry_array;
         const hit = this._hit;
         const hit_normal = hit.surface_normal;
 
         let any_hit: boolean;
-        const ray_count = ray_directions.length;
+        const pitch = viewport.width;
+        const pitch2 = pitch + pitch;
+        let pixel_index = pixels.length - pitch;
+        let x = 0;
 
-        for (let i = 0; i < ray_count; i++) {
-            ray_direction.id = i;
+        for (const ray of viewport.rays) {
             ray.closest_distance_squared = 10000;
             any_hit = false;
 
@@ -35,12 +32,20 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
                     any_hit = true;
 
             if (any_hit)
-                pixels[i] = (
+                pixels[pixel_index] = (
                     255 << 24 )|(  // alpha
                     ((hit_normal.z + 1) * 127.5) << 16 )|(  // blue
                     ((hit_normal.y + 1) * 127.5) << 8  )|(  // green
                     ((hit_normal.x + 1) * 127.5)            // red
             );
+
+            x++;
+            if (x === pitch) {
+                pixel_index -= pitch2;
+                x = 0;
+            }
+
+            pixel_index++;
         }
     }
 }

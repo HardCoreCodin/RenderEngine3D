@@ -191,7 +191,7 @@ export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
     }
 }
 
-export const mat3 = (
+export const mat2 = (
     m11: number = 0, m12: number = m11,
     m21: number = m11, m22: number = m11
 ): Matrix2x2 => new Matrix2x2().setTo(

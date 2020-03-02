@@ -2,7 +2,7 @@ import Rectangle from "./rectangle.js";
 import { rgba } from "../../accessors/color.js";
 export default class Display extends Rectangle {
     constructor(_scene, RenderPipeline, Viewport, Controller, context = _scene.context) {
-        super();
+        super({ width: context.canvas.width, height: context.canvas.height }, { x: 0, y: 0 });
         this._scene = _scene;
         this.RenderPipeline = RenderPipeline;
         this.Viewport = Viewport;

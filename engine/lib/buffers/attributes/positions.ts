@@ -1,4 +1,4 @@
-import {iterTriangles, Triangle} from "./_base.js";
+import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./_base.js";
 import {InputPositions} from "../../geometry/inputs.js";
 import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
 import {Positions2D, Positions3D, Positions4D} from "../vectors.js";
@@ -34,7 +34,9 @@ export class VertexPositions2D extends Positions2D implements IVertexAttribute<P
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Position2D>> {
-        return iterTriangles(this.current_triangle, this._face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputPositions): this {
@@ -44,7 +46,7 @@ export class VertexPositions2D extends Positions2D implements IVertexAttribute<P
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Position2D, this.arrays);
+        this.current_triangle = new Triangle(Position2D, this.arrays[0]);
     }
 }
 export class VertexPositions3D extends Positions3D implements IVertexAttribute<Position3D, ATTRIBUTE.position> {
@@ -67,7 +69,9 @@ export class VertexPositions3D extends Positions3D implements IVertexAttribute<P
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Position3D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputPositions): this {
@@ -81,7 +85,7 @@ export class VertexPositions3D extends Positions3D implements IVertexAttribute<P
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Position3D, this.arrays);
+        this.current_triangle = new Triangle(Position3D, this.arrays[0]);
     }
 }
 export class VertexPositions4D extends Positions4D implements IVertexAttribute<Position4D, ATTRIBUTE.position> {
@@ -104,7 +108,9 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Position4D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputPositions): this {
@@ -120,7 +126,7 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Position4D, this.arrays);
+        this.current_triangle = new Triangle(Position4D, this.arrays[0]);
     }
 }
 

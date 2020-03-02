@@ -1,4 +1,4 @@
-import {Triangle, iterTriangles} from "./_base.js";
+import {Triangle, iterSharedTriangles, iterUnsharedTriangles} from "./_base.js";
 import {ATTRIBUTE} from "../../../constants.js";
 import {InputNormals} from "../../geometry/inputs.js";
 import {Position3D, Position4D} from "../../accessors/position.js";
@@ -36,7 +36,9 @@ export class VertexNormals3D extends Directions3D implements IVertexAttribute<Di
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Direction3D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputNormals): this {
@@ -56,7 +58,7 @@ export class VertexNormals3D extends Directions3D implements IVertexAttribute<Di
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Direction3D, this.arrays);
+        this.current_triangle = new Triangle(Direction3D, this.arrays[0]);
     }
 }
 export class VertexNormals4D extends Directions4D implements IVertexAttribute<Direction4D, ATTRIBUTE.normal> {
@@ -79,7 +81,9 @@ export class VertexNormals4D extends Directions4D implements IVertexAttribute<Di
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Direction4D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputNormals): this {
@@ -100,7 +104,7 @@ export class VertexNormals4D extends Directions4D implements IVertexAttribute<Di
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Direction4D, this.arrays);
+        this.current_triangle = new Triangle(Direction4D, this.arrays[0]);
     }
 }
 

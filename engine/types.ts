@@ -67,3 +67,4 @@ export type FaceInputNum = QuadInputNum | TriangleInputNum;
 export type VertexInputs = Array<Num2|Num3|Num4>;
 export type VertexInputStr = PositionInputStr | ColorInputStr | NormalInputStr | UVInputStr;
 export type VertexInputNum = PositionInputNum | ColorInputNum | NormalInputNum | UVInputNum;
+export type Indices = Uint8Array | Uint16Array | Uint32Array;

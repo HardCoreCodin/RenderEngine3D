@@ -1,3 +1,4 @@
+
 export const check_if_two_3D_vectors_are_equal = (
     a: Float32Array,
     b: Float32Array
@@ -451,8 +452,8 @@ export const multiply_some_3D_vectors_by_a_3x3_matrix_to_out = (
     let k = 2;
     for (let i = 0; i < a.length; i+=3) if (include[id]) {
         o[i] = a[i]*m[0] + a[j]*m[3] + a[k]*m[6];
-        o[i] = a[i]*m[1] + a[j]*m[4] + a[k]*m[7];
-        o[i] = a[i]*m[2] + a[j]*m[5] + a[k]*m[8];
+        o[j] = a[i]*m[1] + a[j]*m[4] + a[k]*m[7];
+        o[k] = a[i]*m[2] + a[j]*m[5] + a[k]*m[8];
 
         id++;
         j += 3;
@@ -490,11 +491,11 @@ export const multiply_all_3D_directions_by_a_4x4_matrix_to_out3 = (
 ) : void => {
     let j = 1;
     let k = 2;
-    let l = 0;
+
     for (let i = 0; i < a.length; i+=3) {
-        o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
-        o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
-        o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
+        o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
+        o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
+        o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
         j += 3;
         k += 3;
     }
@@ -573,11 +574,10 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out3 = (
     let id = 0;
     let j = 1;
     let k = 2;
-    let l = 0;
     for (let i = 0; i < a.length; i+=3) if (include[id]) {
-        o[l++] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
-        o[l++] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
-        o[l++] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
+        o[i] = a[i]*m[0] + a[j]*m[4] + a[k]*m[8];
+        o[j] = a[i]*m[1] + a[j]*m[5] + a[k]*m[9];
+        o[k] = a[i]*m[2] + a[j]*m[6] + a[k]*m[10];
         id++;
         j += 3;
         k += 3;

@@ -26,7 +26,7 @@ import {
     multiply_some_2D_vectors_by_a_2x2_matrix_to_out,
     normalize_all_2D_directions_in_place,
     normalize_some_2D_directions_in_place
-} from "../math/vec2";
+} from "../math/vec2.js";
 import {
     multiply_all_3D_directions_by_a_4x4_matrix_in_place,
     multiply_all_3D_directions_by_a_4x4_matrix_to_out3,
@@ -46,7 +46,7 @@ import {
     multiply_some_3D_vectors_by_a_3x3_matrix_to_out,
     normalize_all_3D_directions_in_place,
     normalize_some_3D_directions_in_place
-} from "../math/vec3";
+} from "../math/vec3.js";
 import {
     multiply_all_4D_vectors_by_a_4x4_matrix_in_place,
     multiply_all_4D_vectors_by_a_4x4_matrix_to_out,
@@ -54,7 +54,7 @@ import {
     multiply_some_4D_vectors_by_a_4x4_matrix_to_out,
     normalize_all_4D_directions_in_place,
     normalize_some_4D_directions_in_place
-} from "../math/vec4";
+} from "../math/vec4.js";
 
 
 export abstract class VectorBuffer<VectorType extends Vector> extends Buffer<Float32Array> {
@@ -85,7 +85,7 @@ export abstract class VectorBuffer<VectorType extends Vector> extends Buffer<Flo
     }
 
     protected _randomize(): void {
-        for (i = 0; i < this.array.length; i++)
+        for (let i = 0; i < this.array.length; i++)
             this.array[i] = Math.random();
     }
 }
@@ -168,7 +168,7 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
             else
                 multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, out.array);
         } else {
-            if (out.length === 3) {
+            if (out.allocator.dim === 3) {
                 if (include)
                     multiply_some_3D_directions_by_a_4x4_matrix_to_out3(this.array, matrix.array, include, out.array);
                 else
@@ -269,13 +269,15 @@ export class Positions3D extends VectorBuffer3D<Position3D> {
             else
                 multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, out.array);
         } else {
-            if (out.length === 3) {
+            if (out.allocator.dim === 3) {
                 if (include)
                     multiply_some_3D_positions_by_a_4x4_matrix_to_out3(this.array, matrix.array, include, out.array);
+                else
                     multiply_all_3D_positions_by_a_4x4_matrix_to_out3(this.array, matrix.array, out.array)
             } else {
                 if (include)
                     multiply_some_3D_positions_by_a_4x4_matrix_to_out4(this.array, matrix.array, include, out.array);
+                else
                     multiply_all_3D_positions_by_a_4x4_matrix_to_out4(this.array, matrix.array, out.array)
             }
         }

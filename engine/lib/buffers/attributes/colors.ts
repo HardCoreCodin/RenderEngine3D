@@ -1,4 +1,4 @@
-import {iterTriangles, Triangle} from "./_base.js";
+import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./_base.js";
 import {Color3D, Color4D} from "../../accessors/color.js";
 import {Colors3D, Colors4D} from "../vectors.js";
 import {InputColors} from "../../geometry/inputs.js";
@@ -35,12 +35,9 @@ export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Color3D>> {
-        return iterTriangles(
-            this.current_triangle,
-            this._face_vertices.arrays,
-            this._face_vertices.length,
-            this._is_shared
-        );
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputColors): this {
@@ -66,7 +63,7 @@ export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Color3D, this.arrays);
+        this.current_triangle = new Triangle(Color3D, this.arrays[0]);
     }
 }
 export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D, ATTRIBUTE.color> {
@@ -89,7 +86,9 @@ export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D
     get is_shared(): boolean {return this._is_shared}
 
     get triangles(): Generator<Triangle<Color4D>> {
-        return iterTriangles(this.current_triangle, this.face_vertices.arrays, this.face_count, this._is_shared);
+        return this._is_shared ?
+            iterSharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays) :
+            iterUnsharedTriangles(this.current_triangle, this.arrays, this._face_vertices.arrays);
     }
 
     load(inputs: InputColors): this {
@@ -115,7 +114,7 @@ export class VertexColors4D extends Colors4D implements IVertexAttribute<Color4D
 
     protected _post_init(): void {
         super._post_init();
-        this.current_triangle = new Triangle(Color4D, this.arrays);
+        this.current_triangle = new Triangle(Color4D, this.arrays[0]);
     }
 }
 
