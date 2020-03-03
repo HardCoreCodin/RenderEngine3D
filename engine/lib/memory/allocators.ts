@@ -108,3 +108,5 @@ export const FROM_TO_INDICES_ALLOCATOR_INT8 = new Int8Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT16 = new Int16Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT32 = new Int32Allocator2D();
 export const RENDER_TARGET_ALLOCATOR = new Uint8ClampedAllocator1D();
+export const UINT32_ALLOCATOR = new Int32Allocator1D();
+export const FLOAT32_ALLOCATOR = new Float32Allocator1D();

@@ -1,47 +1,90 @@
 import RayTraceViewport from "./viewport.js";
 import BaseRenderPipeline from "../_base/pipelines.js";
-import {RayHit} from "../../buffers/rays.js";
-import {pos3} from "../../accessors/position.js";
-import {dir3} from "../../accessors/direction.js";
 import {drawPixel} from "../../../utils.js";
+import {intersectSphere, intersectSpheres} from "./_core/ray_sphere_intersection.js";
 
 export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext2D, RayTraceViewport>
 {
-    protected readonly _hit = new RayHit(pos3(), dir3());
-
     render(viewport: RayTraceViewport): void {
-        // if (!this.scene.implicit_geometry_array.length)
-        //     return;
-
-        const pixel_count = viewport.pixel_count;
         const pixels = viewport.pixels;
-        const geos = this.scene.implicit_geometry_array;
-        const hit = this._hit;
-        const hit_normal = hit.surface_normal.array;
-        const ray = viewport.ray;
-        ray.direction_offset = 0;
-        let any_hit: boolean;
+        const spheres = this.scene.spheres;
+        const sphere_radii = spheres.radii;
+        const sphere_centers = spheres.centers.arrays;
+        const sphere_count = spheres.count;
 
+        const rays = viewport.rays;
+        const ray = rays.current;
+        const count = rays.count;
+        const ray_origin = ray.origin.array;
+        const ray_directions = ray.directions;
+        const origin_x = ray_origin[0];
+        const origin_y = ray_origin[1];
+        const origin_z = ray_origin[2];
+        const hit = ray.closest_hit;
+        const hit_position = hit.position.array;
+        const hit_normal = hit.surface_normal.array;
         let r, g, b, a = 1;
 
-        for (let i = 0; i < pixel_count; i++) {
-            ray.closest_distance_squared = 10000;
-            any_hit = false;
+        let any_hit: boolean;
+        let distance, closest_distance, raydir_x, raydir_y, raydir_z: number;
+        let offset = 0;
+        let sphere_index: number;
+        let sphere_center: Float32Array;
 
-            for (const geo of geos) {
-                if (geo.intersect(ray, hit))
+        for (let index = 0; index < count; index++) {
+            raydir_x = ray_directions[offset++];
+            raydir_y = ray_directions[offset++];
+            raydir_z = ray_directions[offset++];
+
+            any_hit = false;
+            closest_distance = Infinity;
+            for ([sphere_index, sphere_center] of sphere_centers.entries()) {
+                distance = intersectSphere(
+                    sphere_radii[sphere_index],
+                    closest_distance,
+
+                    sphere_center[0],
+                    sphere_center[1],
+                    sphere_center[2],
+
+                    origin_x,
+                    origin_y,
+                    origin_z,
+
+                    raydir_x,
+                    raydir_y,
+                    raydir_z,
+
+                    hit_position,
+                    hit_normal
+                );
+
+                if (distance) {
+                    closest_distance = distance;
                     any_hit = true;
+                }
             }
 
+            // any_hit = intersectSpheres(
+            //     sphere_radii,
+            //     sphere_centers,
+            //
+            //     ray_origin,
+            //     ray_directions,
+            //
+            //     offset,
+            //     hit_position,
+            //     hit_normal
+            // );
             if (any_hit) {
                 r = (hit_normal[0] + 1.0) / 2.0;
                 g = (hit_normal[1] + 1.0) / 2.0;
                 b = (hit_normal[2] + 1.0) / 2.0;
-            } else r = g = b = 0;
+            } else
+                r = g = b = 0;
 
-            drawPixel(pixels, i, r, g, b, a);
-
-            ray.direction_offset += 3;
+            drawPixel(pixels, index, r, g, b, a);
+            // offset += 3;
         }
     }
 }
