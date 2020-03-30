@@ -3,7 +3,7 @@ import {Position3D} from "../accessors/position.js";
 import {Direction3D} from "../accessors/direction.js";
 import {FLOAT32_ALLOCATOR} from "../memory/allocators.js";
 import {multiply_all_3D_directions_by_a_4x4_matrix_to_out3} from "../math/vec3.js";
-import {generateRayDirections} from "../render/raytrace/_core/ray_generation.js";
+import {generateRayDirections} from "../render/raytrace/shaders/generation/ray_generation.js";
 
 export class RayHit {
     distance_squared: number;

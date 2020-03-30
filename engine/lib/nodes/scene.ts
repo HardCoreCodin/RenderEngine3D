@@ -2,7 +2,7 @@ import Camera from "./camera.js";
 import {Parent} from "./_base.js";
 import {MeshGeometries} from "./geometry.js";
 import {IMaterial, IMaterialConstructor} from "../_interfaces/render.js";
-import Spheres from "../geometry/implicit_surfaces/spheres.js";
+import Spheres from "../geometry/implicit/spheres.js";
 
 
 export default class Scene<

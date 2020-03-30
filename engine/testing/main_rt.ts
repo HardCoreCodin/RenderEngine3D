@@ -34,8 +34,8 @@ camera.transform.rotation.y = 2.3;
 //         geo.transform.translation.z = j*3;
 //     }
 
-const num_spheres_x = 5;
-const num_spheres_z = 5;
+const num_spheres_x = 2;
+const num_spheres_z = 2;
 engine.scene.spheres.init(num_spheres_x * num_spheres_z);
 engine.scene.spheres.radii.fill(1);
 let sphere_index = 0;
