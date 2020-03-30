@@ -3,54 +3,55 @@ export const intersectSpheres = (
     sphere_centers: Float32Array[],
 
     ray_origin: Float32Array,
-    ray_directions: Float32Array,
-    ray_directions_offset: number,
+    ray_direction: Float32Array,
 
     P: Float32Array, // The position of the closest intersection of the ray with the spheres
     N: Float32Array  // The direction of the surface of the sphere at the intersection position
 ) : boolean => {
-    // The position that the ray originates from:
+    // O: The position that the ray originates from:
     const Ox = ray_origin[0];
     const Oy = ray_origin[1];
     const Oz = ray_origin[2];
 
     // The direction that the ray is aiming at:
-    const Dx = ray_directions[ray_directions_offset  ];
-    const Dy = ray_directions[ray_directions_offset+1];
-    const Dz = ray_directions[ray_directions_offset+2];
+    const Dx = ray_direction[0];
+    const Dy = ray_direction[1];
+    const Dz = ray_direction[2];
 
     let any_hit = false; // Track if the ray intersected any of the spheres
-    let r, r2: number; // The radius of a sphere (and it's square)
-    let d, d2: number; // The distance from the origin to the position of the current intersection (and it's square)
-    let cd2: number; // The distance from the origin to the position of the closest intersection yet - squared
-    let CI_Px, CI_Py, CI_Pz: number; // The position of the closest intersection of the ray with the spheres yet
-    let CI_Sx, CI_Sy, CI_Sz: number; // The center position of the sphere of the closest intersection yet
-    let Sx, Sy, Sz: number; // The center position of a sphere
-    let Cx, Cy, Cz: number; // A position along the ray that is closest to the sphere's center
-    let ICd2: number;   // The square of the distance from that position to an intersection position
-    let CI_Cd2: number; // The square of the distance from that position to the closest intersection position
-    let OCd: number;    // The distance from the ray's origin to that position along the ray
-    let CI_OCd: number; // The distance from the ray's origin to that position along the ray for the closest intersection
-    let CSx, CSy, CSz: number; // A direction from that position along the ray towards the sphere's center
-    let CSd2: number; // The length of that direction - squared
-    // It is the square of the distance from that position along the ray to the center of the sphere.
 
-    // To begin with, position the closest intersection at infinity
-    cd2 = Infinity;
+    let d, d2: number; // The distance from the origin to the position of the current intersection (and it's square)
+    let r, r2: number; // The radius of the current sphere (and it's square)
+    let Ix, Iy, Iz: number; // I: A position along the ray that intersects the current sphere
+    let Sx, Sy, Sz: number;
+    let Cx, Cy, Cz: number;
+    let SCx, SCy, SCz: number;
+    let OSx, OSy, OSz: number;
+
+    let OCd: number;
+    let ICd2: number;
+    let CSd2: number;
+
+    let cl_Sx, cl_Sy, cl_Sz: number; // The center position of the sphere of the closest intersection yet
+    let cl_Px, cl_Py, cl_Pz: number; // The position of the closest intersection of the ray with the spheres yet
+    let cl_OCd: number; // The distance from the ray's origin to that position along the ray for the closest intersection
+    let cl_Cd2: number; // The square of the distance from that position to the closest intersection position
+    let cl_OPd2 = Infinity; // The distance from the origin to the position of the closest intersection yet - squared
 
     // Loop over all the spheres and intersect the ray against them:
     for (const [sphere_index, sphere_center] of sphere_centers.entries()) {
+        // S: The center position of the current sphere
         Sx = sphere_center[0];
         Sy = sphere_center[1];
         Sz = sphere_center[2];
-        r = sphere_radii[sphere_index];
-        r2 = r*r;
 
-        OCd = (
-            (Sx - Ox) * Dx +
-            (Sy - Oy) * Dy +
-            (Sz - Oz) * Dz
-        );
+        // OS: A direction from the ray's origin (O) to the current sphere's center (S)
+        OSx = Sx - Ox;
+        OSy = Sy - Oy;
+        OSz = Sz - Oz;
+
+        // The distance from the ray's origin (O) to a position along the ray closest to the current sphere's center
+        OCd = Dx*OSx + Dy*OSy + Dz*OSz;
 
         // If that distance is zero, the ray originates at the center of the sphere.
         // If it's negative, it originates "in front" of the center of the sphere (it is behind it)
@@ -58,68 +59,71 @@ export const intersectSpheres = (
         if (OCd <= 0)
             continue;
 
+        // C: A position along the ray that is closest to the current sphere's center
         Cx = Ox + Dx*OCd;
         Cy = Oy + Dy*OCd;
         Cz = Oz + Dz*OCd;
 
-        CSx = Sx - Cx;
-        CSy = Sy - Cy;
-        CSz = Sz - Cz;
+        // SC: A direction from the current sphere's center to that position (C)
+        SCx = Cx - Sx;
+        SCy = Cy - Sy;
+        SCz = Cz - Sz;
 
-        CSd2 = (
-            CSx*CSx +
-            CSy*CSy +
-            CSz*CSz
-        );
+        // The (squared)length of that direction (SC).
+        // It is the (squared)distance from center of the current sphere (S) to that closest position (C).
+        CSd2 = SCx*SCx + SCy*SCy + SCz*SCz;
 
-        // If the distance is larger than the sphere's radius
-        // (or it's square is larger than the square of the sphere's radius)
-        // the ray missed the sphere and went passed by it
+        // If that distance (squared) is greater than the sphere's radius (squared)
+        // the ray missed the sphere and went passed by it:
+        r = sphere_radii[sphere_index];
+        r2 = r*r;
         if (CSd2 > r2)
             continue;
 
+        // The (squared)distance from the current intersection position (I) to that closest position (C)
         ICd2 = r2 - CSd2;
+
         d2 = OCd - ICd2;
-        if (d2 < 0 || d2 >= cd2)
+        if (d2 >= cl_OPd2)
             continue;
 
-        cd2 = d2;
-        CI_Cd2 = ICd2;
-        CI_OCd = OCd;
+        cl_OPd2 = d2;
+        cl_Cd2 = ICd2;
+        cl_OCd = OCd;
 
-        CI_Px = Cx;
-        CI_Py = Cy;
-        CI_Pz = Cz;
+        cl_Px = Cx;
+        cl_Py = Cy;
+        cl_Pz = Cz;
 
-        CI_Sx = Sx;
-        CI_Sy = Sy;
-        CI_Sz = Sz;
+        cl_Sx = Sx;
+        cl_Sy = Sy;
+        cl_Sz = Sz;
 
         any_hit = true;
     }
 
     if (any_hit) {
-        if (CI_Cd2 > 0.001) {
-            d = CI_OCd - Math.sqrt(CI_Cd2);
-            CI_Px = Ox + d*Dx;
-            CI_Py = Oy + d*Dy;
-            CI_Pz = Oz + d*Dz;
+        if (cl_Cd2 > 0.001) {
+            d = cl_OCd - Math.sqrt(cl_Cd2);
+            cl_Px = Ox + d*Dx;
+            cl_Py = Oy + d*Dy;
+            cl_Pz = Oz + d*Dz;
         }
 
         if (r === 1) {
-            N[0] = CI_Px - CI_Sx;
-            N[1] = CI_Py - CI_Sy;
-            N[2] = CI_Pz - CI_Sz;
+            N[0] = cl_Px - cl_Sx;
+            N[1] = cl_Py - cl_Sy;
+            N[2] = cl_Pz - cl_Sz;
         } else {
             const one_over_radius = 1 / r;
-            N[0] = (CI_Px - CI_Sx) * one_over_radius;
-            N[1] = (CI_Py - CI_Sy) * one_over_radius;
-            N[2] = (CI_Pz - CI_Sz) * one_over_radius;
+            N[0] = (cl_Px - cl_Sx) * one_over_radius;
+            N[1] = (cl_Py - cl_Sy) * one_over_radius;
+            N[2] = (cl_Pz - cl_Sz) * one_over_radius;
         }
 
-        P[0] = CI_Px;
-        P[1] = CI_Py;
-        P[2] = CI_Pz;
+        P[0] = cl_Px;
+        P[1] = cl_Py;
+        P[2] = cl_Pz;
     }
 
     return any_hit;
@@ -133,10 +137,12 @@ export const intersectSphere = (
     center_y: number,
     center_z: number,
 
+    // The position that the ray originates from:
     origin_x: number,
     origin_y: number,
     origin_z: number,
 
+    // The direction that the ray is aiming at:
     raydir_x: number,
     raydir_y: number,
     raydir_z: number,

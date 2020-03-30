@@ -1,10 +1,7 @@
 import {rgba} from "../lib/accessors/color.js";
-import RayTraceEngine from "../lib/render/raytrace/engine.js";
 import RayTracer from "../lib/render/raytrace/pipeline.js";
+import RayTraceEngine from "../lib/render/raytrace/engine.js";
 import RayTraceViewport from "../lib/render/raytrace/viewport.js";
-import Spheres from "../lib/geometry/implicit_surfaces/spheres.js";
-import spheres from "../lib/geometry/implicit_surfaces/spheres.js";
-import {Position3D} from "../lib/accessors/position.js";
 
 globalThis.rgba = rgba;
 // globalThis.r = rgba(1, 0 ,0, 1);
@@ -24,11 +21,18 @@ const controller = globalThis.controller = vp1.controller;
 const camera = controller.camera;
 camera.is_static = false;
 camera.lense.fov = 75;
-camera.transform.translation.x = 10;
-camera.transform.translation.y = 10;
-camera.transform.translation.z = 10;
+camera.transform.translation.x = 5;
+camera.transform.translation.y = 5;
+camera.transform.translation.z = 5;
 camera.transform.rotation.x = -1;
 camera.transform.rotation.y = 2.3;
+
+// for (let i=0; i < 5; i++)
+//     for (let j=0; j < 5; j++) {
+//         let geo = new Sphere(engine.scene);
+//         geo.transform.translation.x = i*3;
+//         geo.transform.translation.z = j*3;
+//     }
 
 const num_spheres_x = 5;
 const num_spheres_z = 5;

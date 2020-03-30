@@ -1,6 +1,10 @@
 const array_length = 4**8;
 let i, now: number;
 const num_iterations: number = 100;
+
+console.log(`Iteration count: ${num_iterations}`);
+console.log(`Arrays length: ${array_length}`);
+
 /*
 
 cd C:\Program Files (x86)\Google\Chrome\Application && chrome.exe --no-sandbox --js-flags="--trace-opt --trace-deopt" --user-data-dir=C:\chromeDebugProfile
@@ -55,28 +59,50 @@ const add_array_of_arrays = (
     o_arrays[2][o_id] = a_arrays[2][a_id] + b_arrays[2][b_id];
     o_arrays[3][o_id] = a_arrays[3][a_id] + b_arrays[3][b_id];
 };
-
-const add_arrays = (
-    a_id: number, a_X: Float32Array, a_Y: Float32Array, a_Z: Float32Array, a_W: Float32Array,
-    b_id: number, b_X: Float32Array, b_Y: Float32Array, b_Z: Float32Array, b_W: Float32Array,
-    o_id: number, o_X: Float32Array, o_Y: Float32Array, o_Z: Float32Array, o_W: Float32Array,
-): void => {
-    o_X[o_id] = a_X[b_id] + b_X[b_id];
-    o_Y[o_id] = b_Y[b_id] + b_Y[b_id];
-    o_Z[o_id] = b_Z[b_id] + b_Z[b_id];
-    o_W[o_id] = a_W[b_id] + b_W[b_id];
-};
-
-const add_AoS_arrays = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
-): void => {
-    o[0] = a[0] + b[0];
-    o[1] = a[1] + b[1];
-    o[2] = a[2] + b[2];
-    o[3] = a[3] + b[3];
-};
+//
+// const add_SoA = (
+//     a_id: number, a_X: Float32Array, a_Y: Float32Array, a_Z: Float32Array, a_W: Float32Array,
+//     b_id: number, b_X: Float32Array, b_Y: Float32Array, b_Z: Float32Array, b_W: Float32Array,
+//     o_id: number, o_X: Float32Array, o_Y: Float32Array, o_Z: Float32Array, o_W: Float32Array,
+// ): void => {
+//     o_X[o_id] = a_X[b_id] + b_X[b_id];
+//     o_Y[o_id] = b_Y[b_id] + b_Y[b_id];
+//     o_Z[o_id] = b_Z[b_id] + b_Z[b_id];
+//     o_W[o_id] = a_W[b_id] + b_W[b_id];
+// };
+//
+// const add_AoS = (
+//     a: Float32Array,
+//     b: Float32Array,
+//     o: Float32Array
+// ): void => {
+//     o[0] = a[0] + b[0];
+//     o[1] = a[1] + b[1];
+//     o[2] = a[2] + b[2];
+//     o[3] = a[3] + b[3];
+// };
+//
+// const vec4_addition_passed_as_SoA = (
+//     a_id: number, aX: Float32Array, aY: Float32Array, aZ: Float32Array, aW: Float32Array,
+//     b_id: number, bX: Float32Array, bY: Float32Array, bZ: Float32Array, bW: Float32Array,
+//     o_id: number, oX: Float32Array, oY: Float32Array, oZ: Float32Array, oW: Float32Array
+// ): void => {
+//     for (let n = 0; n < num_iterations; n++)
+//         add_SoA(
+//             a_id, aX, aY, aZ, aW,
+//             b_id, bX, bY, bZ, bW,
+//             o_id, oX, oY, oZ, oW
+//         );
+// }
+//
+// ;const vec4_addition_passed_as_AoS = (
+//     a: Float32Array,
+//     b: Float32Array,
+//     o: Float32Array
+// ): void => {
+//     for (let n = 0; n < num_iterations; n++)
+//         add_AoS(a, b, o);
+// };
 
 // const vec4_addition_passed_as_objects = (
 //     a: {id: number, array: [Float32Array, Float32Array, Float32Array, Float32Array]},
@@ -101,27 +127,8 @@ const vec4_addition_passed_as_array_of_arrays = (
         );
 };
 
-const vec4_addition_passed_as_arrays = (
-    a_id: number, aX: Float32Array, aY: Float32Array, aZ: Float32Array, aW: Float32Array,
-    b_id: number, bX: Float32Array, bY: Float32Array, bZ: Float32Array, bW: Float32Array,
-    o_id: number, oX: Float32Array, oY: Float32Array, oZ: Float32Array, oW: Float32Array
-): void => {
-    for (let n = 0; n < num_iterations; n++)
-        add_arrays(
-            a_id, aX, aY, aZ, aW,
-            b_id, bX, bY, bZ, bW,
-            o_id, oX, oY, oZ, oW
-        );
-};
 
-const vec4_addition_passed_as_AoS_arrays = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
-): void => {
-    for (let n = 0; n < num_iterations; n++)
-        add_AoS_arrays(a, b, o);
-};
+
 
 const a_buffer = new Float32Array(array_length);
 const b_buffer = new Float32Array(array_length);
@@ -228,95 +235,115 @@ for (i = 0; i < arrays_count; i++) {
 // for (i = 0; i < num_calls; i++) vec4_addition_passed_as_objects(a, b, o);
 // console.log(`vec4_addition_passed_as_objects: ${performance.now() - now}`);
 //
+//
+//     now = performance.now();
+//     for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
+//         i, a_arrays,
+//         i, b_arrays,
+//         i, o_arrays
+//     );
+//     console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
 
-    now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
-        i, a_arrays,
-        i, b_arrays,
-        i, o_arrays
-    );
-    console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
-
-
-    now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_arrays(
-        i, a_x, a_y, a_z, a_w,
+function add_SoA(a_id: number, a_X: Float32Array, a_Y: Float32Array, a_Z: Float32Array, a_W: Float32Array,
+                 b_id: number, b_X: Float32Array, b_Y: Float32Array, b_Z: Float32Array, b_W: Float32Array,
+                 o_id: number, o_X: Float32Array, o_Y: Float32Array, o_Z: Float32Array, o_W: Float32Array): void {
+    o_X[o_id] = a_X[b_id] + b_X[b_id];
+    o_Y[o_id] = b_Y[b_id] + b_Y[b_id];
+    o_Z[o_id] = b_Z[b_id] + b_Z[b_id];
+    o_W[o_id] = a_W[b_id] + b_W[b_id];
+}
+function SoA(a_id: number, aX: Float32Array, aY: Float32Array, aZ: Float32Array, aW: Float32Array,
+             b_id: number, bX: Float32Array, bY: Float32Array, bZ: Float32Array, bW: Float32Array,
+             o_id: number, oX: Float32Array, oY: Float32Array, oZ: Float32Array, oW: Float32Array): void {
+    for (let n = 0; n < num_iterations; n++)
+        add_SoA(a_id, aX, aY, aZ, aW,
+                b_id, bX, bY, bZ, bW,
+                o_id, oX, oY, oZ, oW);
+}
+now = performance.now();
+for (i = 0; i < arrays_count; i++)
+    SoA(i, a_x, a_y, a_z, a_w,
         i, b_x, b_y, b_z, b_w,
-        i, o_x, o_y, o_z, o_w,
-    );
-    console.log(`vec4_addition_passed_as_arrays: ${performance.now() - now}`);
+        i, o_x, o_y, o_z, o_w);
+console.log(`Round 1: add_SoA: ${performance.now() - now}`);
 
-
-    now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_AoS_arrays(
-        as[i],
-        bs[i],
-        os[i]
-    );
-    console.log(`vec4_addition_passed_as_AoS_arrays: ${performance.now() - now}`);
+function add_AoS(a: Float32Array, b: Float32Array, o: Float32Array): void {
+    o[0] = a[0] + b[0];
+    o[1] = a[1] + b[1];
+    o[2] = a[2] + b[2];
+    o[3] = a[3] + b[3];
+}
+function AoS(a: Float32Array, b: Float32Array, o: Float32Array): void {
+    for (let n = 0; n < num_iterations; n++)
+        add_AoS(a, b, o);
+}
+now = performance.now();
+for (i = 0; i < arrays_count; i++)
+    AoS(as[i], bs[i], os[i]);
+console.log(`Round 1: add_AoS: ${performance.now() - now}`);
 
 //
 // now = performance.now();
 // for (i = 0; i < num_calls; i++) vec4_addition_passed_as_objects(a, b, o);
 // console.log(`vec4_addition_passed_as_objects: ${performance.now() - now}`);
 //
+//
+//     now = performance.now();
+//     for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
+//         i, a_arrays,
+//         i, b_arrays,
+//         i, o_arrays
+//     );
+//     console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
+
 
     now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
-        i, a_arrays,
-        i, b_arrays,
-        i, o_arrays
-    );
-    console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
-
-
-    now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_arrays(
+    for (i = 0; i < arrays_count; i++) SoA(
         i, a_x, a_y, a_z, a_w,
         i, b_x, b_y, b_z, b_w,
         i, o_x, o_y, o_z, o_w,
     );
-    console.log(`vec4_addition_passed_as_arrays: ${performance.now() - now}`);
+    console.log(`Round 2: add_SoA: ${performance.now() - now}`);
 
 
     now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_AoS_arrays(
+    for (i = 0; i < arrays_count; i++) AoS(
         as[i],
         bs[i],
         os[i]
     );
-    console.log(`vec4_addition_passed_as_AoS_arrays: ${performance.now() - now}`);
+    console.log(`Round 2: add_AoS: ${performance.now() - now}`);
 
 //
 // now = performance.now();
 // for (i = 0; i < num_calls; i++) vec4_addition_passed_as_objects(a, b, o);
 // console.log(`vec4_addition_passed_as_objects: ${performance.now() - now}`);
 //
-    now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
-        i, a_arrays,
-        i, b_arrays,
-        i, o_arrays
-    );
-    console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
+//     now = performance.now();
+//     for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_array_of_arrays(
+//         i, a_arrays,
+//         i, b_arrays,
+//         i, o_arrays
+//     );
+//     console.log(`vec4_addition_passed_as_array_of_arrays: ${performance.now() - now}`);
 
 
     now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_arrays(
+    for (i = 0; i < arrays_count; i++) SoA(
         i, a_x, a_y, a_z, a_w,
         i, b_x, b_y, b_z, b_w,
         i, o_x, o_y, o_z, o_w,
     );
-    console.log(`vec4_addition_passed_as_arrays: ${performance.now() - now}`);
+    console.log(`Round 3: add_SoA: ${performance.now() - now}`);
 
 
     now = performance.now();
-    for (i = 0; i < arrays_count; i++) vec4_addition_passed_as_AoS_arrays(
+    for (i = 0; i < arrays_count; i++) AoS(
         as[i],
         bs[i],
         os[i]
     );
-    console.log(`vec4_addition_passed_as_AoS_arrays: ${performance.now() - now}`);
+    console.log(`Round 3: add_AoS: ${performance.now() - now}`);
 
 //
 // now = performance.now();

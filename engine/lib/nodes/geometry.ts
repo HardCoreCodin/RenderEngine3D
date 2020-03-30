@@ -2,9 +2,7 @@ import Node3D from "./_base.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 import Scene from "./scene.js";
 import Mesh from "../geometry/mesh.js";
-// import ImplicitSurface from "../geometry/implicit_surfaces/_base.js";
-import {IImplicitGeometryCallback, IMaterial, IMeshCallback} from "../_interfaces/render.js";
-import {Ray, RayHit} from "../buffers/rays.js";
+import {IMaterial, IMeshCallback} from "../_interfaces/render.js";
 
 
 abstract class BaseGeometry<Context extends RenderingContext = RenderingContext>
@@ -37,59 +35,6 @@ abstract class BaseGeometry<Context extends RenderingContext = RenderingContext>
 
     postWorldMatrixRefresh(): void {
         this.model_to_world.invert(this.world_to_model);
-    }
-}
-
-export abstract class ImplicitGeometry<Context extends RenderingContext = RenderingContext>
-    extends BaseGeometry<Context>
-{
-    constructor(
-        scene: Scene<Context>,
-        is_rigid: boolean = true,
-        is_renderable: boolean = true
-    ) {
-        super(scene, is_rigid, is_renderable);
-        scene.implicit_geometries.add(this);
-        this.material = scene.default_material;
-    }
-
-    abstract intersect(ray: Ray, intersection: RayHit): boolean;
-}
-
-export class ImplicitGeometries {
-    readonly on_added = new Set<IImplicitGeometryCallback>();
-    readonly on_removed = new Set<IImplicitGeometryCallback>();
-
-    constructor(readonly scene: Scene) {}
-
-    protected readonly _set = new Set<ImplicitGeometry>();
-
-    get count(): number {return this._set.size}
-
-    add(geo: ImplicitGeometry): ImplicitGeometry {
-        if (!this._set.has(geo)) {
-            this._set.add(geo);
-
-            if (this.on_added.size)
-                for (const on_added of this.on_added)
-                    on_added(geo);
-        }
-
-        return geo;
-    }
-
-    remove(geo: ImplicitGeometry) {
-        if (this._set.has(geo)) {
-            this._set.delete(geo);
-            if (this.on_removed.size)
-                for (const on_removed of this.on_removed)
-                    on_removed(geo);
-        }
-    }
-
-    *[Symbol.iterator](): Generator<ImplicitGeometry> {
-        for (const geo of this._set)
-            yield geo
     }
 }
 
