@@ -1,7 +1,7 @@
 import {rgba} from "../lib/accessors/color.js";
 import RasterEngine from "../lib/render/raster/software/engine.js";
-import RayTracer from "../lib/render/raytrace/pipeline.js";
-import RayTraceViewport from "../lib/render/raytrace/viewport.js";
+// import RayTracer from "../lib/render/raytrace/pipeline.js";
+// import RayTraceViewport from "../lib/render/raytrace/viewport.js";
 
 globalThis.rgba = rgba;
 // globalThis.r = rgba(1, 0 ,0, 1);
@@ -9,8 +9,8 @@ globalThis.rgba = rgba;
 // globalThis.b = rgba(0, 0 ,1, 1);
 
 globalThis.RasterEngine = RasterEngine;
-globalThis.RayTracer = RayTracer;
-globalThis.RayTraceViewport = RayTraceViewport;
+// globalThis.RayTracer = RayTracer;
+// globalThis.RayTraceViewport = RayTraceViewport;
 
 
 const engine = globalThis.engine = new RasterEngine();

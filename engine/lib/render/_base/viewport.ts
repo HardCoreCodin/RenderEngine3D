@@ -31,7 +31,6 @@ export default abstract class BaseViewport<
         super();
         this.context = _display.context as Context;
         this._init();
-        this._initOverlay();
     }
 
     protected _initOverlay(): void {
@@ -40,6 +39,7 @@ export default abstract class BaseViewport<
     };
 
     protected _init(): void {
+        this._initOverlay();
         this.reset(this._display.width, this._display.height, this._display.x, this._display.y);
     }
 

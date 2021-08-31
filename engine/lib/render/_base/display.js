@@ -49,7 +49,6 @@ export default class Display extends Rectangle {
             new_width = Math.round(viewport.width * scale_x);
             new_height = Math.round(viewport.height * scale_y);
             viewport.reset(new_width, new_height, last_x, viewport.y);
-            viewport.update();
             last_x += new_width;
         }
     }
@@ -99,7 +98,7 @@ export default class Display extends Rectangle {
         else
             this._active_viewport = viewport;
         viewport.is_active = true;
-        viewport.update();
+        // viewport.update();
         return viewport;
     }
     removeViewport(viewport) {

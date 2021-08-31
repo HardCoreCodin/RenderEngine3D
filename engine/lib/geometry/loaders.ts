@@ -4,7 +4,7 @@ import {InputAttribute, MeshInputs} from "./inputs.js";
 import {ATTRIBUTE} from "../../constants.js";
 
 
-const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()): Mesh => {
+export const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()): Mesh => {
     if (!has_positions.test(obj))
         throw `Invalid obj file sting - no vertex positions found!`;
 

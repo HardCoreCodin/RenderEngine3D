@@ -51,6 +51,7 @@ export default abstract class RasterViewport<
     ): void {
         super.reset(width, height, x, y);
         this.view_frustum.aspect_ratio = width / height;
+        this.update();
     }
 
     update(): void {
@@ -155,12 +156,8 @@ export abstract class ProjectionMatrix<Context extends RenderingContext>
     }
 
     updateZ(): void {
-        const n = this.view_frustum.near;
-        const f = this.view_frustum.far;
-        const d = this.view_frustum.one_over_depth_span;
-
-        this.z_axis.z = f * d;
-        this.translation.z *= -n * d;
+        this.z_axis.z        = this.view_frustum.far  * this.view_frustum.one_over_depth_span;
+        this.translation.z =  -this.view_frustum.near * this.z_axis.z;
     }
 }
 
@@ -173,8 +170,8 @@ export class PerspectiveProjectionMatrix<Context extends RenderingContext>
     }
 
     updateXY(): void {
-        this.x_axis.x = this.lense.focal_length;
-        this.y_axis.y = this.lense.focal_length * this.view_frustum.aspect_ratio;
+        this.x_axis.x = this.lense.focal_length / this.view_frustum.aspect_ratio;
+        this.y_axis.y = this.lense.focal_length;
     }
 }
 

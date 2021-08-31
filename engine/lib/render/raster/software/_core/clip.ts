@@ -27,7 +27,7 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
 ): number => {
     // Break each face that needs to be clipped into smaller output triangle(s).
     let clipped = false;
-    const new_face_offset = face_count + face_count + face_count;  // 3 * face_count + 0 : out vertex 1 of new faces;
+    const new_face_offset =  3 *face_count;  // 3 * face_count + 0 : out vertex 1 of new faces;
 
     let v1_index, v1_flags, f_2,
         v2_index, v2_flags, f_3,
@@ -44,7 +44,7 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
 
     for (let f = 0; f < face_count; f++) {
         if (face_flags[f] & CLIP) {
-            // Clipping is done only against the near clipping plane, so ther are only 2 possible cases:
+            // Clipping is done only against the near clipping plane, so there are only 2 possible cases:
             // 1: One vertex is inside the frustum and the other two are outside beyond the near clipping plane.
             // 2: Two vertices are inside the frustum and the third is outside beyond the near clipping plane.
             v1_index = indices_v1[f];

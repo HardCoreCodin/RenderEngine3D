@@ -44,7 +44,7 @@ export class Position2D extends Vector2D<Direction2D> implements IPosition2D
     }
 
     to(other: this, out: Direction2D): typeof out {
-        subtract_a_2D_vector_from_another_2D_vector_to_out(this.array, other.array, out.array);
+        subtract_a_2D_vector_from_another_2D_vector_to_out(other.array, this.array, out.array);
         return out;
     }
 
@@ -121,7 +121,7 @@ export class Position4D extends Vector4D<Direction4D> implements IPosition4D
     }
 
     to(other: this, out: Direction4D): Direction4D {
-        subtract_a_4D_vector_from_another_4D_vector_to_out(this.array, other.array, out.array);
+        subtract_a_4D_vector_from_another_4D_vector_to_out(other.array, this.array, out.array);
         return out;
     }
 

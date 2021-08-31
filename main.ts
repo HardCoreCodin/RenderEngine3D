@@ -2,14 +2,15 @@
 // import teapot from './teapot.js';
 //
 // import Engine3D from "./engine/engine.js";
-// import Mesh from "./engine/lib/geometry/mesh.js";
+// import {loadMeshFromObj} from "./engine/lib/geometry/loaders.js";
 //
-// const teapot_mesh = Mesh.fromObj(teapot);
+// // import Mesh from "./engine/lib/geometry/mesh.js";
+//
+// const teapot_mesh = loadMeshFromObj(teapot);
 // // teapot_mesh.transform.rotationAngleForY = 180;
 // teapot_mesh.transform.translation.z = 5;
 // teapot_mesh.transform.translation.x = 5;
-//
-// const spaceship_mesh = Mesh.fromObj(spaceship);
+// const spaceship_mesh = loadMeshFromObj(spaceship);
 // // spaceship_mesh.transform.rotationAngleForY = 180;
 // spaceship_mesh.transform.translation.z = 5;
 // spaceship_mesh.transform.translation.x = -5;

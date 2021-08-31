@@ -1,7 +1,7 @@
 import Mesh from "./mesh.js";
 import { MeshOptions } from "./options.js";
 import { MeshInputs } from "./inputs.js";
-const loadMeshFromObj = (obj, options = new MeshOptions()) => {
+export const loadMeshFromObj = (obj, options = new MeshOptions()) => {
     if (!has_positions.test(obj))
         throw `Invalid obj file sting - no vertex positions found!`;
     let included = 1 /* position */;

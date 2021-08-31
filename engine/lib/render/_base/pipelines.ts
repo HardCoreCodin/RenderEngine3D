@@ -1,7 +1,7 @@
 import Scene from "../../nodes/scene.js";
 import {IMesh} from "../../_interfaces/geometry.js";
 import {
-    IImplicitGeometryCallback,
+    // IImplicitGeometryCallback,
     IMeshCallback,
     IRenderPipeline,
     IViewport
@@ -15,8 +15,8 @@ export default abstract class BaseRenderPipeline<
 {
     abstract render(viewport: ViewportType): void;
 
-    readonly on_implicit_geometry_added_callback: IImplicitGeometryCallback;
-    readonly on_implicit_geometry_removed_callback: IImplicitGeometryCallback;
+    // readonly on_implicit_geometry_added_callback: IImplicitGeometryCallback;
+    // readonly on_implicit_geometry_removed_callback: IImplicitGeometryCallback;
 
     readonly on_mesh_loaded_callback: IMeshCallback;
     readonly on_mesh_added_callback: IMeshCallback;

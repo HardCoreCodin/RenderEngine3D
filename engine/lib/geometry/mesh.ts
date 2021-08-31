@@ -40,7 +40,6 @@ export default class Mesh
 
     load(): this {
         this.options.sanitize(this.inputs);
-
         const face_attrs = this.options.face_attributes;
         const vertex_attrs = this.options.vertex_attributes;
 
@@ -57,7 +56,6 @@ export default class Mesh
 
         this.faces.init(this.face_vertices, face_attrs, pd, fnd, fcd);
         this.vertices.init(this.face_vertices, vertex_attrs, this.options.share, this.vertex_count, pd, vnd, vcd, ud);
-
         this.vertices.positions.load(this.inputs.position);
         this.bbox.load(this.vertices.positions);
 

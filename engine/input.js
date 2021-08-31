@@ -1,4 +1,4 @@
-// import Camera from "./lib/render/camera.js";
+// import Camera from "./lib/nodes/camera.js";
 // import {Direction3D} from "./lib/accessors/direction.js";
 //
 // const UP_KEY_CODE = 82; // R
@@ -70,7 +70,7 @@
 //     get forward_direction() : Direction3D {
 //         this._forward_direction.x = this.look_direction.x;
 //         this._forward_direction.z = this.look_direction.z;
-//         this._forward_direction.normalize();
+//         this._forward_direction.inormalize();
 //
 //         return this._forward_direction;
 //     }
@@ -167,9 +167,9 @@
 //                 this.forward_direction.mul(this.movement_amount, this.forward_movement);
 //
 //                 if (pressed.forward)
-//                     this.camera.transform.matrix.translation.add(this.forward_movement);
+//                     this.camera.transform.matrix.translation.iadd(this.forward_movement);
 //                 else
-//                     this.camera.transform.matrix.translation.sub(this.forward_movement);
+//                     this.camera.transform.matrix.translation.isub(this.forward_movement);
 //             }
 //
 //             if (pressed.right ||
@@ -178,9 +178,9 @@
 //                 this.right_direction.mul(this.movement_amount, this.right_movement);
 //
 //                 if (pressed.right)
-//                     this.camera.transform.matrix.translation.add(this.right_movement);
+//                     this.camera.transform.matrix.translation.iadd(this.right_movement);
 //                 else
-//                     this.camera.transform.matrix.translation.sub(this.right_movement);
+//                     this.camera.transform.matrix.translation.isub(this.right_movement);
 //             }
 //
 //             if (pressed.up ||

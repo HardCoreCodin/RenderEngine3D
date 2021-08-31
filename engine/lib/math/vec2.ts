@@ -211,49 +211,45 @@ export const normalize_a_2D_direction_in_place = (
 };
 
 export const normalize_all_2D_directions_in_place = (
-    a: Float32Array,
+    vectors: Float32Array[],
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ) : void => {
-    let j = start + 1;
+    let v: Float32Array;
     let n: number;
     const sqrt = Math.sqrt;
-    for (let i = start; i < end; i+=2) {
-        n = a[i]**2 + a[j]**2;
+    for (let i = start; i < end; i++) {
+        v = vectors[i];
+        n = v[0]**2 + v[1]**2;
         if (n === 1)
             continue;
 
         n = 1 / sqrt(n);
 
-        a[i] *= n;
-        a[j] *= n;
-
-        j += 2;
+        v[0] *= n;
+        v[1] *= n;
     }
 };
 
 export const normalize_some_2D_directions_in_place = (
-    a: Float32Array,
-    include: Uint8Array[],
+    vectors: Float32Array[],
+    include: Uint8Array,
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ) : void => {
-    let id = start;
-    let j = start + 1;
+    let v: Float32Array;
     let n: number;
     const sqrt = Math.sqrt;
-    for (let i = start; i < end; i+=2) if (include[id]) {
-        n = a[i]**2 + a[j]**2;
+    for (let i = start; i < end; i++) if (include[i]) {
+        v = vectors[i];
+        n = v[0]**2 + v[1]**2;
         if (n === 1)
             continue;
 
         n = 1 / sqrt(n);
 
-        a[i] *= n;
-        a[j] *= n;
-
-        j += 2;
-        id++;
+        v[0] *= n;
+        v[1] *= n;
     }
 };
 
@@ -304,76 +300,70 @@ export const multiply_a_2D_vector_by_a_2x2_matrix_in_place = (
 };
 
 export const multiply_all_2D_vectors_by_a_2x2_matrix_to_out = (
-    a: Float32Array,
+    vectors: Float32Array[],
     m: Float32Array,
-    o: Float32Array,
+    outs: Float32Array[],
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ): void => {
-    let j = start + 1;
-    for (let i = start; i < end; i+=2) {
-        o[i] = a[i]*m[0] + a[j]*m[4];
-        o[j] = a[i]*m[1] + a[j]*m[3];
-
-        j += 2;
+    let v, o: Float32Array;
+    for (let i = start; i < end; i++) {
+        v = vectors[i];
+        o = outs[i];
+        o[0] = v[0]*m[0] + v[1]*m[4];
+        o[1] = v[0]*m[1] + v[1]*m[3];
     }
 };
 export const multiply_all_2D_vectors_by_a_2x2_matrix_in_place = (
-    a: Float32Array,
+    vectors: Float32Array[],
     m: Float32Array,
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ): void => {
-    let j = start + 1;
+    let v: Float32Array;
     let x, y: number;
-    for (let i = start; i < end; i+=2) {
-        x = a[i];
-        y = a[j];
+    for (let i = start; i < end; i++) {
+        v = vectors[i];
+        x = v[0];
+        y = v[1];
 
-        a[i] = x*m[0] + y*m[2];
-        a[j] = x*m[1] + y*m[3];
-
-        j += 2;
+        v[0] = x*m[0] + y*m[2];
+        v[1] = x*m[1] + y*m[3];
     }
 };
 
 export const multiply_some_2D_vectors_by_a_2x2_matrix_to_out = (
-    a: Float32Array,
+    vectors: Float32Array[],
     m: Float32Array,
-    include: Uint8Array[],
-    o: Float32Array,
+    include: Uint8Array,
+    outs: Float32Array[],
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ): void => {
-    let id = start;
-    let j = start + 1;
-    for (let i = start; i < end; i+=2) if (include[id]) {
-        o[i] = a[i]*m[0] + a[j]*m[2];
-        o[j] = a[i]*m[1] + a[j]*m[3];
-
-        id++;
-        j += 2;
+    let v, o: Float32Array;
+    for (let i = start; i < end; i++) if (include[i]) {
+        v = vectors[i];
+        o = outs[i];
+        o[0] = v[0]*m[0] + v[1]*m[2];
+        o[1] = v[0]*m[1] + v[1]*m[3];
     }
 };
 
 export const multiply_some_2D_vectors_by_a_2x2_matrix_in_place = (
-    a: Float32Array,
+    vectors: Float32Array[],
     m: Float32Array,
-    include: Uint8Array[],
+    include: Uint8Array,
     start: number = 0,
-    end: number = a.length
+    end: number = vectors.length
 ): void => {
-    let id = start;
-    let j = start + 1;
+    let v; Float32Array;
     let x, y: number;
-    for (let i = start; i < end; i+=2) if (include[id]) {
-        x = a[i];
-        y = a[j];
+    for (let i = start; i < end; i++) if (include[i]) {
+        v = vectors[i];
+        x = v[0];
+        y = v[1];
 
-        a[i] = x*m[0] + y*m[2];
-        a[j] = x*m[1] + y*m[3];
-
-        id++;
-        j += 2;
+        v[0] = x*m[0] + y*m[2];
+        v[1] = x*m[1] + y*m[3];
     }
 };

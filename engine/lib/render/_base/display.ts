@@ -83,7 +83,6 @@ export default class Display<Context extends RenderingContext>
                 last_x,
                 viewport.y
             );
-            viewport.update();
 
             last_x += new_width
         }
@@ -145,7 +144,7 @@ export default class Display<Context extends RenderingContext>
             this._active_viewport = viewport;
 
         viewport.is_active = true;
-        viewport.update();
+        // viewport.update();
         return viewport;
     }
 

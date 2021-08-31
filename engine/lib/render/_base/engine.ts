@@ -213,15 +213,6 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     start() {
         this._startListening();
         this._is_running = true;
-
-        // Engine starts "inactive" to input until user clicks on the canvas.
-        // Matrices are updated by the controller (which is inactive initially).
-        // Initialize matrices manually here once, to set their initial state:
-        viewport = this._display.active_viewport;
-        if (viewport instanceof RasterViewport)
-            viewport.projection_matrix.update();
-        viewport.update();
-
         this._display.resize(this.canvas.clientWidth, this.canvas.clientHeight);
         requestAnimationFrame(this._update_callback);
     }

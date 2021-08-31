@@ -2,7 +2,7 @@ import {Float3, Float4, T2, T3} from "../../../../../types.js";
 import {ABOVE, BELOW, CLIP, CULL, FAR, INSIDE, LEFT, NDC, NEAR, OUT, RIGHT} from "../../../../../constants.js";
 
 export const cullVertices = (
-    [X, Y, Z, W]: Float4,
+    arrays: Float32Array[],
     vertex_flags: Uint8Array,
     vertex_count: number
 ): number => {
@@ -25,10 +25,10 @@ export const cullVertices = (
     directions = shared_directions = OUT;
 
     for (let i = 0; i < vertex_count; i++) {
-        w = W[i];
-        x = X[i];
-        y = Y[i];
-        z = Z[i];
+        x = arrays[i][0];
+        y = arrays[i][1];
+        z = arrays[i][2];
+        w = arrays[i][3];
 
         if (z < 0) {
             has_near = true;
@@ -39,6 +39,7 @@ export const cullVertices = (
         else
             directions = 0;
 
+        if (w < 0) w = -w;
         if (x > w)
             directions |= RIGHT;
         else if (x < -w)
@@ -60,7 +61,7 @@ export const cullVertices = (
             // Note: This will end-up beign zero if either:
             // A. All vertices are inside the frustum - no need for face clipping.
             // B. All vertices are outside the frustum in at least one direction shared by all.
-            //   (All vertises are above and/or all vertices on the left and/or all vertices behind, etc.)
+            //   (All vertices are above and/or all vertices on the left and/or all vertices behind, etc.)
         } else {
             has_inside = true;
             vertex_flags[i] = NDC;
@@ -69,7 +70,7 @@ export const cullVertices = (
 
     if (!has_inside && shared_directions)
     // All vertices are completely outside, and all share at least one out-region.
-    // The entire mesh is completly outside the frustum and does not intersect it in any way.
+    // The entire mesh is completely outside the frustum and does not intersect it in any way.
     // It can be safely culled altogether.
         return CULL;
     // else:

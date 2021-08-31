@@ -118,28 +118,28 @@ export class Colors4D extends VectorBuffer4D<Color4D> {constructor() {super(Colo
 export class Directions2D extends VectorBuffer2D<Direction2D> {
     constructor() {super(Direction2D)}
 
-    normalize(include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    normalize(include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            normalize_some_2D_directions_in_place(this.array, include, start, end);
+            normalize_some_2D_directions_in_place(this.arrays, include, start, end);
         else
-            normalize_all_2D_directions_in_place(this.array, start, end);
+            normalize_all_2D_directions_in_place(this.arrays, start, end);
         return this;
     }
 
-    mul(matrix: Matrix2x2, out: this, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    mul(matrix: Matrix2x2, out: this, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_2D_vectors_by_a_2x2_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+            multiply_some_2D_vectors_by_a_2x2_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
         else
-            multiply_all_2D_vectors_by_a_2x2_matrix_to_out(this.array, matrix.array, out.array, start, end);
+            multiply_all_2D_vectors_by_a_2x2_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
 
         return out;
     }
 
-    imul(matrix: Matrix2x2, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    imul(matrix: Matrix2x2, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_2D_vectors_by_a_2x2_matrix_in_place(this.array, matrix.array, include, start, end);
+            multiply_some_2D_vectors_by_a_2x2_matrix_in_place(this.arrays, matrix.array, include, start, end);
         else
-            multiply_all_2D_vectors_by_a_2x2_matrix_in_place(this.array, matrix.array, start, end);
+            multiply_all_2D_vectors_by_a_2x2_matrix_in_place(this.arrays, matrix.array, start, end);
 
         return this;
     }
@@ -147,11 +147,11 @@ export class Directions2D extends VectorBuffer2D<Direction2D> {
 export class Directions3D extends VectorBuffer3D<Direction3D> {
     constructor() {super(Direction3D)}
 
-    normalize(include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    normalize(include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            normalize_some_3D_directions_in_place(this.array, include, start, end);
+            normalize_some_3D_directions_in_place(this.arrays, include, start, end);
         else
-            normalize_all_3D_directions_in_place(this.array, start, end);
+            normalize_all_3D_directions_in_place(this.arrays, start, end);
         return this;
     }
 
@@ -160,26 +160,26 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
     (
         matrix: Matrix3x3|Matrix4x4,
         out: Out,
-        include?: Uint8Array[],
+        include?: Uint8Array,
         start: number = 0,
-        end: number = this.array.length
+        end: number = this.arrays.length
     ): typeof out {
         if (matrix instanceof Matrix3x3) {
             if (include)
-                multiply_some_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+                multiply_some_3D_vectors_by_a_3x3_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
             else
-                multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, out.array, start, end);
+                multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
         } else {
             if (out.allocator.dim === 3) {
                 if (include)
-                    multiply_some_3D_directions_by_a_4x4_matrix_to_out3(this.array, matrix.array, include, out.array, start, end);
+                    multiply_some_3D_directions_by_a_4x4_matrix_to_out3(this.arrays, matrix.array, include, out.arrays, start, end);
                 else
-                    multiply_all_3D_directions_by_a_4x4_matrix_to_out3(this.array, matrix.array, out.array, start, end);
+                    multiply_all_3D_directions_by_a_4x4_matrix_to_out3(this.arrays, matrix.array, out.arrays, start, end);
             } else {
                 if (include)
-                    multiply_some_3D_directions_by_a_4x4_matrix_to_out4(this.array, matrix.array, include, out.array, start, end);
+                    multiply_some_3D_directions_by_a_4x4_matrix_to_out4(this.arrays, matrix.array, include, out.arrays, start, end);
                 else
-                    multiply_all_3D_directions_by_a_4x4_matrix_to_out4(this.array, matrix.array, out.array, start, end);
+                    multiply_all_3D_directions_by_a_4x4_matrix_to_out4(this.arrays, matrix.array, out.arrays, start, end);
             }
         }
 
@@ -188,20 +188,20 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
 
     imul(
         matrix: Matrix3x3|Matrix4x4,
-        include?: Uint8Array[],
+        include?: Uint8Array,
         start: number = 0,
-        end: number = this.array.length
+        end: number = this.arrays.length
     ) : this {
         if (matrix instanceof Matrix3x3) {
             if (include)
-                multiply_some_3D_vectors_by_a_3x3_matrix_in_place(this.array, matrix.array, include, start, end);
+                multiply_some_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, include, start, end);
             else
-                multiply_all_3D_vectors_by_a_3x3_matrix_in_place(this.array, matrix.array, start, end);
+                multiply_all_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, start, end);
         } else {
             if (include)
-                multiply_some_3D_directions_by_a_4x4_matrix_in_place(this.array, matrix.array, include, start, end);
+                multiply_some_3D_directions_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
             else
-                multiply_all_3D_directions_by_a_4x4_matrix_in_place(this.array, matrix.array, start, end);
+                multiply_all_3D_directions_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
         }
 
         return this;
@@ -210,28 +210,28 @@ export class Directions3D extends VectorBuffer3D<Direction3D> {
 export class Directions4D extends VectorBuffer4D<Direction4D> {
     constructor() {super(Direction4D)}
 
-    normalize(include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    normalize(include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            normalize_some_4D_directions_in_place(this.array, include, start, end);
+            normalize_some_4D_directions_in_place(this.arrays, include, start, end);
         else
-            normalize_all_4D_directions_in_place(this.array, start, end);
+            normalize_all_4D_directions_in_place(this.arrays, start, end);
         return this;
     }
 
-    mul(matrix: Matrix4x4, out: this, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    mul(matrix: Matrix4x4, out: this, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_4D_vectors_by_a_4x4_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+            multiply_some_4D_vectors_by_a_4x4_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
         else
-            multiply_all_4D_vectors_by_a_4x4_matrix_to_out(this.array, matrix.array, out.array, start, end);
+            multiply_all_4D_vectors_by_a_4x4_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
 
         return out;
     }
 
-    imul(matrix: Matrix4x4, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    imul(matrix: Matrix4x4, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.array, matrix.array, include, start, end);
+            multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
         else
-            multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.array, matrix.array, start, end);
+            multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
 
         return this;
     }
@@ -241,20 +241,20 @@ export class Directions4D extends VectorBuffer4D<Direction4D> {
 export class Positions2D extends VectorBuffer2D<Position2D> {
     constructor() {super(Position2D)}
 
-    mul(matrix: Matrix2x2, out: this, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    mul(matrix: Matrix2x2, out: this, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_2D_vectors_by_a_2x2_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+            multiply_some_2D_vectors_by_a_2x2_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
         else
-            multiply_all_2D_vectors_by_a_2x2_matrix_to_out(this.array, matrix.array, out.array, start, end);
+            multiply_all_2D_vectors_by_a_2x2_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
 
         return out;
     }
 
-    imul(matrix: Matrix2x2, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    imul(matrix: Matrix2x2, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_2D_vectors_by_a_2x2_matrix_in_place(this.array, matrix.array, include, start, end);
+            multiply_some_2D_vectors_by_a_2x2_matrix_in_place(this.arrays, matrix.array, include, start, end);
         else
-            multiply_all_2D_vectors_by_a_2x2_matrix_in_place(this.array, matrix.array, start, end);
+            multiply_all_2D_vectors_by_a_2x2_matrix_in_place(this.arrays, matrix.array, start, end);
 
         return this;
     }
@@ -265,43 +265,43 @@ export class Positions3D extends VectorBuffer3D<Position3D> {
     mul<OutVector extends Position3D|Position4D, Out extends VectorBuffer<OutVector>>(
         matrix: Matrix3x3|Matrix4x4,
         out: Out,
-        include?: Uint8Array[],
+        include?: Uint8Array,
         start: number = 0,
-        end: number = this.array.length
+        end: number = this.arrays.length
     ): typeof out {
         if (matrix instanceof Matrix3x3) {
             if (include)
-                multiply_some_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+                multiply_some_3D_vectors_by_a_3x3_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
             else
-                multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.array, matrix.array, out.array, start, end);
+                multiply_all_3D_vectors_by_a_3x3_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
         } else {
             if (out.allocator.dim === 3) {
                 if (include)
-                    multiply_some_3D_positions_by_a_4x4_matrix_to_out3(this.array, matrix.array, include, out.array, start, end);
+                    multiply_some_3D_positions_by_a_4x4_matrix_to_out3(this.arrays, matrix.array, include, out.arrays, start, end);
                 else
-                    multiply_all_3D_positions_by_a_4x4_matrix_to_out3(this.array, matrix.array, out.array, start, end)
+                    multiply_all_3D_positions_by_a_4x4_matrix_to_out3(this.arrays, matrix.array, out.arrays, start, end)
             } else {
                 if (include)
-                    multiply_some_3D_positions_by_a_4x4_matrix_to_out4(this.array, matrix.array, include, out.array, start, end);
+                    multiply_some_3D_positions_by_a_4x4_matrix_to_out4(this.arrays, matrix.array, include, out.arrays, start, end);
                 else
-                    multiply_all_3D_positions_by_a_4x4_matrix_to_out4(this.array, matrix.array, out.array, start, end)
+                    multiply_all_3D_positions_by_a_4x4_matrix_to_out4(this.arrays, matrix.array, out.arrays, start, end)
             }
         }
 
         return out;
     }
 
-    imul(matrix: Matrix3x3|Matrix4x4, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    imul(matrix: Matrix3x3|Matrix4x4, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (matrix instanceof Matrix3x3) {
             if (include)
-                multiply_some_3D_vectors_by_a_3x3_matrix_in_place(this.array, matrix.array, include, start, end);
+                multiply_some_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, include, start, end);
             else
-                multiply_all_3D_vectors_by_a_3x3_matrix_in_place(this.array, matrix.array, start, end);
+                multiply_all_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, start, end);
         } else {
             if (include)
-                multiply_some_3D_positions_by_a_4x4_matrix_in_place(this.array, matrix.array, include, start, end);
+                multiply_some_3D_positions_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
             else
-                multiply_all_3D_positions_by_a_4x4_matrix_in_place(this.array, matrix.array, start, end);
+                multiply_all_3D_positions_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
         }
 
         return this;
@@ -315,20 +315,20 @@ export class Positions4D extends VectorBuffer4D<Position4D> {
         this.arrays[3].fill(1);
     }
 
-    mul(matrix: Matrix4x4, out: this, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    mul(matrix: Matrix4x4, out: this, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_4D_vectors_by_a_4x4_matrix_to_out(this.array, matrix.array, include, out.array, start, end);
+            multiply_some_4D_vectors_by_a_4x4_matrix_to_out(this.arrays, matrix.array, include, out.arrays, start, end);
         else
-            multiply_all_4D_vectors_by_a_4x4_matrix_to_out(this.array, matrix.array, out.array, start, end);
+            multiply_all_4D_vectors_by_a_4x4_matrix_to_out(this.arrays, matrix.array, out.arrays, start, end);
 
         return out;
     }
 
-    imul(matrix: Matrix4x4, include?: Uint8Array[], start: number = 0, end: number = this.array.length): this {
+    imul(matrix: Matrix4x4, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
         if (include)
-            multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.array, matrix.array, include, start, end);
+            multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
         else
-            multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.array, matrix.array, start, end);
+            multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
 
         return this;
     }

@@ -1,14 +1,14 @@
-// import Camera, {cam} from "./lib/render/camera.js";
-// import Triangle4D, {tri} from "./primitives/triangle.js";
-// import FPSController, {fps} from "./input.js";
-// import Matrix4x4, {mat4x4} from "./math/mat4x4.js";
-// import {dir4D, Direction4D} from "./math/vec4.js";
-// import {rgb, RGB} from "./math/vec3.js";
-// import {Allocators} from "./lib/allocators/float.js";
+// import Camera from "./lib/nodes/camera.js";
+// import Triangle4D, {tri} from "./lib/primitives/triangle.js";
+// import {FPSController} from "./lib/input/controllers.js";
+// import Matrix4x4, {mat4} from "./lib/accessors/matrix4x4.js";
+// import {dir4, Direction4D} from "./lib/accessors/direction.js";
+// import {rgb, Color3D} from "./lib/accessors/color.js";
+// import {Allocators} from "./lib/memory/allocators.js";
 // import MeshRenderer, {rend} from "./objects/renderable.js";
-// import {BufferSizes} from "./buffer.js";
+// // import {BufferSizes} from "./buffer.js";
 // import Mesh from "./lib/geometry/mesh.js";
-// import Transform from "./lib/scene_graph/transform.js";
+// import Transform from "./lib/nodes/transform.js";
 //
 // export default class Engine3D {
 //     private readonly screen: Screen;
@@ -17,7 +17,7 @@
 //     private readonly mesh_renderers: MeshRenderer[] = [];
 //
 //     private readonly allocators: Allocators;
-//     private readonly allocator_sizes: BufferSizes;
+//     // private readonly allocator_sizes: BufferSizes;
 //
 //     private depth_buffer: Float32Array;
 //     private frame_time = 1000 / 60;
@@ -36,7 +36,7 @@
 //     private readonly triangle_in_ndc_space: Triangle4D;
 //     private readonly triangle_in_screen_space: Triangle4D;
 //     private readonly triangle_normal: Direction4D;
-//     private readonly triangle_color: RGB;
+//     private readonly triangle_color: Color3D;
 //
 //     private triangle_count: number;
 //     private triangles_to_raster: Triangle4D[] = [];
@@ -57,9 +57,9 @@
 //         for (const mesh of meshes)
 //             this.mesh_renderers.push(rend(mesh.load(this.allocators), this.allocators));
 //
-//         this.camera = cam(this.allocators);
+//         this.camera = new Camera(this.allocators);
 //         this.camera_space_to_clip_space = this.camera.projection_matrix;
-//         this.fps_controller = fps(this.camera, canvas, this.allocators.vec3D);
+//         this.fps_controller = new FPSController(canvas, this.camera);
 //
 //         this.ray = dir4D(this.allocators.vec4D);
 //         this.light_direction = dir4D(0, 0, -1, 0, this.allocators.vec4D);

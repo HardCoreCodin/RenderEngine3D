@@ -1,5 +1,5 @@
 import Scene from "../nodes/scene.js";
-import Geometry, {ImplicitGeometry, MeshGeometries} from "../nodes/geometry.js";
+import Geometry, {MeshGeometries} from "../nodes/geometry.js";
 import {Border, Grid} from "../render/_base/viewport.js";
 import {ProjectionMatrix, ViewFrustum} from "../render/raster/_base/viewport.js";
 import {I2D} from "./vectors.js";
@@ -34,7 +34,7 @@ export type IMaterialConstructor<
     > = new (scene: Scene<Context>) => Instance;
 
 export type IMeshCallback = (mesh: IMesh) => void;
-export type IImplicitGeometryCallback = (geometry: ImplicitGeometry) => void;
+// export type IImplicitGeometryCallback = (geometry: ImplicitGeometry) => void;
 
 export interface IRenderPipeline<
     Context extends RenderingContext,

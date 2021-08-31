@@ -4,29 +4,29 @@ import {CULL, INSIDE, NDC} from "../../../../../constants.js";
 let i, flags, one_over_ws, one_over_w: number;
 
 export const perspectiveDivideAllVertexPositions = (
-    [X, Y, Z, W]: Float32Array[]
+    arrays: Float32Array[]
 ): void => {
-    for (const [i, w] of W.entries()) {
+    for (const array of arrays) {
         // Store reciprocals for use in rasterization:
-        W[i] = one_over_w = 1/w;
-        X[i] *= one_over_w;
-        Y[i] *= one_over_w;
-        Z[i] *= one_over_w;
+        array[3] = one_over_w = 1.0 / array[3];
+        array[0] *= one_over_w;
+        array[1] *= one_over_w;
+        array[2] *= one_over_w;
     }
 };
 
-const perspectiveDivideVertexPositions = (
-    [X, Y, Z, W]: Float4,
+export const perspectiveDivideVertexPositions = (
+    arrays: Float32Array[],
     vertex_flags: Uint8Array
 ): void => {
     let one_over_w: number;
 
-    for (const [i, flags] of vertex_flags.entries()) if (flags & NDC) {
+    for (const [i, array] of arrays.entries()) if (vertex_flags[i] & NDC) {
         // Store reciprocals for use in rasterization:
-        W[i] = one_over_w = 1 / W[i];
-        X[i] *= one_over_w;
-        Y[i] *= one_over_w;
-        Z[i] *= one_over_w;
+        array[3] = one_over_w = 1.0 / array[3];
+        array[0] *= one_over_w;
+        array[1] *= one_over_w;
+        array[2] *= one_over_w;
 
         // The perspective divide should finalize normalizing the depth values
         // into the 0 -> 1 space, by dividing clip-space 'z' by clip-space 'w'

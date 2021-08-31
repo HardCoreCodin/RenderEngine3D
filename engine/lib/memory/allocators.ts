@@ -90,6 +90,10 @@ export abstract class Uint8ClampedAllocator extends Allocator<Uint8ClampedArray>
 }
 export class Uint8ClampedAllocator1D extends Uint8ClampedAllocator {constructor() {super(DIM._1D)}}
 
+export const FLAGS_1D_ALLOCATOR = new Int8Allocator1D();
+export const FLAGS_2D_ALLOCATOR = new Int8Allocator2D();
+export const FLAGS_3D_ALLOCATOR = new Int8Allocator3D();
+
 export const VECTOR_2D_ALLOCATOR = new Float32Allocator2D();
 export const VECTOR_3D_ALLOCATOR = new Float32Allocator3D();
 export const VECTOR_4D_ALLOCATOR = new Float32Allocator4D();
