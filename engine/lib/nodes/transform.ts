@@ -97,13 +97,13 @@ export class EulerRotation implements IEulerRotation {
 export class Scale implements IScale {
     constructor(
         protected readonly _matrix: Matrix4x4 = new Matrix4x4(),
-        protected _prior_x_scale: number = 0,
-        protected _prior_y_scale: number = 0,
-        protected _prior_z_scale: number = 0,
+        protected _prior_x_scale: number = 1,
+        protected _prior_y_scale: number = 1,
+        protected _prior_z_scale: number = 1,
 
-        protected _x_scale: number = 0,
-        protected _y_scale: number = 0,
-        protected _z_scale: number = 0
+        protected _x_scale: number = 1,
+        protected _y_scale: number = 1,
+        protected _z_scale: number = 1
     ) {}
 
 

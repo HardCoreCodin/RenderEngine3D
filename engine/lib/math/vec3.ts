@@ -141,6 +141,17 @@ export const multiply_a_3D_vector_by_a_number_to_out = (
     o[2] = a[2] * b;
 };
 
+export const multiply_a_3D_vector_by_a_number_and_add_another_vector_to_out = (
+    a: Float32Array,
+    b: number,
+    c: Float32Array,
+    o: Float32Array
+) : void => {
+    o[0] = a[0] * b + c[0];
+    o[1] = a[1] * b + c[1];
+    o[2] = a[2] * b + c[2];
+};
+
 export const multiply_a_3D_vector_by_a_number_in_place = (
     a: Float32Array,
     b: number
@@ -271,6 +282,14 @@ export const dot_a_3D_direction_with_another_3D_direction = (
     a[0] * b[0] +
     a[1] * b[1] +
     a[2] * b[2];
+export const dot_a_3D_direction_with_a_direction_between_two_positions = (
+    v: Float32Array,
+    a: Float32Array,
+    b: Float32Array
+) : number =>
+    v[0] * (b[0] - a[0]) +
+    v[1] * (b[1] - a[1]) +
+    v[2] * (b[2] - a[2]) ;
 export const cross_a_3D_direction_with_another_3D_direction_to_out = (
     a: Float32Array,
     b: Float32Array,

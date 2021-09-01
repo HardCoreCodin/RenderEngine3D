@@ -22,13 +22,14 @@ export default abstract class BaseViewport<
     protected abstract _getBorder(): BorderType;
 
     abstract update(): void;
+    abstract reset(width: number, height: number, x: number, y: number): void;
 
     constructor(
         protected _controller: IController,
         protected _render_pipeline: IRenderPipeline<Context>,
         protected readonly _display: IDisplay<Context>
     ) {
-        super();
+        super(_display.size, _display.position);
         this.context = _display.context as Context;
         this._init();
     }
@@ -50,11 +51,11 @@ export default abstract class BaseViewport<
 
     setFrom(other: this): void {
         this._controller.camera.setFrom(other.controller.camera);
-        this.reset(
-            other._size.width,
-            other._size.height,
-            other._position.x,
-            other._position.y
+        this.setTo(
+            other.size.width,
+            other.size.height,
+            other.position.x,
+            other.position.y
         )
     }
 
@@ -75,8 +76,8 @@ export default abstract class BaseViewport<
 
     is_inside(x: number, y: number): boolean {
         return (
-            x >= this._position.x && x < this._position.x + this._size.width &&
-            y >= this._position.y && y < this._position.y + this._size.height
+            x >= this.position.x && x < this.position.x + this.size.width &&
+            y >= this.position.y && y < this.position.y + this.size.height
         );
     }
 }

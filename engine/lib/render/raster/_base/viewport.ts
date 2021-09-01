@@ -46,10 +46,10 @@ export default abstract class RasterViewport<
     reset(
         width: number,
         height: number,
-        x: number = this._position.x,
-        y: number = this._position.y
+        x: number = this.position.x,
+        y: number = this.position.y
     ): void {
-        super.reset(width, height, x, y);
+        super.setTo(width, height, x, y);
         this.view_frustum.aspect_ratio = width / height;
         this.update();
     }

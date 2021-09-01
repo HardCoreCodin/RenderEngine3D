@@ -37,17 +37,17 @@ export const pullSharedVertices = (
     vertices: Float32Array[],
     vertex_face_ids: Indices[]
 ): void => {
-    let accumulated, face_id: number;
+    let accumulated, face_id, vertex_id: number;
     // For each component 'accumulate-in' the face-value of all the faces_vertices of this vertex:
     for (let component_index = 0; component_index < faces[0].length; component_index++) {
+        vertex_id = 0;
 
         // Average vertex-attribute values from their related face's attribute values:
-        for (const [vertex_id, face_ids] of vertex_face_ids.entries()) {
+        for (const face_ids of vertex_face_ids) {
             accumulated = 0;
-            for (face_id of face_ids)
-                accumulated += faces[face_id][component_index];
+            for (face_id of face_ids) accumulated += faces[face_id][component_index];
 
-            vertices[vertex_id][component_index] = accumulated / face_ids.length;
+            vertices[vertex_id++][component_index] = accumulated / face_ids.length;
         }
     }
 };

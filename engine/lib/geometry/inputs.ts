@@ -44,11 +44,13 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
         const v3 = Array<number>(quad_count);
         const v4 = Array<number>(quad_count);
 
-        for (const [face_id, [v1_index, v2_index, v3_index, v4_index]] of this.faces_vertices.entries()) {
-            v1[face_id] = v1_index;
-            v2[face_id] = v2_index;
-            v3[face_id] = v3_index;
-            v4[face_id] = v4_index;
+        let face_id = 0;
+        for (const indices of this.faces_vertices) {
+            v1[face_id] = indices[0];
+            v2[face_id] = indices[1];
+            v3[face_id] = indices[2];
+            v4[face_id] = indices[3];
+            face_id++;
         }
 
         const triangle_count = quad_count * 2;

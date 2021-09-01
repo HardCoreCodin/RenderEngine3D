@@ -27,19 +27,23 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
         for (let i = 0; i < vertex_count; i++)
             vertex_face_indices[i] = [];
 
-        for (const [face_id, vertex_ids] of face_vertices.arrays.entries()) {
+        let face_id = 0;
+        for (const vertex_ids of face_vertices.arrays) {
             vertex_face_indices[vertex_ids[0]].push(face_id);
             vertex_face_indices[vertex_ids[1]].push(face_id);
             vertex_face_indices[vertex_ids[2]].push(face_id);
+            face_id++;
         }
 
         this.init(face_vertices.arrays.length * 3);
 
         let offset = 0;
-        for (const [vertex_index, face_indices] of vertex_face_indices.entries()) {
+        let vertex_index = 0;
+        for (const face_indices of vertex_face_indices) {
             this.indices[vertex_index] = this.array.subarray(offset, offset+face_indices.length) as ArrayType;
             this.indices[vertex_index].set(face_indices);
             offset += face_indices.length;
+            vertex_index++;
         }
 
         return this;

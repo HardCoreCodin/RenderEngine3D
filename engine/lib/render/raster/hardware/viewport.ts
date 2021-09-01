@@ -28,10 +28,10 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
 
     refresh() {
         this.context.enable(this.context.SCISSOR_TEST);
-        this.context.scissor(this._position.x, this._position.y, this._size.width, this._size.height);
+        this.context.scissor(this.position.x, this.position.y, this.size.width, this.size.height);
         this.context.clearColor(0, 0, 0, 1);
         this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT);
-        this.context.viewport(this._position.x, this._position.y, this._size.width, this._size.height);
+        this.context.viewport(this.position.x, this.position.y, this.size.width, this.size.height);
 
         this._render_pipeline.render(this);
         this._drawOverlay();

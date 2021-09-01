@@ -20,8 +20,8 @@ export const perspectiveDivideVertexPositions = (
     vertex_flags: Uint8Array
 ): void => {
     let one_over_w: number;
-
-    for (const [i, array] of arrays.entries()) if (vertex_flags[i] & NDC) {
+    let i = 0;
+    for (const array of arrays) if (vertex_flags[i++] & NDC) {
         // Store reciprocals for use in rasterization:
         array[3] = one_over_w = 1.0 / array[3];
         array[0] *= one_over_w;
@@ -46,30 +46,18 @@ export const perspectiveDivideVertexPositions = (
     }
 };
 
-const perspectiveCorrectVertexAttribute2D = (
-    [Xa, Ya]: Float2,
-    [Xo, Yo]: Float2,
+const perspectiveCorrectVertexAttribute = (
+    vectors: Float32Array[],
+    outs: Float32Array[],
     ONE_OVER_WS: Float32Array,
     vertex_flags: Uint8Array,
 ): void => {
-    for ([i, flags] of vertex_flags.entries()) if (flags & NDC) {
+    let j, i = 0;
+    for (const out of outs) if (vertex_flags[i] & NDC) {
         one_over_ws = ONE_OVER_WS[i];
-        Xo[i] = Xa[i] * one_over_ws;
-        Yo[i] = Ya[i] * one_over_ws;
-    }
-};
-
-const perspectiveCorrectVertexAttribute3D = (
-    [Xa, Ya, Za]: Float3,
-    [Xo, Yo, Zo]: Float3,
-    ONE_OVER_WS: Float32Array,
-    vertex_flags: Uint8Array,
-): void => {
-    for ([i, flags] of vertex_flags.entries()) if (flags & NDC) {
-        one_over_ws = ONE_OVER_WS[i];
-        Xo[i] = Xa[i] * one_over_ws;
-        Yo[i] = Ya[i] * one_over_ws;
-        Zo[i] = Za[i] * one_over_ws;
+        j = 0;
+        for (const component of vectors[i])
+            out[j++] = component * one_over_ws;
     }
 };
 

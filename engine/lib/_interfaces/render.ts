@@ -2,7 +2,7 @@ import Scene from "../nodes/scene.js";
 import Geometry, {MeshGeometries} from "../nodes/geometry.js";
 import {Border, Grid} from "../render/_base/viewport.js";
 import {ProjectionMatrix, ViewFrustum} from "../render/raster/_base/viewport.js";
-import {I2D} from "./vectors.js";
+import {I2D, IPosition2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
 import {IController} from "./input.js";
 import {IMesh} from "./geometry.js";
@@ -13,9 +13,12 @@ export interface ISize {
 }
 
 export interface IRectangle extends ISize, I2D {
+    readonly size: ISize;
+    readonly position: I2D;
+
     setPosition(x: number, y: number): void;
     resize(width: number, height: number): void;
-    reset(width: number, height: number, x: number, y: number): void
+    setTo(width: number, height: number, x: number, y: number): void
 }
 
 export interface IMaterial<Context extends RenderingContext>
@@ -86,7 +89,7 @@ export interface IViewport<
     is_active: boolean;
     is_inside(x: number, y: number): boolean;
     refresh(): void;
-
+    reset(width: number, height: number, x: number, y: number): void;
     update(): void;
     setFrom(other: this): void;
 }

@@ -62,10 +62,8 @@ export abstract class Flags<Other extends Accessor<Uint8Array> = Accessor<Uint8A
     }
 
     setTo(...values: number[]): this {
-        for (const [value, index] of values.entries()) {
-            this.array[index] = value;
-        }
-
+        let index = 0;
+        for (const value of values) this.array[index++] = value;
         return this;
     }
 

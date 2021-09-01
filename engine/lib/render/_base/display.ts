@@ -56,8 +56,8 @@ export default class Display<Context extends RenderingContext>
     refresh() {
         const width = this._canvas.clientWidth;
         const height = this._canvas.clientHeight;
-        if (width !== this._size.width ||
-            height !== this._size.height)
+        if (width !== this.size.width ||
+            height !== this.size.height)
             this.resize(width, height);
 
         for (const viewport of this._viewports)
@@ -65,10 +65,10 @@ export default class Display<Context extends RenderingContext>
     }
 
     resize(width: number, height: number): void {
-        const scale_x = width / this._size.width;
-        const scale_y = height / this._size.height;
-        this._size.width = this._canvas.width = width;
-        this._size.height = this._canvas.height = height;
+        const scale_x = width / this.size.width;
+        const scale_y = height / this.size.height;
+        this.size.width = this._canvas.width = width;
+        this.size.height = this._canvas.height = height;
 
         let new_width,
             new_height: number;
@@ -144,7 +144,6 @@ export default class Display<Context extends RenderingContext>
             this._active_viewport = viewport;
 
         viewport.is_active = true;
-        // viewport.update();
         return viewport;
     }
 

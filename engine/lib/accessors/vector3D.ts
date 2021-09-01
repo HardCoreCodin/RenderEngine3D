@@ -160,10 +160,10 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
 
                 multiply_a_3D_vector_by_a_number_to_out(this.array, other_or_num, out.array);
             } else
-                this.setAllTo(0);
+                out.setAllTo(0);
         } else {
             if (out.is(this))
-                return this.imul(other_or_num);
+                return out.imul(other_or_num);
 
             multiply_a_3D_vector_by_another_3D_vector_to_out(this.array, other_or_num.array, out.array);
         }
