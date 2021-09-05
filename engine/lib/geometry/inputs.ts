@@ -60,7 +60,7 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
         const new_v3 = Array(triangle_count);
 
         let second_index = quad_count;
-        for (let first_index = 0; first_index < quad_count; first_index++) {
+        for (let first_index = 0; first_index < quad_count; first_index++, second_index++) {
             new_v1[first_index] = v1[first_index];
             new_v2[first_index] = v2[first_index];
             new_v3[first_index] = v3[first_index];
@@ -68,8 +68,6 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
             new_v1[second_index] = v1[first_index];
             new_v2[second_index] = v3[first_index];
             new_v3[second_index] = v4[first_index];
-
-            second_index++;
         }
 
         this.faces_vertices = Array<Num3>(triangle_count);

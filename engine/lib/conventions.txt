@@ -1,5 +1,6 @@
 Up direction: Y
 Coordinate system: Left handed (DX)
+Triangle winding order: Counter Clockwise (CCW)
 Matrix multiplication: Row major (DX)
 Normalized device coordinates: 0 to 1 (DX)
-Rasterization (shadow) rules: bottom right (GL)
+Rasterization (shadow) rules: Bottom right (GL)

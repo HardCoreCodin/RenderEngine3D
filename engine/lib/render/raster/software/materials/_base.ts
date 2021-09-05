@@ -1,8 +1,21 @@
 import BaseMaterial from "../../../_base/material.js";
 import Rasterizer from "../pipeline.js";
+import Scene from "../../../../nodes/scene.js";
+import shadePixelCoords, {IPixelShader} from "./shaders/pixel.js";
+import shadeMesh, {IMeshShader} from "./shaders/mesh.js";
 
-export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRenderingContext2D, Rasterizer> {}
+export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRenderingContext2D, Rasterizer>
+{
+    constructor(
+        readonly scene: Scene<CanvasRenderingContext2D>,
+        public pixel_shader: IPixelShader = shadePixelCoords,
+        public mesh_shader: IMeshShader = shadeMesh
+    ) {
+        super(scene);
+    }
+}
 
+//
 // export class PixelShader {
 //
 // }
@@ -10,7 +23,7 @@ export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRendering
 // export class StandardMaterial {
 //
 // }
-
+//
 //
 // const SHADER_BODY_TOKEN = 'ShaderBody';
 // const SHADER_FUNCTION_BODY_TEMPLATE = `
@@ -29,8 +42,8 @@ export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRendering
 //         SHADER_MAIN_BODY_REGEX.exec(script_element.innerText)[1]
 //     )
 // );
-
-
+//
+//
 // // Example:
 // // <script type="pixel-shader">
 //

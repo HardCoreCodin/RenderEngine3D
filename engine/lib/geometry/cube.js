@@ -35,11 +35,11 @@ inputs.uv.addFace(0, 1, 2, 3);
 inputs.sanitize();
 // Cube inputs:
 // =====================
-export const cube_vertex_count = 8;
-export const cube_face_vertices = new FaceVerticesInt8().load(inputs.position);
-export const cube_vertex_faces = new VertexFacesInt8().load(cube_face_vertices, cube_vertex_count);
+export const CUBE_VERTEX_COUNT = 8;
+export const CUBE_FACE_VERTICES = new FaceVerticesInt8().load(inputs.position);
+export const CUBE_VERTEX_FACES = new VertexFacesInt8().load(CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT);
 // Mesh options:
 const defaults = new MeshOptions(1 /* position */, 1 /* NO_VERTEX__GENERATE_FACE */, 1 /* NO_VERTEX__GENERATE_FACE */, true);
-const Cube = (options = defaults) => new Mesh(inputs, options, cube_face_vertices, cube_vertex_faces).load();
+const Cube = (options = defaults) => new Mesh(inputs, options, CUBE_FACE_VERTICES, CUBE_VERTEX_FACES).load();
 export default Cube;
 //# sourceMappingURL=cube.js.map

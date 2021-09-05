@@ -5,41 +5,25 @@ import {Positions4D} from "../../../buffers/vectors.js";
 import {Border, Grid} from "../../_base/viewport.js";
 import RasterViewport from "../_base/viewport.js";
 import RenderTarget from "../../_base/render_target.js";
-import {perspectiveDivideAllVertexPositions, perspectiveDivideVertexPositions} from "./_core/half_space.js";
+import {projectAllVertexPositions, projectSomeVertexPositions} from "./_core/half_space.js";
 import {cullVertices} from "./_core/cull.js";
 import {ABOVE, BELOW, CLIP, CULL, FAR, INSIDE, LEFT, NDC, NEAR, OUT, RIGHT} from "../../../../constants.js";
 import {Position4D} from "../../../accessors/position.js";
 import {dir4} from "../../../accessors/direction.js";
+import {ISize} from "../../../_interfaces/render.js";
 
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid, SWBorder>
 {
-    ndc_to_screen: Matrix3x3;
     render_target: RenderTarget;
 
     reset(width: number, height: number, x: number, y: number): void {
-        const half_width = width >>> 1;
-        const half_height = height >>> 1;
-
-        // Scale the normalized screen to the pixel size:
-        // (from normalized size of -1->1 horizontally and vertically having a width and height of 2)
-        this.ndc_to_screen.x_axis.x = half_width;
-        this.ndc_to_screen.y_axis.y = -half_height;
-        // Note: HTML5 Canvas element has a coordinate system that goes top-to-bottom vertically.
-
-        // Move the screen up and to the right appropriately,
-        // such that it goes 0->width horizontally and 0->height vertically:
-        this.ndc_to_screen.translation.x = half_width;
-        this.ndc_to_screen.translation.y = half_height;
-
-        // this.depth_buffer = new Float32Array(this.screen.width * this.screen.height);
-
-        this.render_target.reset();
         super.reset(width, height, x, y);
+        this.render_target.reset();
     }
 
     update(): void {
         super.update();
-        this.grid.project(this.world_to_clip, this.ndc_to_screen);
+        this.grid.project(this.world_to_clip, this.size);
     }
 
     protected _getGrid(): SWGrid {
@@ -51,13 +35,11 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
     }
 
     protected _init(): void {
-        this.ndc_to_screen = mat3().setToIdentity();
         this.render_target = new RenderTarget(this);
         super._init();
     }
 
     refresh() {
-        // this.update();
         this.context.fillStyle = "black";
         this.context.fillRect(this.x, this.y, this.width, this.height);
         super.refresh();
@@ -73,23 +55,20 @@ export class SWBorder extends Border {
 let delta = dir4();
 
 export class SWGrid extends Grid {
-    protected _nds_to_screen: Matrix4x4;
     public view_positions: Positions4D;
     public edge_flags: FlagsBuffer2D;
 
     constructor(protected readonly _render_target: RenderTarget) {super()}
 
-    project(world_to_clip: Matrix4x4, ndc_to_screen: Matrix3x3) {
-        this._nds_to_screen.x_axis.setFrom(ndc_to_screen.x_axis);
-        this._nds_to_screen.y_axis.setFrom(ndc_to_screen.y_axis);
-        this._nds_to_screen.z_axis.setFrom(ndc_to_screen.z_axis);
-
+    project(world_to_clip: Matrix4x4, size: ISize) {
         this.vertex_positions.mul(world_to_clip, this.view_positions);
 
-        const cull_result: number = cullVertices(this.view_positions.arrays, this.edge_flags.array, this.view_positions.length);
-        if (cull_result == CULL)
-            return CULL;
-        else if (cull_result == CLIP) {
+        const half_width  = size.width  >>> 1;
+        const half_height = size.height >>> 1;
+
+        const cull_result = cullVertices(this.view_positions.arrays, this.edge_flags.array, this.vertex_positions.vertex_count);
+        if (cull_result === CULL) return CULL;
+        if (cull_result === CLIP) {
             let from_flag, to_flag: number;
             let from, to: Position4D;
             let vertex_index: number = 0;
@@ -122,11 +101,11 @@ export class SWGrid extends Grid {
                 vertex_index += 2;
             }
 
-            perspectiveDivideVertexPositions(this.view_positions.arrays, this.edge_flags.array);
-            this.view_positions.imul(this._nds_to_screen, this.edge_flags.array);
+            projectSomeVertexPositions(this.view_positions.arrays, this.vertex_positions.vertex_count, this.edge_flags.array, half_width, half_height);
+            // this.view_positions.imul(this._nds_to_screen, this.edge_flags.array);
         } else {
-            perspectiveDivideAllVertexPositions(this.view_positions.arrays);
-            this.view_positions.imul(this._nds_to_screen);
+            projectAllVertexPositions(this.view_positions.arrays, this.vertex_positions.vertex_count, half_width, half_height);
+            // this.view_positions.imul(this._nds_to_screen);
         }
     }
 
@@ -139,7 +118,6 @@ export class SWGrid extends Grid {
                 this.edge_flags.init(this.vertex_positions.vertex_count / 2);
             }
         } else {
-            this._nds_to_screen = new Matrix4x4().setToIdentity();
             this.view_positions = new Positions4D().init(this.vertex_positions.vertex_count);
             this.edge_flags = new FlagsBuffer2D().init(this.vertex_positions.vertex_count / 2);
         }

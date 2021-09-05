@@ -8,18 +8,19 @@ export interface ITransform {
     readonly translation: IPosition3D;
 
     setFrom(other: this): void;
+    update(): void;
 }
 
 export interface IScale {
     x: number;
     y: number;
     z: number;
-    setFrom(other: this): void;
+    setFrom(other: this, transform: ITransform): void;
 }
 
 export interface IEulerRotation {
     x: number;
     y: number;
     z: number;
-    setFrom(other: this): void;
+    setFrom(other: this, transform: ITransform): void;
 }

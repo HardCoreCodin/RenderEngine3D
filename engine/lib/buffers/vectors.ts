@@ -324,11 +324,18 @@ export class Positions4D extends VectorBuffer4D<Position4D> {
         return out;
     }
 
-    imul(matrix: Matrix4x4, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
-        if (include)
-            multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
-        else
-            multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
+    imul(matrix: Matrix3x3|Matrix4x4, include?: Uint8Array, start: number = 0, end: number = this.arrays.length): this {
+        if (matrix instanceof Matrix3x3) {
+            if (include)
+                multiply_some_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, include, start, end);
+            else
+                multiply_all_3D_vectors_by_a_3x3_matrix_in_place(this.arrays, matrix.array, start, end);
+        } else {
+            if (include)
+                multiply_some_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, include, start, end);
+            else
+                multiply_all_4D_vectors_by_a_4x4_matrix_in_place(this.arrays, matrix.array, start, end);
+        }
 
         return this;
     }

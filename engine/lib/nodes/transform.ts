@@ -2,197 +2,158 @@ import Matrix4x4 from "../accessors/matrix4x4.js";
 import {I2D, I3D} from "../_interfaces/vectors.js";
 import {IEulerRotation, IScale, ITransform} from "../_interfaces/transform.js";
 import {mat3} from "../accessors/matrix3x3.js";
+import {dir3} from "../accessors/direction.js";
 
 
 export default class Transform implements ITransform {
+    private readonly _intermediary_matrix = mat3();
+    private readonly _translation = dir3();
+    readonly rotation: EulerRotation;
+    readonly scale: Scale;
+
     constructor(
-        readonly matrix: Matrix4x4 = new Matrix4x4(),
-        readonly translation = matrix.translation,
-        readonly rotation = new EulerRotation(matrix),
-        readonly scale = new Scale(matrix)
+        readonly matrix: Matrix4x4 = new Matrix4x4().setToIdentity(),
+        readonly translation = matrix.translation
     ) {
-        matrix.setToIdentity();
+        this.scale = new Scale(this);
+        this.rotation = new EulerRotation(this);
     }
 
     setFrom(other: this): void {
-        this.scale.setFrom(other.scale);
-        this.rotation.setFrom(other.rotation);
-        this.matrix.setFrom(other.matrix);
+        this.scale.setFrom(other.scale, this);
+        this.rotation.setFrom(other.rotation, this);
+    }
+
+    update() {
+        this._translation.setFrom(this.translation);
+        this.scale.matrix.mul(this.rotation.matrix, this._intermediary_matrix);
+
+        this.matrix.setToIdentity();
+        this.matrix.x_axis.setFrom(this._intermediary_matrix.x_axis);
+        this.matrix.y_axis.setFrom(this._intermediary_matrix.y_axis);
+        this.matrix.z_axis.setFrom(this._intermediary_matrix.z_axis);
+        this.translation.setFrom(this._translation);
     }
 }
 
 export class EulerRotation implements IEulerRotation {
-    protected _x_angle = 0;
-    protected _y_angle = 0;
-    protected _z_angle = 0;
+    protected _angles = dir3(0);
+    public matrix = mat3().setToIdentity();
 
-    protected _rotation = mat3().setToIdentity();
+    constructor(protected _transform: Transform) {}
 
-    constructor(protected readonly _transform: Matrix4x4) {}
-
-    setFrom(other: this): void {
-        this._x_angle = other._x_angle;
-        this._y_angle = other._y_angle;
-        this._z_angle = other._z_angle;
-
-        this._transform.setFrom(other._transform);
+    setFrom(other: this, transform: Transform): void {
+        this._angles.setFrom(other._angles);
+        this._transform = transform;
+        this._updateTransform();
     }
 
-    get x(): number {return this._x_angle}
-    get y(): number {return this._y_angle}
-    get z(): number {return this._z_angle}
+    get x(): number {return this._angles.x}
+    get y(): number {return this._angles.y}
+    get z(): number {return this._angles.z}
 
     set x(x: number) {
-        this._x_angle = x;
+        this._angles.x = x;
         this._updateTransform();
     }
 
     set y(y: number) {
-        this._y_angle = y;
+        this._angles.y = y;
         this._updateTransform();
     }
 
     set z(z: number) {
-        this._z_angle = z;
+        this._angles.z = z;
         this._updateTransform();
     }
 
     set xy(xy: I2D) {
-        this._x_angle = xy.x;
-        this._y_angle = xy.y;
+        this._angles.x = xy.x;
+        this._angles.y = xy.y;
         this._updateTransform();
     }
 
     set xz(xz: I3D) {
-        this._x_angle = xz.x;
-        this._z_angle = xz.z;
+        this._angles.x = xz.x;
+        this._angles.z = xz.z;
         this._updateTransform();
     }
 
     set yz(yz: I3D) {
-        this._y_angle = yz.y;
-        this._z_angle = yz.z;
+        this._angles.y = yz.y;
+        this._angles.z = yz.z;
         this._updateTransform();
     }
 
     set xyz(xyz: I3D) {
-        this._x_angle = xyz.x;
-        this._y_angle = xyz.y;
-        this._z_angle = xyz.z;
+        this._angles.x = xyz.x;
+        this._angles.y = xyz.y;
+        this._angles.z = xyz.z;
         this._updateTransform();
     }
 
     protected _updateTransform(): void {
-        this._rotation.transpose();
-        this._transform.imul(this._rotation);
-
-        this._rotation.setRotationAroundZ(this._z_angle, true); // Roll
-        this._rotation.rotateAroundX(this._x_angle); // Pitch
-        this._rotation.rotateAroundY(this._y_angle); // Yaw
-
-        this._transform.imul(this._rotation);
+        this.matrix.setRotationAroundZ(this._angles.z, true); // Roll
+        this.matrix.rotateAroundX(this._angles.x); // Pitch
+        this.matrix.rotateAroundY(this._angles.y); // Yaw
+        this._transform.update();
     }
 }
 
 export class Scale implements IScale {
-    constructor(
-        protected readonly _matrix: Matrix4x4 = new Matrix4x4(),
-        protected _prior_x_scale: number = 1,
-        protected _prior_y_scale: number = 1,
-        protected _prior_z_scale: number = 1,
+    public matrix = mat3().setToIdentity();
 
-        protected _x_scale: number = 1,
-        protected _y_scale: number = 1,
-        protected _z_scale: number = 1
+    constructor(
+        protected _transform: Transform
     ) {}
 
-
-    setFrom(other: this): void {
-        this._prior_x_scale = other._prior_x_scale;
-        this._prior_y_scale = other._prior_y_scale;
-        this._prior_z_scale = other._prior_z_scale;
-
-        this._x_scale = other._x_scale;
-        this._y_scale = other._y_scale;
-        this._z_scale = other._z_scale;
-
-        this._matrix.setFrom(other._matrix);
+    setFrom(other: this, transform: Transform): void {
+        this.matrix.setFrom(other.matrix);
+        this._transform = transform;
+        this._transform.update();
     }
 
-    get x(): number {return this._x_scale}
-    get y(): number {return this._y_scale}
-    get z(): number {return this._z_scale}
+    get x(): number {return this.matrix.x_axis.x}
+    get y(): number {return this.matrix.y_axis.y}
+    get z(): number {return this.matrix.z_axis.z}
 
     set x(x: number) {
-        this._x_scale = x;
-        this._updateTransform();
+        this.matrix.x_axis.x = x;
+        this._transform.update();
     }
 
     set y(y: number) {
-        this._y_scale = y;
-        this._updateTransform();
+        this.matrix.y_axis.y = y;
+        this._transform.update();
     }
 
     set z(z: number) {
-        this._z_scale = z;
-        this._updateTransform();
+        this.matrix.z_axis.z = z;
+        this._transform.update();
     }
 
     set xy(xy: I2D) {
-        this._x_scale= xy.x;
-        this._y_scale = xy.y;
-        this._updateTransform();
+        this.matrix.x_axis.x = xy.x;
+        this.matrix.y_axis.y = xy.y;
+        this._transform.update();
     }
 
     set xz(xz: I3D) {
-        this._x_scale = xz.x;
-        this._z_scale = xz.z;
-        this._updateTransform();
+        this.matrix.x_axis.x = xz.x;
+        this.matrix.z_axis.z = xz.z;
+        this._transform.update();
     }
 
     set yz(yz: I3D) {
-        this._y_scale = yz.y;
-        this._z_scale = yz.z;
-        this._updateTransform();
+        this.matrix.y_axis.y = yz.y;
+        this.matrix.z_axis.z = yz.z;
+        this._transform.update();
     }
 
     set xyz(xyz: I3D) {
-        this._x_scale = xyz.x;
-        this._y_scale = xyz.y;
-        this._z_scale = xyz.z;
-        this._updateTransform();
-    }
-
-    protected _updateTransform(): void {
-        if (this._x_scale &&
-            this._x_scale !== 1 &&
-            this._x_scale !== this._prior_x_scale
-        ) this._matrix.x_axis.imul(
-            this._prior_x_scale && this._prior_x_scale !== 1 ?
-                this._x_scale / this._prior_x_scale :
-                this._x_scale
-        );
-
-        if (this._y_scale &&
-            this._y_scale !== 1 &&
-            this._y_scale !== this._prior_y_scale
-        ) this._matrix.y_axis.imul(
-            this._prior_y_scale && this._prior_y_scale !== 1 ?
-                this._y_scale / this._prior_y_scale :
-                this._y_scale
-        );
-
-        if (this._z_scale &&
-            this._z_scale !== 1 &&
-            this._z_scale !== this._prior_z_scale
-        ) this._matrix.z_axis.imul(
-            this._prior_z_scale && this._prior_z_scale !== 1 ?
-                this._z_scale / this._prior_z_scale :
-                this._z_scale
-        );
-
-        this._prior_x_scale = this._x_scale;
-        this._prior_y_scale = this._y_scale;
-        this._prior_z_scale = this._z_scale;
+        this.matrix.x_axis.x = xyz.x;
+        this.matrix.y_axis.y = xyz.y;
+        this.matrix.z_axis.z = xyz.z;
+        this._transform.update();
     }
 }

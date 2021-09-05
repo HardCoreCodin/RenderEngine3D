@@ -1,35 +1,47 @@
 import Geometry from "../../../nodes/geometry.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
-import RasterViewport from "../_base/viewport.js";
 import SoftwareRasterViewport from "./viewport.js";
 import SoftwareRasterMaterial from "./materials/_base.js";
-import RenderTarget from "../../_base/render_target.js";
 import BaseRenderPipeline from "../../_base/pipelines.js";
 import {VertexPositions4D} from "../../../buffers/attributes/positions.js";
-import {cube_face_vertices} from "../../../geometry/cube.js";
-import {VECTOR_4D_ALLOCATOR} from "../../../memory/allocators.js";
-import {T4} from "../../../../types.js";
+import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "../../../geometry/cube.js";
 import {IRasterRenderPipeline} from "../../../_interfaces/render.js";
-import {rgb} from "../../../accessors/color.js";
+import Mesh from "../../../geometry/mesh.js";
+import {FlagsBuffer1D, InterpolationVertexIndicesBuffer} from "../../../buffers/flags.js";
+import {cullFaces, cullVertices} from "./_core/cull.js";
+import {CLIP, CULL, INSIDE, MAX_RENDER_TARGET_SIZE, NDC} from "../../../../constants.js";
+import {shadePixelDepth} from "./materials/shaders/pixel.js";
+import {
+    projectAllVertexPositions,
+    projectSomeVertexPositions,
+    projectFaceVertexPositions,
+    shadeFace
+} from "./_core/half_space.js";
+import {UVs2D} from "../../../buffers/vectors.js";
+import {clipFaces} from "./_core/clip.js";
+import {rgba} from "../../../accessors/color.js";
 
 
 export default class Rasterizer
     extends BaseRenderPipeline<CanvasRenderingContext2D, SoftwareRasterViewport>
-    implements IRasterRenderPipeline<CanvasRenderingContext2D, SoftwareRasterViewport> {
+    implements IRasterRenderPipeline<CanvasRenderingContext2D, SoftwareRasterViewport>
+{
     readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
     cull_back_faces: boolean = false;
+    show_wire_frame: boolean = true;
     protected current_max_face_count: number = 0;
     protected current_max_vertex_count: number = 0;
 
-    protected interpolations: Float32Array;
-    protected src_trg_indices: Uint32Array;
-    protected src_trg_numbers: Uint8Array;
-    protected vertex_flags: Uint8Array;
-    protected face_flags: Uint8Array;
+    protected interpolations = new UVs2D();
+    protected src_trg_indices = new InterpolationVertexIndicesBuffer();
+    protected src_trg_numbers = new FlagsBuffer1D();
 
-    protected readonly clip_space_vertex_positions = new VertexPositions4D().autoInit(8, cube_face_vertices);
-
+    protected depth_buffer = new Float32Array(MAX_RENDER_TARGET_SIZE);
+    protected vertex_flags = new FlagsBuffer1D().init(CUBE_VERTEX_COUNT);
+    protected face_flags = new FlagsBuffer1D().init(CUBE_FACE_VERTICES.length);
+    protected readonly clip_space_vertex_positions = new VertexPositions4D().autoInit(CUBE_VERTEX_COUNT, CUBE_FACE_VERTICES);
+    protected readonly clipped_vertex_positions = new VertexPositions4D();
 
     protected _updateClippingBuffers(): void {
         let max_face_count = 0;
@@ -49,178 +61,175 @@ export default class Rasterizer
 
         if (max_face_count > this.current_max_face_count) {
             this.current_max_face_count = max_face_count;
-
-            this.face_flags = new Uint8Array(max_face_count);
-            [
-                this.clip_space_vertex_positions.array,
-                this.clip_space_vertex_positions.arrays
-            ] = VECTOR_4D_ALLOCATOR.allocateBuffer(max_face_count);
-
-            this.src_trg_numbers = new Uint8Array(max_face_count);
-
-            max_face_count += max_face_count;
-            this.interpolations = new Float32Array(max_face_count);
-
-            max_face_count += max_face_count;
-            this.src_trg_indices = new Uint32Array(max_face_count);
+            this.face_flags.init(max_face_count*2);
+            this.src_trg_numbers.init(max_face_count);
+            this.interpolations.init(max_face_count);
+            this.src_trg_indices.init(max_face_count);
         }
 
         if (max_vertex_count > this.current_max_vertex_count) {
             this.current_max_vertex_count = max_vertex_count;
-            this.face_flags = new Uint8Array(max_vertex_count);
+            this.vertex_flags.init(max_vertex_count);
+            this.clip_space_vertex_positions.init(max_vertex_count);
+            this.clipped_vertex_positions.init(max_face_count*6);
         }
     }
 
     render(viewport: SoftwareRasterViewport): void {
-        // if (!this.scene.mesh_geometries.mesh_count)
-        //     return;
+        if (!this.scene.mesh_geometries.mesh_count)
+            return;
 
-        render_target = viewport.render_target;
-        render_target.clear();
-        //
-        // width = viewport.width;
-        // height = viewport.height;
-        //
-        // y_start = viewport.y;
-        // x_start = viewport.x;
-        //
-        // y_end = y_start + height;
-        // x_end = x_start + width;
-        //
-        // pixel_index = y_start * width + x_start;
-        // for (y = y_start; y < y_end; y++) {
-        //     for (x = x_start; x < x_end; x++) {
-        //         if (
-        //             (x > (x_start + ((x_end - x_start) / 3))) && (x > (x_start + (((x_end - x_start) / 3)*2))) &&
-        //             (y > (y_start + ((y_end - y_start) / 3))) && (y > (y_start + (((y_end - y_start) / 3)*2)))
-        //             )
-        //             render_target.putPixel(pixel_index, 1, 0, 0);
-        //
-        //         pixel_index++;
-        //     }
-        // }
-        //
-        // render_target.draw();
+        viewport.render_target.clear();
 
-        // render_target.drawTriangle(
-        //     {x: 20, y: 20},
-        //     {x: 20, y: 120},
-        //     {x: 120, y: 120},
-        //     rgb(1, 0, 0)
-        //     );
+        this._updateClippingBuffers();
 
-        //
-        // this._updateClippingBuffers();
-        //
-        // let mesh: IMesh;
-        // // let mesh_shader: MeshShader;
-        // let mesh_geometry: IGeometry;
-        // let mesh_geometries: Set<Geometry>;
-        //
-        // const camera = viewport.controller.camera;
-        // const n = camera.view_frustum.near;
-        // const world_to_clip = viewport.world_to_clip;
-        // const model_to_clip = this.model_to_clip;
-        // const clip_positions = this.clip_space_vertex_positions;
-        // const cp = clip_positions.array;
-        //
-        // const vf = this.vertex_flags;
-        // const ff = this.face_flags;
-        // const cbf = this.cull_back_faces;
-        // const cc = true; // Always do clipping checks
-        //
-        // const stn = this.src_trg_numbers;
-        // const sti = this.src_trg_indices;
-        // const ipl = this.interpolations;
-        //
-        // let fv: T3<Uint8Array | Uint16Array | Uint32Array>;
-        // let v1, v2, v3: Uint8Array | Uint16Array | Uint32Array;
-        // let vc, fc, result: number;
-        // const pz = camera.projection_matrix.translation.z;
-        //
-        // for (const material of this.scene.materials) if (material instanceof SoftwareRasterMaterial) {
-        //     // mesh_shader = material.mesh_shader;
-        //
-        //     for (mesh of material.mesh_geometries.meshes) {
-        //         // fv = mesh.face_vertices.array;
-        //         vc = mesh.vertex_count;
-        //         fc = mesh.face_count;
-        //
-        //         // mesh_shader.bindMesh(mesh);
-        //
-        //         for (mesh_geometry of material.mesh_geometries.getGeometries(mesh)) if (mesh_geometry.is_renderable) {
-        //             // Prepare a matrix for converting from model space to clip space:
-        //             mesh_geometry.model_to_world.mul(world_to_clip, model_to_clip);
-        //
-        //             // Bind the inputs and outputs for the mesh shader, and execute it.
-        //             // Skip this geometry if it returns a CULL flag (0):
-        //             // if (mesh_shader.bindInputs(model_to_clip).bindOutputs(clip_positions).shade()) {
-        //             //     // The mesh shader did not cull this geometry.
-        //             //     // Cull the vertices against the view frustum:
-        //             //     if (cullVertices(cp, vf, vc)) {
-        //             //         // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
-        //             //         // Check it's faces as well and check for clipping cases:
-        //             //         result = cullFaces(cp, fv, fc, ff, vf, cc, cbf, pz);
-        //             //         if (result) {
-        //             //             if (result === CLIP) {
-        //             //
-        //             //             }
-        //             //         }
-        //             //     }
-        //             //
-        //             // for (vertex_attribute of this.material.vertex_attributes) {
-        //             //     if (vertex_attribute.is_shared)
-        //             //         clipSharedAttribute(
-        //             //             vertex_attribute.array,
-        //             //
-        //             //             this.src_trg_indices,
-        //             //             this.src_trg_numbers,
-        //             //             this.interpolations,
-        //             //             this.face_flags,
-        //             //
-        //             //             clipped_vertex_attribute.array
-        //             //         );
-        //             //     else
-        //             //         clipUnsharedAttribute(
-        //             //             vertex_attribute.array,
-        //             //
-        //             //             this.src_trg_numbers,
-        //             //             this.interpolations,
-        //             //             this.face_flags,
-        //             //
-        //             //             clipped_vertex_attribute.array
-        //             //         );
-        //             // }
-        //
-        //             // Note:
-        //             // Additional vertex attributes might need to be 'clipped' as well if the mesh has any:
-        //             // if (this.result_flags === CLIP) {
-        //             //     this.clipper.clipAttr(this.in_vertex_attribute_1, out_vertex_attribute_1);
-        //             //     this.clipper.clipAttr(this.in_vertex_attribute_2, out_vertex_attribute_2);
-        //             //     ...
-        //             //     this.clipper.clipAttr(this.in_vertex_attribute_n, out_vertex_attribute_n);
-        //             // }
-        //             // }
-        //         }
-        //     }
-        // }
+        let mesh: Mesh;
+        let mesh_geometry: Geometry;
 
-        // render_target.draw();
+        const half_width  = viewport.size.width  >>> 1;
+        const half_height = viewport.size.height >>> 1;
+        const world_to_clip = viewport.world_to_clip;
+        const model_to_clip = this.model_to_clip;
+        const clip_positions = this.clip_space_vertex_positions;
+        const clipped_vertices = this.clipped_vertex_positions.arrays;
+
+        const n = viewport.view_frustum.near;
+        const vf = this.vertex_flags.array;
+        const ff = this.face_flags.array;
+        const cbf = this.cull_back_faces;
+        const cc = true; // Always do clipping checks
+
+        const stn = this.src_trg_numbers.array;
+        const sti = this.src_trg_indices.arrays;
+        const ipl = this.interpolations.arrays;
+
+        let result, face_index, vertex_index, face_count, vertex_count: number;
+        const pz = viewport.projection_matrix.translation.z;
+
+        this.depth_buffer.fill(2);
+
+        const inputs = {
+            image_size: viewport.size,
+            pixel_coords: { x: 0, y: 0},
+            pixel_depth: 0
+        };
+        const context = viewport.context;
+        const wire_frame_color = `${rgba(1)}`;
+        const wire_frame_clipped_color = `${rgba(1, 0,  0)}`;
+
+        for (const material of this.scene.materials) if (material instanceof SoftwareRasterMaterial) {
+            for (mesh of material.mesh_geometries.meshes) {
+                for (mesh_geometry of material.mesh_geometries.getGeometries(mesh)) if (mesh_geometry.is_renderable) {
+                    // Prepare a matrix for converting from model space to clip space:
+                    mesh_geometry.model_to_world.mul(world_to_clip, model_to_clip);
+
+                    // Bind the inputs and outputs for the mesh shader, and execute it.
+                    // Skip this geometry if it returns a CULL flag (0):
+                    if (material.mesh_shader(mesh, model_to_clip, clip_positions)) {
+                        // The mesh shader did not cull this geometry.
+                        // Cull the vertices against the view frustum:
+                        face_count = mesh.face_count;
+                        vertex_count = mesh.vertex_count;
+                        if (cullVertices(clip_positions.arrays, vf, vertex_count)) {
+                            // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
+                            // Check it's faces as well and check for clipping cases:
+                            result = cullFaces(clip_positions.arrays, mesh.face_vertices.arrays, ff, vf, true, true, pz);
+                            if (result === CULL) continue;
+                            if (result === CLIP) {
+                                face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, sti, stn, ipl, vf, ff, n, clipped_vertices);
+                                projectFaceVertexPositions(clipped_vertices, face_count, ff, mesh.face_count, half_width, half_height);
+                                // for (vertex_attribute of material.vertex_attributes) {
+                                //     if (vertex_attribute.is_shared)
+                                //         clipSharedAttribute(
+                                //             vertex_attribute.array,
+                                //
+                                //             this.src_trg_indices,
+                                //             this.src_trg_numbers,
+                                //             this.interpolations,
+                                //             this.face_flags,
+                                //
+                                //             clipped_vertex_attribute.array
+                                //         );
+                                //     else
+                                //         clipUnsharedAttribute(
+                                //             vertex_attribute.array,
+                                //
+                                //             this.src_trg_numbers,
+                                //             this.interpolations,
+                                //             this.face_flags,
+                                //
+                                //             clipped_vertex_attribute.array
+                                //         );
+                                // }
+
+                                // Note:
+                                // Additional vertex attributes might need to be 'clipped' as well if the mesh has any:
+                                // if (this.result_flags === CLIP) {
+                                //     this.clipper.clipAttr(this.in_vertex_attribute_1, out_vertex_attribute_1);
+                                //     this.clipper.clipAttr(this.in_vertex_attribute_2, out_vertex_attribute_2);
+                                //     ...
+                                //     this.clipper.clipAttr(this.in_vertex_attribute_n, out_vertex_attribute_n);
+                                // }
+                                // }
+                            } else { // result === INSIDE :
+                                projectSomeVertexPositions(clip_positions.arrays, vertex_count, vf, half_width, half_height);
+                                vertex_index = 0;
+                                face_index = 0;
+                                for (const current_face_vertex_indices of mesh.face_vertices.arrays) {
+                                    for (const index of current_face_vertex_indices)
+                                        clipped_vertices[vertex_index++].set(clip_positions.arrays[index]);
+                                }
+                            }
+
+                            vertex_index = 0;
+                            for (face_index = 0; face_index < face_count; face_index++) {
+                                if (ff[face_index]) {
+                                    const v1 = clipped_vertices[vertex_index++];
+                                    const v2 = clipped_vertices[vertex_index++];
+                                    const v3 = clipped_vertices[vertex_index++];
+
+                                    if (this.show_wire_frame) {
+                                        context.beginPath();
+                                        context.moveTo(v1[0], v1[1]);
+                                        context.lineTo(v2[0], v2[1]);
+                                        context.lineTo(v3[0], v3[1]);
+                                        context.lineTo(v1[0], v1[1]);
+                                        context.closePath();
+                                        context.strokeStyle = face_index < mesh.face_count ? wire_frame_color : wire_frame_clipped_color;
+                                        context.stroke();
+                                    }
+                                } else
+                                    vertex_index += 3;
+                            }
+
+                                // if (!(i < mesh.face_count && ff[i] === 0))
+                                //     shadeFace(shadePixelDepth, inputs, this.depth_buffer, viewport.render_target.array,
+                                //         clip_positions.arrays[mesh.face_vertices.arrays[i][0]],
+                                //         clip_positions.arrays[mesh.face_vertices.arrays[i][1]],
+                                //         clip_positions.arrays[mesh.face_vertices.arrays[i][2]]
+                                //     );
+                        }
+                    }
+                }
+            }
+        }
+
+        // viewport.render_target.draw();
     }
 }
 
-let width, height,
-    x, x_start, x_end,
-    y, y_start, y_end,
-
-    pixel_index: number;
-
-let render_target: RenderTarget;
+// let width, height,
+//     x, x_start, x_end,
+//     y, y_start, y_end,
+//
+//     pixel_index: number;
+//
+// let render_target: RenderTarget;
 
 // import {Matrix4x4} from "../accessors/matrix.js";
 // import {VertexPositions3D, VertexPositions4D} from "../geometry/positions.js";
 // import {IFaceVertices} from "../_interfaces/buffers.js";
-// import {cube_face_vertices} from "../geometry/cube.js";
+// import {CUBE_FACE_VERTICES} from "../geometry/cube.js";
 // import {cullVertices} from "../math/rendering/culling.js";
 //
 // export default class Rasterizer
@@ -238,7 +247,7 @@ let render_target: RenderTarget;
 //         readonly local_to_world: Matrix4x4,
 //         readonly local_to_clip = new Matrix4x4(),
 //
-//         readonly clip_bbox_positions = new VertexPositions4D(cube_face_vertices),
+//         readonly clip_bbox_positions = new VertexPositions4D(CUBE_FACE_VERTICES),
 //     ) {
 //         this.clip_space_positions = new VertexPositions4D(face_vertices);
 //         this.ndc_space_positions = new VertexPositions4D(face_vertices);

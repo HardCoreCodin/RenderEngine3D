@@ -104,7 +104,7 @@ export class ViewFrustum<Context extends RenderingContext>
 
         this._far_clipping_plane_distance = far;
         this._one_over_depth_span = 1.0 / (far - this._near_clipping_plane_distance);
-        this._viewport.projection_matrix.updateZ();
+        this._viewport.update();
     }
 
     get near(): number {
@@ -117,7 +117,7 @@ export class ViewFrustum<Context extends RenderingContext>
 
         this._near_clipping_plane_distance = near;
         this._one_over_depth_span = 1.0 / (this._far_clipping_plane_distance - near);
-        this._viewport.projection_matrix.updateZ();
+        this._viewport.update();
     }
 
     get aspect_ratio(): number {
@@ -129,7 +129,7 @@ export class ViewFrustum<Context extends RenderingContext>
             return;
 
         this._aspect_ratio = aspect_ratio;
-        this._viewport.projection_matrix.updateXY();
+        this._viewport.update();
     }
 }
 

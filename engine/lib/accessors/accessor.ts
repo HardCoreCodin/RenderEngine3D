@@ -1,8 +1,9 @@
-import {Allocator} from "../memory/allocators.js";
+import {Allocator, U32_4D_ALLOCATOR} from "../memory/allocators.js";
 import {IAccessor} from "../_interfaces/accessors.js";
 import {IVector} from "../_interfaces/vectors.js";
 import {IFlags} from "../_interfaces/flags.js";
 import {TypedArray} from "../../types.js";
+import {Flags3D} from "./flags.js";
 
 export abstract class Accessor<ArrayType extends TypedArray = Float32Array>
     implements IAccessor<ArrayType>
@@ -78,6 +79,48 @@ export abstract class Flags<Other extends Accessor<Uint8Array> = Accessor<Uint8A
     }
 
     equals(other: Other): boolean {
+        for (let i = 0; i < this.allocator.dim; i++)
+            if (this.array[i] !== other.array[i])
+                return false;
+
+        return true;
+    }
+}
+
+export class InterpolationVertexIndices extends Accessor<Uint32Array> {
+    protected _getAllocator() {return U32_4D_ALLOCATOR}
+
+    get src1(): number { return this.array[0]; }
+    get trg1(): number { return this.array[1]; }
+    get src2(): number { return this.array[2]; }
+    get teg2(): number { return this.array[3]; }
+
+    set src1(index: number) { this.array[0] = index; }
+    set trg1(index: number) { this.array[1] = index; }
+    set src2(index: number) { this.array[2] = index; }
+    set teg2(index: number) { this.array[3] = index; }
+
+    copy(out: InterpolationVertexIndices = new InterpolationVertexIndices()): InterpolationVertexIndices {
+        return out.setFrom(this);
+    }
+
+    setTo(...values: number[]): this {
+        let index = 0;
+        for (const value of values) this.array[index++] = value;
+        return this;
+    }
+
+    setAllTo(value: number): this {
+        this.array.fill(value);
+        return this;
+    }
+
+    setFrom(other: InterpolationVertexIndices): this {
+        this.array.set(other.array);
+        return this;
+    }
+
+    equals(other: InterpolationVertexIndices): boolean {
         for (let i = 0; i < this.allocator.dim; i++)
             if (this.array[i] !== other.array[i])
                 return false;

@@ -1,4 +1,4 @@
-import {cube_face_vertices, cube_vertex_count} from "./cube.js";
+import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "./cube.js";
 import {VertexPositions3D, VertexPositions4D} from "../buffers/attributes/positions.js";
 import {Position3D, Position4D} from "../accessors/position.js";
 import {IBounds, IBounds3D, IBounds4D} from "../_interfaces/geometry.js";
@@ -26,7 +26,7 @@ abstract class Bounds implements IBounds {
 
 export class Bounds3D extends Bounds implements IBounds3D {
     constructor(
-        readonly vertex_positions = new VertexPositions3D().autoInit(cube_vertex_count, cube_face_vertices),
+        readonly vertex_positions = new VertexPositions3D().autoInit(CUBE_VERTEX_COUNT, CUBE_FACE_VERTICES),
         readonly min = new Position3D(vertex_positions.arrays[0]),
         readonly max = new Position3D(vertex_positions.arrays[6])
     ) {
@@ -36,7 +36,7 @@ export class Bounds3D extends Bounds implements IBounds3D {
 
 export class Bounds4D extends Bounds implements IBounds4D {
     constructor(
-        readonly vertex_positions = new VertexPositions4D().autoInit(cube_vertex_count, cube_face_vertices),
+        readonly vertex_positions = new VertexPositions4D().autoInit(CUBE_VERTEX_COUNT, CUBE_FACE_VERTICES),
         readonly min = new Position4D(vertex_positions.arrays[0]),
         readonly max = new Position4D(vertex_positions.arrays[6])
     ) {

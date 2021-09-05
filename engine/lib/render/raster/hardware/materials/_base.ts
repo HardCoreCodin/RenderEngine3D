@@ -4,7 +4,6 @@ import GLMeshBuffers from "../_core/mesh_buffers.js";
 import GLRenderPipeline from "../pipeline.js";
 import BaseMaterial from "../../../_base/material.js";
 import {IMesh} from "../../../../_interfaces/geometry.js";
-import {IMatrix4x4} from "../../../../_interfaces/matrix.js";
 import Matrix4x4 from "../../../../accessors/matrix4x4";
 
 

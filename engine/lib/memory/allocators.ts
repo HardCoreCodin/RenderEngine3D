@@ -84,6 +84,7 @@ export abstract class Int32Allocator extends Allocator<Uint32Array> {
 export class Int32Allocator1D extends Int32Allocator {constructor() {super(DIM._1D)}}
 export class Int32Allocator2D extends Int32Allocator {constructor() {super(DIM._2D)}}
 export class Int32Allocator3D extends Int32Allocator {constructor() {super(DIM._3D)}}
+export class Int32Allocator4D extends Int32Allocator {constructor() {super(DIM._4D)}}
 
 export abstract class Uint8ClampedAllocator extends Allocator<Uint8ClampedArray> {
     protected _getArrayConstructor(): TypedArrayConstructor<Uint8ClampedArray> {return Uint8ClampedArray}
@@ -93,6 +94,7 @@ export class Uint8ClampedAllocator1D extends Uint8ClampedAllocator {constructor(
 export const FLAGS_1D_ALLOCATOR = new Int8Allocator1D();
 export const FLAGS_2D_ALLOCATOR = new Int8Allocator2D();
 export const FLAGS_3D_ALLOCATOR = new Int8Allocator3D();
+export const U32_4D_ALLOCATOR = new Int32Allocator4D();
 
 export const VECTOR_2D_ALLOCATOR = new Float32Allocator2D();
 export const VECTOR_3D_ALLOCATOR = new Float32Allocator3D();

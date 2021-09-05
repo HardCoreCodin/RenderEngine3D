@@ -192,7 +192,6 @@ export interface IUV extends Vector<Accessor> {
 export interface IUV2D extends IUV, I2D {
     setTo(u: number, v: number): this;
 }
-
 export interface IUV3D extends IUV, I3D {
     w: number;
 
