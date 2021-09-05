@@ -35,29 +35,29 @@ Since these are trivial to compute they can be used instead of the triangle-area
 Given that the winding order of triangle corners in 2D space is counter clockwise,
 the area of the parallelogram of a triangle is:
 
-Eq.12:    ▱ABC = (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax)
+Eq.12:    ▱ABC = ACxABy - ACyABx = (Cx - Ax)(By - Ay) - (Cy - Ay)(Bx - Ax)
 
 From Eq.9 The first barycentric weight of point P is:
 
 Eq.9:     α = ▱ABP / ▱ABC:
 
 Substituting C for P gives the area of the parallelogram of triangle ABP:
-Eq.13:    ▱ABP = (Bx - Ax)(Py - Ay) - (By - Ay)(Px - Ax)
+Eq.13:    ▱ABP = APxABy - APyABx = (Px - Ax)(By - Ay) - (Py - Ay)(Bx - Ax)
 
 Expanding and factoring out the coordinates of P shows that ▱ABP is a linear function of P:
 
-Eq.14:    ▱ABP = (BxPy - BxAy - AxPy + AxAy) - (ByPx - ByAx - AyPx + AyAx)
-                = BxPy - BxAy - AxPy + AxAy - ByPx + ByAx + AyPx - AyAx
-                = AyPx - ByPx + BxPy - AxPy + ByAx - BxAy
-                = (Ay - By)Px + (Bx - Ax)Py + (ByAx - BxAy)
+Eq.14:    ▱ABP = (PxBy - PxAy - AxBy + AxAy) - (PyBx - PyAx -AyBx + AyAx)
+                = PxBy - PxAy - AxBy + AxAy - PyBx + PyAx + AyBx - AyAx
+                = ByPx - AyPx + AxPy - BxPy + AyBx - AxBy
+                = (By - Ay)Px + (Ax - Bx)Py + (AyBx - AxBy)
 
 This means it can be computed incrementally from an initial value(!).
 
 Defining constants α△x and α△y as coefficients for Px and Py, and a constant offset αK:
 
-Eq.15:    α△x = Ay - By
-Eq.16:    α△y = Bx - Ax
-Eq.17:    αK  = ByAx - BxAy
+Eq.15:    α△x = By - Ay
+Eq.16:    α△y = Ax - Bx
+Eq.17:    αK  = AyBx - AxBy
 
 Gives:
 
@@ -124,15 +124,15 @@ This can all be applied to the other 2 areas ▱BCP and ▱CAP to get incrementa
 Given:
 Eq.10:    β = ▱BCP / ▱ABC
 And:
-Eq.31:    ▱BCP = (By - Cy)Px + (Cx - Bx)Py + (CyBx - CxBy)
+Eq.31:    ▱BCP = (Cy - By)Px + (Bx - Cx)Py + (ByCx - BxCy)
 
 Defining:
-Eq.32:    β△x = Cy - Ay
-Eq.33:    β△y = Ax - Cx
-Eq.34:    βK  = CxAy - CyAx
-Eq.35:    β▱x = ⅟▱ABC(β△x) = ⅟▱ABC(Cy - Ay)
-Eq.36:    β▱y = ⅟▱ABC(β△y) = ⅟▱ABC(Ax - Cx)
-Eq.37:    β▱K = ⅟▱ABC(βK)  = ⅟▱ABC(CxAy - CyAx)
+Eq.32:    β△x = Cy - By
+Eq.33:    β△y = Bx - Cx
+Eq.34:    βK  = ByCx - BxCy
+Eq.35:    β▱x = ⅟▱ABC(β△x) = ⅟▱ABC(Cy - By)
+Eq.36:    β▱y = ⅟▱ABC(β△y) = ⅟▱ABC(Bx - Cx)
+Eq.37:    β▱K = ⅟▱ABC(βK)  = ⅟▱ABC(ByCx - BxCy)
 
 Gives:
 E1.38:    β(Px, Py) = (β▱x)Px + (β▱y)Py + β▱K
@@ -141,15 +141,15 @@ E1.39:    β(Px + △x, Py + △y) = β(Px, Py) + (△x * β▱x) + (△y * β�
 Given:
 Eq.11:    γ = ▱CAP / ▱ABC
 And:
-Eq.40:    ▱CAP = (Cy - Ay)Px + (Ax - Cx)Py + (AyCx - AxCy)
+Eq.40:    ▱CAP = (Ay - Cy)Px + (Cx - Ax)Py + (CyAx - CxAy)
 
 Defining:
-Eq.41:    γ△x = Cy - Ay
-Eq.42:    γ△y = Ax - Cx
-Eq.43:    γK  = AyCx - AxCy
-Eq.44:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(Cy - Ay)
-Eq.45:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Ax - Cx)
-Eq.46:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(AyCx - AxCy)
+Eq.41:    γ△x = Ay - Cy
+Eq.42:    γ△y = Cx - Ax
+Eq.43:    γK  = CyAx - CxAy
+Eq.44:    γ▱x = ⅟▱ABC(γ△x) = ⅟▱ABC(Ay - Cy)
+Eq.45:    γ▱y = ⅟▱ABC(γ△y) = ⅟▱ABC(Cx - Ax)
+Eq.46:    γ▱K = ⅟▱ABC(γK)  = ⅟▱ABC(CyAx - CxAy)
 
 Gives:
 Eq.47:    γ(Px, Py) = (γ▱x)Px + (γ▱y)Py + γ▱K
@@ -176,31 +176,31 @@ to be computed at all, and so neither would it's coefficients and deltas.
 
 This leaves the following values that need to be pre-computed:
 ==============================================================
-Eq.15:    α△x = Ay - By
-Eq.41:    γ△x = By - Cy
+Eq.15:    α△x = By - Ay
+Eq.41:    γ△x = Ay - Cy
 
-Eq.16:    α△y = Bx - Ax
-Eq.42:    γ△y = Ax - Cx
+Eq.16:    α△y = Ax - Bx
+Eq.42:    γ△y = Cx - Ax
 
-Eq.17:    αK  = ByAx - BxAy
-Eq.43:    γK  = AyCx - AxCy
+Eq.17:    αK  = AyBx - AxBy
+Eq.43:    γK  = CyAx - CxAy
 
 All would then need to be multiplied by ⅟▱ABC which would need to be computes:
-Eq.12:    ▱ABC = (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax)
+Eq.12:    ▱ABC = ACxABy - ACyABx = (Cx - Ax)(By - Ay) - (Cy - Ay)(Bx - Ax)
 
 Notice that the first 2 component are already computed for the deltas:
-Eq.52:   ▱ABC = (α△y)(γ△x) - (By - Ay)(Cx - Ax)
+Eq.52:   ▱ABC = (γ△y)(α△x) - (Cy - Ay)(Bx - Ax)
 
 Also notice that the second 2 components had their negatives computed for the deltas:
-Eq.53:   ▱ABC = (α△y)(γ△x) - (-α△x)(-γ△y)
+Eq.53:   ▱ABC = (γ△y)(α△x) - (-γ△x)(-α△y)
 
 But these 2 negatives cancel-out in their multiplication by each other:
-Eq.54:   ▱ABC = (α△y)(γ△x) - (-1)(α△x)(-1)(γ△y)
-               = (α△y)(γ△x) - (α△x)(γ△y)(-1)(-1)
-               = α△y * γ△x - α△x * γ△y
+Eq.54:   ▱ABC = (γ△y)(α△x) - (-1)(γ△x)(-1)(α△y)
+               = (α△y)(α△x) - (γ△x)(α△y)(-1)(-1)
+               = α△y * α△x - γ△x * α△y
 
 Ans so:
-Eq.55:   ⅟▱ABC = 1 / (α△y * γ△x - α△x * γ△y)
+Eq.55:   ⅟▱ABC = 1 / (α△y * α△x - γ△x * α△y)
 
 In code, this can be efficiently accomplished in 3 steps:
 1. Compute the deltas themselves (6 subtractions, 4 multiplications)

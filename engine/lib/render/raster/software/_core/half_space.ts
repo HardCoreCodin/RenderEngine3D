@@ -269,7 +269,7 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
 
     let pixel_depth: number;
 
-    const screen_width = inputs.image_size.width;
+    const screen_width  = inputs.image_size.width;
     const screen_height = inputs.image_size.height;
 
     const Ax = v1[0];
@@ -307,49 +307,17 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     max_y = min(max_y, screen_height - 1);
 
     // Compute area components:
-    const BAy = Ay - By;
+    const ABy = By - Ay;
     const ABx = Bx - Ax;
 
     const ACy = Cy - Ay;
-    const CAx = Ax - Cx;
+    const ACx = Cx - Ax;
 
-    const ABC = ABx*ACy - BAy*CAx;
+    const ABC = ACx*ABy - ACy*ABx; // (Cx - Ax)(By - Ay) - (Cy - Ay)(Bx - Ax)
 
     // Cull faces facing backwards:
     if (ABC <= 0)
         return;
-
-    // Compute edge exclusions:
-    // Origin: Top-left
-    // Rules: Top/Left
-    // Winding: CCW
-    const exclude_edge_1 = BAy > 0 || ABx > 0;
-    const exclude_edge_2 = By > Cy || Cx > Bx;
-    const exclude_edge_3 = ACy > 0 || CAx > 0;
-
-    const ABPk = Ax*By - Ay*Bx;
-    const CAPk = Cx*Ay - Cy*Ax;
-
-    // Compute weight constants:
-    const one_over_ABC = 1.0 / ABC;
-
-    const b1_dx = BAy * one_over_ABC;
-    const b1_dy = ABx * one_over_ABC;
-    const b1_k = ABPk * one_over_ABC;
-
-    const b3_dx = ACy * one_over_ABC;
-    const b3_dy = CAx * one_over_ABC;
-    const b3_k = CAPk * one_over_ABC;
-
-    // Fetch 'ws reciprocals' for perspective corrected interpolation:
-    // const v1_one_over_w = v1[3];
-    // const v2_one_over_w = v2[3];
-    // const v3_one_over_w = v3[3];
-
-    // Pre-compute barycentric weight constants for depth and one-over-ws:
-    const z1 = v1[2];
-    const z2 = v2[2];
-    const z3 = v3[2];
 
     // Floor bounds coordinates down to their integral component:
     min_x <<= 0;
@@ -361,34 +329,53 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     let pixel_index = screen_width * min_y + min_x;
     let pixel_start = pixel_index;
 
-    // Offset bounds coordinate to their pixel centers:
-    min_x += 0.5;
-    min_y += 0.5;
-    max_x += 0.5;
-    max_y += 0.5;
+    // Fetch 'ws reciprocals' for perspective corrected interpolation:
+    // const v1_one_over_w = v1[3];
+    // const v2_one_over_w = v2[3];
+    // const v3_one_over_w = v3[3];
+
+    // Pre-compute barycentric weight constants for depth and one-over-ws:
+    const z1 = v1[2];
+    const z2 = v2[2];
+    const z3 = v3[2];
+
+    // Compute edge exclusions:
+    // Drawing: Top-down
+    // Origin: Top-left
+    // Shadow rules: Top/Left
+    // Winding: CW (Flipped vertically due to top-down drawing!)
+    const exclude_edge_1 = ABy > 0;
+    const exclude_edge_2 = By > Cy;
+    const exclude_edge_3 = ACy < 0;
+
+    // Compute weight constants:
+    const one_over_ABC = 1.0 / ABC;
+
+    const Cdx = ABy * one_over_ABC;
+    const Bdx = -ACy * one_over_ABC;
+
+    const Cdy = -ABx * one_over_ABC;
+    const Bdy = ACx * one_over_ABC;
 
     // Compute initial areal coordinates for the first pixel center:
-    let b1 = b1_dx*min_x + b1_dy*min_y + b1_k;
-    let b3 = b3_dx*min_x + b3_dy*min_y + b3_k;
-    let b2 = 1 - b1 - b3;
+    let C_start = Cdx*(min_x + 0.5) + Cdy*(min_y + 0.5) + (Ay*Bx - Ax*By) * one_over_ABC;
+    let B_start = Bdx*(min_x + 0.5) + Bdy*(min_y + 0.5) + (Cy*Ax - Cx*Ay) * one_over_ABC;
+    let A, B, C;
 
     // Scan the bounds:
-    for (let y = min_y; y <= max_y; y++) {
+    for (let y = min_y; y <= max_y; y++, C_start += Cdy, B_start += Bdy, pixel_start += screen_width) {
         pixel_index = pixel_start;
+        B = B_start;
+        C = C_start;
 
-        for (let x = min_x; x <= max_x; x++) {
+        for (let x = min_x; x <= max_x; x++, B += Bdx, C += Cdx, pixel_index++) {
+            A = 1 - B - C;
+
             // If the pixel is outside of the triangle, skip it:
-            if (b1 < 0 ||
-                b2 < 0 ||
-                b3 < 0
-            ) {
-                b1 += b1_dx;
-                b3 += b3_dx;
-                b2 = 1 - b1 - b3;
-                pixel_index++;
-
+            if (A < 0 ||
+                B < 0 ||
+                C < 0)
                 continue;
-            }
 
             // Cull and text pixel based on it's depth:
             // pixel_depth = z1*b1 + z2*b2 + z3*b3;
@@ -420,15 +407,6 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
             // pixel_face_ids[pixel_index] = f;
             // pixel_object_ids[pixel_index] = object_id;
             // pixel_material_ids[pixel_index] = material_id;
-
-            b1 += b1_dx;
-            b3 += b3_dx;
-            b2 = 1 - b1 - b3;
-            pixel_index++;
         }
-
-        b1 += b1_dy;
-        b3 += b3_dy;
-        pixel_start += screen_width;
     }
 };

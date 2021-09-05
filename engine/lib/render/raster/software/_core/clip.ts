@@ -28,6 +28,11 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         out1_index, out1_num, out1z,
         out2_index, out2_num, out2z,
 
+        first_new_vertex_x,
+        first_new_vertex_y,
+        second_new_vertex_x,
+        second_new_vertex_y,
+
         t, one_minus_t, clipped_face_v1_index,
         encoded_vertex_nums: number;
 
@@ -127,8 +132,8 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
             clipped = clipped_faces_vertex_positions[clipped_face_v1_index + (out1_num - 1)];
 
             // Compute the new clip-space coordinates of the clipped-vertex:
-            clipped[0] = one_minus_t*out1[0] + t*in1[0];
-            clipped[1] = one_minus_t*out1[1] + t*in1[1];
+            clipped[0] = first_new_vertex_x = one_minus_t*out1[0] + t*in1[0];
+            clipped[1] = first_new_vertex_y = one_minus_t*out1[1] + t*in1[1];
             clipped[2] = 0;
             clipped[3] = near_clipping_plane_distance;
             // Note:
@@ -183,14 +188,27 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 t = t_values[1] = out1z / (out1z - in2z);
                 one_minus_t = 1 - t;
 
+                second_new_vertex_x = one_minus_t*out1[0] + t*in2[0];
+                second_new_vertex_y = one_minus_t*out1[1] + t*in2[1];
+
+                // Determine orientation:
+                if ((in2[0] - first_new_vertex_x)*(second_new_vertex_y - first_new_vertex_y) >
+                    (in2[1] - first_new_vertex_y)*(second_new_vertex_x - first_new_vertex_x)) {
+                    in1_num = 1;
+                    in2_num = 2;
+                } else {
+                    in1_num = 2;
+                    in2_num = 1;
+                }
+
                 // Since this vertex belongs to an 'extra' new face, the index is offset to that index-space
-                clipped_faces_vertex_positions[new_face_offset].set(vertices[in2_index]);
-                clipped_faces_vertex_positions[new_face_offset+1].set(clipped);
-                clipped = clipped_faces_vertex_positions[new_face_offset+2];
+                clipped_faces_vertex_positions[new_face_offset].set(clipped);
+                clipped = clipped_faces_vertex_positions[new_face_offset + in2_num];
+                clipped_faces_vertex_positions[new_face_offset + in1_num].set(vertices[in2_index]);
 
                 // Compute the new clip-space coordinates of the clipped-vertex:
-                clipped[0] = one_minus_t*out1[0] + t*in2[0];
-                clipped[1] = one_minus_t*out1[1] + t*in2[1];
+                clipped[0] = second_new_vertex_x = one_minus_t*out1[0] + t*in2[0];
+                clipped[1] = second_new_vertex_y = one_minus_t*out1[1] + t*in2[1];
                 clipped[2] = 0;
                 clipped[3] = near_clipping_plane_distance;
 
