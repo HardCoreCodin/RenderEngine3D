@@ -178,6 +178,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
 
     protected _on_keyup(key_event: KeyboardEvent): void {
         controller = this._display.active_viewport.controller;
+        controller.keyUp(key_event.which);
 
         for (const key of Object.keys(this.keys))
             if (this.keys[key] === key_event.which)

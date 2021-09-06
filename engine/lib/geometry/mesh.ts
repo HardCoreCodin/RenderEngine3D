@@ -32,9 +32,9 @@ export default class Mesh
     ) {
         inputs.sanitize();
 
-        this.vertex_count = inputs.position.vertex_count;
         this.face_vertices = face_vertices || new FaceVerticesInt32().load(inputs.position);
         this.face_count = this.face_vertices.length;
+        this.vertex_count = options.share & ATTRIBUTE.position ? inputs.position.vertex_count : this.face_count * 3;
         this.vertex_faces = vertex_faces || new VertexFacesInt32().load(this.face_vertices, this.vertex_count);
     }
 

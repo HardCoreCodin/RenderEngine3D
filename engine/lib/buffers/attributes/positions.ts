@@ -24,7 +24,7 @@ export class VertexPositions2D extends Positions2D implements IVertexAttribute<P
     autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
         this._face_vertices = face_vertices;
-        this.init(is_shared ? vertex_count : this.face_count * 3);
+        this.init(vertex_count);
         return this;
     }
 
@@ -59,7 +59,7 @@ export class VertexPositions3D extends Positions3D implements IVertexAttribute<P
     autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
         this._face_vertices = face_vertices;
-        this.init(is_shared ? vertex_count : this.face_count * 3);
+        this.init(vertex_count);
         return this;
     }
 
@@ -98,7 +98,7 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
     autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
         this._face_vertices = face_vertices;
-        this.init(is_shared ? vertex_count : this.face_count * 3);
+        this.init(vertex_count);
         return this;
     }
 

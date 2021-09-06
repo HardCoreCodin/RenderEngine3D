@@ -15,6 +15,7 @@ import {ISize} from "../../../_interfaces/render.js";
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid, SWBorder>
 {
     render_target: RenderTarget;
+    wire_frame_render_target: RenderTarget;
 
     reset(width: number, height: number, x: number, y: number): void {
         super.reset(width, height, x, y);
@@ -36,6 +37,7 @@ export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderi
 
     protected _init(): void {
         this.render_target = new RenderTarget(this);
+        this.wire_frame_render_target = new RenderTarget(this);
         super._init();
     }
 

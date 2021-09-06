@@ -148,7 +148,7 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
 
     _getVertexComponent(vertex_component: number|string): number {
         if (typeof vertex_component === "string")
-            return this._getVertexComponent(vertex_component);
+            vertex_component = Number(vertex_component);
 
         if (typeof vertex_component === "number") {
             if (Number.isFinite(vertex_component))
@@ -162,7 +162,7 @@ export class InputAttribute<Attribute extends ATTRIBUTE>
 
     _getVertexIndex(vertex_index: number|string): number {
         if (typeof vertex_index === "string")
-            return this._getVertexIndex(vertex_index);
+            vertex_index = Number(vertex_index);
 
         if (typeof vertex_index === "number") {
             if (Number.isFinite(vertex_index)) {

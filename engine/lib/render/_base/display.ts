@@ -123,10 +123,11 @@ export default class Display<Context extends RenderingContext>
     }
 
     addViewport(
-        controller: IController = new this.Controller(this._canvas, this._scene.addCamera()),
+        controller: IController = new this.Controller(this._scene.addCamera()),
         render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline,
         viewport:IViewport<Context> = new this.Viewport(controller, render_pipeline, this)
     ): IViewport<Context> {
+        controller.viewport = viewport;
         this._viewports.add(viewport);
         this.registerViewport(viewport);
 

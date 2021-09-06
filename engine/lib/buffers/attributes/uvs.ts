@@ -18,7 +18,7 @@ export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBU
     autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
         this._face_vertices = face_vertices;
-        this.init(is_shared ? vertex_count : this.face_count * 3);
+        this.init(vertex_count);
         return this;
     }
 
@@ -58,7 +58,7 @@ export class VertexUVs3D extends UVs3D implements IVertexAttribute<UV3D, ATTRIBU
     autoInit(vertex_count: number, face_vertices: IFaceVertices, is_shared: number | boolean = true): this {
         this._is_shared = !!is_shared;
         this._face_vertices = face_vertices;
-        this.init(is_shared ? vertex_count : this.face_count * 3);
+        this.init(vertex_count);
         return this;
     }
 

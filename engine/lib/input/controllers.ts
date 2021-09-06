@@ -11,10 +11,12 @@ import {
     KEY_CODES, MOUSE_BUTTON
 } from "../../constants.js";
 import Camera from "../nodes/camera.js";
+import {IViewport} from "../_interfaces/render.js";
 
 abstract class Controller
     implements IController
 {
+    public viewport : IViewport;
     abstract readonly keys: IControllerKeys;
     readonly pressed = new Uint8Array(256);
 
@@ -43,7 +45,6 @@ abstract class Controller
     protected _matrix: IMatrix4x4;
 
     constructor(
-        public canvas: HTMLCanvasElement,
         protected _camera: Camera,
         public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
         public rotation_speed: number = DEFAULT_ROTATION_SPEED,
@@ -79,6 +80,12 @@ abstract class Controller
 
         if (this.mouse_moved || this.mouse_wheel_moved || this.mouse_clicked)
             this._updateFromMouse(delta_time);
+    }
+    keyUp (key: number): void {
+        if (key === KEY_CODES.CTRL)
+            this.viewport.show_wire_frame = !this.viewport.show_wire_frame;
+        else if (key === KEY_CODES.SPACE)
+            this.viewport.cull_back_faces = !this.viewport.cull_back_faces;
     }
 
     protected _updateFromKeyboard(delta_time: number): void {}

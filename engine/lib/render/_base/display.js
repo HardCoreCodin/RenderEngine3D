@@ -81,7 +81,8 @@ export default class Display extends Rectangle {
                 viewports.delete(viewport);
         }
     }
-    addViewport(controller = new this.Controller(this._canvas, this._scene.addCamera()), render_pipeline = this._default_render_pipeline, viewport = new this.Viewport(controller, render_pipeline, this)) {
+    addViewport(controller = new this.Controller(this._scene.addCamera()), render_pipeline = this._default_render_pipeline, viewport = new this.Viewport(controller, render_pipeline, this)) {
+        controller.viewport = viewport;
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         if (this._active_viewport) {

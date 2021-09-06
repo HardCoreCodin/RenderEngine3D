@@ -240,18 +240,18 @@ export const shadeFace2 = <Inputs extends IPixelShaderInputs, Shader extends IPi
             b3 += b3_dx;
             pixel_index++;
 
-            // if (b2_dx < 0 && b2 < 0 ||
-            //     b3_dx < 0 && b3 < 0)
-            //     break;
+            if (b2_dx < 0 && b2 < 0 ||
+                b3_dx < 0 && b3 < 0)
+                break;
         }
 
         b2 += b2_dy;
         b3 += b3_dy;
         index_start += W;
 
-        // if (b2_dy < 0 && b2_start < 0 ||
-        //     b3_dy < 0 && b3_start < 0)
-        //     break;
+        if (b2_dy < 0 && b2_start < 0 ||
+            b3_dy < 0 && b3_start < 0)
+            break;
     }
 };
 
@@ -266,8 +266,7 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     v2: Float32Array,
     v3: Float32Array,
 ): void => {
-
-    let pixel_depth: number;
+    let pixel_depth, z: number;
 
     const screen_width  = inputs.image_size.width;
     const screen_height = inputs.image_size.height;
@@ -329,10 +328,10 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     let pixel_index = screen_width * min_y + min_x;
     let pixel_start = pixel_index;
 
-    // Fetch 'ws reciprocals' for perspective corrected interpolation:
-    // const v1_one_over_w = v1[3];
-    // const v2_one_over_w = v2[3];
-    // const v3_one_over_w = v3[3];
+    //Fetch 'ws reciprocals' for perspective corrected interpolation:
+    const w1 = v1[3];
+    const w2 = v2[3];
+    const w3 = v3[3];
 
     // Pre-compute barycentric weight constants for depth and one-over-ws:
     const z1 = v1[2];
@@ -372,41 +371,28 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
             A = 1 - B - C;
 
             // If the pixel is outside of the triangle, skip it:
-            if (A < 0 ||
-                B < 0 ||
-                C < 0)
+            if (A < 0 || (A === 0 && exclude_edge_1) ||
+                B < 0 || (B === 0 && exclude_edge_2) ||
+                C < 0 || (C === 0 && exclude_edge_3))
                 continue;
 
             // Cull and text pixel based on it's depth:
-            // pixel_depth = z1*b1 + z2*b2 + z3*b3;
-            // if (pixel_depth < 0 ||
-            //     // pixel_depth > 1 ||
-            //     pixel_depth > depths[pixel_index])
-            //     continue;
+            pixel_depth = z1*A + z2*B + z3*C;
+            if (pixel_depth < 0 ||
+                pixel_depth > 1 ||
+                pixel_depth > depths[pixel_index])
+                continue;
 
-            // depths[pixel_index] = pixel_depth;
+            z = 1.0 / (A*w1 + B*w2 + C*w3);
+            inputs.perspective_corrected_barycentric_coords.A = A * w1 * z;
+            inputs.perspective_corrected_barycentric_coords.B = B * w2 * z;
+            inputs.perspective_corrected_barycentric_coords.C = C * w3 * z;
+            inputs.pixel_coords.x = x;
+            inputs.pixel_coords.y = y;
+            inputs.pixel_depth = depths[pixel_index] = pixel_depth;
 
-            // shader(inputs, pixel_color);
-            // drawPixel(pixels, pixel_index, pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.a);
-            drawPixel(pixels, pixel_index, 1, 1, 1, 1);
-            // console.log("Here!");
-
-            // Compute and store 'z_behind_pixel' for (re)used in interpolation:
-            // pixel_one_over_ws[pixel_index] = z_behind_pixel = 1 / (
-            //     // Linearly interpolated 1/w using the barycentric coordinates
-            //     b1 * v1_one_over_w +
-            //     b2 * v2_one_over_w +
-            //     b3 * v3_one_over_w
-            // );
-            // // Compute and store perspective correct barycentric coordinates:
-            // pixel_v1_weights[pixel_index] = b1 * z_behind_pixel;
-            // pixel_v2_weights[pixel_index] = b2 * z_behind_pixel;
-            // pixel_v3_weights[pixel_index] = b3 * z_behind_pixel;
-
-            // // Store pixel metadata:
-            // pixel_face_ids[pixel_index] = f;
-            // pixel_object_ids[pixel_index] = object_id;
-            // pixel_material_ids[pixel_index] = material_id;
+            shader(inputs, pixel_color);
+            drawPixel(pixels, pixel_index, pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.a);
         }
     }
 };

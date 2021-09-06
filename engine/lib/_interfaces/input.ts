@@ -1,5 +1,6 @@
 import {I2D} from "./vectors.js";
 import Camera from "../nodes/camera.js";
+import {IViewport} from "./render.js";
 
 export interface IControllerKeys {
     up: number;
@@ -19,7 +20,7 @@ export interface IControllerKeys {
 }
 
 export interface IController {
-    canvas: HTMLCanvasElement;
+    viewport: IViewport;
     camera: Camera,
 
     position_changed: boolean;
@@ -44,10 +45,10 @@ export interface IController {
     rotation_speed: number;
 
     update(delta_time: number): void;
+    keyUp (key: number): void;
 }
 
 export type ControllerConstructor = new (
-    canvas: HTMLCanvasElement,
     _camera: Camera,
     movement_speed?: number,
     rotation_speed?: number,

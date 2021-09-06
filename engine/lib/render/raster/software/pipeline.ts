@@ -9,10 +9,8 @@ import {IRasterRenderPipeline} from "../../../_interfaces/render.js";
 import Mesh from "../../../geometry/mesh.js";
 import {FlagsBuffer1D, InterpolationVertexIndicesBuffer} from "../../../buffers/flags.js";
 import {cullFaces, cullVertices} from "./_core/cull.js";
-import {CLIP, CULL, INSIDE, MAX_RENDER_TARGET_SIZE, NDC} from "../../../../constants.js";
-import {shadePixelDepth} from "./materials/shaders/pixel.js";
+import {CLIP, CULL, MAX_RENDER_TARGET_SIZE} from "../../../../constants.js";
 import {
-    projectAllVertexPositions,
     projectSomeVertexPositions,
     projectFaceVertexPositions,
     shadeFace
@@ -20,7 +18,6 @@ import {
 import {UVs2D} from "../../../buffers/vectors.js";
 import {clipFaces} from "./_core/clip.js";
 import {rgba} from "../../../accessors/color.js";
-import {drawLine2D} from "./_core/line.js";
 
 
 export default class Rasterizer
@@ -29,8 +26,6 @@ export default class Rasterizer
 {
     readonly model_to_clip: Matrix4x4 = new Matrix4x4();
 
-    cull_back_faces: boolean = false;
-    show_wire_frame: boolean = true;
     protected current_max_face_count: number = 0;
     protected current_max_vertex_count: number = 0;
 
@@ -97,8 +92,6 @@ export default class Rasterizer
         const n = viewport.view_frustum.near;
         const vf = this.vertex_flags.array;
         const ff = this.face_flags.array;
-        const cbf = this.cull_back_faces;
-        const cc = true; // Always do clipping checks
 
         const stn = this.src_trg_numbers.array;
         const sti = this.src_trg_indices.arrays;
@@ -112,7 +105,8 @@ export default class Rasterizer
         const inputs = {
             image_size: viewport.size,
             pixel_coords: { x: 0, y: 0},
-            pixel_depth: 0
+            pixel_depth: 0,
+            perspective_corrected_barycentric_coords: { A: 0, B: 0, C: 0}
         };
         const context = viewport.render_target.context;
         const wire_frame_color = `${rgba(1)}`;
@@ -134,7 +128,7 @@ export default class Rasterizer
                         if (cullVertices(clip_positions.arrays, vf, vertex_count)) {
                             // The mesh could not be determined to be outside the view frustum based on vertex culling alone.
                             // Check it's faces as well and check for clipping cases:
-                            result = cullFaces(clip_positions.arrays, mesh.face_vertices.arrays, ff, vf, true, true, pz);
+                            result = cullFaces(clip_positions.arrays, mesh.face_vertices.arrays, ff, vf, true, viewport.cull_back_faces, pz);
                             if (result === CULL) continue;
                             if (result === CLIP) {
                                 face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, sti, stn, ipl, vf, ff, n, clipped_vertices);
@@ -189,23 +183,21 @@ export default class Rasterizer
                                     const v2 = clipped_vertices[vertex_index+1];
                                     const v3 = clipped_vertices[vertex_index+2];
 
-                                    shadeFace(shadePixelDepth, inputs, this.depth_buffer, viewport.render_target.array, v1, v2, v3);
-                                    // this.show_wire_frame = false;
-                                    // if (this.show_wire_frame) {
-                                    //     // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v1[0], v1[1], v2[0], v2[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-                                    //     // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v2[0], v2[1], v3[0], v3[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-                                    //     // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v3[0], v3[1], v1[0], v1[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-                                    //
-                                    //
-                                    //     context.beginPath();
-                                    //     context.moveTo(v1[0], v1[1]);
-                                    //     context.lineTo(v2[0], v2[1]);
-                                    //     context.lineTo(v3[0], v3[1]);
-                                    //     context.lineTo(v1[0], v1[1]);
-                                    //     context.closePath();
-                                    //     context.strokeStyle = face_index < mesh.face_count ? wire_frame_color : wire_frame_clipped_color;
-                                    //     context.stroke();
-                                    // }
+                                    if (viewport.show_wire_frame) {
+                                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v1[0], v1[1], v2[0], v2[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
+                                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v2[0], v2[1], v3[0], v3[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
+                                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v3[0], v3[1], v1[0], v1[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
+
+                                        context.beginPath();
+                                        context.moveTo(v1[0], v1[1]);
+                                        context.lineTo(v2[0], v2[1]);
+                                        context.lineTo(v3[0], v3[1]);
+                                        context.lineTo(v1[0], v1[1]);
+                                        context.closePath();
+                                        context.strokeStyle = face_index < mesh.face_count ? wire_frame_color : wire_frame_clipped_color;
+                                        context.stroke();
+                                    } else
+                                        shadeFace(material.pixel_shader, inputs, this.depth_buffer, viewport.render_target.array, v1, v2, v3);
                                 }
                             }
                         }
@@ -214,32 +206,8 @@ export default class Rasterizer
             }
         }
 
-        viewport.render_target.draw();
-
-        if (this.show_wire_frame) {
-            for (face_index = 0, vertex_index = 0; face_index < face_count; face_index++, vertex_index += 3) {
-                if (ff[face_index]) {
-                    const v1 = clipped_vertices[vertex_index];
-                    const v2 = clipped_vertices[vertex_index+1];
-                    const v3 = clipped_vertices[vertex_index+2];
-                    if (this.show_wire_frame) {
-                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v1[0], v1[1], v2[0], v2[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v2[0], v2[1], v3[0], v3[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-                        // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v3[0], v3[1], v1[0], v1[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
-
-
-                        context.beginPath();
-                        context.moveTo(v1[0], v1[1]);
-                        context.lineTo(v2[0], v2[1]);
-                        context.lineTo(v3[0], v3[1]);
-                        context.lineTo(v1[0], v1[1]);
-                        context.closePath();
-                        context.strokeStyle = face_index < mesh.face_count ? wire_frame_color : wire_frame_clipped_color;
-                        context.stroke();
-                    }
-                }
-            }
-        }
+        if (!viewport.show_wire_frame)
+            viewport.render_target.draw();
     }
 }
 

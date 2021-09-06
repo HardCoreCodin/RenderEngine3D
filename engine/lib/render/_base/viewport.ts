@@ -12,6 +12,8 @@ export default abstract class BaseViewport<
     implements IViewport<Context, GridType>
 {
     is_active: boolean = false;
+    cull_back_faces: boolean = true;
+    show_wire_frame: boolean = true;
 
     readonly context: Context;
 
@@ -70,8 +72,8 @@ export default abstract class BaseViewport<
     }
 
     refresh() {
-        this._render_pipeline.render(this);
         this._drawOverlay();
+        this._render_pipeline.render(this);
     }
 
     is_inside(x: number, y: number): boolean {

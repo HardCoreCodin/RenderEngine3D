@@ -86,6 +86,8 @@ export interface IViewport<
     controller: IController;
     render_pipeline: IRenderPipeline<Context>;
 
+    cull_back_faces: boolean;
+    show_wire_frame: boolean;
     is_active: boolean;
     is_inside(x: number, y: number): boolean;
     refresh(): void;
