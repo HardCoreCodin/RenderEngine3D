@@ -3,7 +3,7 @@ import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import SoftwareRasterViewport from "./viewport.js";
 import SoftwareRasterMaterial from "./materials/_base.js";
 import BaseRenderPipeline from "../../_base/pipelines.js";
-import {VertexPositions4D} from "../../../buffers/attributes/positions.js";
+import {VertexPositions3D, VertexPositions4D} from "../../../buffers/attributes/positions.js";
 import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "../../../geometry/cube.js";
 import {IRasterRenderPipeline} from "../../../_interfaces/render.js";
 import Mesh from "../../../geometry/mesh.js";
@@ -16,7 +16,7 @@ import {
     shadeFace
 } from "./_core/half_space.js";
 import {UVs2D} from "../../../buffers/vectors.js";
-import {clipFaces} from "./_core/clip.js";
+import {clipFaces, IAttributeBuffers} from "./_core/clip.js";
 import {rgba} from "../../../accessors/color.js";
 
 
@@ -38,6 +38,8 @@ export default class Rasterizer
     protected face_flags = new FlagsBuffer1D().init(CUBE_FACE_VERTICES.length);
     protected readonly clip_space_vertex_positions = new VertexPositions4D().autoInit(CUBE_VERTEX_COUNT, CUBE_FACE_VERTICES);
     protected readonly clipped_vertex_positions = new VertexPositions4D();
+    protected readonly clipped_vertex_normals = new VertexPositions3D();
+    protected readonly clipped_vertex_uvs = new UVs2D();
 
     protected _updateClippingBuffers(): void {
         let max_face_count = 0;
@@ -68,6 +70,8 @@ export default class Rasterizer
             this.vertex_flags.init(max_vertex_count);
             this.clip_space_vertex_positions.init(max_vertex_count);
             this.clipped_vertex_positions.init(max_face_count*6);
+            this.clipped_vertex_normals.init(max_face_count*6 + 1);
+            this.clipped_vertex_uvs.init(max_face_count*4 + 1);
         }
     }
 
@@ -106,14 +110,30 @@ export default class Rasterizer
             image_size: viewport.size,
             pixel_coords: { x: 0, y: 0},
             pixel_depth: 0,
-            perspective_corrected_barycentric_coords: { A: 0, B: 0, C: 0}
+            perspective_corrected_barycentric_coords: { A: 0, B: 0, C: 0},
+            normal: this.clipped_vertex_normals.arrays[this.clipped_vertex_normals.arrays.length - 1],
+            uv: this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 1]
         };
         const context = viewport.render_target.context;
         const wire_frame_color = `${rgba(1)}`;
         const wire_frame_clipped_color = `${rgba(1, 0,  0)}`;
+        let v1, v2, v3: Float32Array;
+        const normals: [Float32Array, Float32Array, Float32Array] = [null, null, null];
+        const uvs: [Float32Array, Float32Array, Float32Array] = [null, null, null];
 
         for (const material of this.scene.materials) if (material instanceof SoftwareRasterMaterial) {
             for (mesh of material.mesh_geometries.meshes) {
+                const attributes: IAttributeBuffers[] = mesh.options.normal || mesh.options.include_uvs ? [] : null;
+                if (mesh.options.normal)
+                    attributes.push([
+                        mesh.vertices.normals.arrays,
+                        this.clipped_vertex_normals.arrays
+                    ]);
+                if (mesh.options.include_uvs)
+                    attributes.push([
+                        mesh.vertices.uvs.arrays,
+                        this.clipped_vertex_uvs.arrays
+                    ]);
                 for (mesh_geometry of material.mesh_geometries.getGeometries(mesh)) if (mesh_geometry.is_renderable) {
                     // Prepare a matrix for converting from model space to clip space:
                     mesh_geometry.model_to_world.mul(world_to_clip, model_to_clip);
@@ -131,57 +151,30 @@ export default class Rasterizer
                             result = cullFaces(clip_positions.arrays, mesh.face_vertices.arrays, ff, vf, true, viewport.cull_back_faces, pz);
                             if (result === CULL) continue;
                             if (result === CLIP) {
-                                face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, sti, stn, ipl, vf, ff, n, clipped_vertices);
+                                face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, sti, stn, ipl, vf, ff, n, clipped_vertices, attributes);
                                 projectFaceVertexPositions(clipped_vertices, face_count, ff, mesh.face_count, half_width, half_height);
-                                // for (vertex_attribute of material.vertex_attributes) {
-                                //     if (vertex_attribute.is_shared)
-                                //         clipSharedAttribute(
-                                //             vertex_attribute.array,
-                                //
-                                //             this.src_trg_indices,
-                                //             this.src_trg_numbers,
-                                //             this.interpolations,
-                                //             this.face_flags,
-                                //
-                                //             clipped_vertex_attribute.array
-                                //         );
-                                //     else
-                                //         clipUnsharedAttribute(
-                                //             vertex_attribute.array,
-                                //
-                                //             this.src_trg_numbers,
-                                //             this.interpolations,
-                                //             this.face_flags,
-                                //
-                                //             clipped_vertex_attribute.array
-                                //         );
-                                // }
-
-                                // Note:
-                                // Additional vertex attributes might need to be 'clipped' as well if the mesh has any:
-                                // if (this.result_flags === CLIP) {
-                                //     this.clipper.clipAttr(this.in_vertex_attribute_1, out_vertex_attribute_1);
-                                //     this.clipper.clipAttr(this.in_vertex_attribute_2, out_vertex_attribute_2);
-                                //     ...
-                                //     this.clipper.clipAttr(this.in_vertex_attribute_n, out_vertex_attribute_n);
-                                // }
-                                // }
                             } else { // result === INSIDE :
                                 projectSomeVertexPositions(clip_positions.arrays, vertex_count, vf, half_width, half_height);
                                 vertex_index = 0;
                                 face_index = 0;
                                 for (const current_face_vertex_indices of mesh.face_vertices.arrays) {
-                                    for (const index of current_face_vertex_indices)
-                                        clipped_vertices[vertex_index++].set(clip_positions.arrays[index]);
+                                    for (const index of current_face_vertex_indices) {
+                                        clipped_vertices[vertex_index].set(clip_positions.arrays[index]);
+                                        if (attributes)
+                                            for (const [attrs, clipped_attrs] of attributes)
+                                                clipped_attrs[vertex_index].set(attrs[index]);
+
+                                        vertex_index++
+                                    }
                                 }
                             }
 
                             vertex_index = 0;
                             for (face_index = 0; face_index < face_count; face_index++, vertex_index += 3) {
                                 if (ff[face_index]) {
-                                    const v1 = clipped_vertices[vertex_index];
-                                    const v2 = clipped_vertices[vertex_index+1];
-                                    const v3 = clipped_vertices[vertex_index+2];
+                                    v1 = clipped_vertices[vertex_index];
+                                    v2 = clipped_vertices[vertex_index+1];
+                                    v3 = clipped_vertices[vertex_index+2];
 
                                     if (viewport.show_wire_frame) {
                                         // drawLine2D(viewport.render_target.array, viewport.size.width, viewport.size.height, v1[0], v1[1], v2[0], v2[1], 1, face_index < mesh.face_count ? 1 : 0, face_index < mesh.face_count ? 1 : 0, 1);
@@ -196,8 +189,25 @@ export default class Rasterizer
                                         context.closePath();
                                         context.strokeStyle = face_index < mesh.face_count ? wire_frame_color : wire_frame_clipped_color;
                                         context.stroke();
-                                    } else
-                                        shadeFace(material.pixel_shader, inputs, this.depth_buffer, viewport.render_target.array, v1, v2, v3);
+                                    } else {
+                                        if (mesh.options.normal) {
+                                            normals[0] = this.clipped_vertex_normals.arrays[vertex_index];
+                                            normals[1] = this.clipped_vertex_normals.arrays[vertex_index+1];
+                                            normals[2] = this.clipped_vertex_normals.arrays[vertex_index+2];
+                                        }
+                                        if (mesh.options.include_uvs) {
+                                            uvs[0] = this.clipped_vertex_uvs.arrays[vertex_index];
+                                            uvs[1] = this.clipped_vertex_uvs.arrays[vertex_index+1];
+                                            uvs[2] = this.clipped_vertex_uvs.arrays[vertex_index+2];
+                                        }
+                                        shadeFace(
+                                            material.pixel_shader,
+                                            inputs, this.depth_buffer,
+                                            viewport.render_target.array,
+                                            v1, v2, v3,
+                                            mesh.options.normal ? normals : undefined,
+                                            mesh.options.include_uvs ? uvs : undefined,);
+                                    }
                                 }
                             }
                         }

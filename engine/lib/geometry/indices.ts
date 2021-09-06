@@ -19,10 +19,8 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
     extends Buffer<ArrayType>
     implements IVertexFaces
 {
-    indices: ArrayType[] = [];
-
     load(face_vertices: IFaceVertices, vertex_count: number): this {
-        this.indices.length = vertex_count;
+        this.arrays.length = vertex_count;
         const vertex_face_indices: number[][] = Array<number[]>(vertex_count);
         for (let i = 0; i < vertex_count; i++)
             vertex_face_indices[i] = [];
@@ -40,8 +38,8 @@ abstract class VertexFaces<ArrayType extends Uint8Array | Uint16Array | Uint32Ar
         let offset = 0;
         let vertex_index = 0;
         for (const face_indices of vertex_face_indices) {
-            this.indices[vertex_index] = this.array.subarray(offset, offset+face_indices.length) as ArrayType;
-            this.indices[vertex_index].set(face_indices);
+            this.arrays[vertex_index] = this.array.subarray(offset, offset+face_indices.length) as ArrayType;
+            this.arrays[vertex_index].set(face_indices);
             offset += face_indices.length;
             vertex_index++;
         }

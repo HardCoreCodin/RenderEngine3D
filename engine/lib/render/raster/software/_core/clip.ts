@@ -1,5 +1,7 @@
 import {CLIP, INEXTRA, INSIDE, NEAR} from "../../../../../constants.js";
 
+export type IAttributeBuffers = [Float32Array[], Float32Array[]];
+
 export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
     vertices: Float32Array[], // float4[]
     face_vertex_indices: FaceVerticesArrayType[], // uint3[]
@@ -13,12 +15,14 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
 
     near_clipping_plane_distance: number,
 
-    clipped_faces_vertex_positions: Float32Array[]
+    clipped_faces_vertex_positions: Float32Array[],
+
+    attributes?: IAttributeBuffers[]
 ): number => {
     // Break each face that needs to be clipped into smaller output triangle(s).
     let new_face_offset = face_vertex_indices.length * 3;
     let src_trg_ids: FaceVerticesArrayType;
-    let clipped, in1, in2, out1, out2, t_values: Float32Array;
+    let clipped, in1, in2, out1, out2, t_values, attr_in, attr_out, attr_clipped: Float32Array;
     let v1_index, v1_flags,
         v2_index, v2_flags,
         v3_index, v3_flags,
@@ -33,8 +37,7 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         second_new_vertex_x,
         second_new_vertex_y,
 
-        t, one_minus_t, clipped_face_v1_index,
-        encoded_vertex_nums: number;
+        t, one_minus_t, clipped_face_v1_index, clipped_index, encoded_vertex_nums, component_count: number;
 
     const face_count = face_vertex_indices.length;
     let faces_added = clipped_face_v1_index = 0;
@@ -46,6 +49,14 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         clipped_faces_vertex_positions[clipped_face_v1_index+0].set(vertices[v1_index]);
         clipped_faces_vertex_positions[clipped_face_v1_index+1].set(vertices[v2_index]);
         clipped_faces_vertex_positions[clipped_face_v1_index+2].set(vertices[v3_index]);
+
+        if (attributes) {
+            for (const [attrs, clipped_attrs] of attributes) {
+                clipped_attrs[clipped_face_v1_index+0].set(attrs[v1_index]);
+                clipped_attrs[clipped_face_v1_index+1].set(attrs[v2_index]);
+                clipped_attrs[clipped_face_v1_index+2].set(attrs[v3_index]);
+            }
+        }
 
         if (face_flags[f] & CLIP) {
             // Clipping is done only against the near clipping plane, so there are only 2 possible cases:
@@ -129,7 +140,8 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
             // *The same logic applies for the second interpolation in either of it's 2 cases below.
 
             // Compute the index of the "unshared" position-value(s) of the 'clipped' vertex of this face:
-            clipped = clipped_faces_vertex_positions[clipped_face_v1_index + (out1_num - 1)];
+            clipped_index = clipped_face_v1_index + out1_num - 1;
+            clipped = clipped_faces_vertex_positions[clipped_index];
 
             // Compute the new clip-space coordinates of the clipped-vertex:
             clipped[0] = first_new_vertex_x = one_minus_t*out1[0] + t*in1[0];
@@ -142,6 +154,17 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
             // what the "original" Z-depth value this vertex "would have had", had it been on the
             // near clipping plane in view-space in the first place.
             // *The same logic applies for the second interpolation in either of it's 2 cases below.
+
+            if (attributes) {
+                for (const [attrs, clipped_attrs] of attributes) {
+                    attr_in = attrs[in1_index];
+                    attr_out = attrs[out1_index];
+                    attr_clipped = clipped_attrs[clipped_index];
+                    component_count = attrs[0].length;
+                    for (let component = 0; component < component_count; component++)
+                        attr_clipped[clipped_index] = one_minus_t*attr_out[component] + t*attr_in[component];
+                }
+            }
 
             if (out2_num) {
                 // One vertex is inside the frustum, and the other two are outside beyond the near clipping plane.
@@ -160,13 +183,25 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 one_minus_t = 1 - t;
 
                 // Compute the index of the "unshared" position-value(s) of the 'clipped' vertex of this face:
-                clipped = clipped_faces_vertex_positions[clipped_face_v1_index + (out2_num - 1)];
+                clipped_index = clipped_face_v1_index + out2_num - 1;
+                clipped = clipped_faces_vertex_positions[clipped_index];
 
                 // Compute the new clip-space coordinates of the clipped-vertex:
                 clipped[0] = one_minus_t*out2[0] + t*in1[0];
                 clipped[1] = one_minus_t*out2[1] + t*in1[1];
                 clipped[2] = 0;
                 clipped[3] = near_clipping_plane_distance;
+
+                if (attributes) {
+                    for (const [attrs, clipped_attrs] of attributes) {
+                        attr_in = attrs[in1_index];
+                        attr_out = attrs[out2_index];
+                        attr_clipped = clipped_attrs[clipped_index];
+                        component_count = attrs[0].length;
+                        for (let component = 0; component < component_count; component++)
+                            attr_clipped[clipped_index] = one_minus_t*attr_out[component] + t*attr_in[component];
+                    }
+                }
             } else {
                 // Two vertices are inside the frustum, and the third one is behind the near clipping plane.
                 // Clipping forms a quad which needs to be split into 2 triangles.
@@ -202,15 +237,30 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 }
 
                 // Since this vertex belongs to an 'extra' new face, the index is offset to that index-space
+                clipped_index = new_face_offset + in2_num;
                 clipped_faces_vertex_positions[new_face_offset].set(clipped);
-                clipped = clipped_faces_vertex_positions[new_face_offset + in2_num];
-                clipped_faces_vertex_positions[new_face_offset + in1_num].set(vertices[in2_index]);
+                clipped = clipped_faces_vertex_positions[clipped_index];
+                clipped_faces_vertex_positions[new_face_offset + in1_num].set(in2);
 
                 // Compute the new clip-space coordinates of the clipped-vertex:
-                clipped[0] = second_new_vertex_x = one_minus_t*out1[0] + t*in2[0];
-                clipped[1] = second_new_vertex_y = one_minus_t*out1[1] + t*in2[1];
+                clipped[0] = second_new_vertex_x;
+                clipped[1] = second_new_vertex_y;
                 clipped[2] = 0;
                 clipped[3] = near_clipping_plane_distance;
+
+                if (attributes) {
+                    for (const [attrs, clipped_attrs] of attributes) {
+                        attr_in = attrs[in2_index];
+                        attr_out = attrs[out1_index];
+                        attr_clipped = clipped_attrs[clipped_index];
+                        component_count = attrs[0].length;
+                        for (let component = 0; component < component_count; component++)
+                            attr_clipped[component] = one_minus_t*attr_out[component] + t*attr_in[component];
+
+                        clipped_attrs[new_face_offset].set(clipped_attrs[clipped_face_v1_index + out1_num - 1]);
+                        clipped_attrs[new_face_offset + in1_num].set(attrs[in2_index]);
+                    }
+                }
 
                 // Flag this face as needing an extra face to represent itself after clipping:
                 face_flags[f] |= INEXTRA;
@@ -233,7 +283,8 @@ export const SRC2 = 0b0011_0000;
 export const TRG2 = 0b1100_0000;
 
 export const clipSharedAttribute = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
-    vertex_attribute: Float32Array[],
+    vertices: Float32Array[], // floatN[]
+    face_vertex_indices: FaceVerticesArrayType[], // uint3[]
     src_trg_indices: FaceVerticesArrayType[], //unit4[]
     src_trg_numbers: Uint8Array,
     interpolation_t_values: Float32Array[], //float2[]
@@ -246,12 +297,20 @@ export const clipSharedAttribute = <FaceVerticesArrayType extends Uint8Array|Uin
     let clipped_1, src1, trg1,
         clipped_2, src2, trg2, t_values: Float32Array;
     let src_trg_ids: FaceVerticesArrayType;
-    let t1, one_minus_t1, clipped_v1_index, src1_num,
-        t2, one_minus_t2, clipped_v2_index, src2_num,
-        c, clipped_face_v1_index: number;
+    let v1_index, t1, one_minus_t1, clipped_v1_index, src1_num,
+        v2_index, t2, one_minus_t2, clipped_v2_index, src2_num,
+        v3_index, c, clipped_face_v1_index, f, flags: number;
 
-    let f = clipped_face_v1_index = 0;
-    for (const flags of face_flags) {
+    const face_count = face_vertex_indices.length;
+    clipped_face_v1_index = f = 0;
+    for (const current_face_vertex_indices of face_vertex_indices) {
+        v1_index = current_face_vertex_indices[0];
+        v2_index = current_face_vertex_indices[1];
+        v3_index = current_face_vertex_indices[2];
+        clipped_faces_vertex_attributes[clipped_face_v1_index+0].set(vertices[v1_index]);
+        clipped_faces_vertex_attributes[clipped_face_v1_index+1].set(vertices[v2_index]);
+        clipped_faces_vertex_attributes[clipped_face_v1_index+2].set(vertices[v3_index]);
+        flags = face_flags[f];
         if (flags & CLIP) {
             // Extract interpolation values and compute their complements:
             t_values = interpolation_t_values[f];
@@ -260,10 +319,10 @@ export const clipSharedAttribute = <FaceVerticesArrayType extends Uint8Array|Uin
 
             // Fetch vertex indices for both sources and targets:
             src_trg_ids = src_trg_indices[f];
-            src1 = vertex_attribute[src_trg_ids[0]]; // The source vertex in the first interpolation
-            trg1 = vertex_attribute[src_trg_ids[1]]; // The target vertex in the first interpolation
-            src2 = vertex_attribute[src_trg_ids[2]]; // The source vertex in the second interpolation
-            trg2 = vertex_attribute[src_trg_ids[3]]; // The target vertex in the second interpolation
+            src1 = vertices[src_trg_ids[0]]; // The source vertex in the first interpolation
+            trg1 = vertices[src_trg_ids[1]]; // The target vertex in the first interpolation
+            src2 = vertices[src_trg_ids[2]]; // The source vertex in the second interpolation
+            trg2 = vertices[src_trg_ids[3]]; // The target vertex in the second interpolation
 
             src1_num = (src_trg_numbers[f] & SRC1)     ; src1_num--;
             src2_num = (src_trg_numbers[f] & SRC2) >> 4; src2_num--;
@@ -276,8 +335,8 @@ export const clipSharedAttribute = <FaceVerticesArrayType extends Uint8Array|Uin
             clipped_2 = clipped_faces_vertex_attributes[clipped_v2_index];
 
             for (c = 0; c < num_components; c++) {
-                clipped_1[c] = t1*src1[c] + one_minus_t1*trg1[c];
-                clipped_2[c] = t2*src2[c] + one_minus_t2*trg2[c];
+                clipped_1[c] = one_minus_t1*src1[c] + t1*trg1[c];
+                clipped_2[c] = one_minus_t2*src2[c] + t2*trg2[c];
             }
         }
 

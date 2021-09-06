@@ -1,7 +1,5 @@
-import {CULL, INSIDE, NDC} from "../../../../../constants.js";
+import {NDC} from "../../../../../constants.js";
 import {IPixelShader, IPixelShaderInputs} from "../materials/shaders/pixel.js";
-import {I2D} from "../../../../_interfaces/vectors.js";
-import {ISize} from "../../../../_interfaces/render.js";
 import {Color4D} from "../../../../accessors/color.js";
 import {drawPixel} from "../../../../../utils.js";
 
@@ -265,6 +263,9 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     v1: Float32Array,
     v2: Float32Array,
     v3: Float32Array,
+
+    normals?: [Float32Array, Float32Array, Float32Array],
+    uvs?: [Float32Array, Float32Array, Float32Array]
 ): void => {
     let pixel_depth, z: number;
 
@@ -359,7 +360,7 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     // Compute initial areal coordinates for the first pixel center:
     let C_start = Cdx*(min_x + 0.5) + Cdy*(min_y + 0.5) + (Ay*Bx - Ax*By) * one_over_ABC;
     let B_start = Bdx*(min_x + 0.5) + Bdy*(min_y + 0.5) + (Cy*Ax - Cx*Ay) * one_over_ABC;
-    let A, B, C;
+    let A, B, C, Ap, Bp, Cp;
 
     // Scan the bounds:
     for (let y = min_y; y <= max_y; y++, C_start += Cdy, B_start += Bdy, pixel_start += screen_width) {
@@ -384,13 +385,22 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
                 continue;
 
             z = 1.0 / (A*w1 + B*w2 + C*w3);
-            inputs.perspective_corrected_barycentric_coords.A = A * w1 * z;
-            inputs.perspective_corrected_barycentric_coords.B = B * w2 * z;
-            inputs.perspective_corrected_barycentric_coords.C = C * w3 * z;
+            inputs.perspective_corrected_barycentric_coords.A = Ap = A * w1 * z;
+            inputs.perspective_corrected_barycentric_coords.B = Bp = B * w2 * z;
+            inputs.perspective_corrected_barycentric_coords.C = Cp = C * w3 * z;
             inputs.pixel_coords.x = x;
             inputs.pixel_coords.y = y;
             inputs.pixel_depth = depths[pixel_index] = pixel_depth;
 
+            if (normals) {
+                inputs.normal[0] = normals[0][0] * Ap + normals[1][0] * Bp + normals[2][0] * Cp;
+                inputs.normal[1] = normals[0][1] * Ap + normals[1][1] * Bp + normals[2][1] * Cp;
+                inputs.normal[2] = normals[0][2] * Ap + normals[1][2] * Bp + normals[2][2] * Cp;
+            }
+            if (uvs) {
+                inputs.uv[0] = uvs[0][0] * Ap + uvs[1][0] * Bp + uvs[2][0] * Cp;
+                inputs.uv[1] = uvs[0][1] * Ap + uvs[1][1] * Bp + uvs[2][1] * Cp;
+            }
             shader(inputs, pixel_color);
             drawPixel(pixels, pixel_index, pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.a);
         }

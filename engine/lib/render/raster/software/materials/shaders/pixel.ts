@@ -12,7 +12,9 @@ export interface IPixelShaderInputs {
     pixel_depth: number,
     pixel_coords: I2D,
     image_size: ISize,
-    perspective_corrected_barycentric_coords: IPerspectiveCorrectedBarycentricCoords
+    perspective_corrected_barycentric_coords: IPerspectiveCorrectedBarycentricCoords,
+    normal: Float32Array,
+    uv: Float32Array
 }
 
 export type IPixelShader<PixelShaderInputsType extends IPixelShaderInputs = IPixelShaderInputs> = (
@@ -49,6 +51,24 @@ export const shadePixelBarycentric: IPixelShader = (
     out_color.a = 1;
 };
 
+export const shadePixelUV: IPixelShader = (
+    input: IPixelShaderInputs,
+    out_color: Color4D
+): void => {
+    out_color.r = input.uv[0];
+    out_color.g = input.uv[1];
+    out_color.b = 0;
+    out_color.a = 1;
+};
+export const shadePixelNormal: IPixelShader = (
+    input: IPixelShaderInputs,
+    out_color: Color4D
+): void => {
+    out_color.r = input.normal[0] * 0.5 + 0.5;
+    out_color.g = input.normal[1] * 0.5 + 0.5;
+    out_color.b = input.normal[2] * 0.5 + 0.5;
+    out_color.a = 1;
+};
 // export const shadeThing: IPixelShader = (
 //     input: IPixelShaderInputs,
 //     out_color: Color4D

@@ -7,9 +7,9 @@ const __memory = new ArrayBuffer(MEMORY_SIZE);
 let __offset = 0;
 
 const __allocate = (size: number): number => {
-    let offset = __offset - __offset % 4 + 4;
-    __offset += size;
-    if (__offset > __offset)
+    let offset = __offset - (__offset % 4) + 4;
+    __offset += size + 4 - (__offset % 4);
+    if (__offset > MEMORY_SIZE)
         throw 'Buffer overflow!';
 
     return offset;
