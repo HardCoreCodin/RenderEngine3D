@@ -50,7 +50,7 @@ export const CUBE_VERTEX_FACES = new VertexFacesInt8().load(CUBE_FACE_VERTICES, 
 
 // Mesh options:
 const defaults = new MeshOptions(
-    ATTRIBUTE.position,
+    0,
     NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE,
     COLOR_SOURCING.NO_VERTEX__GENERATE_FACE,
     true

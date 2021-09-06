@@ -60,6 +60,7 @@ export const shadePixelUV: IPixelShader = (
     out_color.b = 0;
     out_color.a = 1;
 };
+
 export const shadePixelNormal: IPixelShader = (
     input: IPixelShaderInputs,
     out_color: Color4D
@@ -69,23 +70,17 @@ export const shadePixelNormal: IPixelShader = (
     out_color.b = input.normal[2] * 0.5 + 0.5;
     out_color.a = 1;
 };
-// export const shadeThing: IPixelShader = (
-//     input: IPixelShaderInputs,
-//     out_color: Color4D
-// ): void => {
-//     float s = w0 * st0[0] + w1 * st1[0] + w2 * st2[0];
-//     float t = w0 * st0[1] + w1 * st1[1] + w2 * st2[1];
-//     #ifdef PERSP_CORRECT
-//     float z = 1 / (w0 * v0[2] + w1 * v1[2] + w2 * v2[2]);
-//     // if we use perspective correct interpolation we need to
-//     // multiply the result of this interpolation by z, the depth
-//     // of the point on the 3D triangle that the pixel overlaps.
-//     s *= z, t *= z;
-//     #endif
-//     const int M = 10;
-//     // checkerboard pattern
-//     float p = (fmod(s * M, 1.0) > 0.5) ^ (fmod(t * M, 1.0) < 0.5);
-//     framebuffer[j * w + i][0] = (unsigned char)(p * 255);
-//     framebuffer[j * w + i][1] = (unsigned char)(p * 255);
-//     framebuffer[j * w + i][2] = (unsigned char)(p * 255);
-// };
+
+// const fmod = (a: number, b: number): number => Number((a - (Math.floor(a / b) * b)).toPrecision(8));
+
+export const shadePixelCheckerboard: IPixelShader = (
+    input: IPixelShaderInputs,
+    out_color: Color4D
+): void => {
+    let s = input.uv[0] * 4;
+    let t = input.uv[1] * 4;
+    s -= Math.floor(s);
+    t -= Math.floor(t);
+    out_color.array.fill((s > 0.5 ? 1 : 0) ^ (t < 0.5 ? 1 : 0));
+    out_color.a = 1;
+};

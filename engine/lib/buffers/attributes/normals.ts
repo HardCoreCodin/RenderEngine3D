@@ -113,7 +113,7 @@ export class VertexNormals4D extends Directions4D implements IVertexAttribute<Di
         // for (const normal of this) normal.inormalize();
         let one_over_length;
         for (const array of this.arrays) {
-            one_over_length = Math.sqrt(array[0]*array[0] + array[1]*array[1] + array[2]*array[2]);
+            one_over_length = 1.0 / Math.sqrt(array[0]*array[0] + array[1]*array[1] + array[2]*array[2]);
             array[0] *= one_over_length;
             array[1] *= one_over_length;
             array[2] *= one_over_length;

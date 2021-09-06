@@ -39,7 +39,7 @@ export const CUBE_VERTEX_COUNT = 8;
 export const CUBE_FACE_VERTICES = new FaceVerticesInt8().load(inputs.position);
 export const CUBE_VERTEX_FACES = new VertexFacesInt8().load(CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT);
 // Mesh options:
-const defaults = new MeshOptions(1 /* position */, 1 /* NO_VERTEX__GENERATE_FACE */, 1 /* NO_VERTEX__GENERATE_FACE */, true);
+const defaults = new MeshOptions(0, 1 /* NO_VERTEX__GENERATE_FACE */, 1 /* NO_VERTEX__GENERATE_FACE */, true);
 const Cube = (options = defaults) => new Mesh(inputs, options, CUBE_FACE_VERTICES, CUBE_VERTEX_FACES).load();
 export default Cube;
 //# sourceMappingURL=cube.js.map

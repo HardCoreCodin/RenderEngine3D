@@ -112,7 +112,7 @@ export const MIN_ZOOM = 0.1;
 export const DEFAULT_ZOOM = 1;
 export const DEFAULT_FOCAL_LENGTH = 1;
 
-export const DEFAULT_MOVEMENT_SPEED = 0.006;
+export const DEFAULT_MOVEMENT_SPEED = 0.003;
 export const DEFAULT_ROTATION_SPEED = 0.002;
 export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
 export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 0.001;

@@ -99,159 +99,8 @@ const perspectiveCorrectVertexAttribute = (
 
 const max = Math.max;
 const min = Math.min;
-// const sorted_triangle_vertex_indicies = new Uint32Array(4);
-// const sorted_triangle_vertex_x_coords = new Float32Array(4);
-// const sorted_triangle_vertex_y_coords = new Float32Array(4);
 
 const pixel_color = new Color4D();
-
-export const shadeFace2 = <Inputs extends IPixelShaderInputs, Shader extends IPixelShader<Inputs>>(
-    shader: Shader,
-    inputs: Inputs,
-
-    depths: Float32Array,
-    pixels: Uint32Array,
-
-    v1: Float32Array,
-    v2: Float32Array,
-    v3: Float32Array,
-
-    // barycentrics: Float32Array
-): void => {
-    let perspective_corrected_b1, b1, pixel_index,
-        perspective_corrected_b2, b2, z_behind_pixel,
-        perspective_corrected_b3, b3, z: number;
-
-    const W = inputs.image_size.width;
-    const H = inputs.image_size.height;
-
-    const Ax = v1[0]; const Bx = v2[0]; const Cx = v3[0];
-    const Ay = v1[1]; const By = v2[1]; const Cy = v3[1];
-    const w1 = v1[3]; const w2 = v2[3]; const w3 = v3[3];
-
-    // Clip the bounds of the triangle to the viewport:
-    let min_x = min(Ax, Bx, Cx); if (min_x >= W) return; // Cull face against the right edge of the viewport:
-    let max_x = max(Ax, Bx, Cx); if (max_x < 0)  return; // Cull face against the left edge of the viewport:
-    let min_y = min(Ay, By, Cy); if (min_y >= H) return; // Cull face against the bottom edge of the viewport:
-    let max_y = max(Ay, By, Cy); if (max_y < 0)  return; // Cull face against the top edge of the viewport:
-    min_x = max(min_x, 0); max_x = min(max_x, W);
-    min_y = max(min_y, 0); max_y = min(max_y, H);
-
-    // Compute area components:
-    const ABx = Bx - Ax; const CAx = Ax - Cx;
-    const BAy = Ay - By; const ACy = Cy - Ay;
-    const ABC = ABx*ACy - BAy*CAx;
-    if (ABC <= 0) return; // Cull faces facing backwards:
-    const one_over_ABC = 1.0 / ABC;
-
-    // Compute weight constants:
-    const b2_dx = ACy * one_over_ABC;  const b3_dx = BAy * one_over_ABC;  const ABPk = Ax*By - Ay*Bx;
-    const b2_dy = CAx * one_over_ABC;  const b3_dy = ABx * one_over_ABC;  const CAPk = Cx*Ay - Cy*Ax;
-    const b2_k = CAPk * one_over_ABC;  const b3_k = ABPk * one_over_ABC;
-
-    // Compute edge exclusions (Origin: Top-left, Rules: Top/Left, Winding: CCW):
-    const exclude_edge_1: boolean = BAy > 0 || ABx > 0;
-    const exclude_edge_2: boolean = By > Cy || Cx > Bx;
-    const exclude_edge_3: boolean = ACy > 0 || CAx > 0;
-
-    // Floor bounds coordinates down to their integral component:
-    min_x <<= 0;
-    min_y <<= 0;
-    max_x <<= 0;
-    max_y <<= 0;
-
-    // Set first pixel index (now that min_x/min_y are integers):
-    let index_start = W * min_y + min_x;
-
-    // Compute initial areal coordinates for the first pixel center:
-    let b2_start = b2_dx*(min_x+0.5) + b2_dy*(min_y+0.5) + b2_k;
-    let b3_start = b3_dx*(min_x+0.5) + b3_dy*(min_y+0.5) + b3_k;
-
-    const z1 = v1[2];
-    const z2 = v2[2];
-    const z3 = v3[2];
-    b2 = b2_start;
-    b3 = b3_start;
-    // Scan the bounds:
-    for (inputs.pixel_coords.y = min_y; inputs.pixel_coords.y < max_y; inputs.pixel_coords.y++) {
-
-        pixel_index = index_start;
-
-        for (inputs.pixel_coords.x = min_x; inputs.pixel_coords.x < max_x; inputs.pixel_coords.x++) {
-            b1 = 1 - b3 - b2;
-
-            // If the pixel is outside of the triangle, skip it:
-            if (!(b1 < 0 || (b1 === 0 && exclude_edge_1) ||
-                  b2 < 0 || (b2 === 0 && exclude_edge_2) ||
-                  b3 < 0 || (b3 === 0 && exclude_edge_3))) {
-
-                // Linearly interpolate `1/z` using the barycentric coordinates, then (pre)reciprocate it to get `z`:
-                z = 1.0 / (b1*w1 + b2*w2 + b3*w3);
-
-                // float s = w0 * st0[0] + w1 * st1[0] + w2 * st2[0];
-                // float t = w0 * st0[1] + w1 * st1[1] + w2 * st2[1];
-                // #ifdef PERSP_CORRECT
-                // float z = 1 / (w0 * v0[2] + w1 * v1[2] + w2 * v2[2]);
-                // // if we use perspective correct interpolation we need to
-                // // multiply the result of this interpolation by z, the depth
-                // // of the point on the 3D triangle that the pixel overlaps.
-                // s *= z, t *= z;
-                // #endif
-                // const int M = 10;
-                // // checkerboard pattern
-                // float p = (fmod(s * M, 1.0) > 0.5) ^ (fmod(t * M, 1.0) < 0.5);
-                // framebuffer[j * w + i][0] = (unsigned char)(p * 255);
-                // framebuffer[j * w + i][1] = (unsigned char)(p * 255);
-                // framebuffer[j * w + i][2] = (unsigned char)(p * 255);
-
-                perspective_corrected_b1 = b1 * w1 * z;
-                perspective_corrected_b2 = b2 * w2 * z;
-                perspective_corrected_b3 = b3 * w3 * z;
-
-                // Linearly interpolated Z's "1/W-variants" using the barycentric coordinates
-                inputs.pixel_depth = (
-                    b1 * z1 +
-                    b2 * z2 +
-                    b3 * z3
-                );
-                // inputs.pixel_depth = z;
-                // Cull and test pixel based on it's depth:
-                // shader_inputs.pixel_depth = z1*b1 + z2*b2 + z3*b3;
-
-                // if (inputs.pixel_depth < 0 || inputs.pixel_depth > depths[pixel_index])
-                //     continue;
-
-
-                depths[pixel_index] = inputs.pixel_depth;
-
-                // // Compute and store perspective correct barycentric coordinates:
-                // barycentrics[0] = b1 * z_behind_pixel;
-                // barycentrics[1] = b2 * z_behind_pixel;
-                // barycentrics[2] = b3 * z_behind_pixel;
-
-                shader(inputs, pixel_color);
-                // drawPixel(pixels, pixel_index, pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.a);
-                drawPixel(pixels, pixel_index, perspective_corrected_b1, perspective_corrected_b2, perspective_corrected_b3, pixel_color.a);
-                // drawPixel(pixels, pixel_index, b1, b2, b3, pixel_color.a);
-            }
-            b2 += b2_dx;
-            b3 += b3_dx;
-            pixel_index++;
-
-            if (b2_dx < 0 && b2 < 0 ||
-                b3_dx < 0 && b3 < 0)
-                break;
-        }
-
-        b2 += b2_dy;
-        b3 += b3_dy;
-        index_start += W;
-
-        if (b2_dy < 0 && b2_start < 0 ||
-            b3_dy < 0 && b3_start < 0)
-            break;
-    }
-};
 
 export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPixelShader<Inputs>>(
     shader: Shader,
@@ -360,15 +209,22 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
     // Compute initial areal coordinates for the first pixel center:
     let C_start = Cdx*(min_x + 0.5) + Cdy*(min_y + 0.5) + (Ay*Bx - Ax*By) * one_over_ABC;
     let B_start = Bdx*(min_x + 0.5) + Bdy*(min_y + 0.5) + (Cy*Ax - Cx*Ay) * one_over_ABC;
-    let A, B, C, Ap, Bp, Cp;
+    let A, B, C, Ap, Bp, Cp, one_over_length;
 
     // Scan the bounds:
     for (let y = min_y; y <= max_y; y++, C_start += Cdy, B_start += Bdy, pixel_start += screen_width) {
+        // if (Bdy < 0 && B_start < 0 ||
+        //     Cdy < 0 && C_start < 0)
+        //     return;
+
         pixel_index = pixel_start;
         B = B_start;
         C = C_start;
 
         for (let x = min_x; x <= max_x; x++, B += Bdx, C += Cdx, pixel_index++) {
+            // if (Bdx < 0 && B < 0 || Cdx < 0 && C < 0)
+            //     break;
+
             A = 1 - B - C;
 
             // If the pixel is outside of the triangle, skip it:
@@ -396,6 +252,10 @@ export const shadeFace = <Inputs extends IPixelShaderInputs, Shader extends IPix
                 inputs.normal[0] = normals[0][0] * Ap + normals[1][0] * Bp + normals[2][0] * Cp;
                 inputs.normal[1] = normals[0][1] * Ap + normals[1][1] * Bp + normals[2][1] * Cp;
                 inputs.normal[2] = normals[0][2] * Ap + normals[1][2] * Bp + normals[2][2] * Cp;
+                one_over_length = 1.0 / Math.sqrt(inputs.normal[0]*inputs.normal[0] + inputs.normal[1]*inputs.normal[1] + inputs.normal[2]*inputs.normal[2]);
+                inputs.normal[0] *= one_over_length;
+                inputs.normal[1] *= one_over_length;
+                inputs.normal[2] *= one_over_length;
             }
             if (uvs) {
                 inputs.uv[0] = uvs[0][0] * Ap + uvs[1][0] * Bp + uvs[2][0] * Cp;
