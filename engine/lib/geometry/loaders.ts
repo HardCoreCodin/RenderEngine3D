@@ -60,14 +60,14 @@ const setFace = (inputs: MeshInputs, line_parts: string[]) : void => {
 
     if (p4 === undefined) {
         // Triangle:
-        inputs.position.addFace(p1, p2, p3);
-        if (n1) inputs.normal.addFace(n1, n2, n3);
-        if (uv1) inputs.uv.addFace(uv1, uv2, uv3);
+        inputs.position.addFace(Number(p1)-1, Number(p3)-1, Number(p2)-1);
+        if (n1) inputs.normal.addFace(Number(n1)-1, Number(n3)-1, Number(n2)-1);
+        if (uv1) inputs.uv.addFace(Number(uv1)-1, Number(uv3)-1, Number(uv2)-1);
     } else {
         // Quad:
-        inputs.position.addFace(p1, p2, p3, p4);
-        if (n1) inputs.normal.addFace(n1, n2, n3, n4);
-        if (uv1) inputs.uv.addFace(uv1, uv2, uv3, uv4);
+        inputs.position.addFace(Number(p1)-1, Number(p4)-1, Number(p3)-1, Number(p2)-1);
+        if (n1) inputs.normal.addFace(Number(n1)-1, Number(n4)-1, Number(n3)-1, Number(n2)-1);
+        if (uv1) inputs.uv.addFace(Number(uv1)-1, Number(uv4)-1, Number(uv3)-1, Number(uv4)-1);
     }
 };
 

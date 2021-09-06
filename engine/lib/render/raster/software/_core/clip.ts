@@ -1,6 +1,6 @@
 import {CLIP, INEXTRA, INSIDE, NEAR} from "../../../../../constants.js";
 
-export type IAttributeBuffers = [Float32Array[], Float32Array[]];
+export type IAttributeBuffers = [Float32Array[], Uint32Array[], Float32Array[], boolean];
 
 export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
     vertices: Float32Array[], // float4[]
@@ -37,7 +37,7 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         second_new_vertex_x,
         second_new_vertex_y,
 
-        t, one_minus_t, clipped_face_v1_index, clipped_index, encoded_vertex_nums, component_count: number;
+        t, one_minus_t, clipped_face_v1_index, clipped_index, encoded_vertex_nums, component_count, one_over_length: number;
 
     const face_count = face_vertex_indices.length;
     let faces_added = clipped_face_v1_index = 0;
@@ -51,10 +51,10 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
         clipped_faces_vertex_positions[clipped_face_v1_index+2].set(vertices[v3_index]);
 
         if (attributes) {
-            for (const [attrs, clipped_attrs] of attributes) {
-                clipped_attrs[clipped_face_v1_index+0].set(attrs[v1_index]);
-                clipped_attrs[clipped_face_v1_index+1].set(attrs[v2_index]);
-                clipped_attrs[clipped_face_v1_index+2].set(attrs[v3_index]);
+            for (const [attrs, attr_indices, clipped_attrs] of attributes) {
+                clipped_attrs[clipped_face_v1_index+0].set(attrs[attr_indices[f][0]]);
+                clipped_attrs[clipped_face_v1_index+1].set(attrs[attr_indices[f][1]]);
+                clipped_attrs[clipped_face_v1_index+2].set(attrs[attr_indices[f][2]]);
             }
         }
 
@@ -156,13 +156,19 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
             // *The same logic applies for the second interpolation in either of it's 2 cases below.
 
             if (attributes) {
-                for (const [attrs, clipped_attrs] of attributes) {
-                    attr_in = attrs[in1_index];
-                    attr_out = attrs[out1_index];
+                for (const [attrs, attr_indices, clipped_attrs, normalize] of attributes) {
+                    attr_in = attrs[attr_indices[f][in1_num - 1]];
+                    attr_out =attrs[attr_indices[f][out1_num - 1]];
                     attr_clipped = clipped_attrs[clipped_index];
                     component_count = attrs[0].length;
                     for (let component = 0; component < component_count; component++)
-                        attr_clipped[clipped_index] = one_minus_t*attr_out[component] + t*attr_in[component];
+                        attr_clipped[component] = one_minus_t*attr_out[component] + t*attr_in[component];
+                    if (normalize) {
+                        one_over_length = 1.0 / Math.sqrt(attr_clipped[0] * attr_clipped[0] + attr_clipped[1] * attr_clipped[1] + attr_clipped[2] * attr_clipped[2]);
+                        attr_clipped[0] *= one_over_length;
+                        attr_clipped[1] *= one_over_length;
+                        attr_clipped[2] *= one_over_length;
+                    }
                 }
             }
 
@@ -193,13 +199,19 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 clipped[3] = near_clipping_plane_distance;
 
                 if (attributes) {
-                    for (const [attrs, clipped_attrs] of attributes) {
-                        attr_in = attrs[in1_index];
-                        attr_out = attrs[out2_index];
+                    for (const [attrs, attr_indices, clipped_attrs, normalize] of attributes) {
+                        attr_in = attrs[attr_indices[f][in1_num - 1]];
+                        attr_out =attrs[attr_indices[f][out2_num - 1]];
                         attr_clipped = clipped_attrs[clipped_index];
                         component_count = attrs[0].length;
                         for (let component = 0; component < component_count; component++)
-                            attr_clipped[clipped_index] = one_minus_t*attr_out[component] + t*attr_in[component];
+                            attr_clipped[component] = one_minus_t*attr_out[component] + t*attr_in[component];
+                        if (normalize) {
+                            one_over_length = 1.0 / Math.sqrt(attr_clipped[0] * attr_clipped[0] + attr_clipped[1] * attr_clipped[1] + attr_clipped[2] * attr_clipped[2]);
+                            attr_clipped[0] *= one_over_length;
+                            attr_clipped[1] *= one_over_length;
+                            attr_clipped[2] *= one_over_length;
+                        }
                     }
                 }
             } else {
@@ -249,13 +261,19 @@ export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|U
                 clipped[3] = near_clipping_plane_distance;
 
                 if (attributes) {
-                    for (const [attrs, clipped_attrs] of attributes) {
-                        attr_in = attrs[in2_index];
-                        attr_out = attrs[out1_index];
+                    for (const [attrs, attr_indices, clipped_attrs, normalize] of attributes) {
+                        attr_in = attrs[attr_indices[f][in2_num - 1]];
+                        attr_out =attrs[attr_indices[f][out1_num - 1]];
                         attr_clipped = clipped_attrs[clipped_index];
                         component_count = attrs[0].length;
                         for (let component = 0; component < component_count; component++)
                             attr_clipped[component] = one_minus_t*attr_out[component] + t*attr_in[component];
+                        if (normalize) {
+                            one_over_length = 1.0 / Math.sqrt(attr_clipped[0] * attr_clipped[0] + attr_clipped[1] * attr_clipped[1] + attr_clipped[2] * attr_clipped[2]);
+                            attr_clipped[0] *= one_over_length;
+                            attr_clipped[1] *= one_over_length;
+                            attr_clipped[2] *= one_over_length;
+                        }
 
                         clipped_attrs[new_face_offset].set(clipped_attrs[clipped_face_v1_index + out1_num - 1]);
                         clipped_attrs[new_face_offset + in1_num].set(attrs[in2_index]);

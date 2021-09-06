@@ -127,12 +127,16 @@ export default class Rasterizer
                 if (mesh.options.normal)
                     attributes.push([
                         mesh.vertices.normals.arrays,
-                        this.clipped_vertex_normals.arrays
+                        mesh.face_vertices.arrays as Uint32Array[],
+                        this.clipped_vertex_normals.arrays,
+                        true
                     ]);
                 if (mesh.options.include_uvs)
                     attributes.push([
                         mesh.vertices.uvs.arrays,
-                        this.clipped_vertex_uvs.arrays
+                        mesh.face_vertices.arrays as Uint32Array[],
+                        this.clipped_vertex_uvs.arrays,
+                        false
                     ]);
                 for (mesh_geometry of material.mesh_geometries.getGeometries(mesh)) if (mesh_geometry.is_renderable) {
                     // Prepare a matrix for converting from model space to clip space:
@@ -156,15 +160,16 @@ export default class Rasterizer
                             } else { // result === INSIDE :
                                 projectSomeVertexPositions(clip_positions.arrays, vertex_count, vf, half_width, half_height);
                                 vertex_index = 0;
-                                face_index = 0;
-                                for (const current_face_vertex_indices of mesh.face_vertices.arrays) {
-                                    for (const index of current_face_vertex_indices) {
-                                        clipped_vertices[vertex_index].set(clip_positions.arrays[index]);
-                                        if (attributes)
-                                            for (const [attrs, clipped_attrs] of attributes)
-                                                clipped_attrs[vertex_index].set(attrs[index]);
+                                for (const current_face_vertex_indices of mesh.face_vertices.arrays)
+                                    for (const index of current_face_vertex_indices)
+                                        clipped_vertices[vertex_index++].set(clip_positions.arrays[index]);
 
-                                        vertex_index++
+                                if (attributes) {
+                                    for (const [attrs, indices, clipped_attrs] of attributes) {
+                                        vertex_index = 0;
+                                        for (const current_face_vertex_indices of indices)
+                                            for (const index of current_face_vertex_indices)
+                                                clipped_attrs[vertex_index++].set(attrs[index]);
                                     }
                                 }
                             }

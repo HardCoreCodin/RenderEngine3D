@@ -47,19 +47,19 @@ const setFace = (inputs, line_parts) => {
     const [p1, uv1, n1, p2, uv2, n2, p3, uv3, n3, p4, uv4, n4] = line_parts;
     if (p4 === undefined) {
         // Triangle:
-        inputs.position.addFace(p1, p2, p3);
+        inputs.position.addFace(Number(p1) - 1, Number(p3) - 1, Number(p2) - 1);
         if (n1)
-            inputs.normal.addFace(n1, n2, n3);
+            inputs.normal.addFace(Number(n1) - 1, Number(n3) - 1, Number(n2) - 1);
         if (uv1)
-            inputs.uv.addFace(uv1, uv2, uv3);
+            inputs.uv.addFace(Number(uv1) - 1, Number(uv3) - 1, Number(uv2) - 1);
     }
     else {
         // Quad:
-        inputs.position.addFace(p1, p2, p3, p4);
+        inputs.position.addFace(Number(p1) - 1, Number(p4) - 1, Number(p3) - 1, Number(p2) - 1);
         if (n1)
-            inputs.normal.addFace(n1, n2, n3, n4);
+            inputs.normal.addFace(Number(n1) - 1, Number(n4) - 1, Number(n3) - 1, Number(n2) - 1);
         if (uv1)
-            inputs.uv.addFace(uv1, uv2, uv3, uv4);
+            inputs.uv.addFace(Number(uv1) - 1, Number(uv4) - 1, Number(uv3) - 1, Number(uv4) - 1);
     }
 };
 const has_uvs = /^vt\s+-*\d+\.\d+\s+-*\d+\.\d+/m;

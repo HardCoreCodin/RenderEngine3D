@@ -31,11 +31,16 @@ export default class Mesh
         vertex_faces?: IVertexFaces
     ) {
         inputs.sanitize();
-
         this.face_vertices = face_vertices || new FaceVerticesInt32().load(inputs.position);
         this.face_count = this.face_vertices.length;
         this.vertex_count = options.share & ATTRIBUTE.position ? inputs.position.vertex_count : this.face_count * 3;
         this.vertex_faces = vertex_faces || new VertexFacesInt32().load(this.face_vertices, this.vertex_count);
+        if (!options.share) {
+            let index = 0;
+            for (const array of this.face_vertices.arrays)
+                for (let i = 0; i < 3; i++)
+                    array[i] = index++;
+        }
     }
 
     load(): this {

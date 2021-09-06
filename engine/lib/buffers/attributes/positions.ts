@@ -119,7 +119,7 @@ export class VertexPositions4D extends Positions4D implements IVertexAttribute<P
         else
             loadUnsharedVertices(inputs.vertices, inputs.faces_vertices, this.arrays);
 
-        this.arrays[3].fill(1);
+        for (const array of this.arrays) array[3] = 1;
 
         return this;
     }
