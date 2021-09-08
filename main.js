@@ -1,34 +1,51 @@
-// import spaceship from './spaceship.js';
-// import teapot from './teapot.js';
-//
-// import Engine3D from "./engine/engine.js";
-// import {loadMeshFromObj} from "./engine/lib/geometry/loaders.js";
-//
-// // import Mesh from "./engine/lib/geometry/mesh.js";
-//
-// const teapot_mesh = loadMeshFromObj(teapot);
-// // teapot_mesh.transform.rotationAngleForY = 180;
-// teapot_mesh.transform.translation.z = 5;
-// teapot_mesh.transform.translation.x = 5;
-// const spaceship_mesh = loadMeshFromObj(spaceship);
-// // spaceship_mesh.transform.rotationAngleForY = 180;
-// spaceship_mesh.transform.translation.z = 5;
-// spaceship_mesh.transform.translation.x = -5;
-//
-//
-// // import mountains from './mountains.js';
-// //
-// // const mountains_mesh = Mesh.from(mountains);
-// // mountains_mesh.transform.matrix.i.x = 0.1;
-// // mountains_mesh.transform.matrix.i.x = 0.1;
-// // mountains_mesh.transform.matrix.i.x = 0.1;
-// // mountains_mesh.transform.matrix.k.x = 50;
-// // mountains_mesh.transform.matrix.k.y = -30;
-//
-// const canvas: HTMLCanvasElement = document.getElementsByTagName('canvas')[0];
-// canvas.width = window.innerWidth;
-// canvas.height = window.innerHeight;
-//
-// const engine = new Engine3D(canvas, [teapot_mesh, spaceship_mesh]);
-// engine.start();
+import RasterEngine from "./engine/render/raster/software/engine.js";
+import Cube from "./engine/geometry/cube.js";
+import SoftwareRasterMaterial from "./engine/render/raster/software/materials/_base.js";
+import { shadePixelBarycentric, shadePixelDepth, shadePixelNormal, shadePixelUV, shadePixelCheckerboard } from "./engine/render/raster/software/materials/shaders/pixel.js";
+import { loadMeshFromObj } from "./engine/geometry/loaders.js";
+import suzanne_obj from "./assets/monkey.js";
+import { MeshOptions } from "./testing/main2_exports.js";
+const mesh_options = new MeshOptions(0, 2 /* LOAD_VERTEX__NO_FACE */, 0, true);
+const suzanne_mesh = loadMeshFromObj(suzanne_obj, mesh_options).load();
+globalThis.engine = new RasterEngine();
+const scene = globalThis.engine.scene;
+const camera = globalThis.engine.display.active_viewport.controller.camera;
+camera.is_static = false;
+camera.lense.fov = 75;
+camera.transform.translation.y = 1;
+let geo = scene.mesh_geometries.addGeometry(Cube().load());
+geo.is_static = true;
+geo.transform.translation.y = -2;
+geo.transform.translation.z = -6;
+geo.transform.translation.x = -6;
+geo.transform.scale.z = geo.transform.scale.x = 16;
+// geo.transform.scale.y = 0.1;
+geo.refreshWorldMatrix(false, true);
+geo.material = new SoftwareRasterMaterial(scene, shadePixelCheckerboard);
+for (let i = 0; i < 2; i++)
+    for (let j = 0; j < 2; j++) {
+        geo = scene.mesh_geometries.addGeometry(suzanne_mesh);
+        geo.is_static = true;
+        geo.transform.translation.x = i * 5;
+        geo.transform.translation.z = j * 5;
+        geo.refreshWorldMatrix(false, true);
+        if (i) {
+            if (j) {
+                geo.material = new SoftwareRasterMaterial(scene, shadePixelBarycentric);
+            }
+            else {
+                geo.material = new SoftwareRasterMaterial(scene, shadePixelDepth);
+            }
+        }
+        else {
+            if (j) {
+                geo.material = new SoftwareRasterMaterial(scene, shadePixelUV);
+            }
+            else {
+                geo.material = new SoftwareRasterMaterial(scene, shadePixelNormal);
+            }
+        }
+    }
+globalThis.engine.display.active_viewport.view_frustum.near = 1;
+globalThis.engine.start();
 //# sourceMappingURL=main.js.map
