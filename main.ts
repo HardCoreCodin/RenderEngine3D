@@ -2,7 +2,7 @@ import RasterEngine from "./engine/render/raster/software/engine.js";
 import Cube from "./engine/geometry/cube.js";
 import {NORMAL_SOURCING} from "./engine/core/constants.js";
 import SoftwareRasterViewport from "./engine/render/raster/software/viewport.js";
-import SoftwareRasterMaterial from "./engine/render/raster/software/materials/_base.js";
+import SoftwareRasterMaterial from "./engine/render/raster/software/materials/base.js";
 import {
     shadePixelBarycentric,
     shadePixelDepth,
@@ -12,7 +12,7 @@ import {
 } from "./engine/render/raster/software/materials/shaders/pixel.js";
 import {loadMeshFromObj} from "./engine/geometry/loaders.js";
 import suzanne_obj from "./assets/monkey.js"
-import {MeshOptions} from "./testing/main2_exports.js";
+import {MeshOptions} from "./testing/exports.js";
 
 const mesh_options = new MeshOptions(0, NORMAL_SOURCING.LOAD_VERTEX__NO_FACE, 0, true);
 const suzanne_mesh = loadMeshFromObj(suzanne_obj, mesh_options).load();
