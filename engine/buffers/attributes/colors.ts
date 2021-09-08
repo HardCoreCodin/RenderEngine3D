@@ -1,4 +1,4 @@
-import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./_base.js";
+import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./base.js";
 import {Color3D, Color4D} from "../../accessors/color.js";
 import {Colors3D, Colors4D} from "../vectors.js";
 import {InputColors} from "../../geometry/inputs.js";
@@ -10,7 +10,7 @@ import {
     pullUnsharedVertices,
     pullFacesWithUnsharedVertices,
     pullFaceWithSharedVertices
-} from "./_core.js";
+} from "./core.js";
 import {IFaceVertices, IVertexFaces} from "../../core/interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../core/interfaces/attributes.js";
 

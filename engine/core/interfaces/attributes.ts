@@ -1,6 +1,6 @@
 import Matrix from "../../accessors/matrix.js";
 import {Vector} from "../../accessors/accessor.js";
-import {Triangle} from "../../buffers/attributes/_base.js";
+import {Triangle} from "../../buffers/attributes/base.js";
 import {ATTRIBUTE, DIM, FACE_TYPE} from "../constants.js";
 import {InputAttribute} from "../../geometry/inputs.js";
 import {FaceInputNum, FaceInputs, FaceInputStr, VertexInputNum, VertexInputStr} from "../types.js";

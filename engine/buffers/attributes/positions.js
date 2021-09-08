@@ -1,7 +1,7 @@
-import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./_base.js";
+import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./base.js";
 import { Position2D, Position3D, Position4D } from "../../accessors/position.js";
 import { Positions2D, Positions3D, Positions4D } from "../vectors.js";
-import { loadUnsharedVertices, loadVerticesSimple, pullFacesWithUnsharedVertices, pullFaceWithSharedVertices } from "./_core.js";
+import { loadUnsharedVertices, loadVerticesSimple, pullFacesWithUnsharedVertices, pullFaceWithSharedVertices } from "./core.js";
 export class VertexPositions2D extends Positions2D {
     autoInit(vertex_count, face_vertices, is_shared = true) {
         this._is_shared = !!is_shared;

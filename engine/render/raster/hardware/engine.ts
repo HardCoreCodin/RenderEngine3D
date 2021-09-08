@@ -1,4 +1,4 @@
-import GLMaterial from "./materials/_base.js";
+import GLMaterial from "./materials/base.js";
 import GLRenderPipeline from "./pipeline.js";
 import GLViewport from "./viewport.js";
 import RenderEngine from "../../base/engine.js";

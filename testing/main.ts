@@ -1,6 +1,6 @@
-// import GLProgram from "../lib/render/raster/hardware/_core/program.js";
-// import {GLIndexBuffer, GLTexture, GLVertexArray} from "../lib/render/raster/hardware/_core/buffers.js";
-// import {IGLUniform} from "../lib/render/raster/hardware/_core/types.js";
+// import GLProgram from "../lib/render/raster/hardware/core/program.js";
+// import {GLIndexBuffer, GLTexture, GLVertexArray} from "../lib/render/raster/hardware/core/buffers.js";
+// import {IGLUniform} from "../lib/render/raster/hardware/core/types.js";
 // import {mat4} from "../lib/accessors/matrix4x4.js";
 //
 // export const canvas: HTMLCanvasElement = document.querySelector('canvas');

@@ -1,4 +1,4 @@
-import Node3D from "./_base.js";
+import Node3D from "./base.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 import Scene from "./scene.js";
 import Mesh from "../geometry/mesh.js";

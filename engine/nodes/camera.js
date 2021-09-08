@@ -1,4 +1,4 @@
-import Node3D from "./_base.js";
+import Node3D from "./base.js";
 import { DEFAULT_FOCAL_LENGTH, DEFAULT_ZOOM, DEGREES_TO_RADIANS_FACTOR, MAX_FOV, MIN_FOCAL_LENGTH, MIN_FOV, MIN_ZOOM, RADIANS_TO_DEGREES_FACTOR } from "../core/constants.js";
 export default class Camera extends Node3D {
     constructor(scene) {

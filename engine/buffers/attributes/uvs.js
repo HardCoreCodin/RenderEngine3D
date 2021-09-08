@@ -1,7 +1,7 @@
-import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./_base.js";
+import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./base.js";
 import { UV2D, UV3D } from "../../accessors/uv.js";
 import { UVs2D, UVs3D } from "../vectors.js";
-import { loadSharedVertices, loadUnsharedVertices } from "./_core.js";
+import { loadSharedVertices, loadUnsharedVertices } from "./core.js";
 export class VertexUVs2D extends UVs2D {
     autoInit(vertex_count, face_vertices, is_shared = true) {
         this._is_shared = !!is_shared;

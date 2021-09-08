@@ -1,5 +1,5 @@
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
-import SoftwareRasterMaterial from "./materials/_base.js";
+import SoftwareRasterMaterial from "./materials/base.js";
 import BaseRenderPipeline from "../../base/pipelines.js";
 import { VertexPositions3D, VertexPositions4D } from "../../../buffers/attributes/positions.js";
 import { CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT } from "../../../geometry/cube.js";

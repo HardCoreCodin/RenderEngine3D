@@ -1,4 +1,4 @@
-import Node3D from "./_base.js";
+import Node3D from "./base.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 class BaseGeometry extends Node3D {
     constructor(scene, is_rigid = true, is_renderable = true) {

@@ -1,9 +1,9 @@
-import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./_base.js";
+import {iterSharedTriangles, iterUnsharedTriangles, Triangle} from "./base.js";
 import {UV2D, UV3D} from "../../accessors/uv.js";
 import {UVs2D, UVs3D} from "../vectors.js";
 import {InputUVs} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../core/constants.js";
-import {loadSharedVertices, loadUnsharedVertices} from "./_core.js";
+import {loadSharedVertices, loadUnsharedVertices} from "./core.js";
 import {IFaceVertices} from "../../core/interfaces/buffers.js";
 import {IVertexAttribute} from "../../core/interfaces/attributes.js";
 

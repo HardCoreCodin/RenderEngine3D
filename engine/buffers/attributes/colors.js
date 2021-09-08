@@ -1,7 +1,7 @@
-import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./_base.js";
+import { iterSharedTriangles, iterUnsharedTriangles, Triangle } from "./base.js";
 import { Color3D, Color4D } from "../../accessors/color.js";
 import { Colors3D, Colors4D } from "../vectors.js";
-import { loadSharedVertices, loadUnsharedVertices, pullSharedVertices, pullUnsharedVertices, pullFacesWithUnsharedVertices, pullFaceWithSharedVertices } from "./_core.js";
+import { loadSharedVertices, loadUnsharedVertices, pullSharedVertices, pullUnsharedVertices, pullFacesWithUnsharedVertices, pullFaceWithSharedVertices } from "./core.js";
 export class VertexColors3D extends Colors3D {
     autoInit(vertex_count, face_vertices, is_shared = true) {
         this._is_shared = !!is_shared;

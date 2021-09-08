@@ -1,7 +1,7 @@
-import { Triangle, iterSharedTriangles, iterUnsharedTriangles } from "./_base.js";
+import { Triangle, iterSharedTriangles, iterUnsharedTriangles } from "./base.js";
 import { Direction3D, Direction4D, dir3, dir4 } from "../../accessors/direction.js";
 import { Directions3D, Directions4D } from "../vectors.js";
-import { loadSharedVertices, loadUnsharedVertices, pullSharedVertices, pullUnsharedVertices, } from "./_core.js";
+import { loadSharedVertices, loadUnsharedVertices, pullSharedVertices, pullUnsharedVertices, } from "./core.js";
 import { zip } from "../../core/utils.js";
 export class VertexNormals3D extends Directions3D {
     autoInit(vertex_count, face_vertices, is_shared = true) {

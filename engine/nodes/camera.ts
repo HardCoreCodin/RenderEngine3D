@@ -1,4 +1,4 @@
-import Node3D from "./_base.js";
+import Node3D from "./base.js";
 import Scene from "./scene.js";
 import {
     DEFAULT_FOCAL_LENGTH,

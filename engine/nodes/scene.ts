@@ -1,5 +1,5 @@
 import Camera from "./camera.js";
-import {Parent} from "./_base.js";
+import {Parent} from "./base.js";
 import {MeshGeometries} from "./geometry.js";
 import {IMaterial, IMaterialConstructor} from "../core/interfaces/render.js";
 import Spheres from "../geometry/implicit/spheres.js";

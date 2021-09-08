@@ -1,5 +1,5 @@
 import Camera from "./camera.js";
-import { Parent } from "./_base.js";
+import { Parent } from "./base.js";
 import { MeshGeometries } from "./geometry.js";
 import Spheres from "../geometry/implicit/spheres.js";
 export default class Scene extends Parent {

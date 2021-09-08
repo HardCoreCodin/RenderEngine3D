@@ -1,4 +1,4 @@
-import {Triangle, iterSharedTriangles, iterUnsharedTriangles} from "./_base.js";
+import {Triangle, iterSharedTriangles, iterUnsharedTriangles} from "./base.js";
 import {ATTRIBUTE} from "../../core/constants.js";
 import {InputNormals} from "../../geometry/inputs.js";
 import {Position3D, Position4D} from "../../accessors/position.js";
@@ -10,7 +10,7 @@ import {
     loadUnsharedVertices,
     pullSharedVertices,
     pullUnsharedVertices,
-} from "./_core.js";
+} from "./core.js";
 import {zip} from "../../core/utils.js";
 import {IFaceVertices, IVertexFaces} from "../../core/interfaces/buffers.js";
 import {IFaceAttribute, IVertexAttribute} from "../../core/interfaces/attributes.js";
