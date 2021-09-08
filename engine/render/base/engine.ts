@@ -13,12 +13,20 @@ import {
     IMaterialConstructor
 } from "../../core/interfaces/render.js";
 import {non_zero} from "../../core/utils.js";
+import {Color4D} from "../../accessors/color.js";
+import {IPixelShaderInputs} from "../raster/software/materials/shaders/pixel.js";
 
+export type UpdateCallback<Context extends RenderingContext = CanvasRenderingContext2D> = (
+    scene: Scene<Context>,
+    delta_time: number,
+    elapsed_time: number
+) => void;
 
 export default class RenderEngine<Context extends RenderingContext = CanvasRenderingContext2D>
     implements IRenderEngine<Context>
 {
-    protected readonly _update_callback: FrameRequestCallback;
+    public readonly update_callbacks = new Set<UpdateCallback<Context>>();
+    protected readonly _frame_request_callback: FrameRequestCallback;
 
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
@@ -74,7 +82,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
                 'touchstart',
                 'touchend'
             );
-        this._update_callback = this.update.bind(this)
+        this._frame_request_callback = this.update.bind(this)
     }
 
     get is_active(): boolean {return this._is_active}
@@ -96,22 +104,25 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         this._delta_time = time - this._last_timestamp;
         this._last_timestamp = time;
 
-        viewport = this._display.active_viewport;
-        viewports = this._display.viewports;
-        controller = viewport.controller;
-        camera = controller.camera;
+        const viewports = this._display.viewports;
+        const controller = this._display.active_viewport.controller;
         if (this._is_active) {
             controller.update(this._delta_time);
-            if (!camera.is_static || controller.direction_changed || controller.position_changed) {
-                for (viewport of viewports)
+            if (!controller.camera.is_static ||
+                controller.direction_changed ||
+                controller.position_changed) {
+                for (const viewport of viewports)
                     if (Object.is(controller, viewport.controller))
                         viewport.update();
                 controller.direction_changed = controller.position_changed = false;
             }
-        } else if (!camera.is_static)
-            for (viewport of viewports)
+        } else if (!controller.camera.is_static)
+            for (const viewport of viewports)
                 if (Object.is(controller, viewport.controller))
                     viewport.update();
+
+        for (const update_callback of this.update_callbacks)
+            update_callback(this._scene, this._delta_time, time);
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this._scene.children)
@@ -119,7 +130,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
 
         this._display.refresh();
 
-        requestAnimationFrame(this._update_callback);
+        requestAnimationFrame(this._frame_request_callback);
     }
 
     protected _on_pointerlockchange(pointer_event: PointerEvent): void {
@@ -127,14 +138,14 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     }
 
     protected _on_mousemove(mouse_event: MouseEvent): void {
-        controller = this._display.active_viewport.controller;
+        const controller = this._display.active_viewport.controller;
         controller.mouse_moved = true;
         controller.mouse_movement.x += mouse_event.movementX;
         controller.mouse_movement.y += mouse_event.movementY;
     }
 
     protected _on_wheel(wheel_event: WheelEvent): void {
-        controller = this._display.active_viewport.controller;
+        const controller = this._display.active_viewport.controller;
         controller.mouse_wheel = wheel_event.deltaY;
         controller.mouse_wheel_moved = true;
     }
@@ -164,7 +175,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     }
 
     protected _on_keydown(key_event: KeyboardEvent): void {
-        controller = this._display.active_viewport.controller;
+        const controller = this._display.active_viewport.controller;
         controller.key_pressed = true;
 
         for (const key of Object.keys(this.keys))
@@ -177,7 +188,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     }
 
     protected _on_keyup(key_event: KeyboardEvent): void {
-        controller = this._display.active_viewport.controller;
+        const controller = this._display.active_viewport.controller;
         controller.keyUp(key_event.which);
 
         for (const key of Object.keys(this.keys))
@@ -215,7 +226,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         this._startListening();
         this._is_running = true;
         this._display.resize(this.canvas.clientWidth, this.canvas.clientHeight);
-        requestAnimationFrame(this._update_callback);
+        requestAnimationFrame(this._frame_request_callback);
     }
 
     stop() {
@@ -227,8 +238,3 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         return canvas.getContext('2d') as Context;
     }
 }
-
-let camera: Camera;
-let viewport: IViewport;
-let viewports: Generator<IViewport>;
-let controller: IController;

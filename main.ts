@@ -24,19 +24,23 @@ camera.is_static = false;
 camera.lense.fov = 75;
 camera.transform.translation.y = 1;
 
-let geo = scene.mesh_geometries.addGeometry(Cube().load());
-geo.is_static = true;
-geo.transform.translation.y = -2;
-geo.transform.translation.z = 6;
-geo.transform.translation.x = 6;
-geo.transform.scale.z = geo.transform.scale.x = 16;
-// geo.transform.scale.y = 0.1;
-geo.refreshWorldMatrix(false, true);
-geo.material = new SoftwareRasterMaterial(scene, shadePixelBarycentric);
+const cube_geo = scene.mesh_geometries.addGeometry(Cube().load());
+cube_geo.is_static = true;
+cube_geo.transform.translation.y = -2;
+cube_geo.transform.translation.x = -6;
+cube_geo.transform.translation.z = -6;
+cube_geo.transform.scale.z = cube_geo.transform.scale.x = 16;
+cube_geo.refreshWorldMatrix(false, true);
+cube_geo.material = new SoftwareRasterMaterial(scene, shadePixelCheckerboard);
+
+// globalThis.engine.update_callbacks.add((scene, delta_time: number, elapsed_time: number) => {
+//     cube_geo.transform.translation.x = Math.cos(elapsed_time / 1000) * 6;
+//     cube_geo.transform.translation.z = Math.sin(elapsed_time / 1000) * 6;
+// });
 
 for (let i=0; i < 2; i++)
     for (let j=0; j< 2; j++) {
-        geo = scene.mesh_geometries.addGeometry(suzanne_mesh);
+        const geo = scene.mesh_geometries.addGeometry(suzanne_mesh);
         geo.is_static = true;
         geo.transform.translation.x = i*5;
         geo.transform.translation.z = j*5;
