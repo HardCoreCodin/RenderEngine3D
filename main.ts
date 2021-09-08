@@ -27,12 +27,12 @@ camera.transform.translation.y = 1;
 let geo = scene.mesh_geometries.addGeometry(Cube().load());
 geo.is_static = true;
 geo.transform.translation.y = -2;
-geo.transform.translation.z = -6;
-geo.transform.translation.x = -6;
+geo.transform.translation.z = 6;
+geo.transform.translation.x = 6;
 geo.transform.scale.z = geo.transform.scale.x = 16;
 // geo.transform.scale.y = 0.1;
 geo.refreshWorldMatrix(false, true);
-geo.material = new SoftwareRasterMaterial(scene, shadePixelCheckerboard);
+geo.material = new SoftwareRasterMaterial(scene, shadePixelBarycentric);
 
 for (let i=0; i < 2; i++)
     for (let j=0; j< 2; j++) {

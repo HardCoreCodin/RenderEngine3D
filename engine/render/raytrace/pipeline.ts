@@ -1,7 +1,7 @@
 import RayTraceViewport from "./viewport.js";
 import BaseRenderPipeline from "../base/pipelines.js";
 import {drawPixel} from "../../core/utils.js";
-import intersectRayWithSpheres, {intersectRayWithSpheres1, intersectRayWithSpheres2} from "./shaders/intersection/ray_sphere.js";
+import {intersectRayWithSpheres2} from "./shaders/intersection/raySphere.js";
 // import {RayHit} from "../../buffers/rays.js";
 import {dir3} from "../../accessors/direction.js";
 import {pos3} from "../../accessors/position.js";

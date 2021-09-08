@@ -1,11 +1,11 @@
 import { CLIP, INEXTRA, INSIDE, NEAR } from "../../../../core/constants.js";
 export const clipFaces = (vertices, // float4[]
 face_vertex_indices, // uint3[]
-vertex_flags, face_flags, near_clipping_plane_distance, clipped_faces_vertex_positions, attributes) => {
+vertex_flags, face_flags, near_clipping_plane_distance, pz, clipped_faces_vertex_positions, attributes) => {
     // Break each face that needs to be clipped into smaller output triangle(s).
     let new_face_offset = face_vertex_indices.length * 3;
     let clipped, in1, in2, out1, out2, attr_in, attr_out, attr_clipped;
-    let v1_index, v1_flags, v2_index, v2_flags, v3_index, v3_flags, in1_index, in1_num, in1z, in2_index, in2_num, in2z, out1_index, out1_num, out1z, out2_index, out2_num, out2z, first_new_vertex_x, first_new_vertex_y, second_new_vertex_x, second_new_vertex_y, t, one_minus_t, clipped_face_v1_index, clipped_index, component_count, one_over_length, new_vertex_index, old_vertex_index;
+    let v1_index, v1_flags, nx, d1_x, d2_x, new_v1x, new_v2x, in2x, v2_index, v2_flags, ny, d1_y, d2_y, new_v1y, new_v2y, in2y, v3_index, v3_flags, nz, d1_z, d2_z, new_v1z, new_v2z, in2z, new_v2num, out1_index, out1_num, out1z, in1_index, in1_num, in1z, new_v1num, out2_index, out2_num, out2z, in2_index, in2_num, t, one_minus_t, clipped_face_v1_index, clipped_index, component_count, one_over_length;
     const face_count = face_vertex_indices.length;
     let faces_added = clipped_face_v1_index = 0;
     let f = 0;
@@ -102,8 +102,11 @@ vertex_flags, face_flags, near_clipping_plane_distance, clipped_faces_vertex_pos
             clipped_index = clipped_face_v1_index + out1_num - 1;
             clipped = clipped_faces_vertex_positions[clipped_index];
             // Compute the new clip-space coordinates of the clipped-vertex:
-            clipped[0] = first_new_vertex_x = one_minus_t * out1[0] + t * in1[0];
-            clipped[1] = first_new_vertex_y = one_minus_t * out1[1] + t * in1[1];
+            new_v1x = one_minus_t * out1[0] + t * in1[0];
+            new_v1y = one_minus_t * out1[1] + t * in1[1];
+            new_v1z = one_minus_t * out1[2] + t * in1[2];
+            clipped[0] = new_v1x;
+            clipped[1] = new_v1y;
             clipped[2] = 0;
             clipped[3] = near_clipping_plane_distance;
             // Note:
@@ -173,35 +176,54 @@ vertex_flags, face_flags, near_clipping_plane_distance, clipped_faces_vertex_pos
                 // Compute and store the (relative)amount by which the FIRST outside vertex
                 // needs to be moved inwards towards the SECOND inside vertex:
                 in2 = vertices[in2_index];
+                in2x = in2[0];
+                in2y = in2[1];
                 in2z = in2[2];
                 t = out1z / (out1z - in2z);
                 one_minus_t = 1 - t;
-                second_new_vertex_x = one_minus_t * out1[0] + t * in2[0];
-                second_new_vertex_y = one_minus_t * out1[1] + t * in2[1];
+                new_v2x = one_minus_t * out1[0] + t * in2x;
+                new_v2y = one_minus_t * out1[1] + t * in2y;
+                new_v2z = one_minus_t * out1[2] + t * in2z;
                 // Determine orientation:
-                if ((in2[0] - first_new_vertex_x) * (second_new_vertex_y - first_new_vertex_y) >
-                    (in2[1] - first_new_vertex_y) * (second_new_vertex_x - first_new_vertex_x)) {
-                    old_vertex_index = 1;
-                    new_vertex_index = 2;
+                // Compute 2 direction vectors forming a plane for the face:
+                d1_x = new_v2x - in2x;
+                d2_x = new_v1x - in2x;
+                d1_y = new_v2y - in2y;
+                d2_y = new_v1y - in2y;
+                d1_z = new_v2z - in2z;
+                d2_z = new_v1z - in2z;
+                // Compute a normal vector of the face from these 2 direction vectors:
+                nx = (d1_z * d2_y) - (d1_y * d2_z);
+                ny = (d1_x * d2_z) - (d1_z * d2_x);
+                nz = (d1_y * d2_x) - (d1_x * d2_y);
+                // Dot the vector from the face to the origin with the normal:
+                if (nz * (pz - in2z) - ny * in2y - nx * in2x > 0) {
+                    // if the angle is greater than 90 degrees the face is facing the camera
+                    new_v1num = 2;
+                    new_v2num = 1;
                 }
                 else {
-                    old_vertex_index = 2;
-                    new_vertex_index = 1;
+                    // if the angle is 90 the face is at grazing angle to the camera.
+                    // if the angle is greater then 90 degrees the face faces away from the camera.
+                    new_v1num = 1;
+                    new_v2num = 2;
                 }
                 // Since this vertex belongs to an 'extra' new face, the index is offset to that index-space
-                clipped_index = new_face_offset + new_vertex_index;
-                clipped_faces_vertex_positions[new_face_offset].set(clipped);
+                clipped_index = new_face_offset + new_v2num;
+                clipped_faces_vertex_positions[new_face_offset].set(in2);
+                clipped_faces_vertex_positions[new_face_offset + new_v1num].set(clipped);
                 clipped = clipped_faces_vertex_positions[clipped_index];
-                clipped_faces_vertex_positions[new_face_offset + old_vertex_index].set(in2);
                 // Compute the new clip-space coordinates of the clipped-vertex:
-                clipped[0] = second_new_vertex_x;
-                clipped[1] = second_new_vertex_y;
+                clipped[0] = new_v2x;
+                clipped[1] = new_v2y;
                 clipped[2] = 0;
                 clipped[3] = near_clipping_plane_distance;
                 if (attributes) {
                     for (const [attrs, attr_indices, clipped_attrs, normalize] of attributes) {
                         attr_in = attrs[attr_indices[f][in2_num - 1]];
                         attr_out = attrs[attr_indices[f][out1_num - 1]];
+                        clipped_attrs[new_face_offset].set(attr_in);
+                        clipped_attrs[new_face_offset + new_v1num].set(clipped_attrs[clipped_face_v1_index + out1_num - 1]);
                         attr_clipped = clipped_attrs[clipped_index];
                         component_count = attrs[0].length;
                         for (let component = 0; component < component_count; component++)
@@ -212,8 +234,6 @@ vertex_flags, face_flags, near_clipping_plane_distance, clipped_faces_vertex_pos
                             attr_clipped[1] *= one_over_length;
                             attr_clipped[2] *= one_over_length;
                         }
-                        clipped_attrs[new_face_offset].set(clipped_attrs[clipped_face_v1_index + out1_num - 1]);
-                        clipped_attrs[new_face_offset + old_vertex_index].set(attr_in);
                     }
                 }
                 // Flag this face as needing an extra face to represent itself after clipping:

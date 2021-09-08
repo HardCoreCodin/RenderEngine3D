@@ -144,7 +144,7 @@ export default class Rasterizer
                             result = cullFaces(clip_positions.arrays, mesh.face_vertices.arrays, ff, vf, true, viewport.cull_back_faces, pz);
                             if (result === CULL) continue;
                             if (result === CLIP) {
-                                face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, vf, ff, n, clipped_vertices, attributes);
+                                face_count += clipFaces(clip_positions.arrays, mesh.face_vertices.arrays, vf, ff, n, pz, clipped_vertices, attributes);
                                 projectFaceVertexPositions(clipped_vertices, face_count, ff, mesh.face_count, half_width, half_height);
                             } else { // result === INSIDE :
                                 projectSomeVertexPositions(clip_positions.arrays, vertex_count, vf, half_width, half_height);
