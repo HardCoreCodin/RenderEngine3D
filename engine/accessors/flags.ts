@@ -1,4 +1,4 @@
-import {IFlags} from "../core/_interfaces/flags.js";
+import {IFlags} from "../core/interfaces/flags.js";
 import {Accessor, Flags} from "./accessor.js";
 import {FLAGS_1D_ALLOCATOR} from "../core/memory/allocators.js";
 import {FLAGS_2D_ALLOCATOR} from "../core/memory/allocators.js";

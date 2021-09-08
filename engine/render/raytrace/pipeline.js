@@ -1,4 +1,4 @@
-import BaseRenderPipeline from "../_base/pipelines.js";
+import BaseRenderPipeline from "../base/pipelines.js";
 import { drawPixel } from "../../core/utils.js";
 import { intersectRayWithSpheres2 } from "./shaders/intersection/ray_sphere.js";
 // import {RayHit} from "../../buffers/rays.js";

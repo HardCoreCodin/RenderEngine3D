@@ -1,6 +1,6 @@
 import {MeshInputs} from "./inputs.js";
 import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING} from "../core/constants.js";
-import {IMeshOptions} from "../core/_interfaces/geometry.js";
+import {IMeshOptions} from "../core/interfaces/geometry.js";
 
 export class MeshOptions implements IMeshOptions {
     constructor(

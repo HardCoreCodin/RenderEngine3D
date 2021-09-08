@@ -47,7 +47,7 @@ import {
     reflect_a_4D_vector_around_a_4D_direction_to_out,
     square_the_length_of_a_4D_direction
 } from "../core/math/vec4.js";
-import {IDirection2D, IDirection3D, IDirection4D} from "../core/_interfaces/vectors.js";
+import {IDirection2D, IDirection3D, IDirection4D} from "../core/interfaces/vectors.js";
 
 
 export class Direction2D extends Vector2D<Direction2D> implements IDirection2D

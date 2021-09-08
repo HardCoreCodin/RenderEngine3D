@@ -2,17 +2,17 @@ import Geometry from "../../../nodes/geometry.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import SoftwareRasterViewport from "./viewport.js";
 import SoftwareRasterMaterial from "./materials/_base.js";
-import BaseRenderPipeline from "../../_base/pipelines.js";
+import BaseRenderPipeline from "../../base/pipelines.js";
 import {VertexPositions3D, VertexPositions4D} from "../../../buffers/attributes/positions.js";
 import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "../../../geometry/cube.js";
-import {IRasterRenderPipeline} from "../../../core/_interfaces/render.js";
+import {IRasterRenderPipeline} from "../../../core/interfaces/render.js";
 import Mesh from "../../../geometry/mesh.js";
 import {FlagsBuffer1D} from "../../../buffers/flags.js";
-import {cullFaces, cullVertices} from "./_core/cull.js";
+import {cullFaces, cullVertices} from "./core/cull.js";
 import {CLIP, CULL, MAX_RENDER_TARGET_SIZE, NORMAL_SOURCING} from "../../../core/constants.js";
-import {projectFaceVertexPositions, projectSomeVertexPositions, shadeFace} from "./_core/half_space.js";
+import {projectFaceVertexPositions, projectSomeVertexPositions, shadeFace} from "./core/half_space.js";
 import {UVs2D} from "../../../buffers/vectors.js";
-import {clipFaces, IAttributeBuffers} from "./_core/clip.js";
+import {clipFaces, IAttributeBuffers} from "./core/clip.js";
 import {rgba} from "../../../accessors/color.js";
 
 

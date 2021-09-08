@@ -1,7 +1,7 @@
 import {Position3D} from "./position.js";
 import {Direction3D} from "./direction.js";
 import {Accessor} from "./accessor.js";
-import {IMatrix, IRotationMatrix} from "../core/_interfaces/matrix.js";
+import {IMatrix, IRotationMatrix} from "../core/interfaces/matrix.js";
 
 export default abstract class Matrix<Other extends IMatrix = IMatrix> extends Accessor implements IMatrix
 {

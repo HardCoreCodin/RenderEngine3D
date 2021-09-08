@@ -1,7 +1,7 @@
 import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "./cube.js";
 import {VertexPositions3D, VertexPositions4D} from "../buffers/attributes/positions.js";
 import {Position3D, Position4D} from "../accessors/position.js";
-import {IBounds, IBounds3D, IBounds4D} from "../core/_interfaces/geometry.js";
+import {IBounds, IBounds3D, IBounds4D} from "../core/interfaces/geometry.js";
 
 
 abstract class Bounds implements IBounds {

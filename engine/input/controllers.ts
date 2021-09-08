@@ -1,8 +1,8 @@
 import {dir3} from "../accessors/direction.js";
-import {IMatrix4x4} from "../core/_interfaces/matrix.js";
-import {IPosition3D, I2D} from "../core/_interfaces/vectors.js";
-import {IController, IControllerKeys} from "../core/_interfaces/input.js";
-import {IEulerRotation} from "../core/_interfaces/transform.js";
+import {IMatrix4x4} from "../core/interfaces/matrix.js";
+import {IPosition3D, I2D} from "../core/interfaces/vectors.js";
+import {IController, IControllerKeys} from "../core/interfaces/input.js";
+import {IEulerRotation} from "../core/interfaces/transform.js";
 import {
     DEFAULT_MOUSE_SENSITIVITY,
     DEFAULT_MOUSE_WHEEL_SENSITIVITY,
@@ -11,7 +11,7 @@ import {
     KEY_CODES, MOUSE_BUTTON
 } from "../core/constants.js";
 import Camera from "../nodes/camera.js";
-import {IViewport} from "../core/_interfaces/render.js";
+import {IViewport} from "../core/interfaces/render.js";
 
 abstract class Controller
     implements IController

@@ -29,7 +29,7 @@ import {
     square_the_distance_from_a_4D_positions_to_another_4D_position,
     subtract_a_4D_vector_from_another_4D_vector_to_out
 } from "../core/math/vec4.js";
-import {IPosition2D, IPosition3D, IPosition4D} from "../core/_interfaces/vectors.js";
+import {IPosition2D, IPosition3D, IPosition4D} from "../core/interfaces/vectors.js";
 
 export class Position2D extends Vector2D<Direction2D> implements IPosition2D
 {

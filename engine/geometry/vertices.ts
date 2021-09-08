@@ -5,7 +5,7 @@ import {FaceNormals3D, FaceNormals4D, VertexNormals3D, VertexNormals4D} from "..
 import {FaceColors3D, FaceColors4D, VertexColors3D, VertexColors4D} from "../buffers/attributes/colors.js";
 import {VertexUVs2D, VertexUVs3D} from "../buffers/attributes/uvs.js";
 import {ATTRIBUTE, DIM} from "../core/constants.js";
-import {IFaceVertices, IVertexFaces} from "../core/_interfaces/buffers.js";
+import {IFaceVertices, IVertexFaces} from "../core/interfaces/buffers.js";
 
 
 export default class Vertices

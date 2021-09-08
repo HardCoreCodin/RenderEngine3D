@@ -1,7 +1,7 @@
-import GLProgram from "./_core/program.js";
-import { GLVertexArray } from "./_core/buffers.js";
-import { Border, Grid } from "../../_base/viewport.js";
-import RasterViewport, { OrthographicProjectionMatrix, PerspectiveProjectionMatrix } from "../_base/viewport.js";
+import GLProgram from "./core/program.js";
+import { GLVertexArray } from "./core/buffers.js";
+import { Border, Grid } from "../../base/viewport.js";
+import RasterViewport, { OrthographicProjectionMatrix, PerspectiveProjectionMatrix } from "../base/viewport.js";
 export default class GLViewport extends RasterViewport {
     _init() {
         super._init();

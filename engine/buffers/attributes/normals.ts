@@ -12,8 +12,8 @@ import {
     pullUnsharedVertices,
 } from "./_core.js";
 import {zip} from "../../core/utils.js";
-import {IFaceVertices, IVertexFaces} from "../../core/_interfaces/buffers.js";
-import {IFaceAttribute, IVertexAttribute} from "../../core/_interfaces/attributes.js";
+import {IFaceVertices, IVertexFaces} from "../../core/interfaces/buffers.js";
+import {IFaceAttribute, IVertexAttribute} from "../../core/interfaces/attributes.js";
 
 
 export class VertexNormals3D extends Directions3D implements IVertexAttribute<Direction3D, ATTRIBUTE.normal> {

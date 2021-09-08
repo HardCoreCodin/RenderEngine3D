@@ -12,7 +12,7 @@ import {UV2D, UV3D} from "../accessors/uv.js";
 import {Color3D, Color4D} from "../accessors/color.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
-import {VectorConstructor} from "../core/_interfaces/vectors.js";
+import {VectorConstructor} from "../core/interfaces/vectors.js";
 
 import {
     VECTOR_2D_ALLOCATOR,

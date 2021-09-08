@@ -6,7 +6,7 @@ import {
     IInputPositions,
     IInputUVs,
     IMeshInputs
-} from "../core/_interfaces/attributes.js";
+} from "../core/interfaces/attributes.js";
 import {
     FaceInputNum,
     FaceInputs,

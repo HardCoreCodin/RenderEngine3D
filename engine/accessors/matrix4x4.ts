@@ -40,7 +40,7 @@ import {
     transpose_a_4x4_matrix_in_place,
     transpose_a_4x4_matrix_to_out
 } from "../core/math/mat4.js";
-import {IMatrix4x4} from "../core/_interfaces/matrix.js";
+import {IMatrix4x4} from "../core/interfaces/matrix.js";
 import Matrix3x3 from "./matrix3x3.js";
 
 export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {

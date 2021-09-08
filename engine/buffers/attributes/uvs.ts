@@ -4,8 +4,8 @@ import {UVs2D, UVs3D} from "../vectors.js";
 import {InputUVs} from "../../geometry/inputs.js";
 import {ATTRIBUTE} from "../../core/constants.js";
 import {loadSharedVertices, loadUnsharedVertices} from "./_core.js";
-import {IFaceVertices} from "../../core/_interfaces/buffers.js";
-import {IVertexAttribute} from "../../core/_interfaces/attributes.js";
+import {IFaceVertices} from "../../core/interfaces/buffers.js";
+import {IVertexAttribute} from "../../core/interfaces/attributes.js";
 
 
 export class VertexUVs2D extends UVs2D implements IVertexAttribute<UV2D, ATTRIBUTE.uv> {

@@ -1,7 +1,7 @@
 import Buffer from "../core/memory/buffers.js";
 import {Flags, InterpolationVertexIndices} from "../accessors/accessor.js";
 import {Flags1D, Flags2D, Flags3D} from "../accessors/flags.js";
-import {FlagsConstructor} from "../core/_interfaces/flags.js";
+import {FlagsConstructor} from "../core/interfaces/flags.js";
 import {FLAGS_1D_ALLOCATOR, FLAGS_2D_ALLOCATOR, FLAGS_3D_ALLOCATOR, U32_4D_ALLOCATOR} from "../core/memory/allocators.js";
 
 export abstract class FlagsBuffer<FlagsType extends Flags> extends Buffer<Uint8Array> {

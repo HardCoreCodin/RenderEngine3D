@@ -1,6 +1,6 @@
 import {Color4D} from "../../../../../accessors/color.js";
-import {I2D} from "../../../../../core/_interfaces/vectors.js";
-import {ISize} from "../../../../../core/_interfaces/render.js";
+import {I2D} from "../../../../../core/interfaces/vectors.js";
+import {ISize} from "../../../../../core/interfaces/render.js";
 
 interface IPerspectiveCorrectedBarycentricCoords {
     A: number,

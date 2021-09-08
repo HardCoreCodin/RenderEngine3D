@@ -11,8 +11,8 @@ import {
     pullFacesWithUnsharedVertices,
     pullFaceWithSharedVertices
 } from "./_core.js";
-import {IFaceVertices, IVertexFaces} from "../../core/_interfaces/buffers.js";
-import {IFaceAttribute, IVertexAttribute} from "../../core/_interfaces/attributes.js";
+import {IFaceVertices, IVertexFaces} from "../../core/interfaces/buffers.js";
+import {IFaceAttribute, IVertexAttribute} from "../../core/interfaces/attributes.js";
 
 
 export class VertexColors3D extends Colors3D implements IVertexAttribute<Color3D, ATTRIBUTE.color> {

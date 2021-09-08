@@ -9,8 +9,8 @@ import {
     pullFacesWithUnsharedVertices,
     pullFaceWithSharedVertices
 } from "./_core.js";
-import {IFaceVertices} from "../../core/_interfaces/buffers.js";
-import {IFaceAttribute, IVertexAttribute} from "../../core/_interfaces/attributes.js";
+import {IFaceVertices} from "../../core/interfaces/buffers.js";
+import {IFaceAttribute, IVertexAttribute} from "../../core/interfaces/attributes.js";
 
 
 export class VertexPositions2D extends Positions2D implements IVertexAttribute<Position2D, ATTRIBUTE.position>

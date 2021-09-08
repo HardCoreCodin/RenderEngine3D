@@ -1,6 +1,6 @@
 import Vector2D from "./vector2D.js";
 import Vector3D from "./vector3D.js";
-import {IUV2D, IUV3D} from "../core/_interfaces/vectors.js";
+import {IUV2D, IUV3D} from "../core/interfaces/vectors.js";
 
 export class UV2D extends Vector2D<UV2D> implements IUV2D
 {

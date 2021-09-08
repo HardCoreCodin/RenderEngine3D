@@ -1,10 +1,10 @@
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import GLViewport from "./viewport.js";
-import GLMeshBuffers from "./_core/mesh_buffers.js";
+import GLMeshBuffers from "./core/mesh_buffers.js";
 import GLMaterial from "./materials/_base.js";
-import BaseRenderPipeline from "../../_base/pipelines.js";
-import {IMesh} from "../../../core/_interfaces/geometry.js";
-import {IRasterRenderPipeline} from "../../../core/_interfaces/render.js";
+import BaseRenderPipeline from "../../base/pipelines.js";
+import {IMesh} from "../../../core/interfaces/geometry.js";
+import {IRasterRenderPipeline} from "../../../core/interfaces/render.js";
 
 
 export default class GLRenderPipeline

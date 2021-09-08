@@ -1,4 +1,4 @@
-import {IViewport} from "../core/_interfaces/render.js";
+import {IViewport} from "../core/interfaces/render.js";
 import {Position3D} from "../accessors/position.js";
 import {Direction3D} from "../accessors/direction.js";
 

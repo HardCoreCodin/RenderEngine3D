@@ -1,7 +1,7 @@
 import GLMaterial from "./materials/_base.js";
 import GLRenderPipeline from "./pipeline.js";
 import GLViewport from "./viewport.js";
-import RenderEngine from "../../_base/engine.js";
+import RenderEngine from "../../base/engine.js";
 import { FPSController } from "../../../input/controllers.js";
 export default class GLRenderEngine extends RenderEngine {
     constructor(parent_element, Controller = FPSController) {

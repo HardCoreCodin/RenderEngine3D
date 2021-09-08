@@ -1,5 +1,5 @@
-import BaseViewport from "../_base/viewport.js";
-import RenderTarget from "../_base/render_target.js";
+import BaseViewport from "../base/viewport.js";
+import RenderTarget from "../base/render_target.js";
 import { SWBorder, SWGrid } from "../raster/software/viewport.js";
 import { ProjectionPlane } from "../../buffers/rays.js";
 import { MAX_RENDER_TARGET_SIZE } from "../../core/constants.js";

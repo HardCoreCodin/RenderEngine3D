@@ -1,15 +1,15 @@
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import {FlagsBuffer2D} from "../../../buffers/flags.js";
 import {Positions4D} from "../../../buffers/vectors.js";
-import {Border, Grid} from "../../_base/viewport.js";
-import RasterViewport from "../_base/viewport.js";
-import RenderTarget from "../../_base/render_target.js";
-import {projectAllVertexPositions, projectSomeVertexPositions} from "./_core/half_space.js";
-import {cullVertices} from "./_core/cull.js";
+import {Border, Grid} from "../../base/viewport.js";
+import RasterViewport from "../base/viewport.js";
+import RenderTarget from "../../base/render_target.js";
+import {projectAllVertexPositions, projectSomeVertexPositions} from "./core/half_space.js";
+import {cullVertices} from "./core/cull.js";
 import {ABOVE, BELOW, CLIP, CULL, FAR, LEFT, NDC, NEAR, RIGHT} from "../../../core/constants.js";
 import {Position4D} from "../../../accessors/position.js";
 import {dir4} from "../../../accessors/direction.js";
-import {ISize} from "../../../core/_interfaces/render.js";
+import {ISize} from "../../../core/interfaces/render.js";
 
 export default class SoftwareRasterViewport extends RasterViewport<CanvasRenderingContext2D, SWGrid, SWBorder>
 {

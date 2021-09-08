@@ -2,7 +2,7 @@ import Node3D from "./_base.js";
 import Matrix4x4 from "../accessors/matrix4x4.js";
 import Scene from "./scene.js";
 import Mesh from "../geometry/mesh.js";
-import {IMaterial, IMeshCallback} from "../core/_interfaces/render.js";
+import {IMaterial, IMeshCallback} from "../core/interfaces/render.js";
 
 
 abstract class BaseGeometry<Context extends RenderingContext = RenderingContext>

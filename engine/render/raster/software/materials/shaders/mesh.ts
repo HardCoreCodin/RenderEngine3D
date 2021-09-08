@@ -5,7 +5,7 @@ import {VertexPositions4D} from "../../../../../buffers/attributes/positions.js"
 import {CULL, INSIDE} from "../../../../../core/constants.js";
 import {CUBE_VERTEX_COUNT} from "../../../../../geometry/cube.js";
 import {FlagsBuffer1D} from "../../../../../buffers/flags.js";
-import {cullFaces, cullVertices} from "../../_core/cull.js";
+import {cullFaces, cullVertices} from "../../core/cull.js";
 
 export type IMeshShader = (mesh: Mesh, model_to_clip: Matrix4x4, clip_space_vertex_positions: VertexPositions4D) => number;
 

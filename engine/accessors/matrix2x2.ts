@@ -27,7 +27,7 @@ import {
     transpose_a_2x2_matrix_in_place,
     transpose_a_2x2_matrix_to_out
 } from "../core/math/mat2.js";
-import {IMatrix2x2} from "../core/_interfaces/matrix.js";
+import {IMatrix2x2} from "../core/interfaces/matrix.js";
 
 export default class Matrix2x2 extends Matrix implements IMatrix2x2 {
     readonly x_axis: Direction2D;

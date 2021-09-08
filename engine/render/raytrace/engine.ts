@@ -1,9 +1,9 @@
 import RayTracer from "./pipeline.js";
-import RenderEngine from "../_base/engine.js";
+import RenderEngine from "../base/engine.js";
 import RayTraceViewport from "./viewport.js";
 import RayTraceMaterial from "./materials/_base.js";
 import {FPSController} from "../../input/controllers.js";
-import {ControllerConstructor} from "../../core/_interfaces/input.js";
+import {ControllerConstructor} from "../../core/interfaces/input.js";
 
 
 export default class RayTraceEngine extends RenderEngine

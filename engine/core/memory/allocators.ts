@@ -1,5 +1,5 @@
 import {DIM} from "../constants.js";
-import {IAllocator} from "../_interfaces/allocators.js";
+import {IAllocator} from "../interfaces/allocators.js";
 import {TypedArray, TypedArrayConstructor} from "../types.js";
 
 const MEMORY_SIZE = 2**30;

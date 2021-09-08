@@ -1,6 +1,6 @@
 import Vector3D from "./vector3D.js";
 import Vector4D from "./vector4D.js";
-import {IColor3D, IColor4D} from "../core/_interfaces/vectors.js";
+import {IColor3D, IColor4D} from "../core/interfaces/vectors.js";
 
 export class Color3D extends Vector3D<Color3D> implements IColor3D
 {

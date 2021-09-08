@@ -1,11 +1,11 @@
-import GLProgram from "./_core/program.js";
-import {GLVertexArray} from "./_core/buffers.js";
-import {Border, Grid} from "../../_base/viewport.js";
+import GLProgram from "./core/program.js";
+import {GLVertexArray} from "./core/buffers.js";
+import {Border, Grid} from "../../base/viewport.js";
 import RasterViewport, {
     OrthographicProjectionMatrix,
     PerspectiveProjectionMatrix
-} from "../_base/viewport.js";
-import {IGLBuffer, IGLUniform} from "./_core/types.js";
+} from "../base/viewport.js";
+import {IGLBuffer, IGLUniform} from "./core/types.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 
 

@@ -18,7 +18,7 @@ import {
     subtract_a_number_from_a_4D_vector_in_place,
     subtract_a_number_from_a_4D_vector_to_out
 } from "../core/math/vec4.js";
-import {I4D, IVector4D} from "../core/_interfaces/vectors.js";
+import {I4D, IVector4D} from "../core/interfaces/vectors.js";
 
 export default abstract class Vector4D<Other extends Accessor = Accessor>
     extends Vector<Other>

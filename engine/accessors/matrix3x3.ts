@@ -42,7 +42,7 @@ import {
     transpose_a_3x3_matrix_in_place,
     transpose_a_3x3_matrix_to_out
 } from "../core/math/mat3.js";
-import {IMatrix3x3} from "../core/_interfaces/matrix.js";
+import {IMatrix3x3} from "../core/interfaces/matrix.js";
 
 export default class Matrix3x3 extends RotationMatrix implements IMatrix3x3 {
     readonly translation: Position3D;

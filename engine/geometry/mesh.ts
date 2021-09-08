@@ -5,9 +5,9 @@ import {MeshInputs} from "./inputs.js";
 import {MeshOptions} from "./options.js";
 import {FaceVerticesInt32, VertexFacesInt32} from "./indices.js";
 import {ATTRIBUTE, COLOR_SOURCING, DIM, NORMAL_SOURCING} from "../core/constants.js";
-import {IMesh} from "../core/_interfaces/geometry.js";
-import {IMeshCallback} from "../core/_interfaces/render.js";
-import {IFaceVertices, IVertexFaces} from "../core/_interfaces/buffers.js";
+import {IMesh} from "../core/interfaces/geometry.js";
+import {IMeshCallback} from "../core/interfaces/render.js";
+import {IFaceVertices, IVertexFaces} from "../core/interfaces/buffers.js";
 
 
 export default class Mesh

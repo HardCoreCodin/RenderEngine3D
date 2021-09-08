@@ -2,7 +2,7 @@ import { Bounds4D } from "../../../../../geometry/bounds.js";
 import { CULL, INSIDE } from "../../../../../core/constants.js";
 import { CUBE_VERTEX_COUNT } from "../../../../../geometry/cube.js";
 import { FlagsBuffer1D } from "../../../../../buffers/flags.js";
-import { cullFaces, cullVertices } from "../../_core/cull.js";
+import { cullFaces, cullVertices } from "../../core/cull.js";
 const shadeMesh = (mesh, model_to_clip, clip_space_vertex_positions) => {
     // Transform the mesh's vertex positions into clip space:
     mesh.vertices.positions.mul(model_to_clip, clip_space_vertex_positions);

@@ -1,6 +1,6 @@
 import {TypedArray} from "../types.js";
-import {IBuffer} from "../_interfaces/buffers.js";
-import {IAllocator} from "../_interfaces/allocators.js";
+import {IBuffer} from "../interfaces/buffers.js";
+import {IAllocator} from "../interfaces/allocators.js";
 
 export default abstract class Buffer<ArrayType extends TypedArray> implements IBuffer<ArrayType> {
     protected _length: number;

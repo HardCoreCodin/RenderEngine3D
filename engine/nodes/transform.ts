@@ -1,6 +1,6 @@
 import Matrix4x4 from "../accessors/matrix4x4.js";
-import {I2D, I3D} from "../core/_interfaces/vectors.js";
-import {IEulerRotation, IScale, ITransform} from "../core/_interfaces/transform.js";
+import {I2D, I3D} from "../core/interfaces/vectors.js";
+import {IEulerRotation, IScale, ITransform} from "../core/interfaces/transform.js";
 import {mat3} from "../accessors/matrix3x3.js";
 import {dir3} from "../accessors/direction.js";
 

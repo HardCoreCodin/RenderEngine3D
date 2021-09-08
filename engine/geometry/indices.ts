@@ -11,7 +11,7 @@ import {
     VERTEX_FACES_ALLOCATOR_INT32,
     VERTEX_FACES_ALLOCATOR_INT8
 } from "../core/memory/allocators.js";
-import {IFaceVertices, IFromToIndices, IVertexFaces} from "../core/_interfaces/buffers.js";
+import {IFaceVertices, IFromToIndices, IVertexFaces} from "../core/interfaces/buffers.js";
 import {zip} from "../core/utils.js";
 
 

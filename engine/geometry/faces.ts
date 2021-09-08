@@ -8,7 +8,7 @@ import {
 } from "../buffers/attributes/positions.js";
 import {FaceNormals3D, FaceNormals4D} from "../buffers/attributes/normals.js";
 import {FaceColors3D, FaceColors4D, VertexColors3D, VertexColors4D} from "../buffers/attributes/colors.js";
-import {IFaceVertices} from "../core/_interfaces/buffers.js";
+import {IFaceVertices} from "../core/interfaces/buffers.js";
 import {ATTRIBUTE, DIM} from "../core/constants.js";
 
 

@@ -18,7 +18,7 @@ import {
     subtract_a_number_from_a_2D_vector_in_place,
     subtract_a_number_from_a_2D_vector_to_out
 } from "../core/math/vec2.js";
-import {I2D, IVector2D} from "../core/_interfaces/vectors.js";
+import {I2D, IVector2D} from "../core/interfaces/vectors.js";
 
 export default abstract class Vector2D<Other extends Accessor = Accessor>
     extends Vector<Other>

@@ -1,7 +1,7 @@
 import {Allocator, U32_4D_ALLOCATOR} from "../core/memory/allocators.js";
-import {IAccessor} from "../core/_interfaces/accessors.js";
-import {IVector} from "../core/_interfaces/vectors.js";
-import {IFlags} from "../core/_interfaces/flags.js";
+import {IAccessor} from "../core/interfaces/accessors.js";
+import {IVector} from "../core/interfaces/vectors.js";
+import {IFlags} from "../core/interfaces/flags.js";
 import {TypedArray} from "../core/types.js";
 import {Flags3D} from "./flags.js";
 
