@@ -33,6 +33,7 @@ export default class Node3D extends Parent {
         this.scene = scene;
         this.transform = new Transform();
         this.model_to_world = new Matrix4x4();
+        this.world_to_model = new Matrix4x4();
         this._is_static = false;
         this._parent = scene;
         scene.addChild(this);
@@ -74,6 +75,7 @@ export default class Node3D extends Parent {
                 this.transform.matrix.mul(this._parent.model_to_world, this.model_to_world);
             else
                 this.model_to_world.setFrom(this.transform.matrix);
+            this.model_to_world.invert(this.world_to_model);
             this.postWorldMatrixRefresh();
         }
         if (recurse && this.child_count)

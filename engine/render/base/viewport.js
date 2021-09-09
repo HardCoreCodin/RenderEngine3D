@@ -1,6 +1,8 @@
 import Rectangle from "./rectangle.js";
 import { rgba } from "../../accessors/color.js";
 import { VertexPositions2D, VertexPositions3D } from "../../buffers/attributes/positions.js";
+import { Position3D } from "../../accessors/position.js";
+import { Direction3D } from "../../accessors/direction.js";
 export default class BaseViewport extends Rectangle {
     constructor(_controller, _render_pipeline, _display) {
         super(_display.size, _display.position);
@@ -96,6 +98,25 @@ export class Grid extends Overlay {
             grid[offset + 5] = grid[offset + v + 3] = left_and_back;
             offset += 6;
         }
+    }
+}
+const forward = new Direction3D();
+export class ProjectionPlane {
+    constructor(start = new Position3D(), right = new Direction3D(), down = new Direction3D()) {
+        this.start = start;
+        this.right = right;
+        this.down = down;
+    }
+    reset(viewport) {
+        let camera = viewport.controller.camera;
+        camera.transform.matrix.x_axis.mul(1 - viewport.width, this.right);
+        camera.transform.matrix.y_axis.mul(viewport.height - 2, this.down);
+        camera.transform.matrix.z_axis.mul(viewport.width * camera.lense.focal_length, forward);
+        camera.transform.translation.add(forward, this.start);
+        this.start.iadd(this.right);
+        this.start.iadd(this.down);
+        camera.transform.matrix.x_axis.mul(2, this.right);
+        camera.transform.matrix.y_axis.mul(-2, this.down);
     }
 }
 //# sourceMappingURL=viewport.js.map

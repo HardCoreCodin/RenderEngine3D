@@ -211,10 +211,10 @@ export const multiply_a_3D_position_by_a_4x4_matrix_to_out3 = (a, m, o) => {
     o[2] = a[0] * m[2] + a[1] * m[6] + a[2] * m[10] + m[14];
 };
 export const multiply_a_3D_position_by_a_4x4_matrix_to_out4 = (a, m, o) => {
-    o[0] = a[0] * m[0] + a[1] * m[4] + a[2] * m[8] + m[13];
-    o[1] = a[0] * m[1] + a[1] * m[5] + a[2] * m[9] + m[14];
-    o[2] = a[0] * m[2] + a[1] * m[6] + a[2] * m[11] + m[15];
-    o[3] = a[0] * m[3] + a[1] * m[7] + a[2] * m[12] + m[16];
+    o[0] = a[0] * m[0] + a[1] * m[4] + a[2] * m[8] + m[12];
+    o[1] = a[0] * m[1] + a[1] * m[5] + a[2] * m[9] + m[13];
+    o[2] = a[0] * m[2] + a[1] * m[6] + a[2] * m[10] + m[14];
+    o[3] = a[0] * m[3] + a[1] * m[7] + a[2] * m[11] + m[15];
 };
 // ALL:
 // ====

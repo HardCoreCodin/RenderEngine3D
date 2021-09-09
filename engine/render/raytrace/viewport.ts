@@ -1,7 +1,6 @@
-import BaseViewport from "../base/viewport.js";
+import BaseViewport, {ProjectionPlane} from "../base/viewport.js";
 import RenderTarget from "../base/render_target.js";
 import {SWBorder, SWGrid} from "../raster/software/viewport.js";
-import {ProjectionPlane} from "../../buffers/rays.js";
 import {MAX_RENDER_TARGET_SIZE} from "../../core/constants.js";
 import {UINT32_ALLOCATOR} from "../../core/memory/allocators.js";
 
@@ -30,7 +29,7 @@ export default class RayTraceViewport
 
         this.pixels = this._all_pixels.subarray(0, width * height);
         this.render_target.reset();
-        this.projection_plane.reset();
+        this.projection_plane.reset(this);
     }
 
     refresh() {

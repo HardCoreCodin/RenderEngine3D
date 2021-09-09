@@ -40,6 +40,7 @@ export class Parent
 export default class Node3D extends Parent implements Node3D {
     readonly transform = new Transform();
     readonly model_to_world = new Matrix4x4();
+    readonly world_to_model = new Matrix4x4();
 
     protected _is_static = false;
     protected _parent: Node3D | Scene;
@@ -97,6 +98,7 @@ export default class Node3D extends Parent implements Node3D {
             else
                 this.model_to_world.setFrom(this.transform.matrix);
 
+            this.model_to_world.invert(this.world_to_model);
             this.postWorldMatrixRefresh();
         }
 

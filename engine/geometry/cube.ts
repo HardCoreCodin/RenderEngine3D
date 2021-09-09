@@ -4,7 +4,7 @@ import {MeshInputs} from "./inputs.js";
 import {ATTRIBUTE, COLOR_SOURCING, NORMAL_SOURCING} from "../core/constants.js";
 import {FaceVerticesInt8, VertexFacesInt8} from "./indices.js";
 
-export const inputs = new MeshInputs(ATTRIBUTE.position|ATTRIBUTE.uv);
+export const inputs = new MeshInputs(ATTRIBUTE.position|ATTRIBUTE.uv|ATTRIBUTE.normal);
 
 // Quads vertex/index array (CCW LH):
 // X coordinates (0 = left, 1 = right)
@@ -40,6 +40,21 @@ inputs.uv.addFace(0, 1, 2, 3);
 inputs.uv.addFace(0, 1, 2, 3);
 inputs.uv.addFace(0, 1, 2, 3);
 
+// Normals:
+inputs.normal.addVertex(0, 0, -1);
+inputs.normal.addVertex(1, 0, 0);
+inputs.normal.addVertex(0, 0, +1);
+inputs.normal.addVertex(-1, 0, 0);
+inputs.normal.addVertex(0, 1, 0);
+inputs.normal.addVertex(0, -1, 0);
+
+inputs.normal.addFace(0, 0, 0, 0);
+inputs.normal.addFace(1, 1, 1, 1);
+inputs.normal.addFace(2, 2, 2, 2);
+inputs.normal.addFace(3, 3, 3, 3);
+inputs.normal.addFace(4, 4, 4, 4);
+inputs.normal.addFace(5, 5, 5, 5);
+
 inputs.sanitize();
 
 // Cube inputs:
@@ -51,7 +66,7 @@ export const CUBE_VERTEX_FACES = new VertexFacesInt8().load(CUBE_FACE_VERTICES, 
 // Mesh options:
 const defaults = new MeshOptions(
     0,
-    NORMAL_SOURCING.NO_VERTEX__GENERATE_FACE,
+    NORMAL_SOURCING.LOAD_VERTEX__NO_FACE,
     COLOR_SOURCING.NO_VERTEX__GENERATE_FACE,
     true
 );

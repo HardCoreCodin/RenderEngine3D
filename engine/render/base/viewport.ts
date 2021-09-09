@@ -1,8 +1,10 @@
 import Rectangle from "./rectangle.js";
 import {rgba} from "../../accessors/color.js";
-import {IRenderPipeline, IDisplay, IViewport} from "../../core/interfaces/render.js";
+import {IDisplay, IRenderPipeline, IViewport} from "../../core/interfaces/render.js";
 import {IController} from "../../core/interfaces/input.js";
 import {VertexPositions2D, VertexPositions3D} from "../../buffers/attributes/positions.js";
+import {Position3D} from "../../accessors/position.js";
+import {Direction3D} from "../../accessors/direction.js";
 
 export default abstract class BaseViewport<
     Context extends RenderingContext,
@@ -140,5 +142,27 @@ export abstract class Grid extends Overlay {
             grid[offset + 5] = grid[offset + v + 3] = left_and_back;
             offset += 6;
         }
+    }
+}
+
+const forward = new Direction3D();
+
+export class ProjectionPlane {
+    constructor(
+        public start: Position3D = new Position3D(),
+        public right: Direction3D = new Direction3D(),
+        public down: Direction3D = new Direction3D()
+    ) {}
+
+    reset(viewport: IViewport) {
+        let camera = viewport.controller.camera;
+        camera.transform.matrix.x_axis.mul(1 - viewport.width, this.right);
+        camera.transform.matrix.y_axis.mul(viewport.height - 2, this.down);
+        camera.transform.matrix.z_axis.mul(viewport.width * camera.lense.focal_length, forward);
+        camera.transform.translation.add(forward, this.start);
+        this.start.iadd(this.right);
+        this.start.iadd(this.down);
+        camera.transform.matrix.x_axis.mul(2, this.right);
+        camera.transform.matrix.y_axis.mul(-2, this.down);
     }
 }

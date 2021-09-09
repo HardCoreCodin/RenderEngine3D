@@ -1,5 +1,4 @@
 import { NDC } from "../../../../core/constants.js";
-import { Color4D } from "../../../../accessors/color.js";
 import { drawPixel } from "../../../../core/utils.js";
 const projectVertex = (vertex, half_width, half_height) => {
     // The perspective divide should finalize normalizing the depth values
@@ -53,24 +52,17 @@ export const projectFaceVertexPositions = (arrays, face_count, face_flags, face_
         else
             vertex_index += 3;
 };
-const perspectiveCorrectVertexAttribute = (vectors, outs, ONE_OVER_WS, vertex_flags) => {
-    let j, i = 0;
-    let one_over_ws;
-    for (const out of outs)
-        if (vertex_flags[i] & NDC) {
-            one_over_ws = ONE_OVER_WS[i];
-            j = 0;
-            for (const component of vectors[i])
-                out[j++] = component * one_over_ws;
-        }
-};
 const max = Math.max;
 const min = Math.min;
-const pixel_color = new Color4D();
-export const shadeFace = (shader, inputs, depths, pixels, v1, v2, v3, normals, uvs) => {
+// const viewing_direction = new Direction3D();
+export const shadeFace = (shader, pixel, image_size, camera_position, lights, depths, pixels, v1, v2, v3, v1_position, v2_position, v3_position, 
+// start: Float32Array,
+// right: Float32Array,
+// down: Float32Array,
+v1_normal, v2_normal, v3_normal, v1_uv, v2_uv, v3_uv, has_normals, has_uvs) => {
     let pixel_depth, z;
-    const screen_width = inputs.image_size.width;
-    const screen_height = inputs.image_size.height;
+    const screen_width = image_size.width;
+    const screen_height = image_size.height;
     const Ax = v1[0];
     const Bx = v2[0];
     const Cx = v3[0];
@@ -119,6 +111,11 @@ export const shadeFace = (shader, inputs, depths, pixels, v1, v2, v3, normals, u
     const w1 = v1[3];
     const w2 = v2[3];
     const w3 = v3[3];
+    // for (let i = 0; i < 3; i++) {
+    //     v1_position[i] *= w1;
+    //     v2_position[i] *= w2;
+    //     v3_position[i] *= w3;
+    // }
     // Pre-compute barycentric weight constants for depth and one-over-ws:
     const z1 = v1[2];
     const z2 = v2[2];
@@ -140,7 +137,7 @@ export const shadeFace = (shader, inputs, depths, pixels, v1, v2, v3, normals, u
     // Compute initial areal coordinates for the first pixel center:
     let C_start = Cdx * (min_x + 0.5) + Cdy * (min_y + 0.5) + (Ay * Bx - Ax * By) * one_over_ABC;
     let B_start = Bdx * (min_x + 0.5) + Bdy * (min_y + 0.5) + (Cy * Ax - Cx * Ay) * one_over_ABC;
-    let A, B, C, Ap, Bp, Cp, one_over_length;
+    let nx, ny, nz, A, B, C, Ap, Bp, Cp, one_over_length;
     // Scan the bounds:
     for (let y = min_y; y <= max_y; y++, C_start += Cdy, B_start += Bdy, pixel_start += screen_width) {
         // if (Bdy < 0 && B_start < 0 ||
@@ -165,27 +162,30 @@ export const shadeFace = (shader, inputs, depths, pixels, v1, v2, v3, normals, u
                 pixel_depth > depths[pixel_index])
                 continue;
             z = 1.0 / (A * w1 + B * w2 + C * w3);
-            inputs.perspective_corrected_barycentric_coords.A = Ap = A * w1 * z;
-            inputs.perspective_corrected_barycentric_coords.B = Bp = B * w2 * z;
-            inputs.perspective_corrected_barycentric_coords.C = Cp = C * w3 * z;
-            inputs.pixel_coords.x = x;
-            inputs.pixel_coords.y = y;
-            inputs.pixel_depth = depths[pixel_index] = pixel_depth;
-            if (normals) {
-                inputs.normal[0] = normals[0][0] * Ap + normals[1][0] * Bp + normals[2][0] * Cp;
-                inputs.normal[1] = normals[0][1] * Ap + normals[1][1] * Bp + normals[2][1] * Cp;
-                inputs.normal[2] = normals[0][2] * Ap + normals[1][2] * Bp + normals[2][2] * Cp;
-                one_over_length = 1.0 / Math.sqrt(inputs.normal[0] * inputs.normal[0] + inputs.normal[1] * inputs.normal[1] + inputs.normal[2] * inputs.normal[2]);
-                inputs.normal[0] *= one_over_length;
-                inputs.normal[1] *= one_over_length;
-                inputs.normal[2] *= one_over_length;
+            pixel.perspective_corrected_barycentric_coords.A = Ap = A * w1 * z;
+            pixel.perspective_corrected_barycentric_coords.B = Bp = B * w2 * z;
+            pixel.perspective_corrected_barycentric_coords.C = Cp = C * w3 * z;
+            pixel.coords.x = x;
+            pixel.coords.y = y;
+            pixel.depth = depths[pixel_index] = pixel_depth;
+            pixel.position.array[0] = v1_position[0] * Ap + v2_position[0] * Bp + v3_position[0] * Cp;
+            pixel.position.array[1] = v1_position[1] * Ap + v2_position[1] * Bp + v3_position[1] * Cp;
+            pixel.position.array[2] = v1_position[2] * Ap + v2_position[2] * Bp + v3_position[2] * Cp;
+            if (has_normals) {
+                nx = v1_normal[0] * Ap + v2_normal[0] * Bp + v3_normal[0] * Cp;
+                ny = v1_normal[1] * Ap + v2_normal[1] * Bp + v3_normal[1] * Cp;
+                nz = v1_normal[2] * Ap + v2_normal[2] * Bp + v3_normal[2] * Cp;
+                one_over_length = 1.0 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+                pixel.normal.array[0] = nx * one_over_length;
+                pixel.normal.array[1] = ny * one_over_length;
+                pixel.normal.array[2] = nz * one_over_length;
             }
-            if (uvs) {
-                inputs.uv[0] = uvs[0][0] * Ap + uvs[1][0] * Bp + uvs[2][0] * Cp;
-                inputs.uv[1] = uvs[0][1] * Ap + uvs[1][1] * Bp + uvs[2][1] * Cp;
+            if (has_uvs) {
+                pixel.uv.array[0] = v1_uv[0] * Ap + v2_uv[0] * Bp + v3_uv[0] * Cp;
+                pixel.uv.array[1] = v1_uv[1] * Ap + v2_uv[1] * Bp + v3_uv[1] * Cp;
             }
-            shader(inputs, pixel_color);
-            drawPixel(pixels, pixel_index, pixel_color.r, pixel_color.g, pixel_color.b, pixel_color.a);
+            shader(pixel, image_size, camera_position, lights);
+            drawPixel(pixels, pixel_index, pixel.color.r, pixel.color.g, pixel.color.b, pixel.color.a);
         }
     }
 };

@@ -3,6 +3,7 @@ import {CLIP, CULL, INEXTRA, INSIDE, NEAR} from "../../../../core/constants.js";
 export type IAttributeBuffers = [Float32Array[], Uint32Array[], Float32Array[], boolean];
 
 export const clipFaces = <FaceVerticesArrayType extends Uint8Array|Uint16Array|Uint32Array = Uint32Array>(
+    positions: Float32Array[], // float3[]
     vertices: Float32Array[], // float4[]
     face_vertex_indices: FaceVerticesArrayType[], // uint3[]
     vertex_flags: Uint8Array,

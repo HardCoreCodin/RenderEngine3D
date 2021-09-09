@@ -14,7 +14,7 @@ import {
 } from "../../core/interfaces/render.js";
 import {non_zero} from "../../core/utils.js";
 import {Color4D} from "../../accessors/color.js";
-import {IPixelShaderInputs} from "../raster/software/materials/shaders/pixel.js";
+import {IPixel} from "../raster/software/materials/shaders/pixel.js";
 
 export type UpdateCallback<Context extends RenderingContext = CanvasRenderingContext2D> = (
     scene: Scene<Context>,

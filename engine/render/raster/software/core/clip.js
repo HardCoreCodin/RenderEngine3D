@@ -1,5 +1,6 @@
 import { CLIP, INEXTRA, INSIDE, NEAR } from "../../../../core/constants.js";
-export const clipFaces = (vertices, // float4[]
+export const clipFaces = (positions, // float3[]
+vertices, // float4[]
 face_vertex_indices, // uint3[]
 vertex_flags, face_flags, near_clipping_plane_distance, pz, clipped_faces_vertex_positions, attributes) => {
     // Break each face that needs to be clipped into smaller output triangle(s).
