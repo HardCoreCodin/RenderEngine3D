@@ -125,4 +125,5 @@ globalThis.engine.update_callbacks.add((scene, delta_time: number, elapsed_time:
 });
 
 (globalThis.engine.display.active_viewport as SoftwareRasterViewport).view_frustum.near = 1;
+(globalThis.engine.display.active_viewport as SoftwareRasterViewport).show_wire_frame = false;
 globalThis.engine.start();

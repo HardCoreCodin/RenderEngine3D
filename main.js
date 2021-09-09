@@ -97,5 +97,6 @@ globalThis.engine.update_callbacks.add((scene, delta_time, elapsed_time) => {
     light2.transform.translation.y = 2 + Math.cos(elapsed_time / 500);
 });
 globalThis.engine.display.active_viewport.view_frustum.near = 1;
+globalThis.engine.display.active_viewport.show_wire_frame = false;
 globalThis.engine.start();
 //# sourceMappingURL=main.js.map
