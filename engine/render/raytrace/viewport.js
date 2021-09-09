@@ -6,13 +6,13 @@ import { UINT32_ALLOCATOR } from "../../core/memory/allocators.js";
 export default class RayTraceViewport extends BaseViewport {
     _init() {
         this.render_target = new RenderTarget(this);
-        this.projection_plane = new ProjectionPlane(this);
+        this.projection_plane = new ProjectionPlane();
         this._all_pixels = UINT32_ALLOCATOR.allocateBuffer(MAX_RENDER_TARGET_SIZE)[0];
         super._init();
     }
     update() {
         if (this._controller.direction_changed)
-            this.projection_plane.reset();
+            this.projection_plane.reset(this);
     }
     reset(width, height, x, y) {
         super.setTo(width, height, x, y);

@@ -14,14 +14,14 @@ export default class RayTraceViewport
 
     protected _init(): void {
         this.render_target = new RenderTarget(this);
-        this.projection_plane = new ProjectionPlane(this);
+        this.projection_plane = new ProjectionPlane();
         this._all_pixels = UINT32_ALLOCATOR.allocateBuffer(MAX_RENDER_TARGET_SIZE)[0];
         super._init();
     }
 
     update(): void {
         if (this._controller.direction_changed)
-            this.projection_plane.reset();
+            this.projection_plane.reset(this);
     }
 
     reset(width: number, height: number, x: number, y: number): void {
