@@ -13,17 +13,12 @@ import { Color4D, rgba } from "../../../accessors/color.js";
 import { Direction3D } from "../../../accessors/direction.js";
 import { UV2D } from "../../../accessors/uv.js";
 import { Position3D } from "../../../accessors/position.js";
-// import {Position3D} from "../../../accessors/position.js";
-// import {ProjectionPlane} from "../../base/viewport.js";
 export default class Rasterizer extends BaseRenderPipeline {
     constructor() {
         super(...arguments);
         this.model_to_clip = new Matrix4x4();
         this.clip_to_model = new Matrix4x4();
         this.light_to_model = new Matrix4x4();
-        // readonly position = new Position3D();
-        // readonly projection_plane = new ProjectionPlane();
-        // readonly projection_plane_object_space = new ProjectionPlane();
         this.current_max_face_count = 0;
         this.current_max_vertex_count = 0;
         this.depth_buffer = new Float32Array(MAX_RENDER_TARGET_SIZE);
@@ -59,7 +54,7 @@ export default class Rasterizer extends BaseRenderPipeline {
             this.clip_space_vertex_positions.init(max_vertex_count);
             this.clipped_vertex_positions.init(max_face_count * 6);
             this.clipped_vertex_normals.init(max_face_count * 6 + 1);
-            this.clipped_vertex_uvs.init(max_face_count * 4 + 1);
+            this.clipped_vertex_uvs.init(max_face_count * 4 + 2);
             this.object_space_vertex_positions.init(max_face_count * 6 + 2);
         }
     }
@@ -68,7 +63,6 @@ export default class Rasterizer extends BaseRenderPipeline {
             return;
         viewport.render_target.clear();
         this._updateClippingBuffers();
-        // this.projection_plane.reset(viewport);
         let mesh;
         let mesh_geometry;
         const half_width = viewport.size.width >>> 1;
@@ -88,18 +82,24 @@ export default class Rasterizer extends BaseRenderPipeline {
         let result, face_index, vertex_index, face_count, vertex_count, light_index, current_face_flags, v1_index, v2_index, v3_index;
         const pz = viewport.projection_matrix.translation.z;
         this.depth_buffer.fill(2);
+        const surface = {
+            position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 1]),
+            normal: new Direction3D(this.clipped_vertex_normals.arrays[this.clipped_vertex_normals.arrays.length - 1]),
+            UV: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 1]),
+            dUV: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 2]),
+            material: null
+        };
+        const pixel_scene = {
+            camera_position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 2]),
+            lights: this.scene.lights
+        };
         const pixel = {
+            image_size: viewport.size,
             coords: { x: 0, y: 0 },
             depth: 0,
             perspective_corrected_barycentric_coords: { A: 0, B: 0, C: 0 },
-            position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 1]),
-            normal: new Direction3D(this.clipped_vertex_normals.arrays[this.clipped_vertex_normals.arrays.length - 1]),
-            uv: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 1]),
-            color: new Color4D()
+            color: new Color4D(),
         };
-        const image_size = viewport.size;
-        const lights = this.scene.lights;
-        const camera_position = new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 2]);
         const context = viewport.render_target.context;
         const wire_frame_color = `${rgba(1)}`;
         const wire_frame_clipped_color = `${rgba(1, 0, 0)}`;
@@ -107,6 +107,7 @@ export default class Rasterizer extends BaseRenderPipeline {
         let mesh_has_normals, mesh_has_uvs;
         for (const material of this.scene.materials)
             if (material instanceof SoftwareRasterMaterial) {
+                surface.material = material.params;
                 for (mesh of material.mesh_geometries.meshes) {
                     mesh_has_normals = mesh.options.normal >= 2 /* LOAD_VERTEX__NO_FACE */;
                     mesh_has_uvs = mesh.options.include_uvs;
@@ -172,12 +173,7 @@ export default class Rasterizer extends BaseRenderPipeline {
                                         light_position.array = this.scene.object_space_light_positions.arrays[light_index++];
                                         light.model_to_world.translation.matmul(mesh_geometry.world_to_model, light_position);
                                     }
-                                    // this.projection_plane.start.matmul(mesh_geometry.world_to_model, this.projection_plane_object_space.start);
-                                    // this.projection_plane.start.add(this.projection_plane.right, this.position).imatmul(mesh_geometry.world_to_model);
-                                    // this.projection_plane_object_space.start.to(this.position, this.projection_plane_object_space.right);
-                                    // this.projection_plane.start.add(this.projection_plane.down, this.position).imatmul(mesh_geometry.world_to_model);
-                                    // this.projection_plane_object_space.start.to(this.position, this.projection_plane_object_space.down);
-                                    viewport.controller.camera.transform.translation.matmul(mesh_geometry.world_to_model, camera_position);
+                                    viewport.controller.camera.transform.translation.matmul(mesh_geometry.world_to_model, pixel_scene.camera_position);
                                     vertex_index = 0;
                                     for (face_index = 0; face_index < face_count; face_index++) {
                                         current_face_flags = ff[face_index];
@@ -199,7 +195,7 @@ export default class Rasterizer extends BaseRenderPipeline {
                                                 context.stroke();
                                             }
                                             else {
-                                                shadeFace(material.pixel_shader, pixel, image_size, camera_position, lights, this.depth_buffer, viewport.render_target.array, v1, v2, v3, positions[v1_index], positions[v2_index], positions[v3_index], normals[v1_index], normals[v2_index], normals[v3_index], uvs[v1_index], uvs[v2_index], uvs[v3_index], mesh_has_normals, mesh_has_uvs);
+                                                shadeFace(material.pixel_shader, pixel, surface, pixel_scene, this.depth_buffer, viewport.render_target.array, v1, v2, v3, positions[v1_index], positions[v2_index], positions[v3_index], normals[v1_index], normals[v2_index], normals[v3_index], uvs[v1_index], uvs[v2_index], uvs[v3_index], mesh_has_normals, mesh_has_uvs);
                                             }
                                         }
                                     }

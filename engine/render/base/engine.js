@@ -72,7 +72,7 @@ export default class RenderEngine {
                 if (Object.is(controller, viewport.controller))
                     viewport.update();
         for (const update_callback of this.update_callbacks)
-            update_callback(this._scene, this._delta_time, time);
+            update_callback(this._delta_time, time);
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this._scene.children)
             node.refreshWorldMatrix();

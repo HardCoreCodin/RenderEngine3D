@@ -10,15 +10,15 @@ export const inputs = new MeshInputs(ATTRIBUTE.position|ATTRIBUTE.uv|ATTRIBUTE.n
 // X coordinates (0 = left, 1 = right)
 // Y coordinates (0 = bottom, 1 = top)
 // Z coordinates (0 = front, 1 = back)
-inputs.position.addVertex(0, 0, 0);
-inputs.position.addVertex(1, 0, 0);
-inputs.position.addVertex(1, 1, 0);
-inputs.position.addVertex(0, 1, 0);
+inputs.position.addVertex(-1, -1, -1);
+inputs.position.addVertex(1, -1, -1);
+inputs.position.addVertex(1, 1, -1);
+inputs.position.addVertex(-1, 1, -1);
 
-inputs.position.addVertex(0, 0, 1);
-inputs.position.addVertex(1, 0, 1);
+inputs.position.addVertex(-1, -1, 1);
+inputs.position.addVertex(1, -1, 1);
 inputs.position.addVertex(1, 1, 1);
-inputs.position.addVertex(0, 1, 1);
+inputs.position.addVertex(-1, 1, 1);
 
 inputs.position.addFace(0, 1, 2, 3);
 inputs.position.addFace(1, 5, 6, 2);

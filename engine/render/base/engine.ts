@@ -16,8 +16,7 @@ import {non_zero} from "../../core/utils.js";
 import {Color4D} from "../../accessors/color.js";
 import {IPixel} from "../raster/software/materials/shaders/pixel.js";
 
-export type UpdateCallback<Context extends RenderingContext = CanvasRenderingContext2D> = (
-    scene: Scene<Context>,
+export type UpdateCallback = (
     delta_time: number,
     elapsed_time: number
 ) => void;
@@ -25,7 +24,7 @@ export type UpdateCallback<Context extends RenderingContext = CanvasRenderingCon
 export default class RenderEngine<Context extends RenderingContext = CanvasRenderingContext2D>
     implements IRenderEngine<Context>
 {
-    public readonly update_callbacks = new Set<UpdateCallback<Context>>();
+    public readonly update_callbacks = new Set<UpdateCallback>();
     protected readonly _frame_request_callback: FrameRequestCallback;
 
     readonly canvas: HTMLCanvasElement;
@@ -122,7 +121,7 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
                     viewport.update();
 
         for (const update_callback of this.update_callbacks)
-            update_callback(this._scene, this._delta_time, time);
+            update_callback(this._delta_time, time);
 
         // update world-matrices for all dynamic nodes in the scene
         for (const node of this._scene.children)

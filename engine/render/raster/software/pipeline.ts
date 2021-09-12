@@ -1,7 +1,7 @@
 import Geometry from "../../../nodes/geometry.js";
 import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import SoftwareRasterViewport from "./viewport.js";
-import SoftwareRasterMaterial from "./materials/base.js";
+import SoftwareRasterMaterial, {IMaterialParams} from "./materials/base.js";
 import BaseRenderPipeline from "../../base/pipelines.js";
 import {VertexPositions3D, VertexPositions4D} from "../../../buffers/attributes/positions.js";
 import {CUBE_FACE_VERTICES, CUBE_VERTEX_COUNT} from "../../../geometry/cube.js";
@@ -14,14 +14,11 @@ import {projectFaceVertexPositions, projectSomeVertexPositions, shadeFace} from 
 import {Positions3D, UVs2D} from "../../../buffers/vectors.js";
 import {clipFaces, IAttributeBuffers} from "./core/clip.js";
 import {Color4D, rgba} from "../../../accessors/color.js";
-import {multiply_a_3D_position_by_a_4x4_matrix_to_out3} from "../../../core/math/vec3.js";
 import {Direction3D} from "../../../accessors/direction.js";
 import {UV2D} from "../../../accessors/uv.js";
-import {Position3D, Position4D} from "../../../accessors/position.js";
-import {IPixel} from "./materials/shaders/pixel.js";
+import {Position3D} from "../../../accessors/position.js";
+import {IPixel, IPixelScene, ISurface} from "./materials/shaders/pixel.js";
 import PointLight from "../../../nodes/light.js";
-// import {Position3D} from "../../../accessors/position.js";
-// import {ProjectionPlane} from "../../base/viewport.js";
 
 
 export default class Rasterizer
@@ -31,9 +28,6 @@ export default class Rasterizer
     readonly model_to_clip = new Matrix4x4();
     readonly clip_to_model = new Matrix4x4();
     readonly light_to_model = new Matrix4x4();
-    // readonly position = new Position3D();
-    // readonly projection_plane = new ProjectionPlane();
-    // readonly projection_plane_object_space = new ProjectionPlane();
 
     protected current_max_face_count: number = 0;
     protected current_max_vertex_count: number = 0;
@@ -75,7 +69,7 @@ export default class Rasterizer
             this.clip_space_vertex_positions.init(max_vertex_count);
             this.clipped_vertex_positions.init(max_face_count*6);
             this.clipped_vertex_normals.init(max_face_count*6 + 1);
-            this.clipped_vertex_uvs.init(max_face_count*4 + 1);
+            this.clipped_vertex_uvs.init(max_face_count*4 + 2);
             this.object_space_vertex_positions.init(max_face_count*6 + 2);
         }
     }
@@ -87,8 +81,6 @@ export default class Rasterizer
         viewport.render_target.clear();
 
         this._updateClippingBuffers();
-
-        // this.projection_plane.reset(viewport);
 
         let mesh: Mesh;
         let mesh_geometry: Geometry;
@@ -114,21 +106,26 @@ export default class Rasterizer
 
         this.depth_buffer.fill(2);
 
+        const surface: ISurface = {
+            position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 1]),
+            normal: new Direction3D(this.clipped_vertex_normals.arrays[this.clipped_vertex_normals.arrays.length - 1]),
+            UV: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 1]),
+            dUV: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 2]),
+            material: null
+        };
+
+        const pixel_scene: IPixelScene = {
+            camera_position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 2]),
+            lights: this.scene.lights
+        };
+
         const pixel: IPixel = {
+            image_size: viewport.size,
             coords: { x: 0, y: 0},
             depth: 0,
             perspective_corrected_barycentric_coords: { A: 0, B: 0, C: 0},
-
-            position: new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 1]),
-            normal: new Direction3D(this.clipped_vertex_normals.arrays[this.clipped_vertex_normals.arrays.length - 1]),
-            uv: new UV2D(this.clipped_vertex_uvs.arrays[this.clipped_vertex_uvs.arrays.length - 1]),
-
-            color: new Color4D()
+            color: new Color4D(),
         };
-
-        const image_size = viewport.size;
-        const lights = this.scene.lights;
-        const camera_position = new Position3D(this.object_space_vertex_positions.arrays[this.object_space_vertex_positions.arrays.length - 2]);
 
         const context = viewport.render_target.context;
         const wire_frame_color = `${rgba(1)}`;
@@ -137,6 +134,7 @@ export default class Rasterizer
         let mesh_has_normals, mesh_has_uvs: boolean;
 
         for (const material of this.scene.materials) if (material instanceof SoftwareRasterMaterial) {
+            surface.material = material.params;
             for (mesh of material.mesh_geometries.meshes) {
                 mesh_has_normals = mesh.options.normal >= NORMAL_SOURCING.LOAD_VERTEX__NO_FACE;
                 mesh_has_uvs = mesh.options.include_uvs;
@@ -205,13 +203,7 @@ export default class Rasterizer
                                 light.model_to_world.translation.matmul(mesh_geometry.world_to_model, light_position);
                             }
 
-                            // this.projection_plane.start.matmul(mesh_geometry.world_to_model, this.projection_plane_object_space.start);
-                            // this.projection_plane.start.add(this.projection_plane.right, this.position).imatmul(mesh_geometry.world_to_model);
-                            // this.projection_plane_object_space.start.to(this.position, this.projection_plane_object_space.right);
-                            // this.projection_plane.start.add(this.projection_plane.down, this.position).imatmul(mesh_geometry.world_to_model);
-                            // this.projection_plane_object_space.start.to(this.position, this.projection_plane_object_space.down);
-
-                            viewport.controller.camera.transform.translation.matmul(mesh_geometry.world_to_model, camera_position);
+                            viewport.controller.camera.transform.translation.matmul(mesh_geometry.world_to_model, pixel_scene.camera_position);
 
                             vertex_index = 0;
                             for (face_index = 0; face_index < face_count; face_index++) {
@@ -238,10 +230,10 @@ export default class Rasterizer
                                     } else {
                                         shadeFace(
                                             material.pixel_shader,
+
                                             pixel,
-                                            image_size,
-                                            camera_position,
-                                            lights,
+                                            surface,
+                                            pixel_scene,
 
                                             this.depth_buffer,
                                             viewport.render_target.array,

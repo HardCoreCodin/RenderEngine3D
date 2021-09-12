@@ -90,6 +90,7 @@ export abstract class Uint8ClampedAllocator extends Allocator<Uint8ClampedArray>
     protected _getArrayConstructor(): TypedArrayConstructor<Uint8ClampedArray> {return Uint8ClampedArray}
 }
 export class Uint8ClampedAllocator1D extends Uint8ClampedAllocator {constructor() {super(DIM._1D)}}
+export class Uint8ClampedAllocator16D extends Uint8ClampedAllocator {constructor() {super(DIM._16D)}}
 
 export const FLAGS_1D_ALLOCATOR = new Int8Allocator1D();
 export const FLAGS_2D_ALLOCATOR = new Int8Allocator2D();
@@ -114,5 +115,6 @@ export const FROM_TO_INDICES_ALLOCATOR_INT8 = new Int8Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT16 = new Int16Allocator2D();
 export const FROM_TO_INDICES_ALLOCATOR_INT32 = new Int32Allocator2D();
 export const RENDER_TARGET_ALLOCATOR = new Uint8ClampedAllocator1D();
+export const TEXTURE_ALLOCATOR = new Uint8ClampedAllocator16D();
 export const UINT32_ALLOCATOR = new Int32Allocator1D();
 export const FLOAT32_ALLOCATOR = new Float32Allocator1D();

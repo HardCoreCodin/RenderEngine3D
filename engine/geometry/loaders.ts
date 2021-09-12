@@ -1,7 +1,7 @@
 import Mesh from "./mesh.js";
 import {MeshOptions} from "./options.js";
 import {InputAttribute, MeshInputs} from "./inputs.js";
-import {ATTRIBUTE} from "../core/constants.js";
+import {ATTRIBUTE, NORMAL_SOURCING} from "../core/constants.js";
 
 
 export const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOptions()): Mesh => {
@@ -9,9 +9,17 @@ export const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOpti
         throw `Invalid obj file sting - no vertex positions found!`;
 
     let included = ATTRIBUTE.position;
-    if (has_normals.test(obj)) included |= ATTRIBUTE.normal;
-    if (has_colors.test(obj)) included |= ATTRIBUTE.color;
-    if (has_uvs.test(obj)) included |= ATTRIBUTE.uv;
+    if (has_normals.test(obj)) {
+        options.normal = NORMAL_SOURCING.LOAD_VERTEX__NO_FACE;
+        included |= ATTRIBUTE.normal;
+    }
+    if (has_colors.test(obj)) {
+        included |= ATTRIBUTE.color;
+    }
+    if (has_uvs.test(obj)) {
+        included |= ATTRIBUTE.uv;
+        options.include_uvs = true;
+    }
 
     const inputs = new MeshInputs(included);
 
@@ -23,7 +31,7 @@ export const loadMeshFromObj = (obj: string, options: MeshOptions = new MeshOpti
         else if (quad.test(line)) setFace(inputs, quad.exec(line));
         else if (triangle.test(line)) setFace(inputs, triangle.exec(line));
 
-    return new Mesh(inputs, options);
+    return new Mesh(inputs, options).load();
 };
 
 

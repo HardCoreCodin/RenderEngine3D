@@ -5,12 +5,17 @@ export const loadMeshFromObj = (obj, options = new MeshOptions()) => {
     if (!has_positions.test(obj))
         throw `Invalid obj file sting - no vertex positions found!`;
     let included = 1 /* position */;
-    if (has_normals.test(obj))
+    if (has_normals.test(obj)) {
+        options.normal = 2 /* LOAD_VERTEX__NO_FACE */;
         included |= 2 /* normal */;
-    if (has_colors.test(obj))
+    }
+    if (has_colors.test(obj)) {
         included |= 4 /* color */;
-    if (has_uvs.test(obj))
+    }
+    if (has_uvs.test(obj)) {
         included |= 8 /* uv */;
+        options.include_uvs = true;
+    }
     const inputs = new MeshInputs(included);
     for (const line of obj.split('\n'))
         if (position_and_color.test(line))
@@ -25,7 +30,7 @@ export const loadMeshFromObj = (obj, options = new MeshOptions()) => {
             setFace(inputs, quad.exec(line));
         else if (triangle.test(line))
             setFace(inputs, triangle.exec(line));
-    return new Mesh(inputs, options);
+    return new Mesh(inputs, options).load();
 };
 const setPositionAndColor = (inputs, line_parts) => {
     line_parts.shift();

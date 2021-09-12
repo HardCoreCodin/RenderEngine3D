@@ -7,7 +7,7 @@ export class MeshOptions implements IMeshOptions {
         public share: ATTRIBUTE = 0,
         public normal: NORMAL_SOURCING = 0,
         public color: COLOR_SOURCING = 0,
-        public include_uvs: boolean = false,
+        public include_uvs: boolean = true,
         public generate_face_positions: boolean = false
     ) {
     }

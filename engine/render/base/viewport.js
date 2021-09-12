@@ -43,7 +43,7 @@ export default class BaseViewport extends Rectangle {
         this._display.registerViewport(this);
     }
     refresh() {
-        // this._drawOverlay();
+        this._drawOverlay();
         this._render_pipeline.render(this);
     }
     is_inside(x, y) {

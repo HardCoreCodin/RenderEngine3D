@@ -74,7 +74,7 @@ export default abstract class BaseViewport<
     }
 
     refresh() {
-        // this._drawOverlay();
+        this._drawOverlay();
         this._render_pipeline.render(this);
     }
 

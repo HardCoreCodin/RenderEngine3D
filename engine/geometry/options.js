@@ -1,5 +1,5 @@
 export class MeshOptions {
-    constructor(share = 0, normal = 0, color = 0, include_uvs = false, generate_face_positions = false) {
+    constructor(share = 0, normal = 0, color = 0, include_uvs = true, generate_face_positions = false) {
         this.share = share;
         this.normal = normal;
         this.color = color;

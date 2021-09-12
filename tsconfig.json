@@ -1,7 +1,15 @@
 {
-  "compilerOptions": {
-    "module": "es6",
-    "target": "es2018",
-    "sourceMap": true
+    "compilerOptions": {
+      "module": "es6",
+      "target": "es2018",
+      "sourceMap": true,
+      "watch": true,
+      "noImplicitAny": false,
+      "noEmitOnError": false,
+      "removeComments": false,
+    },
+    "compileOnSave": true,
+    "include": [
+      "**/*.ts"
+    ] 
   }
-}

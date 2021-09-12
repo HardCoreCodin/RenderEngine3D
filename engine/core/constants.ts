@@ -108,8 +108,8 @@ export const DEFAULT_ROTATION_SPEED = 0.002;
 export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
 export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 0.001;
 
-export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 10000;
-export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.0001;
+export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 100;
+export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.01;
 
 const __array = new Uint8Array(4);
 const __view = new Uint32Array(__array.buffer);
