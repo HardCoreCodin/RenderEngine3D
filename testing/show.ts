@@ -7,7 +7,8 @@ const material = engine.scene.addMaterial() as rnd.SoftwareRasterMaterial;
 const texture  = engine.scene.addTexture(document.images[1], true, true);
 
 camera.position.setTo(-0.15, 0.4, -3.82);
-camera.transform.rotation.xy = {x: -0.2, y: 0.2};
+camera.transform.rotation.x = -0.2;
+camera.transform.rotation.y = 0.2;
 camera.lense.fov = 50;
 
 const controls = { mip_level: 0, repeat: 1 };
