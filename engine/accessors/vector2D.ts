@@ -1,5 +1,4 @@
 import {Accessor, Vector} from "./accessor.js";
-import {VECTOR_2D_ALLOCATOR} from "../core/memory/allocators.js";
 import {
     add_a_2D_vector_to_another_2D_vector_in_place,
     add_a_2D_vector_to_another_2D_vector_to_out,
@@ -19,15 +18,16 @@ import {
     subtract_a_number_from_a_2D_vector_to_out
 } from "../core/math/vec2.js";
 import {I2D, IVector2D} from "../core/interfaces/vectors.js";
+import {TypedArray} from "../core/types.js";
 
-export default abstract class Vector2D<Other extends Accessor = Accessor>
-    extends Vector<Other>
-    implements IVector2D<Other>
+export default abstract class Vector2D<
+    ArrayType extends TypedArray = Float32Array,
+    Other extends Accessor<ArrayType> = Accessor<ArrayType>>
+    extends Vector<ArrayType, Other>
+    implements IVector2D<ArrayType, Other>
 {
-    protected _getAllocator() {return VECTOR_2D_ALLOCATOR}
-
-    set x(x: number) {this.array[0] = x}
-    set y(y: number) {this.array[1] = y}
+    set x(x: number) {this.array[0] = x; if (this.on_change) this.on_change(this); }
+    set y(y: number) {this.array[1] = y; if (this.on_change) this.on_change(this); }
 
     get x(): number {return this.array[0]}
     get y(): number {return this.array[1]}
@@ -35,20 +35,23 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
     setTo(x: number, y: number): this {
         this.array[0] = x;
         this.array[1] = y;
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
     setAllTo(value: number): this {
         this.array.fill(value);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    setFrom(other: Vector<Accessor & I2D>): this {
+    setFrom(other: Vector<ArrayType, Accessor<ArrayType> & I2D>): this {
         this.array.set(other.array);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    equals(other: Vector<Accessor & I2D>): boolean {
+    equals(other: Vector<ArrayType, Accessor<ArrayType> & I2D>): boolean {
         return check_if_two_2D_vectrs_are_equal(this.array, other.array);
     }
 
@@ -60,7 +63,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
                 add_a_number_to_a_2D_vector_in_place(this.array, other_or_num);
         } else
             add_a_2D_vector_to_another_2D_vector_in_place(this.array, other_or_num.array);
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -72,7 +75,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
                 add_a_number_to_a_2D_vector_to_out(this.array, other_or_num, out.array);
         } else
             add_a_2D_vector_to_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -84,11 +87,11 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
                 subtract_a_number_from_a_2D_vector_in_place(this.array, other_or_num);
         } else {
             if (other_or_num.is(this))
-                return this.setAllTo(0);
-
-            subtract_a_2D_vector_from_another_2D_vector_in_place(this.array, other_or_num.array);
+                this.setAllTo(0);
+            else
+                subtract_a_2D_vector_from_another_2D_vector_in_place(this.array, other_or_num.array);
         }
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -104,7 +107,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
 
             subtract_a_2D_vector_from_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -115,6 +118,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
             return this;
 
         divide_a_2D_vector_by_a_number_in_place(this.array, denominator);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -127,6 +131,7 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
             return this.idiv(denominator);
 
         divide_a_2D_vector_by_a_number_to_out(this.array, denominator, out.array);
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -140,10 +145,10 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
 
                 multiply_a_2D_vector_by_a_number_in_place(this.array, other_or_num);
             } else
-                this.setAllTo(0);
+                return this.setAllTo(0);
         } else
             multiply_a_2D_vector_by_another_2D_vector_in_place(this.array, other_or_num.array);
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -164,12 +169,13 @@ export default abstract class Vector2D<Other extends Accessor = Accessor>
 
             multiply_a_2D_vector_by_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
     lerp(to: this, by: number, out: this): this {
         linearly_interpolate_from_a_2D_vectors_to_another_2D_vector_to_out(this.array, to.array, by, out.array);
+        if (out.on_change) out.on_change(out);
         return out;
     }
 }

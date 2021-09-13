@@ -12,7 +12,7 @@ export default class RasterViewport extends BaseViewport {
     }
     ;
     get projection_matrix() {
-        return this._controller.camera.is_perspective ?
+        return this.camera.is_perspective ?
             this._perspective_projection_matrix :
             this._orthographic_projection_matrix;
     }
@@ -31,13 +31,13 @@ export default class RasterViewport extends BaseViewport {
     }
     update() {
         this.projection_matrix.update();
-        this._controller.camera.transform.matrix.invert(this.world_to_view).mul(this.projection_matrix, this.world_to_clip);
+        this.camera.transform.matrix.invert(this.world_to_view).mul(this.projection_matrix, this.world_to_clip);
     }
     _getPerspectiveProjectionMatrix() {
-        return new PerspectiveProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new PerspectiveProjectionMatrix(this.camera.lense, this.view_frustum);
     }
     _getOrthographicProjectionMatrix() {
-        return new OrthographicProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new OrthographicProjectionMatrix(this.camera.lense, this.view_frustum);
     }
 }
 export class ViewFrustum {
@@ -120,8 +120,8 @@ export class OrthographicProjectionMatrix extends ProjectionMatrix {
         this.m44 = 1;
     }
     updateXY() {
-        this.x_axis.x = this.lense.zoom;
-        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
+        this.x_axis.x = this.lense.zoom_amount;
+        this.y_axis.y = this.lense.zoom_amount * this.view_frustum.aspect_ratio;
     }
 }
 //# sourceMappingURL=viewport.js.map

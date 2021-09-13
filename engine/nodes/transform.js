@@ -25,6 +25,9 @@ export default class Transform {
     }
 }
 export class EulerRotation {
+    // protected _yaw_matrix = mat3().setToIdentity();
+    // protected _pitch_matrix = mat3().setToIdentity();
+    // protected _roll_matrix = mat3().setToIdentity();
     constructor(_transform) {
         this._transform = _transform;
         this._angles = dir3(0);
@@ -70,6 +73,10 @@ export class EulerRotation {
         this._angles.y = xyz.y;
         this._angles.z = xyz.z;
         this._updateTransform();
+    }
+    rotateBy(azimuth, altitude) {
+        this.matrix.rotateAroundX(this._angles.x); // Pitch
+        this.matrix.rotateAroundY(this._angles.y); // Yaw
     }
     _updateTransform() {
         this.matrix.setRotationAroundZ(this._angles.z, true); // Roll

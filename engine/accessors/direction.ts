@@ -48,10 +48,12 @@ import {
     square_the_length_of_a_4D_direction
 } from "../core/math/vec4.js";
 import {IDirection2D, IDirection3D, IDirection4D} from "../core/interfaces/vectors.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../core/memory/allocators.js";
 
-
-export class Direction2D extends Vector2D<Direction2D> implements IDirection2D
+export class Direction2D extends Vector2D implements IDirection2D
 {
+    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
+
     copy(out: Direction2D = new Direction2D()): Direction2D {return out.setFrom(this)}
 
     get is_normalized(): boolean {
@@ -120,8 +122,10 @@ export class Direction2D extends Vector2D<Direction2D> implements IDirection2D
     }
 }
 
-export class Direction3D extends Vector3D<Direction3D> implements IDirection3D
+export class Direction3D extends Vector3D<Float32Array, Direction3D> implements IDirection3D
 {
+    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
+
     copy(out: Direction3D = new Direction3D()): Direction3D {return out.setFrom(this)}
 
     get is_normalized(): boolean {
@@ -226,8 +230,10 @@ export class Direction3D extends Vector3D<Direction3D> implements IDirection3D
     set yz(other: Direction2D) {this.array.set(other.array, 1)}
 }
 
-export class Direction4D extends Vector4D<Direction4D> implements IDirection4D
+export class Direction4D extends Vector4D<Float32Array, Direction4D> implements IDirection4D
 {
+    protected _getAllocator() {return VECTOR_4D_ALLOCATOR}
+
     copy(out: Direction4D = new Direction4D()): Direction4D {return out.setFrom(this)}
 
     get is_normalized(): boolean {

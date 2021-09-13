@@ -19,7 +19,7 @@ const input_uvs = mesh_inputs.uv;
 
 const display = engine.display;
 const vp1 = display.active_viewport;
-const camera = vp1.controller.camera;
+const camera = vp1.camera;
 camera.is_static = false;
 camera.lense.fov = 75;
 camera.transform.translation.y = 1;
@@ -30,8 +30,6 @@ camera.transform.translation.y = 1;
     const susan_positions = susan.vertices;
     const susan_uvs = susan.texturecoords[0];
     const vertex_count = susan_positions.length / 3;
-
-    const vertex_uv: [number, number] = [0, 0];
 
     let vertex_uv_offset = 0;
     let vertex_position_offset = 0;

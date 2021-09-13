@@ -64,23 +64,33 @@ export class Float32Allocator4D extends Float32Allocator {constructor() {super(D
 export class Float32Allocator9D extends Float32Allocator {constructor() {super(DIM._9D)}}
 export class Float32Allocator16D extends Float32Allocator {constructor() {super(DIM._16D)}}
 
-export abstract class Int8Allocator extends Allocator<Uint8Array> {
+export abstract class UInt8Allocator extends Allocator<Uint8Array> {
     protected _getArrayConstructor(): TypedArrayConstructor<Uint8Array> {return Uint8Array}
 }
-export class Int8Allocator1D extends Int8Allocator {constructor() {super(DIM._1D)}}
-export class Int8Allocator2D extends Int8Allocator {constructor() {super(DIM._2D)}}
-export class Int8Allocator3D extends Int8Allocator {constructor() {super(DIM._3D)}}
+export class UInt8Allocator1D extends UInt8Allocator {constructor() {super(DIM._1D)}}
+export class UInt8Allocator2D extends UInt8Allocator {constructor() {super(DIM._2D)}}
+export class UInt8Allocator3D extends UInt8Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class Int16Allocator extends Allocator<Uint16Array> {
+export abstract class UInt16Allocator extends Allocator<Uint16Array> {
     protected _getArrayConstructor(): TypedArrayConstructor<Uint16Array> {return Uint16Array}
 }
-export class Int16Allocator1D extends Int16Allocator {constructor() {super(DIM._1D)}}
-export class Int16Allocator2D extends Int16Allocator {constructor() {super(DIM._2D)}}
-export class Int16Allocator3D extends Int16Allocator {constructor() {super(DIM._3D)}}
+export class UInt16Allocator1D extends UInt16Allocator {constructor() {super(DIM._1D)}}
+export class UInt16Allocator2D extends UInt16Allocator {constructor() {super(DIM._2D)}}
+export class UInt16Allocator3D extends UInt16Allocator {constructor() {super(DIM._3D)}}
 
-export abstract class Int32Allocator extends Allocator<Uint32Array> {
+export abstract class UInt32Allocator extends Allocator<Uint32Array> {
     protected _getArrayConstructor(): TypedArrayConstructor<Uint32Array> {return Uint32Array}
 }
+
+export class UInt32Allocator1D extends UInt32Allocator {constructor() {super(DIM._1D)}}
+export class UInt32Allocator2D extends UInt32Allocator {constructor() {super(DIM._2D)}}
+export class UInt32Allocator3D extends UInt32Allocator {constructor() {super(DIM._3D)}}
+export class UInt32Allocator4D extends UInt32Allocator {constructor() {super(DIM._4D)}}
+
+export abstract class Int32Allocator extends Allocator<Int32Array> {
+    protected _getArrayConstructor(): TypedArrayConstructor<Int32Array> {return Int32Array}
+}
+
 export class Int32Allocator1D extends Int32Allocator {constructor() {super(DIM._1D)}}
 export class Int32Allocator2D extends Int32Allocator {constructor() {super(DIM._2D)}}
 export class Int32Allocator3D extends Int32Allocator {constructor() {super(DIM._3D)}}
@@ -92,10 +102,11 @@ export abstract class Uint8ClampedAllocator extends Allocator<Uint8ClampedArray>
 export class Uint8ClampedAllocator1D extends Uint8ClampedAllocator {constructor() {super(DIM._1D)}}
 export class Uint8ClampedAllocator16D extends Uint8ClampedAllocator {constructor() {super(DIM._16D)}}
 
-export const FLAGS_1D_ALLOCATOR = new Int8Allocator1D();
-export const FLAGS_2D_ALLOCATOR = new Int8Allocator2D();
-export const FLAGS_3D_ALLOCATOR = new Int8Allocator3D();
-export const U32_4D_ALLOCATOR = new Int32Allocator4D();
+export const FLAGS_1D_ALLOCATOR = new UInt8Allocator1D();
+export const FLAGS_2D_ALLOCATOR = new UInt8Allocator2D();
+export const FLAGS_3D_ALLOCATOR = new UInt8Allocator3D();
+export const U32_4D_ALLOCATOR = new UInt32Allocator4D();
+export const I32_2D_ALLOCATOR = new Int32Allocator2D();
 
 export const VECTOR_2D_ALLOCATOR = new Float32Allocator2D();
 export const VECTOR_3D_ALLOCATOR = new Float32Allocator3D();
@@ -105,16 +116,16 @@ export const MATRIX_2X2_ALLOCATOR = new Float32Allocator4D();
 export const MATRIX_3X3_ALLOCATOR = new Float32Allocator9D();
 export const MATRIX_4X4_ALLOCATOR = new Float32Allocator16D();
 
-export const FACE_VERTICES_ALLOCATOR_INT8 = new Int8Allocator3D();
-export const FACE_VERTICES_ALLOCATOR_INT16 = new Int16Allocator3D();
-export const FACE_VERTICES_ALLOCATOR_INT32 = new Int32Allocator3D();
-export const VERTEX_FACES_ALLOCATOR_INT8 = new Int8Allocator1D();
-export const VERTEX_FACES_ALLOCATOR_INT16 = new Int16Allocator1D();
-export const VERTEX_FACES_ALLOCATOR_INT32 = new Int32Allocator1D();
-export const FROM_TO_INDICES_ALLOCATOR_INT8 = new Int8Allocator2D();
-export const FROM_TO_INDICES_ALLOCATOR_INT16 = new Int16Allocator2D();
-export const FROM_TO_INDICES_ALLOCATOR_INT32 = new Int32Allocator2D();
+export const FACE_VERTICES_ALLOCATOR_INT8 = new UInt8Allocator3D();
+export const FACE_VERTICES_ALLOCATOR_INT16 = new UInt16Allocator3D();
+export const FACE_VERTICES_ALLOCATOR_INT32 = new UInt32Allocator3D();
+export const VERTEX_FACES_ALLOCATOR_INT8 = new UInt8Allocator1D();
+export const VERTEX_FACES_ALLOCATOR_INT16 = new UInt16Allocator1D();
+export const VERTEX_FACES_ALLOCATOR_INT32 = new UInt32Allocator1D();
+export const FROM_TO_INDICES_ALLOCATOR_INT8 = new UInt8Allocator2D();
+export const FROM_TO_INDICES_ALLOCATOR_INT16 = new UInt16Allocator2D();
+export const FROM_TO_INDICES_ALLOCATOR_INT32 = new UInt32Allocator2D();
 export const RENDER_TARGET_ALLOCATOR = new Uint8ClampedAllocator1D();
 export const TEXTURE_ALLOCATOR = new Uint8ClampedAllocator16D();
-export const UINT32_ALLOCATOR = new Int32Allocator1D();
+export const UINT32_ALLOCATOR = new UInt32Allocator1D();
 export const FLOAT32_ALLOCATOR = new Float32Allocator1D();

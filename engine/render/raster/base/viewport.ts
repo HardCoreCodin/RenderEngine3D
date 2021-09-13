@@ -29,7 +29,7 @@ export default abstract class RasterViewport<
     };
 
     get projection_matrix(): ProjectionMatrix<Context> {
-        return this._controller.camera.is_perspective ?
+        return this.camera.is_perspective ?
             this._perspective_projection_matrix :
             this._orthographic_projection_matrix;
     }
@@ -56,16 +56,16 @@ export default abstract class RasterViewport<
 
     update(): void {
         this.projection_matrix.update();
-        this._controller.camera.transform.matrix.invert(this.world_to_view
+        this.camera.transform.matrix.invert(this.world_to_view
         ).mul(this.projection_matrix, this.world_to_clip);
     }
 
     protected _getPerspectiveProjectionMatrix(): ProjectionMatrix<Context> {
-        return new PerspectiveProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new PerspectiveProjectionMatrix(this.camera.lense, this.view_frustum);
     }
 
     protected _getOrthographicProjectionMatrix(): ProjectionMatrix<Context> {
-        return new OrthographicProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new OrthographicProjectionMatrix(this.camera.lense, this.view_frustum);
     }
 }
 
@@ -184,7 +184,7 @@ export class OrthographicProjectionMatrix<Context extends RenderingContext>
     }
 
     updateXY(): void {
-        this.x_axis.x = this.lense.zoom;
-        this.y_axis.y = this.lense.zoom * this.view_frustum.aspect_ratio;
+        this.x_axis.x = this.lense.zoom_amount;
+        this.y_axis.y = this.lense.zoom_amount * this.view_frustum.aspect_ratio;
     }
 }

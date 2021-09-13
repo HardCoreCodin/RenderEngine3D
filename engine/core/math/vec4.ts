@@ -1,15 +1,17 @@
-export const check_if_two_4D_vectros_are_equal = (
-    a: Float32Array,
-    b: Float32Array
+import {TypedArray} from "../types.js";
+
+export const check_if_two_4D_vectros_are_equal = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : boolean =>
     a[0].toFixed(3) === b[0].toFixed(3) &&
     a[1].toFixed(3) === b[1].toFixed(3) &&
     a[2].toFixed(3) === b[2].toFixed(3) &&
     a[3].toFixed(3) === b[3].toFixed(3);
 
-export const negate_a_4D_direction_to_out = (
-    a: Float32Array,
-    o: Float32Array
+export const negate_a_4D_direction_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    o: ArrayType
 ): void => {
     o[0] = -a[0];
     o[1] = -a[1];
@@ -17,8 +19,8 @@ export const negate_a_4D_direction_to_out = (
     o[3] = -a[3];
 };
 
-export const negate_a_4D_direction_in_place = (
-    a: Float32Array
+export const negate_a_4D_direction_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType
 ): void => {
     a[0] = -a[0];
     a[1] = -a[1];
@@ -26,8 +28,8 @@ export const negate_a_4D_direction_in_place = (
     a[3] = -a[3];
 };
 
-export const compute_the_length_of_a_4D_direction = (
-    a: Float32Array
+export const compute_the_length_of_a_4D_direction = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType
 ) : number => Math.sqrt((
     a[0] ** 2 +
     a[1] ** 2 +
@@ -35,10 +37,10 @@ export const compute_the_length_of_a_4D_direction = (
     a[3] ** 2
 ));
 
-export const compute_the_distance_from_a_4D_position_to_another_4D_position = (
-    a: Float32Array,
+export const compute_the_distance_from_a_4D_position_to_another_4D_position = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
 
-    b: Float32Array
+    b: ArrayType
 ) : number => Math.sqrt((
     (b[0] - a[0]) ** 2 +
     (b[1] - a[1]) ** 2 +
@@ -46,17 +48,17 @@ export const compute_the_distance_from_a_4D_position_to_another_4D_position = (
     (b[3] - a[3]) ** 2
 ));
 
-export const square_the_length_of_a_4D_direction = (
-    a: Float32Array
+export const square_the_length_of_a_4D_direction = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType
 ) : number =>
     a[0] ** 2 +
     a[1] ** 2 +
     a[2] ** 2 +
     a[3] ** 2;
 
-export const square_the_distance_from_a_4D_positions_to_another_4D_position = (
-    a: Float32Array,
-    b: Float32Array
+export const square_the_distance_from_a_4D_positions_to_another_4D_position = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : number => (
     (b[0] - a[0]) ** 2 +
     (b[1] - a[1]) ** 2 +
@@ -64,11 +66,11 @@ export const square_the_distance_from_a_4D_positions_to_another_4D_position = (
     (b[3] - a[3]) ** 2
 );
 
-export const linearly_interpolate_from_a_4D_vector_to_another_4D_vector_to_out = (
-    a: Float32Array,
-    b: Float32Array,
+export const linearly_interpolate_from_a_4D_vector_to_another_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType,
     t: number,
-    o: Float32Array,
+    o: ArrayType,
 ) : void => {
     o[0] = (1-t)*a[0] + t*(b[0]);
     o[1] = (1-t)*a[1] + t*(b[1]);
@@ -76,10 +78,10 @@ export const linearly_interpolate_from_a_4D_vector_to_another_4D_vector_to_out =
     o[3] = (1-t)*a[3] + t*(b[3]);
 };
 
-export const add_a_4D_vector_to_another_4D_vector_to_out = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
+export const add_a_4D_vector_to_another_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType,
+    o: ArrayType
 ) : void => {
     o[0] = a[0] + b[0];
     o[1] = a[1] + b[1];
@@ -87,9 +89,9 @@ export const add_a_4D_vector_to_another_4D_vector_to_out = (
     o[3] = a[3] + b[3];
 };
 
-export const add_a_4D_vector_to_another_4D_vector_in_place = (
-    a: Float32Array,
-    b: Float32Array
+export const add_a_4D_vector_to_another_4D_vector_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : void => {
     a[0] += b[0];
     a[1] += b[1];
@@ -97,10 +99,10 @@ export const add_a_4D_vector_to_another_4D_vector_in_place = (
     a[3] += b[3];
 };
 
-export const add_a_number_to_a_4D_vector_to_out = (
-    a: Float32Array,
+export const add_a_number_to_a_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number,
-    o: Float32Array
+    o: ArrayType
 ) : void => {
     o[0] = a[0] + b;
     o[1] = a[1] + b;
@@ -108,8 +110,8 @@ export const add_a_number_to_a_4D_vector_to_out = (
     o[3] = a[3] + b;
 };
 
-export const add_a_number_to_a_4D_vector_in_place = (
-    a: Float32Array,
+export const add_a_number_to_a_4D_vector_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number
 ) : void => {
     a[0] += b;
@@ -118,10 +120,10 @@ export const add_a_number_to_a_4D_vector_in_place = (
     a[3] += b;
 };
 
-export const subtract_a_4D_vector_from_another_4D_vector_to_out = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
+export const subtract_a_4D_vector_from_another_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType,
+    o: ArrayType
 ) : void => {
     o[0] = a[0] - b[0];
     o[1] = a[1] - b[1];
@@ -129,9 +131,9 @@ export const subtract_a_4D_vector_from_another_4D_vector_to_out = (
     o[3] = a[3] - b[3];
 };
 
-export const subtract_a_4D_vector_from_another_4D_vector_in_place = (
-    a: Float32Array,
-    b: Float32Array
+export const subtract_a_4D_vector_from_another_4D_vector_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : void => {
     a[0] -= b[0];
     a[1] -= b[1];
@@ -139,10 +141,10 @@ export const subtract_a_4D_vector_from_another_4D_vector_in_place = (
     a[3] -= b[3];
 };
 
-export const subtract_a_number_from_a_4D_vector_to_out = (
-    a: Float32Array,
+export const subtract_a_number_from_a_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number,
-    o: Float32Array
+    o: ArrayType
 ) : void => {
     o[0] = a[0] - b;
     o[1] = a[1] - b;
@@ -150,8 +152,8 @@ export const subtract_a_number_from_a_4D_vector_to_out = (
     o[3] = a[3] - b;
 };
 
-export const subtract_a_number_from_a_4D_vector_in_place = (
-    a: Float32Array,
+export const subtract_a_number_from_a_4D_vector_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number
 ) : void => {
     a[0] -= b;
@@ -160,10 +162,10 @@ export const subtract_a_number_from_a_4D_vector_in_place = (
     a[3] -= b;
 };
 
-export const multiply_a_4D_vector_by_another_4D_vector_to_out = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
+export const multiply_a_4D_vector_by_another_4D_vector_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType,
+    o: ArrayType
 ) : void => {
     o[0] = a[0] * b[0];
     o[1] = a[1] * b[1];
@@ -171,9 +173,9 @@ export const multiply_a_4D_vector_by_another_4D_vector_to_out = (
     o[3] = a[3] * b[3];
 };
 
-export const multiply_a_4D_vector_by_another_4D_vector_in_place = (
-    a: Float32Array,
-    b: Float32Array
+export const multiply_a_4D_vector_by_another_4D_vector_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : void => {
     a[0] *= b[0];
     a[1] *= b[1];
@@ -181,10 +183,10 @@ export const multiply_a_4D_vector_by_another_4D_vector_in_place = (
     a[3] *= b[3];
 };
 
-export const divide_a_4D_vector_by_a_number_to_out = (
-    a: Float32Array,
+export const divide_a_4D_vector_by_a_number_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number,
-    o: Float32Array
+    o: ArrayType
 ) : void => {
     o[0] = a[0] / b;
     o[1] = a[1] / b;
@@ -192,8 +194,8 @@ export const divide_a_4D_vector_by_a_number_to_out = (
     o[3] = a[3] / b;
 };
 
-export const divide_a_4D_vector_by_a_number_in_place = (
-    a: Float32Array,
+export const divide_a_4D_vector_by_a_number_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number
 ) : void => {
     a[0] /= b;
@@ -202,10 +204,10 @@ export const divide_a_4D_vector_by_a_number_in_place = (
     a[3] /= b;
 };
 
-export const multiply_a_4D_vector_by_a_number_to_out = (
-    a: Float32Array,
+export const multiply_a_4D_vector_by_a_number_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number,
-    o: Float32Array
+    o: ArrayType
 ) : void => {
     o[0] = a[0] * b;
     o[1] = a[1] * b;
@@ -213,8 +215,8 @@ export const multiply_a_4D_vector_by_a_number_to_out = (
     o[3] = a[3] * b;
 };
 
-export const multiply_a_4D_vector_by_a_number_in_place = (
-    a: Float32Array,
+export const multiply_a_4D_vector_by_a_number_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
     b: number
 ) : void => {
     a[0] *= b;
@@ -223,9 +225,9 @@ export const multiply_a_4D_vector_by_a_number_in_place = (
     a[3] *= b;
 };
 
-export const normalize_a_4D_direction_to_out = (
-    a: Float32Array,
-    o: Float32Array
+export const normalize_a_4D_direction_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    o: ArrayType
 ) : void => {
     let n = a[0]**2 + a[1]**2 + a[2]**2 + a[3]**2;
     if (n === 1) {
@@ -243,8 +245,8 @@ export const normalize_a_4D_direction_to_out = (
     }
 };
 
-export const normalize_a_4D_direction_in_place = (
-    a: Float32Array
+export const normalize_a_4D_direction_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType
 ) : void => {
     let n = a[0]**2 + a[1]**2 + a[2]**2 + a[3]**2;
     if (n === 1)
@@ -258,12 +260,12 @@ export const normalize_a_4D_direction_in_place = (
     a[3] *= n;
 };
 
-export const normalize_all_4D_directions_in_place = (
-    vectors: Float32Array[],
+export const normalize_all_4D_directions_in_place = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v; Float32Array;
+    let v: ArrayType;
     const sqrt = Math.sqrt;
     let n: number;
     for (let i = start; i < end; i++) {
@@ -281,13 +283,13 @@ export const normalize_all_4D_directions_in_place = (
     }
 };
 
-export const normalize_some_4D_directions_in_place = (
-    vectors: Float32Array[],
+export const normalize_some_4D_directions_in_place = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
     include: Uint8Array,
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v: Float32Array;
+    let v: ArrayType;
     let n: number;
     const sqrt = Math.sqrt;
     for (let i = start; i < end; i++) if (include[i]) {
@@ -305,19 +307,19 @@ export const normalize_some_4D_directions_in_place = (
     }
 };
 
-export const dot_a_4D_direction_with_another_4D_direction = (
-    a: Float32Array,
-    b: Float32Array
+export const dot_a_4D_direction_with_another_4D_direction = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ) : number =>
     a[0] * b[0] +
     a[1] * b[1] +
     a[2] * b[2] +
     a[3] * b[3];
 
-export const reflect_a_4D_vector_around_a_4D_direction_to_out = (
-    a: Float32Array,
-    b: Float32Array,
-    o: Float32Array
+export const reflect_a_4D_vector_around_a_4D_direction_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType,
+    o: ArrayType
 ): void => {
     const n = (
         a[0] * b[0] +
@@ -332,9 +334,9 @@ export const reflect_a_4D_vector_around_a_4D_direction_to_out = (
     o[3] = b[3] * n - a[3];
 };
 
-export const reflect_a_4D_vector_around_a_4D_direction_in_place = (
-    a: Float32Array,
-    b: Float32Array
+export const reflect_a_4D_vector_around_a_4D_direction_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    b: ArrayType
 ): void => {
     const n = (
         a[0] * b[0] +
@@ -349,9 +351,9 @@ export const reflect_a_4D_vector_around_a_4D_direction_in_place = (
     a[3] = b[3] * n - a[3];
 };
 
-export const multiply_a_4D_vector_by_a_4x4_matrix_in_place = (
-    a: Float32Array,
-    m: Float32Array
+export const multiply_a_4D_vector_by_a_4x4_matrix_in_place = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    m: ArrayType
 ) : void => {
     const x = a[0];
     const y = a[1];
@@ -364,10 +366,10 @@ export const multiply_a_4D_vector_by_a_4x4_matrix_in_place = (
     a[3] = x*m[3] + y*m[7] + z*m[11] + w*m[15];
 };
 
-export const multiply_a_4D_vector_by_a_4x4_matrix_to_out = (
-    a: Float32Array,
-    m: Float32Array,
-    o: Float32Array
+export const multiply_a_4D_vector_by_a_4x4_matrix_to_out = <ArrayType extends TypedArray = Float32Array>(
+    a: ArrayType,
+    m: ArrayType,
+    o: ArrayType
 ) : void => {
     o[0] = a[0]*m[0] + a[1]*m[4] + a[2]*m[8] + a[3]*m[12];
     o[1] = a[0]*m[1] + a[1]*m[5] + a[2]*m[9] + a[3]*m[13];
@@ -375,14 +377,14 @@ export const multiply_a_4D_vector_by_a_4x4_matrix_to_out = (
     o[3] = a[0]*m[3] + a[1]*m[7] + a[2]*m[11] + a[3]*m[15];
 };
 
-export const multiply_all_4D_vectors_by_a_4x4_matrix_to_out = (
-    vectors: Float32Array[],
-    m: Float32Array,
-    outs: Float32Array[],
+export const multiply_all_4D_vectors_by_a_4x4_matrix_to_out = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
+    m: ArrayType,
+    outs: ArrayType[],
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v, o: Float32Array;
+    let v, o: ArrayType;
     for (let i = start; i < end; i++) {
         v = vectors[i];
         o = outs[i];
@@ -393,15 +395,15 @@ export const multiply_all_4D_vectors_by_a_4x4_matrix_to_out = (
     }
 };
 
-export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
-    vectors: Float32Array[],
-    m: Float32Array,
+export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
+    m: ArrayType,
     include: Uint8Array,
-    outs: Float32Array[],
+    outs: ArrayType[],
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v, o: Float32Array;
+    let v, o: ArrayType;
     for (let i = start; i < end; i++) if (include[i]){
         v = vectors[i];
         o = outs[i];
@@ -412,13 +414,13 @@ export const multiply_some_4D_vectors_by_a_4x4_matrix_to_out = (
     }
 };
 
-export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = (
-    vectors: Float32Array[],
-    m: Float32Array,
+export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
+    m: ArrayType,
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v: Float32Array;
+    let v: ArrayType;
     let x, y, z, w: number;
     for (let i = start; i < end; i++) {
         v = vectors[i];
@@ -434,14 +436,14 @@ export const multiply_all_4D_vectors_by_a_4x4_matrix_in_place = (
     }
 };
 
-export const multiply_some_4D_vectors_by_a_4x4_matrix_in_place = (
-    vectors: Float32Array[],
-    m: Float32Array,
+export const multiply_some_4D_vectors_by_a_4x4_matrix_in_place = <ArrayType extends TypedArray = Float32Array>(
+    vectors: ArrayType[],
+    m: ArrayType,
     include: Uint8Array,
     start: number = 0,
     end: number = vectors.length
 ) : void => {
-    let v: Float32Array;
+    let v: ArrayType;
     let x, y, z, w: number;
     for (let i = start; i < end; i++) if (include[i]) {
         v = vectors[i];

@@ -1,9 +1,9 @@
 import { Color3D } from "../../../../../accessors/color.js";
 import { Direction3D } from "../../../../../accessors/direction.js";
 // const fmod = (a: number, b: number): number => Number((a - (Math.floor(a / b) * b)).toPrecision(8));
-export const getCheckerBoardPixelValueByUV = (u, v, half_step_count) => {
-    let s = u * half_step_count;
-    let t = v * half_step_count;
+export const getCheckerBoardPixelValueByUV = (UV, half_step_count) => {
+    let s = UV.u * half_step_count;
+    let t = UV.v * half_step_count;
     s -= Math.floor(s);
     t -= Math.floor(t);
     return (s > 0.5 ? 1 : 0) ^ (t < 0.5 ? 1 : 0);
@@ -27,8 +27,8 @@ export const shadePixelBarycentric = (pixel, surface, scene) => {
     pixel.color.a = 1;
 };
 export const shadePixelUV = (pixel, surface, scene) => {
-    pixel.color.r = surface.uv.u;
-    pixel.color.g = surface.uv.v;
+    pixel.color.r = surface.UV.u;
+    pixel.color.g = surface.UV.v;
     pixel.color.b = 0;
     pixel.color.a = 1;
 };
@@ -48,7 +48,7 @@ export const shadePixelNormal = (pixel, surface, scene) => {
     pixel.color.a = 1;
 };
 export const shadePixelCheckerboard = (pixel, surface, scene) => {
-    pixel.color.array.fill(getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4));
+    pixel.color.array.fill(getCheckerBoardPixelValueByUV(surface.UV, 4));
     pixel.color.a = 1;
 };
 const direction_to_light = new Direction3D();
@@ -78,7 +78,7 @@ export const shadePixelLambert = (pixel, surface, scene) => {
 };
 export const shadePixelLambertCheckerboard = (pixel, surface, scene) => {
     shadePixelLambert(pixel, surface, scene);
-    if (!getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4)) {
+    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
         pixel.color.r *= 0.5;
         pixel.color.g *= 0.5;
         pixel.color.b *= 0.5;
@@ -119,7 +119,7 @@ export const shadePixelPhong = (pixel, surface, scene) => {
 };
 export const shadePixelPhongCheckerboard = (pixel, surface, scene) => {
     shadePixelPhong(pixel, surface, scene);
-    if (!getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4)) {
+    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
         pixel.color.r *= 0.5;
         pixel.color.g *= 0.5;
         pixel.color.b *= 0.5;

@@ -2,13 +2,12 @@ import GLMaterial from "./materials/base.js";
 import GLRenderPipeline from "./pipeline.js";
 import GLViewport from "./viewport.js";
 import RenderEngine from "../../base/engine.js";
-import {FPSController} from "../../../input/controllers.js";
-import {ControllerConstructor} from "../../../core/interfaces/input.js";
+import InputController, {InputControllerConstructor} from "../../../input/controllers.js";
 
 
 export default class GLRenderEngine extends RenderEngine<WebGL2RenderingContext>
 {
-    constructor(parent_element?: HTMLElement, Controller: ControllerConstructor = FPSController) {
+    constructor(parent_element?: HTMLElement, Controller: InputControllerConstructor = InputController) {
         super(
             GLViewport,
             GLMaterial,

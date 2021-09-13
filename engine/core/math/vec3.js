@@ -348,7 +348,6 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out3 = (vectors, m, 
 };
 export const multiply_some_3D_directions_by_a_4x4_matrix_to_out4 = (vectors, m, include, outs, start = 0, end = vectors.length) => {
     let o, v;
-    Float32Array;
     for (let i = start; i < end; i++)
         if (include[i]) {
             v = vectors[i];

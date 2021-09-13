@@ -1,6 +1,6 @@
 import Rectangle from "./rectangle.js";
 import {Color4D, rgba} from "../../accessors/color.js";
-import {ControllerConstructor, IController} from "../../core/interfaces/input.js";
+import {InputControllerConstructor} from "../../input/controllers.js";
 import {
     IRenderPipeline,
     IRenderPipelineConstructor,
@@ -9,6 +9,8 @@ import {
     IViewportConstructor,
 } from "../../core/interfaces/render.js";
 import Scene from "../../nodes/scene.js";
+import Mouse from "../../input/mouse.js";
+import Camera from "../../nodes/camera.js";
 
 
 export default class Display<Context extends RenderingContext>
@@ -25,16 +27,18 @@ export default class Display<Context extends RenderingContext>
     protected readonly _inactive_viewport_border_color = rgba(0.75);
 
     constructor(
+        protected readonly _camera: Camera,
+        protected readonly _mouse: Mouse,
         protected readonly _scene: Scene<Context>,
-        protected readonly RenderPipeline: IRenderPipelineConstructor<Context>,
-        protected readonly Viewport: IViewportConstructor<Context>,
-        protected readonly Controller: ControllerConstructor,
+        protected readonly RenderPipelineClass: IRenderPipelineConstructor<Context>,
+        protected readonly ViewportClass: IViewportConstructor<Context>,
+        protected readonly InputControllerClass: InputControllerConstructor,
         public context: Context = _scene.context
     ) {
         super({width: context.canvas.width, height: context.canvas.height}, {x: 0, y: 0});
         this._canvas = context.canvas as HTMLCanvasElement;
-        this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
-        this.active_viewport = this.addViewport();
+        this._default_render_pipeline = new RenderPipelineClass(this.context, this._scene);
+        this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(_mouse), this._default_render_pipeline, this));
         this._active_viewport.border.display = false;
     }
 
@@ -122,12 +126,7 @@ export default class Display<Context extends RenderingContext>
         }
     }
 
-    addViewport(
-        controller: IController = new this.Controller(this._scene.addCamera()),
-        render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline,
-        viewport:IViewport<Context> = new this.Viewport(controller, render_pipeline, this)
-    ): IViewport<Context> {
-        controller.viewport = viewport;
+    addViewport(viewport: IViewport<Context>, render_pipeline: IRenderPipeline<Context> = this._default_render_pipeline): IViewport<Context> {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
 

@@ -85,14 +85,11 @@ export enum KEY_CODES {
     DOWN = 40,
 
     SPACE = 32,
+    SHIFT = 16,
     CTRL = 17,
-    ESC = 27
-}
-
-export enum MOUSE_BUTTON {
-    LEFT = 1,
-    MIDDLE = 2,
-    RIGHT = 3
+    ALT = 18,
+    ESC = 27,
+    TAB = 9,
 }
 
 export const MIN_FOV = 1;
@@ -100,16 +97,21 @@ export const MAX_FOV = 179;
 export const MIN_FOCAL_LENGTH = 0.1;
 export const MIN_ZOOM = 0.1;
 
-export const DEFAULT_ZOOM = 1;
-export const DEFAULT_FOCAL_LENGTH = 1;
-
-export const DEFAULT_MOVEMENT_SPEED = 0.003;
-export const DEFAULT_ROTATION_SPEED = 0.002;
-export const DEFAULT_MOUSE_SENSITIVITY = 0.4;
-export const DEFAULT_MOUSE_WHEEL_SENSITIVITY = 0.001;
-
 export const DEFAULT_FAR_CLIPPING_PLANE_DISTANCE = 100;
 export const DEFAULT_NEAR_CLIPPING_PLANE_DISTANCE = 0.01;
+
+export const NAVIGATION_DEFAULT__TARGET_DISTANCE  = 2;
+export const NAVIGATION_DEFAULT__ZOOM = 1.0;
+export const NAVIGATION_DEFAULT__FOCAL_LENGTH = 2.0;
+export const NAVIGATION_DEFAULT__MAX_VELOCITY = 5;
+export const NAVIGATION_DEFAULT__ACCELERATION = 10;
+
+export const NAVIGATION_SPEED_DEFAULT__TURN   = 1;
+export const NAVIGATION_SPEED_DEFAULT__ORIENT = 0.002;
+export const NAVIGATION_SPEED_DEFAULT__ORBIT  = 0.002;
+export const NAVIGATION_SPEED_DEFAULT__ZOOM   = 0.003;
+export const NAVIGATION_SPEED_DEFAULT__DOLLY  = 0.1;
+export const NAVIGATION_SPEED_DEFAULT__PAN    = 0.003;
 
 const __array = new Uint8Array(4);
 const __view = new Uint32Array(__array.buffer);

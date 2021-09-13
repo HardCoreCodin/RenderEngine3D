@@ -7,9 +7,10 @@ import {Color3D} from "../../accessors/color.js";
 import {Accessor, Vector} from "../../accessors/accessor.js";
 import Matrix3x3 from "../../accessors/matrix3x3.js";
 import Matrix2x2 from "../../accessors/matrix2x2.js";
+import {TypedArray} from "../types.js";
 
 
-export interface IVector<Other extends Accessor> extends IAccessor
+export interface IVector<Other extends IAccessor<ArrayType>, ArrayType extends TypedArray = Float32Array> extends IAccessor<ArrayType>
 {
     iadd(other: Other|number): this;
     add(other: Other|number, out: this): this;
@@ -26,8 +27,8 @@ export interface IVector<Other extends Accessor> extends IAccessor
     lerp(to: this, by: number, out: this): this;
 }
 
-export type VectorConstructor<VectorType extends Vector<Accessor>> = new (
-    array?: Float32Array
+export type VectorConstructor<VectorType extends IVector<IAccessor<ArrayType>, ArrayType>, ArrayType extends TypedArray = Float32Array> = new (
+    array?: ArrayType
 ) => VectorType;
 
 export interface I2D {
@@ -43,13 +44,13 @@ export interface I4D extends I3D {
     w: number;
 }
 
-export type IVector2D<Other extends Accessor> = IVector<Other> & I2D;
-export type IVector3D<Other extends Accessor> = IVector<Other> & I3D;
-export type IVector4D<Other extends Accessor> = IVector<Other> & I4D;
+export type IVector2D<ArrayType extends TypedArray = Float32Array, Other extends Accessor<ArrayType> = Accessor<ArrayType>> = IVector<Other, ArrayType> & I2D;
+export type IVector3D<ArrayType extends TypedArray = Float32Array, Other extends Accessor<ArrayType> = Accessor<ArrayType>> = IVector<Other, ArrayType> & I3D;
+export type IVector4D<ArrayType extends TypedArray = Float32Array, Other extends Accessor<ArrayType> = Accessor<ArrayType>> = IVector<Other, ArrayType> & I4D;
 
 
-export interface IDirection2D
-    extends IVector2D<Direction2D>
+export interface IDirection2D<ArrayType extends TypedArray = Float32Array>
+    extends IVector2D<ArrayType>
 {
     length: number;
     length_squared: number;
@@ -67,8 +68,8 @@ export interface IDirection2D
     matmul(matrix: Matrix2x2, out: this): this;
 }
 
-export interface IDirection3D
-    extends IVector3D<Direction3D>
+export interface IDirection3D<ArrayType extends TypedArray = Float32Array>
+    extends IVector3D<ArrayType>
 {
     length: number;
     length_squared: number;
@@ -92,8 +93,8 @@ export interface IDirection3D
     yz: Direction2D;
 }
 
-export interface IDirection4D
-    extends IVector4D<Direction4D>
+export interface IDirection4D<ArrayType extends TypedArray = Float32Array>
+    extends IVector4D<ArrayType>
 {
     length: number;
     length_squared: number;
@@ -121,8 +122,8 @@ export interface IDirection4D
     yzw: Direction3D;
 }
 
-export interface IPosition2D
-    extends IVector2D<Direction2D>
+export interface IPosition2D<ArrayType extends TypedArray = Float32Array>
+    extends IVector2D<ArrayType>
 {
     to(other: this, out: Direction2D): Direction2D;
     distanceTo(other: this): number;
@@ -132,8 +133,8 @@ export interface IPosition2D
     matmul(matrix: Matrix2x2, out: this): this;
 }
 
-export interface IPosition3D
-    extends IVector3D<Direction3D>
+export interface IPosition3D<ArrayType extends TypedArray = Float32Array>
+    extends IVector3D<ArrayType>
 {
     to(other: this, out: Direction3D): Direction3D;
     distanceTo(other: this): number;
@@ -146,8 +147,8 @@ export interface IPosition3D
     yz: Position2D;
 }
 
-export interface IPosition4D
-    extends IVector4D<Direction4D>
+export interface IPosition4D<ArrayType extends TypedArray = Float32Array>
+    extends IVector4D<ArrayType>
 {
     to(other: this, out: Direction4D): Direction4D;
     distanceTo(other: this): number;
@@ -164,7 +165,7 @@ export interface IPosition4D
     yzw: Position3D;
 }
 
-export interface IColor extends Vector<Accessor> {
+export interface IColor extends IVector<IAccessor> {
     r: number;
     g: number;
     b: number;
@@ -184,7 +185,7 @@ export interface IColor4D extends IColor, I4D {
     rgb: Color3D;
 }
 
-export interface IUV extends Vector<Accessor> {
+export interface IUV extends IVector<IAccessor> {
     u: number;
     v: number;
 }

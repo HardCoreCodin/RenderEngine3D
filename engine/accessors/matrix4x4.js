@@ -1,4 +1,3 @@
-import { Position3D } from "./position.js";
 import { Direction3D } from "./direction.js";
 import { RotationMatrix } from "./matrix.js";
 import { MATRIX_4X4_ALLOCATOR } from "../core/memory/allocators.js";
@@ -9,7 +8,7 @@ export default class Matrix4x4 extends RotationMatrix {
         this.x_axis = new Direction3D(this.array.subarray(0, 3));
         this.y_axis = new Direction3D(this.array.subarray(4, 7));
         this.z_axis = new Direction3D(this.array.subarray(8, 11));
-        this.translation = new Position3D(this.array.subarray(12, 15));
+        this.translation = new Direction3D(this.array.subarray(12, 15));
     }
     _getAllocator() { return MATRIX_4X4_ALLOCATOR; }
     set m11(m11) { this.array[0] = m11; }

@@ -11,7 +11,7 @@ export default class RayTraceViewport extends BaseViewport {
         super._init();
     }
     update() {
-        if (this._controller.direction_changed)
+        if (this.camera.turned)
             this.projection_plane.reset(this);
     }
     reset(width, height, x, y) {

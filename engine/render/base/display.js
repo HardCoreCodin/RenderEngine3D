@@ -1,20 +1,22 @@
 import Rectangle from "./rectangle.js";
 import { rgba } from "../../accessors/color.js";
 export default class Display extends Rectangle {
-    constructor(_scene, RenderPipeline, Viewport, Controller, context = _scene.context) {
+    constructor(_camera, _mouse, _scene, RenderPipelineClass, ViewportClass, InputControllerClass, context = _scene.context) {
         super({ width: context.canvas.width, height: context.canvas.height }, { x: 0, y: 0 });
+        this._camera = _camera;
+        this._mouse = _mouse;
         this._scene = _scene;
-        this.RenderPipeline = RenderPipeline;
-        this.Viewport = Viewport;
-        this.Controller = Controller;
+        this.RenderPipelineClass = RenderPipelineClass;
+        this.ViewportClass = ViewportClass;
+        this.InputControllerClass = InputControllerClass;
         this.context = context;
         this._viewports = new Set();
         this._render_pipelines = new Map();
         this._active_viewport_border_color = rgba(0, 1, 0, 1);
         this._inactive_viewport_border_color = rgba(0.75);
         this._canvas = context.canvas;
-        this._default_render_pipeline = new RenderPipeline(this.context, this._scene);
-        this.active_viewport = this.addViewport();
+        this._default_render_pipeline = new RenderPipelineClass(this.context, this._scene);
+        this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(_mouse), this._default_render_pipeline, this));
         this._active_viewport.border.display = false;
     }
     get active_viewport_border_color() { return this._active_viewport_border_color; }
@@ -81,8 +83,7 @@ export default class Display extends Rectangle {
                 viewports.delete(viewport);
         }
     }
-    addViewport(controller = new this.Controller(this._scene.addCamera()), render_pipeline = this._default_render_pipeline, viewport = new this.Viewport(controller, render_pipeline, this)) {
-        controller.viewport = viewport;
+    addViewport(viewport, render_pipeline = this._default_render_pipeline) {
         this._viewports.add(viewport);
         this.registerViewport(viewport);
         if (this._active_viewport) {

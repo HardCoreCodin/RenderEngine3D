@@ -2,9 +2,9 @@ import GLMaterial from "./materials/base.js";
 import GLRenderPipeline from "./pipeline.js";
 import GLViewport from "./viewport.js";
 import RenderEngine from "../../base/engine.js";
-import { FPSController } from "../../../input/controllers.js";
+import InputController from "../../../input/controllers.js";
 export default class GLRenderEngine extends RenderEngine {
-    constructor(parent_element, Controller = FPSController) {
+    constructor(parent_element, Controller = InputController) {
         super(GLViewport, GLMaterial, GLRenderPipeline, parent_element, Controller);
     }
     _createContext(canvas) {

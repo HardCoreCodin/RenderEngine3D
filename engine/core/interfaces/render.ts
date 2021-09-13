@@ -1,11 +1,12 @@
 import Scene from "../../nodes/scene.js";
-import Geometry, {MeshGeometries} from "../../nodes/geometry.js";
+import {MeshGeometries} from "../../nodes/geometry.js";
 import {Border, Grid} from "../../render/base/viewport.js";
 import {ProjectionMatrix, ViewFrustum} from "../../render/raster/base/viewport.js";
-import {I2D, IPosition2D} from "./vectors.js";
+import {I2D} from "./vectors.js";
 import {IMatrix4x4} from "./matrix.js";
-import {IController} from "./input.js";
 import {IMesh} from "./geometry.js";
+import InputController from "../../input/controllers.js";
+import Camera from "../../nodes/camera.js";
 
 export interface ISize {
     width: number,
@@ -83,7 +84,8 @@ export interface IViewport<
     readonly border: BorderType;
     readonly context: Context;
 
-    controller: IController;
+    camera: Camera,
+    controller: InputController;
     render_pipeline: IRenderPipeline<Context>;
 
     cull_back_faces: boolean;
@@ -97,7 +99,8 @@ export interface IViewport<
 }
 
 export type IViewportConstructor<Context extends RenderingContext> = new (
-    controller: IController,
+    camera: Camera,
+    controller: InputController,
     render_pipeline: IRenderPipeline<Context>,
     screen: IDisplay<Context>,
     context?: Context,
@@ -130,10 +133,7 @@ export interface IDisplay<Context extends RenderingContext>
     resize(width: number, height: number): void;
     setPosition(x: number, y: number): void;
 
-    addViewport(controller?: IController,
-                render_pipeline?: IRenderPipeline<Context>,
-                viewport?: IViewport<Context>
-    ): IViewport<Context>;
+    addViewport(viewport?: IViewport<Context>): IViewport<Context>;
     removeViewport(viewport: IViewport<Context>): void;
 
     registerViewport(viewport: IViewport<Context>): void;
@@ -142,24 +142,14 @@ export interface IDisplay<Context extends RenderingContext>
     setViewportAt(x: number, y: number): void;
 }
 
-export interface IRenderEngineKeys {
-    ctrl: number;
-    esc: number;
-    space: number;
-}
-
 export interface IRenderEngine<Context extends RenderingContext>
 {
     readonly canvas: HTMLCanvasElement;
     readonly context: Context;
 
-    readonly keys: IRenderEngineKeys;
-    readonly pressed: Uint8Array;
-
     scene: Scene<Context>;
     display: IDisplay<Context>;
 
-    readonly is_active: boolean;
     readonly is_running: boolean;
 
     handleEvent(event: Event): void;

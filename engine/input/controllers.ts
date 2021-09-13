@@ -1,245 +1,244 @@
-import {dir3} from "../accessors/direction.js";
-import {IMatrix4x4} from "../core/interfaces/matrix.js";
-import {IPosition3D, I2D} from "../core/interfaces/vectors.js";
-import {IController, IControllerKeys} from "../core/interfaces/input.js";
-import {IEulerRotation} from "../core/interfaces/transform.js";
 import {
-    DEFAULT_MOUSE_SENSITIVITY,
-    DEFAULT_MOUSE_WHEEL_SENSITIVITY,
-    DEFAULT_MOVEMENT_SPEED,
-    DEFAULT_ROTATION_SPEED,
-    KEY_CODES, MOUSE_BUTTON
+    KEY_CODES,
+    NAVIGATION_DEFAULT__ACCELERATION,
+    NAVIGATION_DEFAULT__MAX_VELOCITY,
+    NAVIGATION_SPEED_DEFAULT__DOLLY,
+    NAVIGATION_SPEED_DEFAULT__ORBIT,
+    NAVIGATION_SPEED_DEFAULT__ORIENT,
+    NAVIGATION_SPEED_DEFAULT__PAN,
+    NAVIGATION_SPEED_DEFAULT__TURN,
+    NAVIGATION_SPEED_DEFAULT__ZOOM
 } from "../core/constants.js";
+import Mouse from "./mouse.js";
 import Camera from "../nodes/camera.js";
-import {IViewport} from "../core/interfaces/render.js";
 
-abstract class Controller
-    implements IController
-{
-    public viewport : IViewport;
-    abstract readonly keys: IControllerKeys;
-    readonly pressed = new Uint8Array(256);
 
-    position_changed: boolean = false;
-    direction_changed: boolean = false;
-
-    public key_pressed: boolean = false;
-    public mouse_clicked: boolean = false;
-    public mouse_double_clicked: boolean = false;
-
-    public mouse_up: number = 0;
-    public mouse_down: number = 0;
-
-    public mouse_moved: boolean = false;
-    public mouse_movement: I2D = {x: 0, y: 0};
-
-    public mouse_wheel_moved: boolean = false;
-    public mouse_wheel: number = 0;
-
-    protected movement_amount: number;
-    protected rotation_amount: number;
-    protected readonly right_movement = dir3();
-
-    protected _rotation: IEulerRotation;
-    protected _translation: IPosition3D;
-    protected _matrix: IMatrix4x4;
-
-    constructor(
-        protected _camera: Camera,
-        public movement_speed: number = DEFAULT_MOVEMENT_SPEED,
-        public rotation_speed: number = DEFAULT_ROTATION_SPEED,
-        public mouse_sensitivity: number = DEFAULT_MOUSE_SENSITIVITY,
-        public mouse_wheel_sensitivity: number = DEFAULT_MOUSE_WHEEL_SENSITIVITY
-    ) {
-        this._rotation = _camera.transform.rotation;
-        this._translation = _camera.transform.translation;
-        this._matrix = _camera.transform.matrix;
-    }
-
-    get camera(): Camera {return this._camera}
-    set camera(camera: Camera) {
-        this._camera = camera;
-        this._rotation = camera.transform.rotation;
-        this._translation = camera.transform.translation;
-        this._matrix = camera.transform.matrix;
-    }
-
-    update(delta_time: number): void {
-        this.position_changed = false;
-        this.direction_changed = false;
-
-        if (this.mouse_double_clicked) {
-            this.mouse_movement.x = 0;
-            this.mouse_movement.y = 0;
-            this.mouse_moved = false;
-            this.mouse_double_clicked = false;
-        }
-
-        if (this.key_pressed)
-            this._updateFromKeyboard(delta_time);
-
-        if (this.mouse_moved || this.mouse_wheel_moved || this.mouse_clicked)
-            this._updateFromMouse(delta_time);
-    }
-    keyUp (key: number): void {
-        if (key === KEY_CODES.CTRL)
-            this.viewport.show_wire_frame = !this.viewport.show_wire_frame;
-        else if (key === KEY_CODES.SPACE)
-            this.viewport.cull_back_faces = !this.viewport.cull_back_faces;
-    }
-
-    protected _updateFromKeyboard(delta_time: number): void {}
-    protected _updateFromMouse(delta_time: number): void {}
+export class ControllerSpeedSettings {
+    turn: number   = NAVIGATION_SPEED_DEFAULT__TURN;
+    zoom: number   = NAVIGATION_SPEED_DEFAULT__ZOOM;
+    dolly: number  = NAVIGATION_SPEED_DEFAULT__DOLLY;
+    orbit: number  = NAVIGATION_SPEED_DEFAULT__ORBIT;
+    pan: number    = NAVIGATION_SPEED_DEFAULT__PAN;
+    orient: number = NAVIGATION_SPEED_DEFAULT__ORIENT;
 }
 
-export class FPSController
-    extends Controller
+export class ControllerSettings {
+    speeds = new ControllerSpeedSettings();
+    max_velocity: number = NAVIGATION_DEFAULT__MAX_VELOCITY;
+    acceleration: number = NAVIGATION_DEFAULT__ACCELERATION;
+}
+
+export interface ILook<T>{
+    up: T;
+    down: T;
+}
+
+export interface ITurn<T> {
+    right: T;
+    left: T;
+}
+
+export interface IMove<T> extends ILook<T>, ITurn<T> {
+    forward: T;
+    backward: T;
+}
+
+export interface IControlKeys<T> {
+    space: T;
+    shift: T;
+    ctrl: T;
+    alt: T;
+    tab: T;
+    esc: T;
+}
+
+export class IsPressed implements IControlKeys<boolean> {
+    space: boolean = false;
+    shift: boolean = false;
+    ctrl: boolean = false;
+    alt: boolean = false;
+    tab: boolean = false;
+    esc: boolean = false;
+}
+
+export interface IKeyMap {
+    move: IMove<number>;
+    turn: ITurn<number>;
+    look: ILook<number>;
+    is_pressed: IControlKeys<number>;
+}
+
+export class Turn implements ITurn<boolean> {
+    right: boolean = false;
+    left: boolean  = false;
+}
+
+export class Look extends Turn implements ILook<boolean> {
+    up: boolean = false;
+    down: boolean  = false;
+}
+
+export class Move extends Look implements IMove<boolean> {
+    forward: boolean = false;
+    backward: boolean = false;
+    right: boolean = false;
+    left: boolean  = false;
+}
+
+export type InputControllerConstructor = new (mouse: Mouse) => InputController;
+
+
+export default class InputController
 {
-    keys: IControllerKeys = {
-        forward: KEY_CODES.W,
-        backwards: KEY_CODES.S,
-
-        right: KEY_CODES.D,
-        left: KEY_CODES.A,
-
-        yaw_right: KEY_CODES.RIGHT,
-        yaw_left: KEY_CODES.LEFT,
-
-        pitch_up: KEY_CODES.UP,
-        pitch_down: KEY_CODES.DOWN,
-
-        up: KEY_CODES.R,
-        down: KEY_CODES.F,
+    readonly keys: IKeyMap = {
+        move: {
+            forward: KEY_CODES.W,
+            left: KEY_CODES.A,
+            backward: KEY_CODES.S,
+            right: KEY_CODES.D,
+            up: KEY_CODES.R,
+            down: KEY_CODES.F
+        },
+        turn: {
+            right: KEY_CODES.RIGHT,
+            left: KEY_CODES.LEFT,
+        },
+        look: {
+            up: KEY_CODES.UP,
+            down: KEY_CODES.DOWN
+        },
+        is_pressed: {
+            space: KEY_CODES.SPACE,
+            shift: KEY_CODES.SHIFT,
+            ctrl: KEY_CODES.CTRL,
+            alt: KEY_CODES.ALT,
+            tab: KEY_CODES.TAB,
+            esc: KEY_CODES.ESC
+        }
     };
 
-    protected _updateFromKeyboard(delta_time: number): void {
-        if (this.pressed[this.keys.yaw_left] ||
-            this.pressed[this.keys.yaw_right] ||
-            this.pressed[this.keys.pitch_up] ||
-            this.pressed[this.keys.pitch_down]) {
+    settings = new ControllerSettings();
+    is_pressed = new IsPressed();
+    move = new Move();
+    turn = new Turn();
+    look = new Look();
 
-            this.direction_changed = true;
-            this.rotation_amount = this.rotation_speed * delta_time;
+    constructor(public readonly mouse: Mouse) {
+        mouse.middle_button.on_down = () => mouse.pos_raw_diff.setAllTo(0);
+    }
 
-            if (this.pressed[this.keys.yaw_left] ||
-                this.pressed[this.keys.yaw_right]) {
+    pan(camera: Camera) {
+        camera.pan(
+            this.settings.speeds.pan * -this.mouse.pos_raw_diff.x,
+             this.settings.speeds.pan * +this.mouse.pos_raw_diff.y
+        );
+        this.mouse.raw_movement_handled = true;
+    }
 
-                if (this.pressed[this.keys.yaw_left])
-                    this._rotation.y += this.rotation_amount;
-                else
-                    this._rotation.y -= this.rotation_amount;
-            }
+    zoom(camera: Camera) {
+        camera.lense.zoom(this.settings.speeds.zoom * this.mouse.wheel.scroll_amount);
+        this.mouse.wheel.scroll_handled = true;
+    }
 
-            if (this.pressed[this.keys.pitch_up] ||
-                this.pressed[this.keys.pitch_down]) {
+    dolly(camera: Camera) {
+        camera.dolly(this.settings.speeds.dolly * this.mouse.wheel.scroll_amount);
+        this.mouse.wheel.scroll_handled = true;
+    }
 
-                if (this.pressed[this.keys.pitch_up])
-                    this._rotation.x += this.rotation_amount;
-                else
-                    this._rotation.x -= this.rotation_amount;
+    orient(camera: Camera) {
+        // Y mouse movement are actually NEGATIVE when the mose is moved UP(!)
+        // This has to do with the 2D coordinate system of the canvas going top-to-bottom (with 0 on top).
+        //
+        // Moving the mouse upwards, should actually rotate around the X axis(!)
+        // Angle values are consistent with 2D rotation on every axis individually:
+        // In other words, for each axis-rotation, looking at the axis being rotated
+        // from it's tip (positive-end) down, a POSITIVE angle increment would mean to
+        // rotate the axis COUNTER CLOCK-WISE (CCW).
+        //
+        // When the mouse is moved upwards the player is looking up so the camera should
+        // be orienting upwards. This means a counter-clockwise rotation around the X axis,
+        // looking at it from it's tip.
+        // This requires a positive increment to the rotation angle on the X axis.
+        // Because when the move moves up the increment values for Y are negative,
+        // to get a positive increment in such cases the x-rotation angle needs to be
+        // DECREMENTED by that negative-Y amount.
+        //
+        // Similarly, when the mouse is moved to the right, the player is looking to the right
+        // so the camera should be orienting CLOCK-WISE (CW) around Y (Y is up) looking at Y from the top.
+        // A CW rotation is a negative angle increment, so again the rotation value is DECREMENTED.
+
+        camera.orient(
+            camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y,
+            camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x
+        );
+        this.mouse.raw_movement_handled = true;
+    }
+
+    orbit(camera: Camera): void {
+        camera.orbit(
+            this.settings.speeds.orbit * -this.mouse.pos_raw_diff.x,
+            this.settings.speeds.orbit * -this.mouse.pos_raw_diff.y
+        );
+        this.mouse.raw_movement_handled = true;
+    }
+
+    onKeyChanged(key: number, pressed: boolean) {
+        if (     key === this.keys.is_pressed.esc)   this.is_pressed.esc   = pressed;
+        if (     key === this.keys.is_pressed.ctrl)  this.is_pressed.ctrl  = pressed;
+        else if (key === this.keys.is_pressed.alt)   this.is_pressed.alt   = pressed;
+        else if (key === this.keys.is_pressed.shift) this.is_pressed.shift = pressed;
+        else if (key === this.keys.is_pressed.space) this.is_pressed.space = pressed;
+        else if (key === this.keys.is_pressed.tab)   this.is_pressed.tab   = pressed;
+
+        else if (key === this.keys.look.up)          this.look.up          = pressed;
+        else if (key === this.keys.look.down)        this.look.down        = pressed;
+        else if (key === this.keys.turn.left)        this.turn.left        = pressed;
+        else if (key === this.keys.turn.right)       this.turn.right       = pressed;
+        else if (key === this.keys.move.up)          this.move.up          = pressed;
+        else if (key === this.keys.move.down)        this.move.down        = pressed;
+        else if (key === this.keys.move.left)        this.move.left        = pressed;
+        else if (key === this.keys.move.right)       this.move.right       = pressed;
+        else if (key === this.keys.move.forward)     this.move.forward     = pressed;
+        else if (key === this.keys.move.backward)    this.move.backward    = pressed;
+    }
+
+    update(camera: Camera, delta_time: number): void {
+        if (this.move.right ||
+            this.move.left ||
+            this.move.up ||
+            this.move.down ||
+            this.move.forward ||
+            this.move.backward ||
+            this.turn.left ||
+            this.turn.right ||
+            camera.velocity.isNonZero())
+            camera.navigate(this, delta_time);
+
+        if (this.mouse.is_captured) {
+            if (this.mouse.moved)        this.orient(camera);
+            if (this.mouse.wheel.scrolled) this.zoom(camera);
+        } else {
+            if (this.mouse.wheel.scrolled) this.dolly(camera);
+            if (this.mouse.moved) {
+                if (this.mouse.middle_button.is_pressed) {
+                    if (this.is_pressed.alt)
+                        this.orbit(camera);
+                    else
+                        this.pan(camera);
+                }
             }
         }
 
-        if (this.pressed[this.keys.forward] ||
-            this.pressed[this.keys.backwards] ||
-            this.pressed[this.keys.right] ||
-            this.pressed[this.keys.left] ||
-            this.pressed[this.keys.up] ||
-            this.pressed[this.keys.down]) {
-
-            this.position_changed = true;
-            this.movement_amount = this.movement_speed * delta_time;
-
-            if (this._camera.is_perspective) {
-                if (this.pressed[this.keys.forward] ||
-                    this.pressed[this.keys.backwards]) {
-                    if (this.pressed[this.keys.forward]) {
-                        this._translation.x += this._matrix.z_axis.x * this.movement_amount;
-                        this._translation.z += this._matrix.z_axis.z * this.movement_amount;
-                    } else {
-                        this._translation.x -= this._matrix.z_axis.x * this.movement_amount;
-                        this._translation.z -= this._matrix.z_axis.z * this.movement_amount;
-                    }
-                }
-            }
-
-            if (this.pressed[this.keys.right] ||
-                this.pressed[this.keys.left]) {
-
-                this._matrix.x_axis.mul(this.movement_amount, this.right_movement);
-
-                if (this.pressed[this.keys.right])
-                    this._translation.iadd(this.right_movement);
-                else
-                    this._translation.isub(this.right_movement);
-            }
-
-            if (this.pressed[this.keys.up] ||
-                this.pressed[this.keys.down]) {
-
-                if (this.pressed[this.keys.up])
-                    this._translation.y += this.movement_amount;
-                else
-                    this._translation.y -= this.movement_amount;
-            }
+        if (this.mouse.left_button.double_clicked) {
+            this.mouse.left_button.double_click_handled = true;
+            this.mouse.is_captured = true;
         }
     }
 
-    protected _updateFromMouse(delta_time: number): void {
-        if (this.mouse_moved) {
-            this.direction_changed = true;
-            this.rotation_amount = this.mouse_sensitivity * this.rotation_speed;
-
-            // Note:
-            // Y mouse movement are actually NEGATIVE when the mose is moved UP(!)
-            // This has to do with the 2D coordinate system of the canvas going top-to-bottom (with 0 on top).
-            //
-            // Also Note:
-            // Moving the mouse upwards, should actually rotate around the X axis(!)
-            // Angle values are consistent with 2D rotation on every axis individually:
-            // In other words, for each axis-rotation, looking at the axis being rotated
-            // from it's tip (positive-end) down, a POSITIVE angle increment would mean to
-            // rotate the axis COUNTER CLOCK-WISE (CCW).
-            //
-            // When the mouse is moved upwards the player is looking up so the camera should
-            // be orienting upwards. This means a counter-clockwise rotation around the X axis,
-            // looking at it from it's tip.
-            // This requires a positive increment to the rotation angle on the X axis.
-            // Because when the move moves up the increment values for Y are negative,
-            // to get a positive increment in such cases the x-rotation angle needs to be
-            // DECREMENTED by that negative-Y amount.
-            //
-            // Similarly, when the mouse is moved to the right, the player is looking to the right
-            // so the camera should be orienting CLOCK-WIZE (CW) around Y (Y is up) looking at Y from the top.
-            // A CW roation is a negative angle increment, so again the rotation value is DECREMENTED.
-            this._rotation.x -= this.rotation_amount * this.mouse_movement.y;
-            this._rotation.y -= this.rotation_amount * this.mouse_movement.x;
-
-            this.mouse_movement.x = this.mouse_movement.y = 0;
-            this.mouse_moved = false;
-        }
-
-        if (this.mouse_wheel_moved) {
-            if (this._camera.is_perspective)
-                this._camera.lense.focal_length -= this.mouse_wheel * this.mouse_wheel_sensitivity;
-            else
-                this._camera.lense.zoom -= this.mouse_wheel * this.mouse_wheel_sensitivity;
-            this.mouse_wheel_moved = false;
-        }
-
-        if (this.mouse_clicked) {
-            this.mouse_clicked = false;
-        }
-
-        if (this.mouse_down) {
-            if (this.mouse_down === MOUSE_BUTTON.MIDDLE)
-                this._camera.is_perspective = !this._camera.is_perspective;
-
-            this.mouse_down = 0;
-        }
-
-        if (this.mouse_up) {
-            this.mouse_up = 0;
-        }
+    reset(camera: Camera) {
+        camera.moved = false;
+        camera.turned = false;
+        camera.lense.zoomed = false;
+        this.mouse.reset();
     }
 }

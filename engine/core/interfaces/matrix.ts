@@ -25,7 +25,7 @@ export interface IMatrix extends IAccessor
 
 export interface IRotationMatrix extends IMatrix
 {
-    readonly translation: Position3D;
+    readonly translation: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
@@ -65,7 +65,7 @@ export interface IMatrix2x2 extends IMatrix
 
 export interface IMatrix3x3 extends IRotationMatrix
 {
-    readonly translation: Position3D;
+    readonly translation: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
@@ -89,7 +89,7 @@ export interface IMatrix3x3 extends IRotationMatrix
 export interface IMatrix4x4
     extends IRotationMatrix
 {
-    readonly translation: Position3D;
+    readonly translation: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;

@@ -1,21 +1,15 @@
 import Scene from "../../nodes/scene.js";
 import Display from "./display.js";
-import { KEY_CODES } from "../../core/constants.js";
-import { FPSController } from "../../input/controllers.js";
-import { non_zero } from "../../core/utils.js";
+import InputController from "../../input/controllers.js";
+import UILayer from "../../input/ui.js";
+import Mouse from "../../input/mouse.js";
 export default class RenderEngine {
-    constructor(Viewport, Material, RenderPipeline, parent_element = document.body, Controller = FPSController) {
+    constructor(Viewport, Material, RenderPipeline, parent_element = document.body, Controller = InputController) {
+        this.mouse = new Mouse();
         this.update_callbacks = new Set();
-        this._is_active = false;
         this._is_running = false;
         this._last_timestamp = 0;
         this._delta_time = 0;
-        this.pressed = new Uint8Array(256);
-        this.keys = {
-            esc: KEY_CODES.ESC,
-            ctrl: KEY_CODES.CTRL,
-            space: KEY_CODES.SPACE
-        };
         this._events = [
             'keyup',
             'keydown',
@@ -27,6 +21,7 @@ export default class RenderEngine {
             'dblclick',
             'pointerlockchange'
         ];
+        this.ui = new UILayer(parent_element);
         this.canvas = document.createElement('canvas');
         parent_element.appendChild(this.canvas);
         this.canvas.width = this.canvas.clientWidth;
@@ -34,12 +29,11 @@ export default class RenderEngine {
         this.canvas.style.cssText = 'display: block; width: 100vw; height: 100vh;';
         this.context = this._createContext(this.canvas);
         this._scene = new Scene(this.context, Material);
-        this._display = new Display(this._scene, RenderPipeline, Viewport, Controller);
+        this._display = new Display(this._scene.addCamera(), this.mouse, this._scene, RenderPipeline, Viewport, Controller, this.context);
         if (document.ontouchmove)
             this._events.concat('touchmove', 'touchstart', 'touchend');
         this._frame_request_callback = this.update.bind(this);
     }
-    get is_active() { return this._is_active; }
     get is_running() { return this._is_running; }
     get scene() { return this._scene; }
     set scene(scene) {
@@ -52,100 +46,77 @@ export default class RenderEngine {
         this._display = display;
     }
     update(time) {
-        this._delta_time = time - this._last_timestamp;
+        this._delta_time = (time - this._last_timestamp) * 0.001;
         this._last_timestamp = time;
-        const viewports = this._display.viewports;
-        const controller = this._display.active_viewport.controller;
-        if (this._is_active) {
-            controller.update(this._delta_time);
-            if (!controller.camera.is_static ||
-                controller.direction_changed ||
-                controller.position_changed) {
-                for (const viewport of viewports)
-                    if (Object.is(controller, viewport.controller))
-                        viewport.update();
-                controller.direction_changed = controller.position_changed = false;
-            }
-        }
-        else if (!controller.camera.is_static)
-            for (const viewport of viewports)
-                if (Object.is(controller, viewport.controller))
-                    viewport.update();
+        this._display.active_viewport.controller.update(this._display.active_viewport.camera, this._delta_time);
+        for (const viewport of this._display.viewports)
+            viewport.update();
         for (const update_callback of this.update_callbacks)
             update_callback(this._delta_time, time);
-        // update world-matrices for all dynamic nodes in the scene
         for (const node of this._scene.children)
             node.refreshWorldMatrix();
+        this._display.active_viewport.controller.reset(this._display.active_viewport.camera);
         this._display.refresh();
         requestAnimationFrame(this._frame_request_callback);
     }
     _on_pointerlockchange(pointer_event) {
-        this._is_active = this.canvas === document.pointerLockElement;
+        this.mouse.is_captured = this.canvas === document.pointerLockElement;
     }
     _on_mousemove(mouse_event) {
-        const controller = this._display.active_viewport.controller;
-        controller.mouse_moved = true;
-        controller.mouse_movement.x += mouse_event.movementX;
-        controller.mouse_movement.y += mouse_event.movementY;
+        this.mouse.setRawMovement(mouse_event.movementX, mouse_event.movementY);
     }
     _on_wheel(wheel_event) {
-        const controller = this._display.active_viewport.controller;
-        controller.mouse_wheel = wheel_event.deltaY;
-        controller.mouse_wheel_moved = true;
+        this.mouse.wheel.scroll(wheel_event.deltaY);
     }
-    _on_dblclick() {
-        this._is_active = !this._is_active;
-        this._display.active_viewport.controller.mouse_double_clicked = this._is_active;
-        if (this._is_active)
+    _on_dblclick(wheel_event) {
+        switch (wheel_event.button) {
+            case 0: return this.mouse.left_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+            case 1: return this.mouse.middle_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+            case 2: return this.mouse.right_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+        }
+        if (this.mouse.is_captured)
             this.canvas.requestPointerLock();
         else
             document.exitPointerLock();
     }
     _on_click(mouse_event) {
-        this._display.active_viewport.controller.mouse_clicked = true;
+        switch (mouse_event.button) {
+            case 0: return this.mouse.left_button.click(mouse_event.clientX, mouse_event.clientY);
+            case 1: return this.mouse.middle_button.click(mouse_event.clientX, mouse_event.clientY);
+            case 2: return this.mouse.right_button.click(mouse_event.clientX, mouse_event.clientY);
+        }
         this._display.setViewportAt(mouse_event.clientX, mouse_event.clientY);
     }
     _on_mousedown(mouse_event) {
         const rect = this.canvas.getBoundingClientRect();
         this._display.setPosition(rect.left, rect.top);
-        this._display.active_viewport.controller.mouse_down = mouse_event.which;
+        switch (mouse_event.button) {
+            case 0: return this.mouse.left_button.down(mouse_event.clientX, mouse_event.clientY);
+            case 1: return this.mouse.middle_button.down(mouse_event.clientX, mouse_event.clientY);
+            case 2: return this.mouse.right_button.down(mouse_event.clientX, mouse_event.clientY);
+        }
     }
     _on_mouseup(mouse_event) {
-        this._display.active_viewport.controller.mouse_up = mouse_event.which;
+        switch (mouse_event.button) {
+            case 0: return this.mouse.left_button.up(mouse_event.clientX, mouse_event.clientY);
+            case 1: return this.mouse.middle_button.up(mouse_event.clientX, mouse_event.clientY);
+            case 2: return this.mouse.right_button.up(mouse_event.clientX, mouse_event.clientY);
+        }
     }
     _on_keydown(key_event) {
-        const controller = this._display.active_viewport.controller;
-        controller.key_pressed = true;
-        for (const key of Object.keys(this.keys))
-            if (this.keys[key] === key_event.which)
-                this.pressed[key_event.which] = 1;
-        for (const key of Object.keys(controller.keys))
-            if (controller.keys[key] === key_event.which)
-                controller.pressed[key_event.which] = 1;
+        this._display.active_viewport.controller.onKeyChanged(key_event.which, true);
     }
     _on_keyup(key_event) {
-        const controller = this._display.active_viewport.controller;
-        controller.keyUp(key_event.which);
-        for (const key of Object.keys(this.keys))
-            if (this.keys[key] === key_event.which)
-                this.pressed[key_event.which] = 0;
-        for (const key of Object.keys(controller.keys))
-            if (controller.keys[key] === key_event.which)
-                controller.pressed[key_event.which] = 0;
-        if (!controller.pressed.some(non_zero))
-            controller.key_pressed = false;
+        this._display.active_viewport.controller.onKeyChanged(key_event.which, false);
     }
     handleEvent(event) {
         const handler = `_on_${event.type}`;
-        if (typeof this[handler] === 'function') {
-            if (event.type !== 'wheel')
-                event.preventDefault();
+        if (typeof this[handler] === 'function')
             return this[handler](event);
-        }
     }
     _startListening() {
         for (const event of this._events)
-            document.addEventListener(event, this, false);
+            document.addEventListener(event, this, { passive: true });
     }
     _stopListening() {
         for (const event of this._events)

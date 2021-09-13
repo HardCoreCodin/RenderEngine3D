@@ -43,9 +43,9 @@ export type IPixelShader<Pixel extends IPixel = IPixel> = (
 
 // const fmod = (a: number, b: number): number => Number((a - (Math.floor(a / b) * b)).toPrecision(8));
 
-export const getCheckerBoardPixelValueByUV = (u: number, v: number, half_step_count: number): number => {
-    let s = u * half_step_count;
-    let t = v * half_step_count;
+export const getCheckerBoardPixelValueByUV = (UV: UV2D, half_step_count: number): number => {
+    let s = UV.u * half_step_count;
+    let t = UV.v * half_step_count;
     s -= Math.floor(s);
     t -= Math.floor(t);
     return (s > 0.5 ? 1 : 0) ^ (t < 0.5 ? 1 : 0);
@@ -89,8 +89,8 @@ export const shadePixelUV: IPixelShader = <Pixel extends IPixel = IPixel>(
     surface: ISurface,
     scene: IPixelScene
 ): void => {
-    pixel.color.r = surface.uv.u;
-    pixel.color.g = surface.uv.v;
+    pixel.color.r = surface.UV.u;
+    pixel.color.g = surface.UV.v;
     pixel.color.b = 0;
     pixel.color.a = 1;
 };
@@ -125,7 +125,7 @@ export const shadePixelCheckerboard: IPixelShader = <Pixel extends IPixel = IPix
     surface: ISurface,
     scene: IPixelScene
 ): void => {
-    pixel.color.array.fill(getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4));
+    pixel.color.array.fill(getCheckerBoardPixelValueByUV(surface.UV, 4));
     pixel.color.a = 1;
 };
 
@@ -165,7 +165,7 @@ export const shadePixelLambertCheckerboard: IPixelShader = <Pixel extends IPixel
 ): void => {
     shadePixelLambert(pixel, surface, scene);
 
-    if (!getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4)) {
+    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
         pixel.color.r *= 0.5;
         pixel.color.g *= 0.5;
         pixel.color.b *= 0.5;
@@ -218,7 +218,7 @@ export const shadePixelPhongCheckerboard: IPixelShader = <Pixel extends IPixel =
 ): void => {
     shadePixelPhong(pixel, surface, scene);
 
-    if (!getCheckerBoardPixelValueByUV(surface.uv.u, surface.uv.v, 4)) {
+    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
         pixel.color.r *= 0.5;
         pixel.color.g *= 0.5;
         pixel.color.b *= 0.5;

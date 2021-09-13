@@ -3,6 +3,15 @@ import {IS_BIG_ENDIAN, PIE, TWO_PIE} from "./constants.js";
 
 export const non_zero = _ => _ !== 0;
 
+export const approach = (src: number, trg: number, diff: number): number => {
+    let out: number;
+
+    out = src + diff; if (trg > out) return out;
+    out = src - diff; if (trg < out) return out;
+
+    return trg;
+};
+
 const memcpy = (
     from_array: TypedArray,
     to_array: TypedArray,

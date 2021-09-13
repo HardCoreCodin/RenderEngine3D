@@ -40,10 +40,10 @@ export default class GLViewport extends RasterViewport<WebGL2RenderingContext, G
     }
 
     protected _getPerspectiveProjectionMatrix(): GLPerspectiveProjectionMatrix {
-        return new GLPerspectiveProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new GLPerspectiveProjectionMatrix(this.camera.lense, this.view_frustum);
     }
     protected _getOrthographicProjectionMatrix(): GLOrthographicProjectionMatrix {
-        return new GLOrthographicProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new GLOrthographicProjectionMatrix(this.camera.lense, this.view_frustum);
     }
 }
 

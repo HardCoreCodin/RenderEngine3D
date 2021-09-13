@@ -1,10 +1,11 @@
 import Rectangle from "./rectangle.js";
 import {rgba} from "../../accessors/color.js";
 import {IDisplay, IRenderPipeline, IViewport} from "../../core/interfaces/render.js";
-import {IController} from "../../core/interfaces/input.js";
 import {VertexPositions2D, VertexPositions3D} from "../../buffers/attributes/positions.js";
 import {Position3D} from "../../accessors/position.js";
 import {Direction3D} from "../../accessors/direction.js";
+import InputController from "../../input/controllers.js";
+import Camera from "../../nodes/camera.js";
 
 export default abstract class BaseViewport<
     Context extends RenderingContext,
@@ -29,7 +30,8 @@ export default abstract class BaseViewport<
     abstract reset(width: number, height: number, x: number, y: number): void;
 
     constructor(
-        protected _controller: IController,
+        public camera: Camera,
+        public controller: InputController,
         protected _render_pipeline: IRenderPipeline<Context>,
         protected readonly _display: IDisplay<Context>
     ) {
@@ -54,7 +56,8 @@ export default abstract class BaseViewport<
     }
 
     setFrom(other: this): void {
-        this._controller.camera.setFrom(other.controller.camera);
+        this.camera = other.camera;
+        this.controller = other.controller;
         this.setTo(
             other.size.width,
             other.size.height,
@@ -62,9 +65,6 @@ export default abstract class BaseViewport<
             other.position.y
         )
     }
-
-    get controller(): IController {return this._controller}
-    set controller(constroller: IController) {this._controller = constroller}
 
     get render_pipeline(): IRenderPipeline<Context> {return this._render_pipeline}
     set render_pipeline(render_pipeline: IRenderPipeline<Context>) {
@@ -155,14 +155,14 @@ export class ProjectionPlane {
     ) {}
 
     reset(viewport: IViewport) {
-        let camera = viewport.controller.camera;
-        camera.transform.matrix.x_axis.mul(1 - viewport.width, this.right);
-        camera.transform.matrix.y_axis.mul(viewport.height - 2, this.down);
-        camera.transform.matrix.z_axis.mul(viewport.width * camera.lense.focal_length, forward);
-        camera.transform.translation.add(forward, this.start);
+        const camera = viewport.camera;
+        camera.right.mul(1 - viewport.width, this.right);
+        camera.up.mul(viewport.height - 2, this.down);
+        camera.forward.mul(viewport.width * camera.lense.focal_length, forward);
+        camera.position.add(forward, this.start);
         this.start.iadd(this.right);
         this.start.iadd(this.down);
-        camera.transform.matrix.x_axis.mul(2, this.right);
-        camera.transform.matrix.y_axis.mul(-2, this.down);
+        camera.right.mul(2, this.right);
+        camera.up.mul(-2, this.down);
     }
 }

@@ -76,6 +76,7 @@ export default class Rasterizer extends BaseRenderPipeline {
         const normals = this.clipped_vertex_normals.arrays;
         const uvs = this.clipped_vertex_uvs.arrays;
         let light_position = this.scene.object_space_light_positions.current;
+        const light_model_to_world_position = new Position3D(light_position.array);
         const n = viewport.view_frustum.near;
         const vf = this.vertex_flags.array;
         const ff = this.face_flags.array;
@@ -171,9 +172,10 @@ export default class Rasterizer extends BaseRenderPipeline {
                                     light_index = 0;
                                     for (const light of this.scene.lights) {
                                         light_position.array = this.scene.object_space_light_positions.arrays[light_index++];
-                                        light.model_to_world.translation.matmul(mesh_geometry.world_to_model, light_position);
+                                        light_model_to_world_position.array = light.model_to_world.translation.array;
+                                        light_model_to_world_position.matmul(mesh_geometry.world_to_model, light_position);
                                     }
-                                    viewport.controller.camera.transform.translation.matmul(mesh_geometry.world_to_model, pixel_scene.camera_position);
+                                    viewport.camera.position.matmul(mesh_geometry.world_to_model, pixel_scene.camera_position);
                                     vertex_index = 0;
                                     for (face_index = 0; face_index < face_count; face_index++) {
                                         current_face_flags = ff[face_index];

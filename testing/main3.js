@@ -5,7 +5,7 @@ globalThis.rgba = rgba;
 const engine = globalThis.engine = new GLRenderEngine();
 const display = engine.display;
 const vp1 = display.active_viewport;
-const camera = vp1.controller.camera;
+const camera = vp1.camera;
 camera.is_static = false;
 camera.lense.fov = 75;
 camera.transform.translation.y = 1;

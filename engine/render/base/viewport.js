@@ -4,9 +4,10 @@ import { VertexPositions2D, VertexPositions3D } from "../../buffers/attributes/p
 import { Position3D } from "../../accessors/position.js";
 import { Direction3D } from "../../accessors/direction.js";
 export default class BaseViewport extends Rectangle {
-    constructor(_controller, _render_pipeline, _display) {
+    constructor(camera, controller, _render_pipeline, _display) {
         super(_display.size, _display.position);
-        this._controller = _controller;
+        this.camera = camera;
+        this.controller = controller;
         this._render_pipeline = _render_pipeline;
         this._display = _display;
         this.is_active = false;
@@ -31,11 +32,10 @@ export default class BaseViewport extends Rectangle {
             this.border.draw();
     }
     setFrom(other) {
-        this._controller.camera.setFrom(other.controller.camera);
+        this.camera = other.camera;
+        this.controller = other.controller;
         this.setTo(other.size.width, other.size.height, other.position.x, other.position.y);
     }
-    get controller() { return this._controller; }
-    set controller(constroller) { this._controller = constroller; }
     get render_pipeline() { return this._render_pipeline; }
     set render_pipeline(render_pipeline) {
         this._display.unregisterViewport(this);
@@ -108,15 +108,15 @@ export class ProjectionPlane {
         this.down = down;
     }
     reset(viewport) {
-        let camera = viewport.controller.camera;
-        camera.transform.matrix.x_axis.mul(1 - viewport.width, this.right);
-        camera.transform.matrix.y_axis.mul(viewport.height - 2, this.down);
-        camera.transform.matrix.z_axis.mul(viewport.width * camera.lense.focal_length, forward);
-        camera.transform.translation.add(forward, this.start);
+        const camera = viewport.camera;
+        camera.right.mul(1 - viewport.width, this.right);
+        camera.up.mul(viewport.height - 2, this.down);
+        camera.forward.mul(viewport.width * camera.lense.focal_length, forward);
+        camera.position.add(forward, this.start);
         this.start.iadd(this.right);
         this.start.iadd(this.down);
-        camera.transform.matrix.x_axis.mul(2, this.right);
-        camera.transform.matrix.y_axis.mul(-2, this.down);
+        camera.right.mul(2, this.right);
+        camera.up.mul(-2, this.down);
     }
 }
 //# sourceMappingURL=viewport.js.map

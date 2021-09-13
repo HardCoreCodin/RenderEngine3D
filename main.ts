@@ -5,7 +5,7 @@ const suzanne_mesh = rst.loadMeshFromObj(rst.objs.suzanne);
 const engine = new rst.RasterEngine();
 const scene = engine.scene;
 const viewport = engine.display.active_viewport as rst.SoftwareRasterViewport;
-const camera = viewport.controller.camera;
+const camera = viewport.camera;
 
 viewport.view_frustum.near = 2;
 viewport.show_wire_frame = false;

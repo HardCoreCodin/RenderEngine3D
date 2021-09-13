@@ -1,5 +1,4 @@
 import {Accessor, Vector} from "./accessor.js";
-import {VECTOR_3D_ALLOCATOR} from "../core/memory/allocators.js";
 import {
     add_a_3D_vector_to_another_3D_vector_in_place,
     add_a_3D_vector_to_another_3D_vector_to_out,
@@ -19,16 +18,17 @@ import {
     subtract_a_number_from_a_3D_vector_to_out
 } from "../core/math/vec3.js";
 import {I3D, IVector3D} from "../core/interfaces/vectors.js";
+import {TypedArray} from "../core/types.js";
 
-export default abstract class Vector3D<Other extends Accessor = Accessor>
-    extends Vector<Other>
-    implements IVector3D<Other>
+export default abstract class Vector3D<
+    ArrayType extends TypedArray = Float32Array,
+    Other extends Accessor<ArrayType> = Accessor<ArrayType>>
+    extends Vector<ArrayType, Other>
+    implements IVector3D<ArrayType, Other>
 {
-    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
-
-    set x(x: number) {this.array[0] = x}
-    set y(y: number) {this.array[1] = y}
-    set z(z: number) {this.array[2] = z}
+    set x(x: number) {this.array[0] = x; if (this.on_change) this.on_change(this); }
+    set y(y: number) {this.array[1] = y; if (this.on_change) this.on_change(this); }
+    set z(z: number) {this.array[2] = z; if (this.on_change) this.on_change(this); }
 
     get x(): number {return this.array[0]}
     get y(): number {return this.array[1]}
@@ -38,20 +38,23 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
         this.array[0] = x;
         this.array[1] = y;
         this.array[2] = z;
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
     setAllTo(value: number): this {
         this.array.fill(value);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    setFrom(other: Vector<Accessor & I3D>): this {
+    setFrom(other: Vector<ArrayType, Accessor<ArrayType> & I3D>): this {
         this.array.set(other.array);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    equals(other: Vector<Accessor & I3D>): boolean {
+    equals(other: Vector<ArrayType, Accessor<ArrayType> & I3D>): boolean {
         return check_if_two_3D_vectors_are_equal(this.array, other.array);
     }
 
@@ -64,6 +67,8 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
         } else
             add_a_3D_vector_to_another_3D_vector_in_place(this.array, other_or_num.array);
 
+        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -75,6 +80,8 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
                 add_a_number_to_a_3D_vector_to_out(this.array, other_or_num, out.array);
         } else
             add_a_3D_vector_to_another_3D_vector_to_out(this.array, other_or_num.array, out.array);
+
+        if (out.on_change) out.on_change(out);
 
         return out;
     }
@@ -92,6 +99,8 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
             subtract_a_3D_vector_from_another_3D_vector_in_place(this.array, other_or_num.array);
         }
 
+        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -105,8 +114,10 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
             if (other_or_num.is(this))
                 return out.setAllTo(0);
 
-            subtract_a_3D_vector_from_another_3D_vector_to_out(this.array, other_or_num.array, other_or_num.array);
+            subtract_a_3D_vector_from_another_3D_vector_to_out(this.array, other_or_num.array, out.array);
         }
+
+        if (out.on_change) out.on_change(out);
 
         return out;
     }
@@ -118,6 +129,9 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
             return this;
 
         divide_a_3D_vector_by_a_number_in_place(this.array, denominator);
+
+        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -130,6 +144,8 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
             return this.idiv(denominator);
 
         divide_a_3D_vector_by_a_number_to_out(this.array, denominator, out.array);
+        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
@@ -143,9 +159,11 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
 
                 multiply_a_3D_vector_by_a_number_in_place(this.array, other_or_num);
             } else
-                this.setAllTo(0);
+                return this.setAllTo(0);
         } else
             multiply_a_3D_vector_by_another_3D_vector_in_place(this.array, other_or_num.array);
+
+        if (this.on_change) this.on_change(this);
 
         return this;
     }
@@ -160,7 +178,7 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
 
                 multiply_a_3D_vector_by_a_number_to_out(this.array, other_or_num, out.array);
             } else
-                out.setAllTo(0);
+                return out.setAllTo(0);
         } else {
             if (out.is(this))
                 return out.imul(other_or_num);
@@ -168,12 +186,15 @@ export default abstract class Vector3D<Other extends Accessor = Accessor>
             multiply_a_3D_vector_by_another_3D_vector_to_out(this.array, other_or_num.array, out.array);
         }
 
+        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
 
     lerp(to: this, by: number, out: this): this {
         linearly_interpolate_from_a_3D_vector_to_another_3D_vector_to_out(this.array, to.array, by, out.array);
+        if (out.on_change) out.on_change(out);
         return out;
     }
 }

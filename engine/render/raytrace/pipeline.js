@@ -19,7 +19,7 @@ export default class RayTracer extends BaseRenderPipeline {
             current.setFrom(start);
             for (let x = 0; x < viewport.width; x++) {
                 current.normalize(ray_dir);
-                if (intersectRayWithSpheres2(this.scene.spheres.radii, this.scene.spheres.centers.arrays, viewport.controller.camera.transform.translation.array, ray_dir.array, hit_position.array, hit_normal.array)) {
+                if (intersectRayWithSpheres2(this.scene.spheres.radii, this.scene.spheres.centers.arrays, viewport.camera.position.array, ray_dir.array, hit_position.array, hit_normal.array)) {
                     r = (hit_normal.x + 1.0) / 2.0;
                     g = (hit_normal.y + 1.0) / 2.0;
                     b = (hit_normal.z + 1.0) / 2.0;

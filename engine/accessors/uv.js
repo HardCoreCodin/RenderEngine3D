@@ -1,6 +1,8 @@
 import Vector2D from "./vector2D.js";
 import Vector3D from "./vector3D.js";
+import { VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR } from "../core/memory/allocators.js";
 export class UV2D extends Vector2D {
+    _getAllocator() { return VECTOR_2D_ALLOCATOR; }
     setTo(u, v) { return super.setTo(u, v); }
     copy(out = new UV2D()) { return out.setFrom(this); }
     set u(u) { this.array[0] = u; }
@@ -9,6 +11,7 @@ export class UV2D extends Vector2D {
     get v() { return this.array[1]; }
 }
 export class UV3D extends Vector3D {
+    _getAllocator() { return VECTOR_3D_ALLOCATOR; }
     setTo(u, v, w) { return super.setTo(u, v, w); }
     copy(out = new UV3D()) { return out.setFrom(this); }
     set u(u) { this.array[0] = u; }

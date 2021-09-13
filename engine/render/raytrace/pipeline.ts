@@ -27,7 +27,7 @@ export default class RayTracer extends BaseRenderPipeline<CanvasRenderingContext
                 if (intersectRayWithSpheres2(
                     this.scene.spheres.radii,
                     this.scene.spheres.centers.arrays,
-                    viewport.controller.camera.transform.translation.array,
+                    viewport.camera.position.array,
                     ray_dir.array,
                     hit_position.array,
                     hit_normal.array

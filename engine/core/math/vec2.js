@@ -179,7 +179,6 @@ export const multiply_some_2D_vectors_by_a_2x2_matrix_to_out = (vectors, m, incl
 };
 export const multiply_some_2D_vectors_by_a_2x2_matrix_in_place = (vectors, m, include, start = 0, end = vectors.length) => {
     let v;
-    Float32Array;
     let x, y;
     for (let i = start; i < end; i++)
         if (include[i]) {

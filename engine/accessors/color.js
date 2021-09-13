@@ -1,6 +1,8 @@
 import Vector3D from "./vector3D.js";
 import Vector4D from "./vector4D.js";
+import { VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR } from "../core/memory/allocators.js";
 export class Color3D extends Vector3D {
+    _getAllocator() { return VECTOR_3D_ALLOCATOR; }
     copy(out = new Color3D()) { return out.setFrom(this); }
     setTo(r, g, b) { return super.setTo(r, g, b); }
     toString() { return `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`; }
@@ -12,6 +14,7 @@ export class Color3D extends Vector3D {
     set b(b) { this.array[2] = b; }
 }
 export class Color4D extends Vector4D {
+    _getAllocator() { return VECTOR_4D_ALLOCATOR; }
     copy(out = new Color4D()) { return out.setFrom(this); }
     setTo(r, g, b, a) { return super.setTo(r, g, b, a); }
     toString() { return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`; }

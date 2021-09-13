@@ -1,5 +1,4 @@
 import {Accessor, Vector} from "./accessor.js";
-import {VECTOR_4D_ALLOCATOR} from "../core/memory/allocators.js";
 import {
     add_a_4D_vector_to_another_4D_vector_in_place,
     add_a_4D_vector_to_another_4D_vector_to_out,
@@ -19,17 +18,17 @@ import {
     subtract_a_number_from_a_4D_vector_to_out
 } from "../core/math/vec4.js";
 import {I4D, IVector4D} from "../core/interfaces/vectors.js";
+import {TypedArray} from "../core/types.js";
 
-export default abstract class Vector4D<Other extends Accessor = Accessor>
-    extends Vector<Other>
-    implements IVector4D<Other>
+export default abstract class Vector4D<ArrayType extends TypedArray = Float32Array, Other extends Accessor<ArrayType> = Accessor<ArrayType>>
+    extends Vector<ArrayType, Other>
+    implements IVector4D<ArrayType, Other>
 {
-    protected _getAllocator() {return VECTOR_4D_ALLOCATOR}
 
-    set x(x: number) {this.array[0] = x}
-    set y(y: number) {this.array[1] = y}
-    set z(z: number) {this.array[2] = z}
-    set w(w: number) {this.array[3] = w}
+    set x(x: number) {this.array[0] = x; if (this.on_change) this.on_change(this); }
+    set y(y: number) {this.array[1] = y; if (this.on_change) this.on_change(this); }
+    set z(z: number) {this.array[2] = z; if (this.on_change) this.on_change(this); }
+    set w(w: number) {this.array[3] = w; if (this.on_change) this.on_change(this); }
 
     get x(): number {return this.array[0]}
     get y(): number {return this.array[1]}
@@ -38,20 +37,23 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
     setTo(x: number, y: number, z: number, w: number): this {
         this.array.set([x, y, z, w]);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
     setAllTo(value: number): this {
         this.array.fill(value);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    setFrom(other: Vector<Accessor & I4D>): this {
+    setFrom(other: Vector<ArrayType, Accessor<ArrayType> & I4D>): this {
         this.array.set(other.array);
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
-    equals(other: Vector<Accessor & I4D>): boolean {
+    equals(other: Vector<ArrayType, Accessor<ArrayType> & I4D>): boolean {
         return check_if_two_4D_vectros_are_equal(this.array, other.array);
     }
 
@@ -67,7 +69,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
             add_a_4D_vector_to_another_4D_vector_in_place(this.array, other_or_num.array);
         }
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -83,7 +85,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
             add_a_4D_vector_to_another_4D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -99,7 +101,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
             subtract_a_4D_vector_from_another_4D_vector_in_place(this.array, other_or_num.array);
         }
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -115,7 +117,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
             subtract_a_4D_vector_from_another_4D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -126,7 +128,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
             return this;
 
         divide_a_4D_vector_by_a_number_in_place(this.array, denominator);
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -139,7 +141,7 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
             return this.idiv(denominator);
 
         divide_a_4D_vector_by_a_number_to_out(this.array, denominator, out.array);
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
@@ -153,10 +155,10 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
                 multiply_a_4D_vector_by_a_number_in_place(this.array, other_or_num);
             } else
-                this.setAllTo(0);
+                return this.setAllTo(0);
         } else
             multiply_a_4D_vector_by_another_4D_vector_in_place(this.array, other_or_num.array);
-
+        if (this.on_change) this.on_change(this);
         return this;
     }
 
@@ -177,12 +179,13 @@ export default abstract class Vector4D<Other extends Accessor = Accessor>
 
             multiply_a_4D_vector_by_another_4D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-
+        if (out.on_change) out.on_change(out);
         return out;
     }
 
     lerp(to: this, by: number, out: this): this {
         linearly_interpolate_from_a_4D_vector_to_another_4D_vector_to_out(this.array, to.array, by, out.array);
+        if (out.on_change) out.on_change(out);
         return out;
     }
 }

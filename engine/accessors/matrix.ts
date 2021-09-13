@@ -186,7 +186,7 @@ export abstract class RotationMatrix extends Matrix implements IRotationMatrix
     protected abstract _inner_rotate_around_y_to_out(sin: number, cos: number, out: this): void;
     protected abstract _inner_rotate_around_z_to_out(sin: number, cos: number, out: this): void;
 
-    readonly abstract translation: Position3D;
+    readonly abstract translation: Direction3D;
 
     readonly abstract x_axis: Direction3D;
     readonly abstract y_axis: Direction3D;

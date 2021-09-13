@@ -20,7 +20,7 @@ export default class RayTraceViewport
     }
 
     update(): void {
-        if (this._controller.direction_changed)
+        if (this.camera.turned)
             this.projection_plane.reset(this);
     }
 

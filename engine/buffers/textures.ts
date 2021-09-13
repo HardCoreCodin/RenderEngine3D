@@ -30,42 +30,40 @@ export class TextureMip extends Buffer<Float32Array>
         const last_y = this.height - 1;
         const last_x = this.width - 1;
         const stride  = this.width + 1;
-        let start = 0;
-        let offset = 0;
-        let pixel_offset = 0;
-        let component, v_wrap_offset, u_wrap_offset, tl, tr, bl, br: number;
+
+        let pixel_index = 0;
+        let component, tl, tr, bl, br: number;
         let L, R, T, B: boolean;
 
-        let TL, TR, BL, BR, wTL, wTR, wBL, wBR, components: Float32Array;
+        let TL, TR, BL, BR, components: Float32Array;
 
         this.lines.length = 0;
+        for (let y = 0; y < this.height + 1; y++)
+            this.lines.push(this.arrays.slice(stride * y, stride * (y+1)));
+
+        const Tline = this.lines[0];
+        const Bline = this.lines[this.height];
+        const l = 0;
+        const r = this.width;
+
+        let current_line, next_line: Float32Array[];
         for (let y = 0; y < this.height; y++) {
-            this.lines.push(this.arrays.slice(start, start + stride));
+            current_line = this.lines[y];
+            next_line = this.lines[y + 1];
 
-            offset = start;
-            T = y === 0;
-            B = y === last_y;
+            T = (y === 0);
+            B = (y === last_y);
 
-            if (wrap) {
-                if (     T) v_wrap_offset = stride * this.height;
-                else if (B) v_wrap_offset = 0;
-            }
+            for (let x = 0; x < this.width; x++) {
+                TL = current_line[x];
+                TR = current_line[x + 1];
+                BL = next_line[x];
+                BR = next_line[x + 1];
 
-            for (let x = 0; x < this.width; x++, offset++, v_wrap_offset++) {
-                TL = this.arrays[offset];
-                TR = this.arrays[offset + 1];
-                BL = this.arrays[offset + stride];
-                BR = this.arrays[offset + stride + 1];
+                components = this.colors.arrays[pixel_index++];
 
-                components = this.colors.arrays[pixel_offset + x];
-
-                L = x === 0;
-                R = x === last_x;
-
-                if (wrap) {
-                    if (     L) u_wrap_offset = start + this.width;
-                    else if (R) u_wrap_offset = start;
-                }
+                L = (x === 0);
+                R = (x === last_x);
 
                 tl = TL_offset;
                 tr = TR_offset;
@@ -76,48 +74,19 @@ export class TextureMip extends Buffer<Float32Array>
                     component = components[i];
 
                     TL[br] = TR[bl] = BL[tr] = BR[tl] = component;
-
                     if (     L) TL[bl] = BL[tl] = component;
                     else if (R) TR[br] = BR[tr] = component;
-
                     if (wrap) {
+                        if (     L) current_line[r][br] = next_line[r][tr] = component;
+                        else if (R) current_line[l][bl] = next_line[l][tl] = component;
                         if (T) {
-                            if (L) {
-                                wBR = this.arrays[v_wrap_offset + this.width];
-                                wBR[br] = component;
-                            }
-                            else if (R) {
-                                wBL = this.arrays[v_wrap_offset];
-                                wBL[bl] = component;
-                            } else {
-                                wTL = this.arrays[v_wrap_offset];
-                                wTR = this.arrays[v_wrap_offset + 1];
-                                wTL[br] = wTR[bl] = component;
-                            }
+                            Bline[x][br] = Bline[x+1][bl] = component;
+                            if (     L) Bline[r][br] = component;
+                            else if (R) Bline[l][bl] = component;
                         } else if (B) {
-                            if (L) {
-                                wTR = this.arrays[v_wrap_offset + stride - 1];
-                                wTR[tr] = component;
-                            } else if (R) {
-                                wTL = this.arrays[v_wrap_offset];
-                                wTL[tl] = component;
-                            } else {
-                                wBL = this.arrays[v_wrap_offset];
-                                wBR = this.arrays[v_wrap_offset + 1];
-                                wBL[tr] = wBR[tl] = component;
-                            }
-                        }
-
-                        if (L) {
-                            wTL = this.arrays[u_wrap_offset];
-                            wBL = this.arrays[u_wrap_offset + stride];
-
-                            wTL[bl] = wBL[tl] = component;
-                        } else if (R) {
-                            wTR = this.arrays[u_wrap_offset];
-                            wBR = this.arrays[u_wrap_offset + stride];
-
-                            wTR[br] = wBR[tr] = component;
+                            Tline[x][tr] = Tline[x+1][tl] = component;
+                            if (     L) Tline[r][tr] = component;
+                            else if (R) Tline[l][tl] = component;
                         }
                     } else {
                         if (T) {
@@ -135,12 +104,7 @@ export class TextureMip extends Buffer<Float32Array>
                     }
                 }
             }
-
-            start += stride;
-            pixel_offset += this.width;
         }
-
-        this.lines.push(this.arrays.slice(this.length - stride, this.length));
 
         return this;
     }

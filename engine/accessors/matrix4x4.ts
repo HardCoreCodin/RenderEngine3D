@@ -44,7 +44,7 @@ import {IMatrix4x4} from "../core/interfaces/matrix.js";
 import Matrix3x3 from "./matrix3x3.js";
 
 export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
-    readonly translation: Position3D;
+    readonly translation: Direction3D;
 
     readonly x_axis: Direction3D;
     readonly y_axis: Direction3D;
@@ -59,7 +59,7 @@ export default class Matrix4x4 extends RotationMatrix implements IMatrix4x4 {
         this.y_axis = new Direction3D(this.array.subarray(4, 7));
         this.z_axis = new Direction3D(this.array.subarray(8, 11));
 
-        this.translation = new Position3D(this.array.subarray(12, 15));
+        this.translation = new Direction3D(this.array.subarray(12, 15));
     }
 
     set m11(m11: number) {this.array[0] = m11}

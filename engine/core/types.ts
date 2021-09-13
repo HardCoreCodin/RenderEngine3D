@@ -4,6 +4,7 @@ export type TypedArray = ArrayLike<number> & Iterable<number> & {[i: number]: nu
     BYTES_PER_ELEMENT: number;
     buffer: ArrayBuffer,
     set(array: ArrayLike<number>, offset?: number): void;
+    fill(value: number): void;
     subarray(begin: number, end?: number): TypedArray;
     copyWithin(target: number, begin: number, end?: number): void;
 };

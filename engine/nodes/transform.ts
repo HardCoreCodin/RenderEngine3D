@@ -40,6 +40,10 @@ export class EulerRotation implements IEulerRotation {
     protected _angles = dir3(0);
     public matrix = mat3().setToIdentity();
 
+    // protected _yaw_matrix = mat3().setToIdentity();
+    // protected _pitch_matrix = mat3().setToIdentity();
+    // protected _roll_matrix = mat3().setToIdentity();
+
     constructor(protected _transform: Transform) {}
 
     setFrom(other: this, transform: Transform): void {
@@ -90,6 +94,11 @@ export class EulerRotation implements IEulerRotation {
         this._angles.y = xyz.y;
         this._angles.z = xyz.z;
         this._updateTransform();
+    }
+
+    rotateBy(azimuth: number, altitude: number) {
+        this.matrix.rotateAroundX(this._angles.x); // Pitch
+        this.matrix.rotateAroundY(this._angles.y); // Yaw
     }
 
     protected _updateTransform(): void {

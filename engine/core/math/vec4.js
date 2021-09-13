@@ -148,7 +148,6 @@ export const normalize_a_4D_direction_in_place = (a) => {
 };
 export const normalize_all_4D_directions_in_place = (vectors, start = 0, end = vectors.length) => {
     let v;
-    Float32Array;
     const sqrt = Math.sqrt;
     let n;
     for (let i = start; i < end; i++) {

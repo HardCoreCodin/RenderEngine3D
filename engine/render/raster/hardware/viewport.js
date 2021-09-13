@@ -26,10 +26,10 @@ export default class GLViewport extends RasterViewport {
         this.context.disable(this.context.SCISSOR_TEST);
     }
     _getPerspectiveProjectionMatrix() {
-        return new GLPerspectiveProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new GLPerspectiveProjectionMatrix(this.camera.lense, this.view_frustum);
     }
     _getOrthographicProjectionMatrix() {
-        return new GLOrthographicProjectionMatrix(this._controller.camera.lense, this.view_frustum);
+        return new GLOrthographicProjectionMatrix(this.camera.lense, this.view_frustum);
     }
 }
 export class GLPerspectiveProjectionMatrix extends PerspectiveProjectionMatrix {

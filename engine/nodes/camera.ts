@@ -1,53 +1,156 @@
 import Node3D from "./base.js";
 import Scene from "./scene.js";
 import {
-    DEFAULT_FOCAL_LENGTH,
-    DEFAULT_ZOOM,
     DEGREES_TO_RADIANS_FACTOR,
     MAX_FOV,
-    MIN_FOCAL_LENGTH,
     MIN_FOV,
     MIN_ZOOM,
-    RADIANS_TO_DEGREES_FACTOR
+    MIN_FOCAL_LENGTH,
+    NAVIGATION_DEFAULT__TARGET_DISTANCE,
+    RADIANS_TO_DEGREES_FACTOR,
+    NAVIGATION_DEFAULT__ZOOM,
+    NAVIGATION_DEFAULT__FOCAL_LENGTH
 } from "../core/constants.js";
+import {pos3, Position3D} from "../accessors/position.js";
+import {dir3, Direction3D} from "../accessors/direction.js";
+import {EulerRotation} from "./transform.js";
+import InputController from "../input/controllers.js";
 
+const target_position = pos3();
+const movement = dir3();
 
 export default class Camera
     extends Node3D
 {
+    moved: boolean = false;
+    turned: boolean = false;
+
+    target_distance: number = NAVIGATION_DEFAULT__TARGET_DISTANCE;
+    dolly_amount: number = 0;
+
     is_perspective: boolean = true;
     readonly lense: Lense = new Lense();
 
+    readonly position: Position3D;
+    readonly rotation: EulerRotation;
+    readonly forward: Direction3D;
+    readonly up: Direction3D;
+    readonly right: Direction3D;
+    readonly velocity = new Direction3D().setAllTo(0);
+
     constructor(readonly scene: Scene) {
         super(scene);
-        scene.cameras.add(this)
+        scene.cameras.add(this);
+        this.position = new Position3D(this.transform.translation.array);
+        this.right = new Direction3D(this.transform.matrix.x_axis.array);
+        this.up = new Direction3D(this.transform.matrix.y_axis.array);
+        this.forward = new Direction3D(this.transform.matrix.z_axis.array);
+        this.rotation = this.transform.rotation;
     }
 
     setFrom(other: this): void {
         this.lense.setFrom(other.lense);
         this.transform.setFrom(other.transform);
     }
+
+    dolly(dolly: number) {
+        this.position.add(this.forward.mul(this.target_distance, movement), target_position);
+
+        // Compute new target distance:
+        this.dolly_amount += dolly;
+        this.target_distance = Math.pow(2, this.dolly_amount / 200) * NAVIGATION_DEFAULT__TARGET_DISTANCE;
+
+        // Back-track from target position to new current position:
+        target_position.sub(this.forward.mul(this.target_distance, movement), this.position);
+
+        this.moved = true;
+    }
+
+    orbit(azimuth: number, altitude: number) {
+        // Move the camera forward to the position of it's target:
+        this.position.add(this.forward.mul(this.target_distance, movement), target_position);
+
+        // Reorient the camera while it is at the position of it's target:
+        this.rotation.xy = {
+            x: this.rotation.x + altitude,
+            y: this.rotation.y + azimuth
+        };
+
+        // Back the camera away from it's target position using the updated forward direction:
+        target_position.sub(this.forward.mul(this.target_distance, movement), this.position);
+
+        this.turned = true;
+        this.moved = true;
+    }
+
+    orient(yaw: number, pitch: number) {
+        this.rotation.xy = {x: pitch, y: yaw};
+        this.turned = true;
+    }
+
+    pan(right: number, up: number) {
+        this.position.iadd(this.up.mul(up, movement)).iadd(this.right.mul(right, movement));
+        this.moved = true;
+    }
+
+    navigate(controller: InputController, delta_time: number) {
+        const target_velocity = movement.setAllTo(0);
+
+        if (controller.move.right)    target_velocity.x += controller.settings.max_velocity;
+        if (controller.move.left)     target_velocity.x -= controller.settings.max_velocity;
+        if (controller.move.up)       target_velocity.y += controller.settings.max_velocity;
+        if (controller.move.down)     target_velocity.y -= controller.settings.max_velocity;
+        if (controller.move.forward)  target_velocity.z += controller.settings.max_velocity;
+        if (controller.move.backward) target_velocity.z -= controller.settings.max_velocity;
+        if (controller.turn.left) {
+            this.rotation.y += delta_time * controller.settings.speeds.turn;
+            this.turned = true;
+        }
+        if (controller.turn.right) {
+            this.rotation.y -= delta_time * controller.settings.speeds.turn;
+            this.turned = true;
+        }
+
+        // Update the current velocity:
+        const velocity_difference = controller.settings.acceleration * delta_time;
+        this.velocity.approach(target_velocity, velocity_difference);
+
+        this.moved = this.velocity.isNonZero();
+        if (this.moved) { // Update the current position:
+            this.velocity.mul(delta_time, movement).imatmul(this.transform.matrix);
+            this.position.iadd(movement);
+        }
+    }
 }
 
 export class Lense
 {
-    protected _zoom: number = DEFAULT_ZOOM;
-    protected _focal_length: number = DEFAULT_FOCAL_LENGTH;
+    protected _zoom_amount: number = NAVIGATION_DEFAULT__ZOOM;
+    protected _focal_length: number = NAVIGATION_DEFAULT__FOCAL_LENGTH;
+
+    zoomed: boolean = false;
 
     setFrom(other: this): void {
-        this.zoom = other.zoom;
+        this.zoom_amount = other.zoom_amount;
         this.focal_length = other.focal_length;
     }
 
-    get zoom(): number {return this._zoom}
-    set zoom(zoom: number) {
-        if (zoom === this._zoom)
+    zoom(amount: number) {
+        const new_zoom = this.zoom_amount + amount;
+        this.focal_length = new_zoom > 1 ? new_zoom : (new_zoom < -1 ? (-1 / new_zoom) : 1);
+        this.zoom_amount = new_zoom;
+        this.zoomed = true;
+    }
+
+    get zoom_amount(): number {return this._zoom_amount}
+    set zoom_amount(zoom_amount: number) {
+        if (zoom_amount === this._zoom_amount)
             return;
 
-        if (zoom < MIN_ZOOM)
-            zoom = MIN_ZOOM;
+        if (zoom_amount < MIN_ZOOM)
+            zoom_amount = MIN_ZOOM;
 
-        this._zoom = zoom;
+        this._zoom_amount = zoom_amount;
     }
 
     // angle_in_degrees

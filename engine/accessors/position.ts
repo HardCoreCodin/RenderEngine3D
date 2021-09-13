@@ -30,9 +30,24 @@ import {
     subtract_a_4D_vector_from_another_4D_vector_to_out
 } from "../core/math/vec4.js";
 import {IPosition2D, IPosition3D, IPosition4D} from "../core/interfaces/vectors.js";
+import {
+    I32_2D_ALLOCATOR,
+    VECTOR_2D_ALLOCATOR,
+    VECTOR_3D_ALLOCATOR,
+    VECTOR_4D_ALLOCATOR
+} from "../core/memory/allocators.js";
 
-export class Position2D extends Vector2D<Direction2D> implements IPosition2D
+export class Position2Di extends Vector2D<Int32Array>
 {
+    protected _getAllocator() {return I32_2D_ALLOCATOR}
+
+    copy(out: Position2Di = new Position2Di()): Position2Di {return out.setFrom(this)}
+}
+
+export class Position2D extends Vector2D<Float32Array, Direction2D> implements IPosition2D
+{
+    protected _getAllocator() {return VECTOR_2D_ALLOCATOR}
+
     copy(out: Position2D = new Position2D()): Position2D {return out.setFrom(this)}
 
     distanceTo(other: this): number {
@@ -59,8 +74,10 @@ export class Position2D extends Vector2D<Direction2D> implements IPosition2D
     }
 }
 
-export class Position3D extends Vector3D<Direction3D> implements IPosition3D
+export class Position3D extends Vector3D<Float32Array, Direction3D> implements IPosition3D
 {
+    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
+
     copy(out: Position3D = new Position3D()): Position3D {return out.setFrom(this)}
 
     distanceTo(other: this): number {
@@ -108,8 +125,10 @@ export class Position3D extends Vector3D<Direction3D> implements IPosition3D
     set xy(other: Position2D) {this.array.set(other.array)}
     set yz(other: Position2D) {this.array.set(other.array, 1)}}
 
-export class Position4D extends Vector4D<Direction4D> implements IPosition4D
+export class Position4D extends Vector4D<Float32Array, Direction4D> implements IPosition4D
 {
+    protected _getAllocator() {return VECTOR_4D_ALLOCATOR}
+
     copy(out: Position4D = new Position4D()): Position4D {return out.setFrom(this)}
 
     distanceTo(other: this): number {
@@ -148,6 +167,11 @@ export class Position4D extends Vector4D<Direction4D> implements IPosition4D
 
     set xyz(other: Position3D) {this.array.set(other.array)}
     set yzw(other: Position3D) {this.array.set(other.array, 1)}}
+
+export const pos2i = (
+    x: number = 0,
+    y: number = x
+): Position2Di => new Position2Di().setTo(x, y);
 
 export const pos2 = (
     x: number = 0,

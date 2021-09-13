@@ -1,9 +1,12 @@
 import Vector3D from "./vector3D.js";
 import Vector4D from "./vector4D.js";
 import {IColor3D, IColor4D} from "../core/interfaces/vectors.js";
+import {VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR} from "../core/memory/allocators.js";
 
-export class Color3D extends Vector3D<Color3D> implements IColor3D
+export class Color3D extends Vector3D<Float32Array, Color3D> implements IColor3D
 {
+    protected _getAllocator() {return VECTOR_3D_ALLOCATOR}
+
     copy(out: Color3D = new Color3D()): Color3D {return out.setFrom(this)}
     setTo(r: number, g: number, b: number): this {return super.setTo(r, g, b)}
     toString(): string {return `rgb(${this.r * 255}, ${this.g * 255}, ${this.b * 255})`}
@@ -17,8 +20,10 @@ export class Color3D extends Vector3D<Color3D> implements IColor3D
     set b(b: number) {this.array[2] = b}
 }
 
-export class Color4D extends Vector4D<Color4D> implements IColor4D
+export class Color4D extends Vector4D<Float32Array, Color4D> implements IColor4D
 {
+    protected _getAllocator() {return VECTOR_4D_ALLOCATOR}
+
     copy(out: Color4D = new Color4D()): Color4D {return out.setFrom(this)}
     setTo(r: number, g: number, b: number, a: number): this {return super.setTo(r, g, b, a)}
     toString(): string {return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a * 255})`}
