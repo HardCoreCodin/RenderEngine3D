@@ -125,6 +125,11 @@ export default class InputController
 
     constructor(public readonly mouse: Mouse) {
         mouse.middle_button.on_down = () => mouse.pos_raw_diff.setAllTo(0);
+        mouse.left_button.on_double_click = () => {
+            mouse.left_button.double_click_handled = true;
+            mouse.is_captured = !mouse.is_captured;
+            mouse.pos_raw_diff.setAllTo(0);
+        }
     }
 
     pan(camera: Camera) {
@@ -168,8 +173,8 @@ export default class InputController
         // A CW rotation is a negative angle increment, so again the rotation value is DECREMENTED.
 
         camera.orient(
-            camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y,
-            camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x
+            camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x,
+            camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y
         );
         this.mouse.raw_movement_handled = true;
     }
@@ -227,11 +232,6 @@ export default class InputController
                         this.pan(camera);
                 }
             }
-        }
-
-        if (this.mouse.left_button.double_clicked) {
-            this.mouse.left_button.double_click_handled = true;
-            this.mouse.is_captured = true;
         }
     }
 

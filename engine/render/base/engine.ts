@@ -117,15 +117,18 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
     }
 
     protected _on_dblclick(wheel_event: WheelEvent): void {
-        switch (wheel_event.button) {
-            case 0: return this.mouse.left_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
-            case 1: return this.mouse.middle_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
-            case 2: return this.mouse.right_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+        if (wheel_event.button) {
+            if (wheel_event.button === 1)
+                this.mouse.middle_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+            else
+                this.mouse.right_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+        } else {
+            this.mouse.left_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
+            if (this.mouse.is_captured)
+                this.canvas.requestPointerLock();
+            else
+                document.exitPointerLock();
         }
-        if (this.mouse.is_captured)
-            this.canvas.requestPointerLock();
-        else
-            document.exitPointerLock();
     }
 
     protected _on_click(mouse_event: MouseEvent): void {

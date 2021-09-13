@@ -83,6 +83,11 @@ export default class InputController {
         this.turn = new Turn();
         this.look = new Look();
         mouse.middle_button.on_down = () => mouse.pos_raw_diff.setAllTo(0);
+        mouse.left_button.on_double_click = () => {
+            mouse.left_button.double_click_handled = true;
+            mouse.is_captured = !mouse.is_captured;
+            mouse.pos_raw_diff.setAllTo(0);
+        };
     }
     pan(camera) {
         camera.pan(this.settings.speeds.pan * -this.mouse.pos_raw_diff.x, this.settings.speeds.pan * +this.mouse.pos_raw_diff.y);
@@ -117,7 +122,7 @@ export default class InputController {
         // Similarly, when the mouse is moved to the right, the player is looking to the right
         // so the camera should be orienting CLOCK-WISE (CW) around Y (Y is up) looking at Y from the top.
         // A CW rotation is a negative angle increment, so again the rotation value is DECREMENTED.
-        camera.orient(camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y, camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x);
+        camera.orient(camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x, camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y);
         this.mouse.raw_movement_handled = true;
     }
     orbit(camera) {
@@ -186,10 +191,6 @@ export default class InputController {
                         this.pan(camera);
                 }
             }
-        }
-        if (this.mouse.left_button.double_clicked) {
-            this.mouse.left_button.double_click_handled = true;
-            this.mouse.is_captured = true;
         }
     }
     reset(camera) {

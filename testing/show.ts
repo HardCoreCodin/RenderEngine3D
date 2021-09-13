@@ -1,9 +1,11 @@
-import * as rnd from "../rasterizer.js";
+import SoftwareRasterMaterial from "../engine/render/raster/software/materials/base.js";
+import RasterEngine from "../engine/render/raster/software/engine.js";
+import Cube from "../engine/geometry/cube.js";
 
-const engine = new rnd.RasterEngine();
+const engine = new RasterEngine();
 const camera   = engine.display.active_viewport.camera;
-const cube     = engine.scene.mesh_geometries.addGeometry(rnd.Cube());
-const material = engine.scene.addMaterial() as rnd.SoftwareRasterMaterial;
+const cube     = engine.scene.mesh_geometries.addGeometry(Cube());
+const material = engine.scene.addMaterial() as SoftwareRasterMaterial;
 const texture  = engine.scene.addTexture(document.images[1], true, true);
 
 camera.position.setTo(-0.15, 0.4, -3.82);
