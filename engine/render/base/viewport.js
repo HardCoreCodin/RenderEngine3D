@@ -12,7 +12,7 @@ export default class BaseViewport extends Rectangle {
         this._display = _display;
         this.is_active = false;
         this.cull_back_faces = true;
-        this.show_wire_frame = true;
+        this.show_wire_frame = false;
         this.context = _display.context;
         this._init();
     }

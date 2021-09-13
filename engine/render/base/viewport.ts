@@ -16,7 +16,7 @@ export default abstract class BaseViewport<
 {
     is_active: boolean = false;
     cull_back_faces: boolean = true;
-    show_wire_frame: boolean = true;
+    show_wire_frame: boolean = false;
 
     readonly context: Context;
 
