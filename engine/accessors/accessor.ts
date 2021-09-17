@@ -42,8 +42,6 @@ export abstract class Vector<
     Other extends Accessor<ArrayType> = Accessor<ArrayType>>
     extends Accessor<ArrayType> implements IVector<Other, ArrayType>
 {
-    on_change: (self: this) => void = null;
-
     abstract iadd(other_or_num: Other|number): this
     abstract add(other_or_num: Other|number, out: this): this;
 
@@ -59,13 +57,9 @@ export abstract class Vector<
     abstract lerp(other: this, by: number, out: this): this;
 
     approach(other: this, by: number): this {
-        if (by) {
+        if (by)
             for (let i = 0; i < this.array.length; i++)
                 this.array[i] = approach(this.array[i], other.array[i], by);
-
-            if (this.on_change)
-                this.on_change(this);
-        }
 
         return this;
     }

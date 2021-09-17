@@ -93,6 +93,11 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
 
         this._display.active_viewport.controller.update(this._display.active_viewport.camera, this._delta_time);
 
+        if (this.mouse.is_captured)
+            this.canvas.requestPointerLock();
+        else
+            document.exitPointerLock();
+
         for (const viewport of this._display.viewports) viewport.update();
         for (const update_callback of this.update_callbacks) update_callback(this._delta_time, time);
         for (const node of this._scene.children) node.refreshWorldMatrix();
@@ -100,6 +105,8 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
         this._display.active_viewport.controller.reset(this._display.active_viewport.camera);
 
         this._display.refresh();
+
+        this.ui.update();
 
         requestAnimationFrame(this._frame_request_callback);
     }
@@ -122,13 +129,8 @@ export default class RenderEngine<Context extends RenderingContext = CanvasRende
                 this.mouse.middle_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
             else
                 this.mouse.right_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
-        } else {
+        } else
             this.mouse.left_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
-            if (this.mouse.is_captured)
-                this.canvas.requestPointerLock();
-            else
-                document.exitPointerLock();
-        }
     }
 
     protected _on_click(mouse_event: MouseEvent): void {

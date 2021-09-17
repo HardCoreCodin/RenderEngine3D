@@ -26,8 +26,8 @@ export default abstract class Vector2D<
     extends Vector<ArrayType, Other>
     implements IVector2D<ArrayType, Other>
 {
-    set x(x: number) {this.array[0] = x; if (this.on_change) this.on_change(this); }
-    set y(y: number) {this.array[1] = y; if (this.on_change) this.on_change(this); }
+    set x(x: number) {this.array[0] = x}
+    set y(y: number) {this.array[1] = y}
 
     get x(): number {return this.array[0]}
     get y(): number {return this.array[1]}
@@ -35,19 +35,19 @@ export default abstract class Vector2D<
     setTo(x: number, y: number): this {
         this.array[0] = x;
         this.array[1] = y;
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
     setAllTo(value: number): this {
         this.array.fill(value);
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
     setFrom(other: Vector<ArrayType, Accessor<ArrayType> & I2D>): this {
         this.array.set(other.array);
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -63,7 +63,7 @@ export default abstract class Vector2D<
                 add_a_number_to_a_2D_vector_in_place(this.array, other_or_num);
         } else
             add_a_2D_vector_to_another_2D_vector_in_place(this.array, other_or_num.array);
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -75,7 +75,7 @@ export default abstract class Vector2D<
                 add_a_number_to_a_2D_vector_to_out(this.array, other_or_num, out.array);
         } else
             add_a_2D_vector_to_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
-        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
@@ -91,7 +91,7 @@ export default abstract class Vector2D<
             else
                 subtract_a_2D_vector_from_another_2D_vector_in_place(this.array, other_or_num.array);
         }
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -107,7 +107,7 @@ export default abstract class Vector2D<
 
             subtract_a_2D_vector_from_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
@@ -118,7 +118,7 @@ export default abstract class Vector2D<
             return this;
 
         divide_a_2D_vector_by_a_number_in_place(this.array, denominator);
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -131,7 +131,7 @@ export default abstract class Vector2D<
             return this.idiv(denominator);
 
         divide_a_2D_vector_by_a_number_to_out(this.array, denominator, out.array);
-        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
@@ -148,7 +148,7 @@ export default abstract class Vector2D<
                 return this.setAllTo(0);
         } else
             multiply_a_2D_vector_by_another_2D_vector_in_place(this.array, other_or_num.array);
-        if (this.on_change) this.on_change(this);
+
         return this;
     }
 
@@ -169,13 +169,13 @@ export default abstract class Vector2D<
 
             multiply_a_2D_vector_by_another_2D_vector_to_out(this.array, other_or_num.array, out.array);
         }
-        if (out.on_change) out.on_change(out);
+
         return out;
     }
 
     lerp(to: this, by: number, out: this): this {
         linearly_interpolate_from_a_2D_vectors_to_another_2D_vector_to_out(this.array, to.array, by, out.array);
-        if (out.on_change) out.on_change(out);
+
         return out;
     }
 }

@@ -52,10 +52,10 @@ for (let i = 0; i < 2; i++)
                 x2 = geo.transform.translation.x;
                 z2 = geo.transform.translation.z;
                 rotating_head2 = geo;
+                geo.is_renderable = false;
             }
             else {
                 geo.material = new rst.SoftwareRasterMaterial(scene, rst.pixel_shaders.depth);
-                geo.is_renderable = false;
             }
         }
         else {
@@ -65,10 +65,10 @@ for (let i = 0; i < 2; i++)
                 rotating_head1 = geo;
                 x = geo.transform.translation.x;
                 z = geo.transform.translation.z;
+                geo.is_renderable = false;
             }
             else {
                 geo.material = new rst.SoftwareRasterMaterial(scene, rst.pixel_shaders.normal);
-                geo.is_renderable = false;
             }
         }
     }

@@ -17,8 +17,7 @@ const controls = { mip_level: 0, repeat: 1 };
 material.params.textures.push(texture);
 material.pixel_shader = (pixel, surface, scene) => {
     const tex = surface.material.textures[0];
-    const mip = tex.mips[controls.mip_level];
-    mip.sample(surface.UV.imul(controls.repeat), pixel.color);
+    tex.sample(surface.UV.imul(controls.repeat), surface.dUV, pixel.color);
 };
 cube.material = material;
 

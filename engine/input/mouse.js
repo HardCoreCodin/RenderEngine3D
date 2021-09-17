@@ -6,48 +6,50 @@ class MouseButton {
         this.click_pos = pos2i();
         this.double_click_pos = pos2i();
         this.is_pressed = false;
+        this.went_down = false;
+        this.went_up = false;
         this.clicked = false;
         this.click_handled = false;
+        this.went_down_handled = false;
+        this.went_up_handled = false;
         this.double_clicked = false;
         this.double_click_handled = false;
-        this.on_down = null;
-        this.on_up = null;
-        this.on_click = null;
-        this.on_double_click = null;
     }
     down(x, y) {
         this.is_pressed = true;
+        this.went_down = true;
         this.down_pos.x = x;
         this.down_pos.y = y;
-        if (this.on_down)
-            this.on_down();
     }
     up(x, y) {
         this.is_pressed = false;
+        this.went_up = true;
         this.up_pos.x = x;
         this.up_pos.y = y;
-        if (this.on_up)
-            this.on_up();
     }
     click(x, y) {
         this.click_pos.x = x;
         this.click_pos.y = y;
         this.clicked = true;
-        if (this.on_click)
-            this.on_click();
     }
     doubleClick(x, y) {
         this.double_click_pos.x = x;
         this.double_click_pos.y = y;
         this.double_clicked = true;
-        if (this.on_double_click)
-            this.on_double_click();
     }
     reset() {
         if (this.click_handled)
             this.clicked = false;
         if (this.double_click_handled)
             this.double_clicked = false;
+        if (this.went_down_handled)
+            this.went_down = false;
+        if (this.went_up_handled)
+            this.went_up = false;
+        this.click_handled = false;
+        this.double_click_handled = false;
+        this.went_down_handled = false;
+        this.went_up_handled = false;
     }
 }
 class MouseWheel {

@@ -82,12 +82,6 @@ export default class InputController {
         this.move = new Move();
         this.turn = new Turn();
         this.look = new Look();
-        mouse.middle_button.on_down = () => mouse.pos_raw_diff.setAllTo(0);
-        mouse.left_button.on_double_click = () => {
-            mouse.left_button.double_click_handled = true;
-            mouse.is_captured = !mouse.is_captured;
-            mouse.pos_raw_diff.setAllTo(0);
-        };
     }
     pan(camera) {
         camera.pan(this.settings.speeds.pan * -this.mouse.pos_raw_diff.x, this.settings.speeds.pan * +this.mouse.pos_raw_diff.y);
@@ -164,6 +158,15 @@ export default class InputController {
             this.move.backward = pressed;
     }
     update(camera, delta_time) {
+        if (this.mouse.middle_button.went_down) {
+            this.mouse.middle_button.went_down_handled = true;
+            this.mouse.pos_raw_diff.setAllTo(0);
+        }
+        if (this.mouse.left_button.double_clicked) {
+            this.mouse.left_button.double_click_handled = true;
+            this.mouse.is_captured = !this.mouse.is_captured;
+            this.mouse.pos_raw_diff.setAllTo(0);
+        }
         if (this.move.right ||
             this.move.left ||
             this.move.up ||

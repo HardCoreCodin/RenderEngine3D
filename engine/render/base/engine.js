@@ -49,6 +49,10 @@ export default class RenderEngine {
         this._delta_time = (time - this._last_timestamp) * 0.001;
         this._last_timestamp = time;
         this._display.active_viewport.controller.update(this._display.active_viewport.camera, this._delta_time);
+        if (this.mouse.is_captured)
+            this.canvas.requestPointerLock();
+        else
+            document.exitPointerLock();
         for (const viewport of this._display.viewports)
             viewport.update();
         for (const update_callback of this.update_callbacks)
@@ -57,6 +61,7 @@ export default class RenderEngine {
             node.refreshWorldMatrix();
         this._display.active_viewport.controller.reset(this._display.active_viewport.camera);
         this._display.refresh();
+        this.ui.update();
         requestAnimationFrame(this._frame_request_callback);
     }
     _on_pointerlockchange(pointer_event) {
@@ -75,13 +80,8 @@ export default class RenderEngine {
             else
                 this.mouse.right_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
         }
-        else {
+        else
             this.mouse.left_button.doubleClick(wheel_event.clientX, wheel_event.clientY);
-            if (this.mouse.is_captured)
-                this.canvas.requestPointerLock();
-            else
-                document.exitPointerLock();
-        }
     }
     _on_click(mouse_event) {
         switch (mouse_event.button) {

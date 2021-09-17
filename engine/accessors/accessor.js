@@ -15,17 +15,10 @@ export class Accessor {
     }
 }
 export class Vector extends Accessor {
-    constructor() {
-        super(...arguments);
-        this.on_change = null;
-    }
     approach(other, by) {
-        if (by) {
+        if (by)
             for (let i = 0; i < this.array.length; i++)
                 this.array[i] = approach(this.array[i], other.array[i], by);
-            if (this.on_change)
-                this.on_change(this);
-        }
         return this;
     }
 }

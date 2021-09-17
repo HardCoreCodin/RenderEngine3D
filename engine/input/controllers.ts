@@ -123,14 +123,7 @@ export default class InputController
     turn = new Turn();
     look = new Look();
 
-    constructor(public readonly mouse: Mouse) {
-        mouse.middle_button.on_down = () => mouse.pos_raw_diff.setAllTo(0);
-        mouse.left_button.on_double_click = () => {
-            mouse.left_button.double_click_handled = true;
-            mouse.is_captured = !mouse.is_captured;
-            mouse.pos_raw_diff.setAllTo(0);
-        }
-    }
+    constructor(public readonly mouse: Mouse) {}
 
     pan(camera: Camera) {
         camera.pan(
@@ -208,6 +201,16 @@ export default class InputController
     }
 
     update(camera: Camera, delta_time: number): void {
+        if (this.mouse.middle_button.went_down) {
+            this.mouse.middle_button.went_down_handled = true;
+            this.mouse.pos_raw_diff.setAllTo(0);
+        }
+        if (this.mouse.left_button.double_clicked) {
+            this.mouse.left_button.double_click_handled = true;
+            this.mouse.is_captured = !this.mouse.is_captured;
+            this.mouse.pos_raw_diff.setAllTo(0);
+        }
+
         if (this.move.right ||
             this.move.left ||
             this.move.up ||
