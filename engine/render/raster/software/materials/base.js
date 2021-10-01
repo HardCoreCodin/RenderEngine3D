@@ -7,7 +7,15 @@ export default class SoftwareRasterMaterial extends BaseMaterial {
         shininess: 1,
         specular_color: new Color3D().setAllTo(1),
         diffuse_color: new Color3D().setAllTo(1),
-        textures: []
+        textures: [],
+        has: {
+            diffuse: false,
+            specular: false
+        },
+        uses: {
+            Blinn: false,
+            Phong: false
+        }
     }) {
         super(scene);
         this.scene = scene;

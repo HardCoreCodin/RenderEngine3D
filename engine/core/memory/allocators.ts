@@ -61,6 +61,7 @@ export class Float32Allocator1D extends Float32Allocator {constructor() {super(D
 export class Float32Allocator2D extends Float32Allocator {constructor() {super(DIM._2D)}}
 export class Float32Allocator3D extends Float32Allocator {constructor() {super(DIM._3D)}}
 export class Float32Allocator4D extends Float32Allocator {constructor() {super(DIM._4D)}}
+export class Float32Allocator5D extends Float32Allocator {constructor() {super(DIM._5D)}}
 export class Float32Allocator9D extends Float32Allocator {constructor() {super(DIM._9D)}}
 export class Float32Allocator16D extends Float32Allocator {constructor() {super(DIM._16D)}}
 
@@ -111,6 +112,7 @@ export const I32_2D_ALLOCATOR = new Int32Allocator2D();
 export const VECTOR_2D_ALLOCATOR = new Float32Allocator2D();
 export const VECTOR_3D_ALLOCATOR = new Float32Allocator3D();
 export const VECTOR_4D_ALLOCATOR = new Float32Allocator4D();
+export const VECTOR_5D_ALLOCATOR = new Float32Allocator5D();
 export const FACE_AREAS_ALLOCATOR = new Float32Allocator3D();
 export const MATRIX_2X2_ALLOCATOR = new Float32Allocator4D();
 export const MATRIX_3X3_ALLOCATOR = new Float32Allocator9D();

@@ -3,7 +3,7 @@ import {Direction2D, Direction3D, Direction4D} from "../../accessors/direction.j
 import {Position2D, Position3D, Position4D} from "../../accessors/position.js";
 import Matrix4x4 from "../../accessors/matrix4x4.js";
 import {UV2D} from "../../accessors/uv.js";
-import {Color3D} from "../../accessors/color.js";
+import {Color3D, Color4D} from "../../accessors/color.js";
 import {Accessor, Vector} from "../../accessors/accessor.js";
 import Matrix3x3 from "../../accessors/matrix3x3.js";
 import Matrix2x2 from "../../accessors/matrix2x2.js";
@@ -175,6 +175,7 @@ export interface IColor extends IVector<IAccessor> {
 
 export interface IColor3D extends IColor, I3D {
     setTo(r: number, g: number, b: number): this;
+    toneMap();
 }
 
 export interface IColor4D extends IColor, I4D {
@@ -183,6 +184,16 @@ export interface IColor4D extends IColor, I4D {
     setTo(r: number, g: number, b: number, a: number): this;
 
     rgb: Color3D;
+}
+
+export interface IPixel extends IColor, I4D {
+    opacity: number;
+    depth: number;
+
+    setTo(red: number, green: number, blue: number, opaticy: number, depth: number): this;
+
+    rgba: Color4D;
+    color: Color3D;
 }
 
 export interface IUV extends IVector<IAccessor> {

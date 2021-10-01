@@ -18,6 +18,7 @@ export default class Display extends Rectangle {
         this._default_render_pipeline = new RenderPipelineClass(this.context, this._scene);
         this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(_mouse), this._default_render_pipeline, this));
         this._active_viewport.border.display = false;
+        this._camera.is_static = false;
     }
     get active_viewport_border_color() { return this._active_viewport_border_color; }
     get inactive_viewport_border_color() { return this._inactive_viewport_border_color; }

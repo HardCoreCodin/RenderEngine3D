@@ -1,11 +1,9 @@
-import Matrix4x4 from "../../../accessors/matrix4x4.js";
 import GLMeshBuffers from "./core/mesh_buffers.js";
 import GLMaterial from "./materials/base.js";
 import BaseRenderPipeline from "../../base/pipelines.js";
 export default class GLRenderPipeline extends BaseRenderPipeline {
     constructor() {
         super(...arguments);
-        this.model_to_clip = new Matrix4x4();
         this.mesh_buffers = new Map();
     }
     render(viewport) {

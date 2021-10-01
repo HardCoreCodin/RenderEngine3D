@@ -127,7 +127,7 @@
 // ) : Vertex3D => new Vertex3D(
 //     pos3D(vector3D_allocator),
 //     include & ATTRIBUTE.normal ? dir3D(vector3D_allocator) : undefined,
-//     include & ATTRIBUTE.color ? rgb(vector3D_allocator) : undefined,
+//     include & ATTRIBUTE.color ? color(vector3D_allocator) : undefined,
 //     include & ATTRIBUTE.uv ? uv(vector2D_allocator) : undefined
 // );
 //

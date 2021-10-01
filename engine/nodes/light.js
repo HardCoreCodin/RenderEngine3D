@@ -9,9 +9,7 @@ export default class PointLight extends Node3D {
         this.color = color;
         this.intensity = intensity;
         scene.lights.add(this);
-        if (scene.object_space_light_positions.length < scene.lights.size)
-            scene.object_space_light_positions.init(scene.lights.size + 9);
-        this.position = new Position3D(scene.object_space_light_positions.arrays[scene.lights.size - 1]);
+        this.position = new Position3D(this.transform.translation.array);
     }
     setFrom(other) {
         this.transform.setFrom(other.transform);

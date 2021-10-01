@@ -376,7 +376,7 @@
 //     vert3(include_vertex_attributes, vector3D_allocator, vector2D_allocator),
 //
 //     include_face_attributes & ATTRIBUTE.position ? dir3D(vector3D_allocator) : undefined,
-//     include_face_attributes & ATTRIBUTE.normal ? rgb(vector3D_allocator) : undefined,
+//     include_face_attributes & ATTRIBUTE.normal ? color(vector3D_allocator) : undefined,
 //     include_face_attributes & ATTRIBUTE.color ? pos3D(vector3D_allocator) : undefined,
 // );
 //

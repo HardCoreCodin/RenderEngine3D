@@ -1,10 +1,10 @@
 import Matrix3x3 from "../accessors/matrix3x3.js";
 import Buffer from "../core/memory/buffers.js";
 import { UV2D, UV3D } from "../accessors/uv.js";
-import { Color3D, Color4D } from "../accessors/color.js";
+import { Color3D, Color4D, Pixel } from "../accessors/color.js";
 import { Position2D, Position3D, Position4D } from "../accessors/position.js";
 import { Direction2D, Direction3D, Direction4D } from "../accessors/direction.js";
-import { VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR } from "../core/memory/allocators.js";
+import { VECTOR_2D_ALLOCATOR, VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR, VECTOR_5D_ALLOCATOR } from "../core/memory/allocators.js";
 import { multiply_all_2D_vectors_by_a_2x2_matrix_in_place, multiply_all_2D_vectors_by_a_2x2_matrix_to_out, multiply_some_2D_vectors_by_a_2x2_matrix_in_place, multiply_some_2D_vectors_by_a_2x2_matrix_to_out, normalize_all_2D_directions_in_place, normalize_some_2D_directions_in_place } from "../core/math/vec2.js";
 import { multiply_all_3D_directions_by_a_4x4_matrix_in_place, multiply_all_3D_directions_by_a_4x4_matrix_to_out3, multiply_all_3D_directions_by_a_4x4_matrix_to_out4, multiply_all_3D_positions_by_a_4x4_matrix_in_place, multiply_all_3D_positions_by_a_4x4_matrix_to_out3, multiply_all_3D_positions_by_a_4x4_matrix_to_out4, multiply_all_3D_vectors_by_a_3x3_matrix_in_place, multiply_all_3D_vectors_by_a_3x3_matrix_to_out, multiply_some_3D_directions_by_a_4x4_matrix_in_place, multiply_some_3D_directions_by_a_4x4_matrix_to_out3, multiply_some_3D_directions_by_a_4x4_matrix_to_out4, multiply_some_3D_positions_by_a_4x4_matrix_in_place, multiply_some_3D_positions_by_a_4x4_matrix_to_out3, multiply_some_3D_positions_by_a_4x4_matrix_to_out4, multiply_some_3D_vectors_by_a_3x3_matrix_in_place, multiply_some_3D_vectors_by_a_3x3_matrix_to_out, normalize_all_3D_directions_in_place, normalize_some_3D_directions_in_place } from "../core/math/vec3.js";
 import { multiply_all_4D_vectors_by_a_4x4_matrix_in_place, multiply_all_4D_vectors_by_a_4x4_matrix_to_out, multiply_some_4D_vectors_by_a_4x4_matrix_in_place, multiply_some_4D_vectors_by_a_4x4_matrix_to_out, normalize_all_4D_directions_in_place, normalize_some_4D_directions_in_place } from "../core/math/vec4.js";
@@ -45,6 +45,9 @@ export class VectorBuffer3D extends VectorBuffer {
 export class VectorBuffer4D extends VectorBuffer {
     _getAllocator() { return VECTOR_4D_ALLOCATOR; }
 }
+export class VectorBuffer5D extends VectorBuffer {
+    _getAllocator() { return VECTOR_5D_ALLOCATOR; }
+}
 export class UVs2D extends VectorBuffer2D {
     constructor() { super(UV2D); }
 }
@@ -56,6 +59,9 @@ export class Colors3D extends VectorBuffer3D {
 }
 export class Colors4D extends VectorBuffer4D {
     constructor() { super(Color4D); }
+}
+export class Pixels extends VectorBuffer5D {
+    constructor() { super(Pixel); }
 }
 export class Directions2D extends VectorBuffer2D {
     constructor() { super(Direction2D); }

@@ -10,6 +10,20 @@ export const approach = (src, trg, diff) => {
         return out;
     return trg;
 };
+export const clamped = (value) => {
+    const mn = value < 1.0 ? value : 1.0;
+    return mn > 0.0 ? mn : 0.0;
+};
+export const toneMap = (LinearColor) => {
+    // x = max(0, LinearColor-0.004)
+    // GammaColor = (x*(6.2*x + 0.5))/(x*(6.2*x+1.7) + 0.06)
+    // GammaColor = (x*x*6.2 + x*0.5)/(x*x*6.2 + x*1.7 + 0.06)
+    let x = LinearColor - 0.004;
+    if (x < 0.0)
+        x = 0.0;
+    let x2_times_sholder_strength = x * x * 6.2;
+    return (x2_times_sholder_strength + x * 0.5) / (x2_times_sholder_strength + x * 1.7 + 0.06);
+};
 const memcpy = (from_array, to_array, amount, from_offset = 0, to_offset = 0) => new Uint8Array(to_array.buffer, to_offset, amount).set(new Uint8Array(from_array.buffer, from_offset, amount));
 let modded;
 export const wrapAngle = (theta) => {

@@ -1,6 +1,7 @@
 import SoftwareRasterMaterial from "../engine/render/raster/software/materials/base.js";
 import RasterEngine from "../engine/render/raster/software/engine.js";
 import Cube from "../engine/geometry/cube.js";
+import {IShaded} from "../engine/render/raster/software/materials/shaders/pixel.js";
 
 const engine = new RasterEngine();
 const camera   = engine.display.active_viewport.camera;
@@ -15,9 +16,12 @@ camera.lense.fov = 50;
 
 const controls = { mip_level: 0, repeat: 1 };
 material.params.textures.push(texture);
-material.pixel_shader = (pixel, surface, scene) => {
-    const tex = surface.material.textures[0];
-    tex.sample(surface.UV.imul(controls.repeat), surface.dUV, pixel.color);
+material.pixel_shader = (shaded: IShaded) => {
+    shaded.material.textures[0].sample(
+        shaded.UV.imul(controls.repeat),
+        shaded.dUV.imul(controls.repeat),
+        shaded.pixel.rgba
+    );
 };
 cube.material = material;
 

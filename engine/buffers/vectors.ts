@@ -9,7 +9,7 @@ import Matrix4x4 from "../accessors/matrix4x4.js";
 
 import Buffer from "../core/memory/buffers.js";
 import {UV2D, UV3D} from "../accessors/uv.js";
-import {Color3D, Color4D} from "../accessors/color.js";
+import {Color3D, Color4D, Pixel} from "../accessors/color.js";
 import {Position2D, Position3D, Position4D} from "../accessors/position.js";
 import {Direction2D, Direction3D, Direction4D} from "../accessors/direction.js";
 import {VectorConstructor} from "../core/interfaces/vectors.js";
@@ -17,7 +17,7 @@ import {VectorConstructor} from "../core/interfaces/vectors.js";
 import {
     VECTOR_2D_ALLOCATOR,
     VECTOR_3D_ALLOCATOR,
-    VECTOR_4D_ALLOCATOR
+    VECTOR_4D_ALLOCATOR, VECTOR_5D_ALLOCATOR
 } from "../core/memory/allocators.js";
 import {
     multiply_all_2D_vectors_by_a_2x2_matrix_in_place,
@@ -106,6 +106,11 @@ export class VectorBuffer4D<VectorType extends Vector4D>
 {
     protected  _getAllocator() {return VECTOR_4D_ALLOCATOR}
 }
+export class VectorBuffer5D<VectorType extends Vector4D>
+    extends VectorBuffer<VectorType>
+{
+    protected  _getAllocator() {return VECTOR_5D_ALLOCATOR}
+}
 
 export class UVs2D extends VectorBuffer2D<UV2D> {constructor() {super(UV2D)}}
 export class UVs3D extends VectorBuffer3D<UV3D> {constructor() {super(UV3D)}}
@@ -113,6 +118,7 @@ export class UVs3D extends VectorBuffer3D<UV3D> {constructor() {super(UV3D)}}
 
 export class Colors3D extends VectorBuffer3D<Color3D> {constructor() {super(Color3D)}}
 export class Colors4D extends VectorBuffer4D<Color4D> {constructor() {super(Color4D)}}
+export class Pixels extends VectorBuffer5D<Pixel> {constructor() {super(Pixel)}}
 
 
 export class Directions2D extends VectorBuffer2D<Direction2D> {
@@ -262,7 +268,7 @@ export class Positions2D extends VectorBuffer2D<Position2D> {
 export class Positions3D extends VectorBuffer3D<Position3D> {
     constructor() {super(Position3D)}
 
-    mul<OutVector extends Position3D|Position4D, Out extends VectorBuffer<OutVector>>(
+    mul<Out extends Positions3D|Positions4D>(
         matrix: Matrix3x3|Matrix4x4,
         out: Out,
         include?: Uint8Array,

@@ -4,7 +4,6 @@ import { MeshGeometries } from "./geometry.js";
 import Spheres from "../geometry/implicit/spheres.js";
 import PointLight, { DirectionalLight } from "./light.js";
 import { Color3D } from "../accessors/color.js";
-import { Positions3D } from "../buffers/vectors.js";
 import { Texture } from "../buffers/textures.js";
 export default class Scene extends Parent {
     constructor(context, MaterialClass) {
@@ -12,10 +11,10 @@ export default class Scene extends Parent {
         this.context = context;
         this.MaterialClass = MaterialClass;
         this.spheres = new Spheres();
+        this.ambient_color = new Color3D();
         this.lights = new Set();
         this.cameras = new Set();
         this.materials = new Set();
-        this.object_space_light_positions = new Positions3D().init(10);
         this.textures = [];
         this.mesh_geometries = new MeshGeometries(this);
         this.default_material = new MaterialClass(this);

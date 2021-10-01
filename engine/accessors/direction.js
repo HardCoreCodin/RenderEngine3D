@@ -3,7 +3,7 @@ import Vector3D from "./vector3D.js";
 import Vector4D from "./vector4D.js";
 import Matrix3x3 from "./matrix2x2.js";
 import { compute_the_length_of_a_2D_direction, dot_a_2D_direction_with_another_2D_direction, multiply_a_2D_vector_by_a_2x2_matrix_in_place, multiply_a_2D_vector_by_a_2x2_matrix_to_out, negate_a_2D_direction_in_place, negate_a_2D_direction_to_out, normalize_a_2D_direction_in_place, normalize_a_2D_direction_to_out, reflect_a_2D_vector_around_a_2D_direction_in_place, reflect_a_2D_vector_around_a_2D_direction_to_out, square_the_length_of_a_2D_direction } from "../core/math/vec2.js";
-import { compute_the_length_of_a_3D_direction, cross_a_3D_direction_with_another_3D_direction_in_place, cross_a_3D_direction_with_another_3D_direction_to_out, dot_a_3D_direction_with_another_3D_direction, multiply_a_3D_direction_by_a_4x4_matrix_in_place, multiply_a_3D_direction_by_a_4x4_matrix_to_out3, multiply_a_3D_vector_by_a_3x3_matrix_in_place, multiply_a_3D_vector_by_a_3x3_matrix_to_out, multiply_a_3D_direction_by_a_4x4_matrix_to_out4, negate_a_3D_direction_in_place, negate_a_3D_direction_to_out, normalize_a_3D_direction_in_place, normalize_a_3D_direction_to_out, reflect_a_3D_vector_around_a_3D_direction_in_place, reflect_a_3D_vector_around_a_3D_direction_to_out, square_the_length_of_a_3D_direction } from "../core/math/vec3.js";
+import { compute_the_length_of_a_3D_direction, cross_a_3D_direction_with_another_3D_direction_in_place, cross_a_3D_direction_with_another_3D_direction_to_out, dot_a_3D_direction_with_another_3D_direction, multiply_a_3D_direction_by_a_4x4_matrix_in_place, multiply_a_3D_direction_by_a_4x4_matrix_to_out3, multiply_a_3D_vector_by_a_3x3_matrix_in_place, multiply_a_3D_vector_by_a_3x3_matrix_to_out, multiply_a_3D_direction_by_a_4x4_matrix_to_out4, negate_a_3D_direction_in_place, negate_a_3D_direction_to_out, normalize_a_3D_direction_in_place, normalize_a_3D_direction_to_out, reflect_a_3D_vector_around_a_3D_direction_in_place, reflect_a_3D_vector_around_a_3D_direction_to_out, square_the_length_of_a_3D_direction, reflect_a_3D_vector_around_a_3D_direction_with_dot_in_place, reflect_a_3D_vector_around_a_3D_direction_with_dot_to_out } from "../core/math/vec3.js";
 import { compute_the_length_of_a_4D_direction, dot_a_4D_direction_with_another_4D_direction, multiply_a_4D_vector_by_a_4x4_matrix_in_place, multiply_a_4D_vector_by_a_4x4_matrix_to_out, negate_a_4D_direction_in_place, negate_a_4D_direction_to_out, normalize_a_4D_direction_in_place, normalize_a_4D_direction_to_out, reflect_a_4D_vector_around_a_4D_direction_in_place, reflect_a_4D_vector_around_a_4D_direction_to_out, square_the_length_of_a_4D_direction } from "../core/math/vec4.js";
 import { VECTOR_3D_ALLOCATOR, VECTOR_4D_ALLOCATOR } from "../core/memory/allocators.js";
 export class Direction2D extends Vector2D {
@@ -93,6 +93,16 @@ export class Direction3D extends Vector3D {
         if (out.is(this))
             return this.ireflect(other);
         reflect_a_3D_vector_around_a_3D_direction_to_out(this.array, other.array, out.array);
+        return out;
+    }
+    ireflectWithDot(other, dot) {
+        reflect_a_3D_vector_around_a_3D_direction_with_dot_in_place(this.array, other.array, dot);
+        return this;
+    }
+    reflectWithDot(other, dot, out) {
+        if (out.is(this))
+            return this.ireflectWithDot(other, dot);
+        reflect_a_3D_vector_around_a_3D_direction_with_dot_to_out(this.array, other.array, dot, out.array);
         return out;
     }
     inegate() {

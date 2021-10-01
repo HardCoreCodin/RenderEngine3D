@@ -6,6 +6,7 @@ import {
     IRenderPipeline,
     IViewport
 } from "../../core/interfaces/render.js";
+import Matrix4x4 from "../../accessors/matrix4x4.js";
 
 
 export default abstract class BaseRenderPipeline<
@@ -13,6 +14,8 @@ export default abstract class BaseRenderPipeline<
     ViewportType extends IViewport<Context> = IViewport<Context>>
     implements IRenderPipeline<Context, ViewportType>
 {
+    readonly model_to_clip: Matrix4x4 = new Matrix4x4();
+
     abstract render(viewport: ViewportType): void;
 
     // readonly on_implicit_geometry_added_callback: IImplicitGeometryCallback;

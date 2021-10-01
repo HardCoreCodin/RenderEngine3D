@@ -12,6 +12,21 @@ export const approach = (src: number, trg: number, diff: number): number => {
     return trg;
 };
 
+export const clamped = (value: number): number => {
+    const mn = value < 1.0 ? value : 1.0;
+    return mn > 0.0 ? mn : 0.0;
+};
+export const toneMap = (LinearColor: number): number => {
+        // x = max(0, LinearColor-0.004)
+        // GammaColor = (x*(6.2*x + 0.5))/(x*(6.2*x+1.7) + 0.06)
+        // GammaColor = (x*x*6.2 + x*0.5)/(x*x*6.2 + x*1.7 + 0.06)
+
+        let x: number = LinearColor - 0.004;
+        if (x < 0.0) x = 0.0;
+        let x2_times_sholder_strength: number = x * x * 6.2;
+        return (x2_times_sholder_strength + x*0.5)/(x2_times_sholder_strength + x*1.7 + 0.06);
+};
+
 const memcpy = (
     from_array: TypedArray,
     to_array: TypedArray,

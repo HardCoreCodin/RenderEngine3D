@@ -1,4 +1,5 @@
 import {Vector} from "../accessors/accessor.js";
+import {EulerRotation} from "../nodes/transform.js";
 
 class UISlider {
     protected readonly _input_element: HTMLInputElement;
@@ -111,7 +112,7 @@ export default class UILayer {
     }
 
     addSliders(label: string, obj: Vector|any, range: [number, number] = [0.0, 5.0], step: number = 0.01) {
-        if (obj instanceof Vector) {
+        if (obj instanceof Vector || obj instanceof EulerRotation) {
             for (const attr of 'u' in obj ? 'uvw' : ('r' in obj ? 'rgba' : 'xyzw'))
                 if (attr in obj)
                     this.addSlider(`${label}.${attr}`, obj, attr, range, step);

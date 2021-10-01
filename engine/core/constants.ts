@@ -17,6 +17,7 @@ export const enum DIM {
     _2D = 2,
     _3D = 3,
     _4D = 4,
+    _5D = 5,
     _9D = 9,
     _16D = 16,
 }
@@ -110,8 +111,8 @@ export const NAVIGATION_SPEED_DEFAULT__TURN   = 1;
 export const NAVIGATION_SPEED_DEFAULT__ORIENT = 0.002;
 export const NAVIGATION_SPEED_DEFAULT__ORBIT  = 0.002;
 export const NAVIGATION_SPEED_DEFAULT__ZOOM   = 0.003;
-export const NAVIGATION_SPEED_DEFAULT__DOLLY  = 0.1;
-export const NAVIGATION_SPEED_DEFAULT__PAN    = 0.003;
+export const NAVIGATION_SPEED_DEFAULT__DOLLY  = 1.0;
+export const NAVIGATION_SPEED_DEFAULT__PAN    = 0.03;
 
 const __array = new Uint8Array(4);
 const __view = new Uint32Array(__array.buffer);

@@ -1,3 +1,4 @@
+const sqrt = Math.sqrt;
 export const check_if_two_3D_vectors_are_equal = (a, b) => a[0].toFixed(3) === b[0].toFixed(3) &&
     a[1].toFixed(3) === b[1].toFixed(3) &&
     a[2].toFixed(3) === b[2].toFixed(3);
@@ -97,6 +98,18 @@ export const reflect_a_3D_vector_around_a_3D_direction_in_place = (a, b) => {
     a[1] = b[1] * t_n - a[1];
     a[2] = b[2] * t_n - a[2];
 };
+export const reflect_a_3D_vector_around_a_3D_direction_with_dot_to_out = (a, b, dot, o) => {
+    dot *= -2;
+    o[0] = b[0] * dot + a[0];
+    o[1] = b[1] * dot + a[1];
+    o[2] = b[2] * dot + a[2];
+};
+export const reflect_a_3D_vector_around_a_3D_direction_with_dot_in_place = (a, b, dot) => {
+    dot *= -2;
+    a[0] += b[0] * dot;
+    a[1] += b[1] * dot;
+    a[2] += b[2] * dot;
+};
 export const multiply_a_3D_vector_by_a_3x3_matrix_in_place = (a, m) => {
     const x = a[0];
     const y = a[1];
@@ -122,7 +135,7 @@ export const negate_a_3D_direction_in_place = (a) => {
     a[1] = -a[1];
     a[2] = -a[2];
 };
-export const compute_the_length_of_a_3D_direction = (a) => Math.sqrt((a[0] ** 2 +
+export const compute_the_length_of_a_3D_direction = (a) => sqrt((a[0] ** 2 +
     a[1] ** 2 +
     a[2] ** 2));
 export const square_the_length_of_a_3D_direction = (a) => a[0] ** 2 +
@@ -136,7 +149,7 @@ export const normalize_a_3D_direction_to_out = (a, o) => {
         o[2] = a[2];
     }
     else {
-        t_n = 1 / Math.sqrt(t_n);
+        t_n = 1 / sqrt(t_n);
         o[0] = a[0] * t_n;
         o[1] = a[1] * t_n;
         o[2] = a[2] * t_n;
@@ -146,7 +159,7 @@ export const normalize_a_3D_direction_in_place = (a) => {
     let t_n = a[0] ** 2 + a[1] ** 2 + a[2] ** 2;
     if (t_n === 1)
         return;
-    t_n = 1 / Math.sqrt(t_n);
+    t_n = 1 / sqrt(t_n);
     a[0] *= t_n;
     a[1] *= t_n;
     a[2] *= t_n;
@@ -191,7 +204,7 @@ export const multiply_a_3D_direction_by_a_4x4_matrix_to_out4 = (a, m, o) => {
 };
 // POS:
 // ====
-export const compute_the_distance_from_a_3D_position_to_another_3D_position = (a, b) => Math.sqrt(((b[0] - a[0]) ** 2 +
+export const compute_the_distance_from_a_3D_position_to_another_3D_position = (a, b) => sqrt(((b[0] - a[0]) ** 2 +
     (b[1] - a[1]) ** 2 +
     (b[2] - a[2]) ** 2));
 export const square_the_distance_from_a_3D_positions_to_another_3D_position = (a, b) => ((b[0] - a[0]) ** 2 +
@@ -307,7 +320,6 @@ export const multiply_all_3D_directions_by_a_4x4_matrix_to_out4 = (vectors, m, o
 export const normalize_all_3D_directions_in_place = (vectors, start = 0, end = vectors.length) => {
     let v;
     let t_n;
-    const sqrt = Math.sqrt;
     for (let i = start; i < end; i++) {
         v = vectors[i];
         t_n = v[0] ** 2 + v[1] ** 2 + v[2] ** 2;
@@ -361,7 +373,6 @@ export const multiply_some_3D_directions_by_a_4x4_matrix_to_out4 = (vectors, m, 
 export const normalize_some_3D_directions_in_place = (vectors, include, start = 0, end = vectors.length) => {
     let v;
     let t_n;
-    const sqrt = Math.sqrt;
     for (let i = start; i < end; i++)
         if (include[i]) {
             v = vectors[i];

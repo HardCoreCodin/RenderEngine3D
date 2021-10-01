@@ -1,47 +1,38 @@
-import {Color3D, Color4D} from "../../../../../accessors/color.js";
+import {Color3D, Pixel} from "../../../../../accessors/color.js";
 import {I2D} from "../../../../../core/interfaces/vectors.js";
-import {ISize} from "../../../../../core/interfaces/render.js";
 import {UV2D} from "../../../../../accessors/uv.js";
 import {Direction3D} from "../../../../../accessors/direction.js";
 import {Position3D} from "../../../../../accessors/position.js";
-import PointLight from "../../../../../nodes/light.js";
 import {IMaterialParams} from "../base.js";
+import PointLight from "../../../../../nodes/light.js";
+import {clamped} from "../../../../../core/utils.js";
 
-interface IPerspectiveCorrectedBarycentricCoords {
-    A: number,
-    B: number,
-    C: number
-}
-
-export interface ISurface {
+export interface IShaded {
+    viewing_origin: Position3D,
+    viewing_direction: Direction3D,
+    light_direction: Direction3D,
+    reflected_direction: Direction3D,
     position: Position3D,
     normal: Direction3D,
+    half_vector: Direction3D,
+    ambient_color: Color3D,
+    combined_color: Color3D,
+    temp_color: Color3D;
     UV: UV2D,
     dUV: UV2D,
-    material: IMaterialParams
-}
-
-export interface IPixelScene {
-    camera_position: Position3D,
+    coords: I2D,
+    material: IMaterialParams,
+    perspective_corrected_barycentric_coords: Float32Array,
+    pixel: Pixel,
     lights: Set<PointLight>
 }
 
-export interface IPixel {
-    depth: number,
-    coords: I2D,
-    image_size: ISize,
-    perspective_corrected_barycentric_coords: IPerspectiveCorrectedBarycentricCoords,
-    color: Color4D
-}
-
-export type IPixelShader<Pixel extends IPixel = IPixel> = (
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-) => void;
-
+export type IPixelShader<Shaded extends IShaded = IShaded> = (shaded: Shaded) => void;
 
 // const fmod = (a: number, b: number): number => Number((a - (Math.floor(a / b) * b)).toPrecision(8));
+
+const sqrt = Math.sqrt;
+const pow = Math.pow;
 
 export const getCheckerBoardPixelValueByUV = (UV: UV2D, half_step_count: number): number => {
     let s = UV.u * half_step_count;
@@ -51,176 +42,84 @@ export const getCheckerBoardPixelValueByUV = (UV: UV2D, half_step_count: number)
     return (s > 0.5 ? 1 : 0) ^ (t < 0.5 ? 1 : 0);
 };
 
-const shadePixelCoords: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.a = 1;
-    pixel.color.r = pixel.coords.x / pixel.image_size.width;
-    pixel.color.g = pixel.coords.y / pixel.image_size.height;
-    pixel.color.b = 0;
-};
-
-export const shadePixelDepth: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    const depth = pixel.depth / 10;
-    pixel.color.setAllTo(depth > 1 ? 1 : depth);
-    pixel.color.a = 1;
+export const shadePixelDepth: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shaded.pixel.color.setAllTo(shaded.pixel.depth > 10 ? 1 : shaded.pixel.depth * 0.1);
 };
 export default shadePixelDepth;
 
-export const shadePixelBarycentric: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.r = pixel.perspective_corrected_barycentric_coords.A;
-    pixel.color.g = pixel.perspective_corrected_barycentric_coords.B;
-    pixel.color.b = pixel.perspective_corrected_barycentric_coords.C;
-    pixel.color.a = 1;
+export const shadePixelBarycentric: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shaded.pixel.color.array.set(shaded.perspective_corrected_barycentric_coords);
 };
 
-export const shadePixelUV: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.r = surface.UV.u;
-    pixel.color.g = surface.UV.v;
-    pixel.color.b = 0;
-    pixel.color.a = 1;
+export const shadePixelUV: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shaded.pixel.r = shaded.UV.u;
+    shaded.pixel.g = shaded.UV.v;
 };
 
-export const shadePixelPosition: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.r = (surface.position.x + 2) * 0.5;
-    pixel.color.g = (surface.position.y + 2) * 0.5;
-    pixel.color.b = (surface.position.z + 2) * 0.5;
-    // pixel.color.r = surface.position.x;
-    // pixel.color.g = surface.position.y;
-    // pixel.color.b = surface.position.z;
-    pixel.color.a = 1;
+export const shadePixelPosition: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shaded.pixel.r = (shaded.position.x + 2) * 0.5;
+    shaded.pixel.g = (shaded.position.y + 2) * 0.5;
+    shaded.pixel.b = (shaded.position.z + 2) * 0.5;
 };
 
-export const shadePixelNormal: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.r = surface.normal.x * 0.5 + 0.5;
-    pixel.color.g = surface.normal.y * 0.5 + 0.5;
-    pixel.color.b = surface.normal.z * 0.5 + 0.5;
-    pixel.color.a = 1;
+export const shadePixelNormal: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shaded.pixel.r = shaded.normal.x * 0.5 + 0.5;
+    shaded.pixel.g = shaded.normal.y * 0.5 + 0.5;
+    shaded.pixel.b = shaded.normal.z * 0.5 + 0.5;
 };
 
-export const shadePixelCheckerboard: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.array.fill(getCheckerBoardPixelValueByUV(surface.UV, 4));
-    pixel.color.a = 1;
-};
+export const shadePixelClassic: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    const R = shaded.reflected_direction;
+    const L = shaded.light_direction;
+    const V = shaded.viewing_direction;
+    const O = shaded.viewing_origin;
+    const H = shaded.half_vector;
+    const N = shaded.normal;
+    const P = shaded.position;
+    const tmp = shaded.temp_color;
+    const comb = shaded.combined_color;
+    const material = shaded.material;
 
-const direction_to_light = new Direction3D();
-// const color = new Color3D();
+    let dot, exp, squared_distance: number;
+    const color = shaded.pixel.color.setFrom(shaded.ambient_color);
+    if (material.has.specular) {
+        O.to(P, V).inormalize();
+        if (material.uses.Phong) V.reflect(N, R);
+    }
+    for (const light of shaded.lights) {
+        P.to(light.position, L);
+        squared_distance = L.length_squared;
+        L.imul(1.0 / sqrt(squared_distance));
+        dot = N.dot(L);
+        if (dot > 0) {
+            if (material.has.diffuse)
+                material.diffuse_color.mul(clamped(dot), comb);
+            else
+                comb.setAllTo(0);
 
-export const shadePixelLambert: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.array.fill(0);
-    pixel.color.a = 1;
-    let squared_distance, NdotL: number;
-
-    for (const light of scene.lights) {
-        surface.position.to(light.position, direction_to_light);
-        squared_distance = direction_to_light.length_squared;
-        direction_to_light.imul(1.0 / Math.sqrt(squared_distance));
-        NdotL = surface.normal.dot(direction_to_light);
-        if (NdotL > 0) {
-            light.color.mul(0.85 * NdotL * light.intensity / squared_distance, radiance);
-            pixel.color.r += radiance.r;
-            pixel.color.g += radiance.g;
-            pixel.color.b += radiance.b;
+            if (material.has.specular) {
+                if (material.uses.Blinn) {
+                    dot = N.dot(L.sub(V, H).inormalize());
+                    exp = material.shininess * 16.0;
+                } else if (material.uses.Phong) {
+                    dot = R.dot(L);
+                    exp = material.shininess * 4.0;
+                }
+                comb.iadd(material.specular_color.mul(pow(clamped(dot), exp), tmp));
+            }
+            comb.imul(light.color.mul(light.intensity / squared_distance, tmp));
+            color.iadd(comb);
         }
     }
-    if (pixel.color.r > 1) pixel.color.r = 1;
-    if (pixel.color.g > 1) pixel.color.g = 1;
-    if (pixel.color.b > 1) pixel.color.b = 1;
+    color.toneMap();
 };
 
-export const shadePixelLambertCheckerboard: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    shadePixelLambert(pixel, surface, scene);
+export const shadePixelClassicCheckerboard: IPixelShader = <Shaded extends IShaded = IShaded>(shaded: Shaded): void => {
+    shadePixelClassic(shaded);
 
-    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
-        pixel.color.r *= 0.5;
-        pixel.color.g *= 0.5;
-        pixel.color.b *= 0.5;
-    }
-};
-
-const reflected_direction = new Direction3D();
-const view_direction = new Direction3D();
-const radiance = new Color3D();
-const diffuse_radiance = new Color3D();
-const light_radiance = new Color3D();
-
-export const shadePixelPhong: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    pixel.color.array.fill(0);
-    pixel.color.a = 1;
-    let squared_distance, NdotL: number;
-    scene.camera_position.to(surface.position, view_direction).inormalize();
-    view_direction.reflect(surface.normal, reflected_direction);
-
-    for (const light of scene.lights) {
-        surface.position.to(light.position, direction_to_light);
-        squared_distance = direction_to_light.length_squared;
-        direction_to_light.imul(1.0 / Math.sqrt(squared_distance));
-        NdotL = surface.normal.dot(direction_to_light);
-        if (NdotL > 0) {
-            // diffuse_radiance.setAllTo(0.85 * NdotL);
-            light.color.mul(light.intensity / squared_distance, light_radiance);
-
-            radiance.setAllTo(0.7 * Math.pow(reflected_direction.dot(direction_to_light), 4) + 0.85 * NdotL);
-            radiance.imul(light_radiance);
-
-            pixel.color.r += radiance.r;
-            pixel.color.g += radiance.g;
-            pixel.color.b += radiance.b;
-        }
-    }
-    if (pixel.color.r > 1) pixel.color.r = 1;
-    if (pixel.color.g > 1) pixel.color.g = 1;
-    if (pixel.color.b > 1) pixel.color.b = 1;
-};
-
-export const shadePixelPhongCheckerboard: IPixelShader = <Pixel extends IPixel = IPixel>(
-    pixel: Pixel,
-    surface: ISurface,
-    scene: IPixelScene
-): void => {
-    shadePixelPhong(pixel, surface, scene);
-
-    if (!getCheckerBoardPixelValueByUV(surface.UV, 4)) {
-        pixel.color.r *= 0.5;
-        pixel.color.g *= 0.5;
-        pixel.color.b *= 0.5;
+    if (!getCheckerBoardPixelValueByUV(shaded.UV, 4)) {
+        shaded.pixel.r *= 0.5;
+        shaded.pixel.g *= 0.5;
+        shaded.pixel.b *= 0.5;
     }
 };

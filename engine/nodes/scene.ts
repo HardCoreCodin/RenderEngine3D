@@ -16,11 +16,11 @@ export default class Scene<
 {
     readonly mesh_geometries: MeshGeometries;
     readonly spheres = new Spheres();
+    readonly ambient_color = new Color3D();
     readonly lights = new Set<PointLight>();
     readonly cameras = new Set<Camera>();
     readonly materials = new Set<IMaterial<Context>>();
     readonly default_material: MaterialType;
-    readonly object_space_light_positions = new Positions3D().init(10);
     public textures: Texture[] = [];
 
     constructor(

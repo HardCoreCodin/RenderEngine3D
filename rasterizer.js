@@ -6,7 +6,7 @@ import RasterEngine from "./engine/render/raster/software/engine.js";
 import SoftwareRasterViewport from "./engine/render/raster/software/viewport.js";
 import SoftwareRasterMaterial from "./engine/render/raster/software/materials/base.js";
 import Geometry from "./engine/nodes/geometry.js";
-import { shadePixelDepth, shadePixelNormal, shadePixelLambert, shadePixelLambertCheckerboard, shadePixelPhong, shadePixelPosition, shadePixelUV, shadePixelBarycentric } from "./engine/render/raster/software/materials/shaders/pixel.js";
+import { shadePixelDepth, shadePixelNormal, shadePixelPosition, shadePixelUV, shadePixelBarycentric, shadePixelClassic } from "./engine/render/raster/software/materials/shaders/pixel.js";
 import Cube from "./engine/geometry/cube.js";
 import { loadMeshFromObj } from "./engine/geometry/loaders.js";
 import shadeMesh, { shadeMeshByCullingBBox } from "./engine/render/raster/software/materials/shaders/mesh.js";
@@ -23,9 +23,7 @@ const pixel_shaders = {
     uv: shadePixelUV,
     barycentric: shadePixelBarycentric,
     checkerboard: shadePixelBarycentric,
-    lambert: shadePixelLambert,
-    lambert_checkerboard: shadePixelLambertCheckerboard,
-    phong: shadePixelPhong
+    classic: shadePixelClassic
 };
 const mesh_shaders = {
     base: shadeMesh,

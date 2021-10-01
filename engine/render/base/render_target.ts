@@ -7,8 +7,6 @@ import {drawLine2D} from "../raster/software/core/line.js";
 export default class RenderTarget {
     image: ImageData;
     array: Uint32Array;
-    // protected _array_buffer: ArrayBuffer;
-    // protected _clamped_array: Uint8ClampedArray;
 
     constructor(
         readonly viewport: IViewport<CanvasRenderingContext2D>,
@@ -23,9 +21,6 @@ export default class RenderTarget {
             this.viewport.height
         );
 
-        // this._array_buffer = new ArrayBuffer(this._image.data.length);
-        // this._clamped_array = new Uint8ClampedArray(this._array_buffer);
-        // this._array = new Uint32Array(this._array_buffer);
         this.array = new Uint32Array(this.image.data.buffer);
     }
 
@@ -35,7 +30,6 @@ export default class RenderTarget {
         this.context.moveTo(v1.x, v1.y);
         this.context.lineTo(v2.x, v2.y);
         this.context.lineTo(v3.x, v3.y);
-        // this.context.lineTo(v1.x, v1.y);
         this.context.closePath();
 
         this.context.strokeStyle = `${color}`;
@@ -80,16 +74,9 @@ export default class RenderTarget {
 
     clear(): void {
         this.array.fill(0);
-        // this.context.clearRect(
-        //     this.viewport.x,
-        //     this.viewport.y,
-        //     this.viewport.width,
-        //     this.viewport.height
-        // );
     }
 
     draw(): void {
-        // this._image.data.set(this._clamped_array);
         this.context.putImageData(this.image, this.viewport.x, this.viewport.y);
     }
 }

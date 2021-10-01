@@ -40,6 +40,7 @@ export default class Display<Context extends RenderingContext>
         this._default_render_pipeline = new RenderPipelineClass(this.context, this._scene);
         this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(_mouse), this._default_render_pipeline, this));
         this._active_viewport.border.display = false;
+        this._camera.is_static = false;
     }
 
     get active_viewport_border_color(): Color4D {return this._active_viewport_border_color}

@@ -10,7 +10,15 @@ export interface IMaterialParams {
     shininess: number,
     specular_color: Color3D,
     diffuse_color: Color3D,
-    textures: Texture[]
+    textures: Texture[],
+    has: {
+        diffuse: boolean,
+        specular: boolean
+    },
+    uses: {
+        Blinn: boolean,
+        Phong: boolean
+    }
 }
 
 export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRenderingContext2D, Rasterizer>
@@ -23,7 +31,15 @@ export default class SoftwareRasterMaterial extends BaseMaterial<CanvasRendering
             shininess: 1,
             specular_color: new Color3D().setAllTo(1),
             diffuse_color: new Color3D().setAllTo(1),
-            textures: []
+            textures: [],
+            has: {
+                diffuse: false,
+                specular: false
+            },
+            uses: {
+                Blinn: false,
+                Phong: false
+            }
         }
     ) {
         super(scene);

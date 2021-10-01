@@ -11,9 +11,7 @@ import Geometry from "./engine/nodes/geometry.js";
 import {
     shadePixelDepth,
     shadePixelNormal,
-    shadePixelLambert,
-    shadePixelLambertCheckerboard,
-    shadePixelPhong, shadePixelPosition, shadePixelUV, shadePixelBarycentric
+    shadePixelPosition, shadePixelUV, shadePixelBarycentric, shadePixelClassic
 } from "./engine/render/raster/software/materials/shaders/pixel.js";
 import Cube from "./engine/geometry/cube.js";
 import {loadMeshFromObj} from "./engine/geometry/loaders.js";
@@ -33,9 +31,7 @@ const pixel_shaders = {
     uv: shadePixelUV,
     barycentric: shadePixelBarycentric,
     checkerboard: shadePixelBarycentric,
-    lambert: shadePixelLambert,
-    lambert_checkerboard: shadePixelLambertCheckerboard,
-    phong: shadePixelPhong
+    classic: shadePixelClassic
 };
 
 const mesh_shaders = {

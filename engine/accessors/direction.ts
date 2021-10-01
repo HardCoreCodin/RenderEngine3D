@@ -22,7 +22,8 @@ import {
     cross_a_3D_direction_with_another_3D_direction_in_place,
     cross_a_3D_direction_with_another_3D_direction_to_out,
     dot_a_3D_direction_with_another_3D_direction,
-    multiply_a_3D_direction_by_a_4x4_matrix_in_place, multiply_a_3D_direction_by_a_4x4_matrix_to_out3,
+    multiply_a_3D_direction_by_a_4x4_matrix_in_place,
+    multiply_a_3D_direction_by_a_4x4_matrix_to_out3,
     multiply_a_3D_vector_by_a_3x3_matrix_in_place,
     multiply_a_3D_vector_by_a_3x3_matrix_to_out,
     multiply_a_3D_direction_by_a_4x4_matrix_to_out4,
@@ -32,7 +33,9 @@ import {
     normalize_a_3D_direction_to_out,
     reflect_a_3D_vector_around_a_3D_direction_in_place,
     reflect_a_3D_vector_around_a_3D_direction_to_out,
-    square_the_length_of_a_3D_direction
+    square_the_length_of_a_3D_direction,
+    reflect_a_3D_vector_around_a_3D_direction_with_dot_in_place,
+    reflect_a_3D_vector_around_a_3D_direction_with_dot_to_out
 } from "../core/math/vec3.js";
 import {
     compute_the_length_of_a_4D_direction,
@@ -167,6 +170,18 @@ export class Direction3D extends Vector3D<Float32Array, Direction3D> implements 
             return this.ireflect(other);
 
         reflect_a_3D_vector_around_a_3D_direction_to_out(this.array, other.array, out.array);
+        return out;
+    }
+
+    ireflectWithDot(other: this, dot: number): this {
+        reflect_a_3D_vector_around_a_3D_direction_with_dot_in_place(this.array, other.array, dot);
+        return this;
+    }
+    reflectWithDot(other: this, dot: number, out: this): this {
+        if (out.is(this))
+            return this.ireflectWithDot(other, dot);
+
+        reflect_a_3D_vector_around_a_3D_direction_with_dot_to_out(this.array, other.array, dot, out.array);
         return out;
     }
 
