@@ -150,11 +150,5 @@ export interface IRenderEngine<Context extends RenderingContext>
     scene: Scene<Context>;
     display: IDisplay<Context>;
 
-    readonly is_running: boolean;
-
     handleEvent(event: Event): void;
-    update(timestamp): void;
-
-    start(): void;
-    stop(): void;
 }

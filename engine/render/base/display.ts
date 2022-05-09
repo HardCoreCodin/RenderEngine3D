@@ -9,7 +9,6 @@ import {
     IViewportConstructor,
 } from "../../core/interfaces/render.js";
 import Scene from "../../nodes/scene.js";
-import Mouse from "../../input/mouse.js";
 import Camera from "../../nodes/camera.js";
 
 
@@ -27,18 +26,17 @@ export default class Display<Context extends RenderingContext>
     protected readonly _inactive_viewport_border_color = rgba(0.75);
 
     constructor(
+        public context: Context,
         protected readonly _camera: Camera,
-        protected readonly _mouse: Mouse,
         protected readonly _scene: Scene<Context>,
         protected readonly RenderPipelineClass: IRenderPipelineConstructor<Context>,
         protected readonly ViewportClass: IViewportConstructor<Context>,
-        protected readonly InputControllerClass: InputControllerConstructor,
-        public context: Context = _scene.context
+        protected readonly InputControllerClass: InputControllerConstructor
     ) {
         super({width: context.canvas.width, height: context.canvas.height}, {x: 0, y: 0});
         this._canvas = context.canvas as HTMLCanvasElement;
         this._default_render_pipeline = new RenderPipelineClass(this.context, this._scene);
-        this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(_mouse), this._default_render_pipeline, this));
+        this.active_viewport = this.addViewport(new ViewportClass(_camera, new InputControllerClass(), this._default_render_pipeline, this));
         this._active_viewport.border.display = false;
         this._camera.is_static = false;
     }

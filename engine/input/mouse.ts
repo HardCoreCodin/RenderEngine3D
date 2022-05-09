@@ -1,56 +1,44 @@
-import {pos2i} from "../accessors/position.js";
+export class MouseButton {
+    public down_pos_x: number = 0;
+    public down_pos_y: number = 0;
+    public up_pos_x: number = 0;
+    public up_pos_y: number = 0;
 
-class MouseButton {
-    down_pos = pos2i();
-    up_pos = pos2i();
+    public click_pos_x: number = 0;
+    public click_pos_y: number = 0;
 
-    click_pos = pos2i();
-    double_click_pos = pos2i();
+    public is_pressed: boolean = false;
+    public went_down: boolean = false;
+    public went_up: boolean = false;
 
-    is_pressed: boolean = false;
-    went_down: boolean = false;
-    went_up: boolean = false;
-
-    clicked: boolean = false;
-    click_handled: boolean = false;
-    went_down_handled: boolean = false;
-    went_up_handled: boolean = false;
-
-    double_clicked: boolean = false;
-    double_click_handled: boolean = false;
+    public clicked: boolean = false;
+    public click_handled: boolean = false;
+    public went_down_handled: boolean = false;
+    public went_up_handled: boolean = false;
 
     down(x: number, y: number) {
         this.is_pressed = true;
         this.went_down = true;
-        this.down_pos.x = x;
-        this.down_pos.y = y;
+        this.down_pos_x = x;
+        this.down_pos_y = y;
     }
 
     up(x: number, y: number) {
         this.is_pressed = false;
         this.went_up = true;
-        this.up_pos.x = x;
-        this.up_pos.y = y;
+        this.up_pos_x = x;
+        this.up_pos_y = y;
     }
 
     click(x: number, y: number) {
-        this.click_pos.x = x;
-        this.click_pos.y = y;
+        this.click_pos_x = x;
+        this.click_pos_y = y;
         this.clicked = true;
-    }
-
-    doubleClick(x: number, y: number) {
-        this.double_click_pos.x = x;
-        this.double_click_pos.y = y;
-        this.double_clicked = true;
     }
 
     reset() {
         if (this.click_handled)
             this.clicked = false;
-
-        if (this.double_click_handled)
-            this.double_clicked = false;
 
         if (this.went_down_handled)
             this.went_down = false;
@@ -59,16 +47,15 @@ class MouseButton {
             this.went_up = false;
 
         this.click_handled = false;
-        this.double_click_handled = false;
         this.went_down_handled = false;
         this.went_up_handled = false;
     }
 }
 
-class MouseWheel {
-    scrolled: boolean = false;
-    scroll_amount: number = 0;
-    scroll_handled: boolean = false;
+export class MouseWheel {
+    public scrolled: boolean = false;
+    public scroll_amount: number = 0;
+    public scroll_handled: boolean = false;
 
     scroll(amount: number) {
         this.scroll_amount += amount;
@@ -83,53 +70,73 @@ class MouseWheel {
     }
 }
 
-export default class Mouse {
-    readonly middle_button: MouseButton;
-    readonly right_button: MouseButton;
-    readonly left_button: MouseButton;
+export class Mouse {
+    readonly right_button : MouseButton = new MouseButton();
+    readonly middle_button: MouseButton = new MouseButton();
+    readonly left_button  : MouseButton = new MouseButton();
+    readonly buttons: Array<MouseButton> = [];
+
     readonly wheel = new MouseWheel();
 
-    readonly pos = pos2i();
-    readonly pos_raw_diff = pos2i();
-    readonly movement = pos2i();
+    public pos_x: number = 0;
+    public pos_y: number = 0;
 
-    is_captured: boolean = false;
+    public accumulated_movement_x: number = 0;
+    public accumulated_movement_y: number = 0;
 
-    moved: boolean = false;
-    move_handled: boolean = false;
-    raw_movement_handled: boolean = false;
+    public movement_x: number = 0;
+    public movement_y: number = 0;
 
-    constructor() {
-        this.middle_button = new MouseButton();
-        this.right_button = new MouseButton();
-        this.left_button = new MouseButton();
+    public double_click_pos_x: number = 0;
+    public double_click_pos_y: number = 0;
+    public double_clicked: boolean = false;
+    public double_click_handled: boolean = false;
+
+    public is_captured: boolean = false;
+
+    public moved: boolean = false;
+
+    public move_handled: boolean = false;
+    public accumulated_movement_handled: boolean = false;
+
+    constructor() { this.buttons.push(this.left_button, this.middle_button, this.right_button); }
+
+    doubleClick(x: number, y: number) {
+        this.double_click_pos_x = x;
+        this.double_click_pos_y = y;
+        this.double_clicked = true;
     }
 
-    setMovement(x: number, y: number) {
-        this.movement.x = x - this.pos.x;
-        this.movement.y = y - this.pos.y;
-        this.moved = true;
-    }
-
-    setRawMovement(x: number, y: number) {
-        this.pos_raw_diff.x += x;
-        this.pos_raw_diff.y += y;
+    move(movement_x: number, movement_y: number) {
+        this.movement_x = movement_x;
+        this.movement_y = movement_y;
+        this.accumulated_movement_x += movement_x;
+        this.accumulated_movement_y += movement_y;
         this.moved = true;
     }
 
     reset() {
         if (this.move_handled) {
             this.move_handled = false;
-            this.movement.setAllTo(0);
+            this.movement_x = 0;
+            this.movement_y = 0;
             this.moved = false;
         }
-        if (this.raw_movement_handled) {
-            this.raw_movement_handled = false;
-            this.pos_raw_diff.setAllTo(0);
+        if (this.accumulated_movement_handled) {
+            this.accumulated_movement_handled = false;
+            this.accumulated_movement_x = 0;
+            this.accumulated_movement_y = 0;
         }
+        if (this.double_click_handled)
+            this.double_clicked = false;
+
         this.wheel.reset();
         this.left_button.reset();
         this.middle_button.reset();
         this.right_button.reset();
+        this.double_click_handled = false;
     }
 }
+
+const mouse: Mouse = new Mouse();
+export default mouse;

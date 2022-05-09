@@ -5,7 +5,6 @@ import {IMaterial, IMaterialConstructor} from "../core/interfaces/render.js";
 import Spheres from "../geometry/implicit/spheres.js";
 import PointLight, {DirectionalLight} from "./light.js";
 import {Color3D} from "../accessors/color.js";
-import {Positions3D} from "../buffers/vectors.js";
 import {Texture} from "../buffers/textures.js";
 
 
@@ -23,10 +22,7 @@ export default class Scene<
     readonly default_material: MaterialType;
     public textures: Texture[] = [];
 
-    constructor(
-        public context: Context,
-        public MaterialClass: IMaterialConstructor<Context, MaterialType>
-    ) {
+    constructor(public MaterialClass: IMaterialConstructor<Context, MaterialType>) {
         super();
         this.mesh_geometries = new MeshGeometries(this);
         this.default_material = new MaterialClass(this);
@@ -49,6 +45,7 @@ export default class Scene<
     }
 
     addTexture(
+        context: Context,
         image: HTMLImageElement,
         load: boolean = true,
         wrap: boolean = false,
@@ -57,7 +54,7 @@ export default class Scene<
         width: number = image.width,
         height: number = image.height,
     ): Texture {
-        const texture = new Texture(image, this.context as CanvasRenderingContext2D, wrap, mipmap, filter, width, height);
+        const texture = new Texture(image, context as CanvasRenderingContext2D, wrap, mipmap, filter, width, height);
         this.textures.push(load ? texture.load(wrap, mipmap) : texture);
         return texture;
     }

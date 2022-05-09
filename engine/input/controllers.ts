@@ -9,8 +9,8 @@ import {
     NAVIGATION_SPEED_DEFAULT__TURN,
     NAVIGATION_SPEED_DEFAULT__ZOOM
 } from "../core/constants.js";
-import Mouse from "./mouse.js";
 import Camera from "../nodes/camera.js";
+import mouse from "./mouse.js";
 
 
 export class ControllerSpeedSettings {
@@ -85,7 +85,7 @@ export class Move extends Look implements IMove<boolean> {
     left: boolean  = false;
 }
 
-export type InputControllerConstructor = new (mouse: Mouse) => InputController;
+export type InputControllerConstructor = new () => InputController;
 
 
 export default class InputController
@@ -123,24 +123,22 @@ export default class InputController
     turn = new Turn();
     look = new Look();
 
-    constructor(public readonly mouse: Mouse) {}
-
     pan(camera: Camera) {
         camera.pan(
-            this.settings.speeds.pan * -this.mouse.pos_raw_diff.x,
-             this.settings.speeds.pan * +this.mouse.pos_raw_diff.y
+            this.settings.speeds.pan * -mouse.accumulated_movement_x,
+             this.settings.speeds.pan * +mouse.accumulated_movement_y
         );
-        this.mouse.raw_movement_handled = true;
+        mouse.accumulated_movement_handled = true;
     }
 
     zoom(camera: Camera) {
-        camera.lense.zoom(this.settings.speeds.zoom * this.mouse.wheel.scroll_amount);
-        this.mouse.wheel.scroll_handled = true;
+        camera.lense.zoom(this.settings.speeds.zoom * mouse.wheel.scroll_amount);
+        mouse.wheel.scroll_handled = true;
     }
 
     dolly(camera: Camera) {
-        camera.dolly(this.settings.speeds.dolly * this.mouse.wheel.scroll_amount);
-        this.mouse.wheel.scroll_handled = true;
+        camera.dolly(this.settings.speeds.dolly * mouse.wheel.scroll_amount);
+        mouse.wheel.scroll_handled = true;
     }
 
     orient(camera: Camera) {
@@ -166,18 +164,18 @@ export default class InputController
         // A CW rotation is a negative angle increment, so again the rotation value is DECREMENTED.
 
         camera.orient(
-            camera.rotation.y + this.settings.speeds.orient * -this.mouse.pos_raw_diff.x,
-            camera.rotation.x + this.settings.speeds.orient * -this.mouse.pos_raw_diff.y
+            camera.rotation.y + this.settings.speeds.orient * -mouse.accumulated_movement_x,
+            camera.rotation.x + this.settings.speeds.orient * -mouse.accumulated_movement_y
         );
-        this.mouse.raw_movement_handled = true;
+        mouse.accumulated_movement_handled = true;
     }
 
     orbit(camera: Camera): void {
         camera.orbit(
-            this.settings.speeds.orbit * -this.mouse.pos_raw_diff.x,
-            this.settings.speeds.orbit * -this.mouse.pos_raw_diff.y
+            this.settings.speeds.orbit * -mouse.accumulated_movement_x,
+            this.settings.speeds.orbit * -mouse.accumulated_movement_y
         );
-        this.mouse.raw_movement_handled = true;
+        mouse.accumulated_movement_handled = true;
     }
 
     onKeyChanged(key: number, pressed: boolean) {
@@ -201,14 +199,16 @@ export default class InputController
     }
 
     update(camera: Camera, delta_time: number): void {
-        if (this.mouse.middle_button.went_down) {
-            this.mouse.middle_button.went_down_handled = true;
-            this.mouse.pos_raw_diff.setAllTo(0);
+        if (mouse.middle_button.went_down) {
+            mouse.middle_button.went_down_handled = true;
+            mouse.accumulated_movement_x = 0;
+            mouse.accumulated_movement_y = 0;
         }
-        if (this.mouse.left_button.double_clicked) {
-            this.mouse.left_button.double_click_handled = true;
-            this.mouse.is_captured = !this.mouse.is_captured;
-            this.mouse.pos_raw_diff.setAllTo(0);
+        if (mouse.double_clicked) {
+            mouse.double_click_handled = true;
+            mouse.is_captured = !mouse.is_captured;
+            mouse.accumulated_movement_x = 0;
+            mouse.accumulated_movement_y = 0;
         }
 
         if (this.move.right ||
@@ -222,13 +222,13 @@ export default class InputController
             camera.velocity.isNonZero())
             camera.navigate(this, delta_time);
 
-        if (this.mouse.is_captured) {
-            if (this.mouse.moved)        this.orient(camera);
-            if (this.mouse.wheel.scrolled) this.zoom(camera);
+        if (mouse.is_captured) {
+            if (mouse.moved)        this.orient(camera);
+            if (mouse.wheel.scrolled) this.zoom(camera);
         } else {
-            if (this.mouse.wheel.scrolled) this.dolly(camera);
-            if (this.mouse.moved) {
-                if (this.mouse.middle_button.is_pressed) {
+            if (mouse.wheel.scrolled) this.dolly(camera);
+            if (mouse.moved) {
+                if (mouse.middle_button.is_pressed) {
                     if (this.is_pressed.alt)
                         this.orbit(camera);
                     else
@@ -242,6 +242,6 @@ export default class InputController
         camera.moved = false;
         camera.turned = false;
         camera.lense.zoomed = false;
-        this.mouse.reset();
+        mouse.reset();
     }
 }

@@ -1,9 +1,9 @@
 import * as rst from "./rasterizer.js";
+import Scene from "./engine/nodes/scene.js";
+import SoftwareRasterMaterial from "./engine/render/raster/software/materials/base.js";
 
 const suzanne_mesh = rst.loadMeshFromObj(rst.objs.suzanne);
-
-const engine = new rst.RasterEngine();
-const scene = engine.scene;
+const scene = new Scene(SoftwareRasterMaterial);
 const cube = scene.mesh_geometries.addGeometry(rst.Cube());
 const mesh1 = scene.mesh_geometries.addGeometry(suzanne_mesh);
 const mesh2 = scene.mesh_geometries.addGeometry(suzanne_mesh);
@@ -14,7 +14,7 @@ const mat1 = scene.addMaterial() as rst.SoftwareRasterMaterial;
 const mat2 = scene.addMaterial() as rst.SoftwareRasterMaterial;
 const mat3 = scene.addMaterial() as rst.SoftwareRasterMaterial;
 
-const camera = engine.display.active_viewport.camera;
+const camera = scene.addCamera();
 camera.position.setTo(0, 15, -15);
 camera.transform.rotation.x = -0.75;
 
@@ -74,17 +74,35 @@ light3.position.y = 3;
 const sin = Math.sin;
 const cos = Math.cos;
 
-engine.update_callbacks.add((delta_time: number, elapsed_time: number) => {
-    mesh1.transform.rotation.y = elapsed_time / 1000 * 1.5;
-    mesh2.transform.rotation.y = (elapsed_time / 1000 + 1) * 1.2;
+// function binarySearch(arr, target, start, end) {
+//     let index = Math.floor((end + start) / 2);
+//     let value = arr[index];
+//     if (arr[index] === target)
+//         return index;
+//     if (arr[index] > target)
+//         return binarySearch(arr, target, start, index - 1);
+//     else
+//         return binarySearch(arr, target, index + 1, end);
+// }
+// let Arr = [1, 2, 3, 4, 5, 6, 7, 8];
+// let Start = 0;
+// let End = Arr.length - 1;
+// let Target = 8;
+// let Result = binarySearch(Arr, Target, Start, End);
 
-    light1.position.x = cos(elapsed_time / 1000) * 0.6 + mesh1.transform.translation.x - 3;
-    light1.position.z = sin(elapsed_time / 1000) * 0.6 + mesh1.transform.translation.z + 3;
-    light1.position.y = sin(elapsed_time / 500 ) + 2;
+class DemoRasterEngine extends rst.RasterEngine {
+    OnUpdate() {
+        mesh1.transform.rotation.y = this.elapsed_time * 1.5;
+        mesh2.transform.rotation.y = (this.elapsed_time + 1) * 1.2;
 
-    light2.position.x = sin(elapsed_time / 2000) * 0.6 + mesh2.transform.translation.x + 3;
-    light2.position.z = cos(elapsed_time / 2000) * 0.6 + mesh2.transform.translation.z + 3;
-    light2.position.y = cos(elapsed_time / 500 ) + 2;
-});
+        light1.position.x = cos(this.elapsed_time) * 0.6 + mesh1.transform.translation.x - 3;
+        light1.position.z = sin(this.elapsed_time) * 0.6 + mesh1.transform.translation.z + 3;
+        light1.position.y = sin(this.elapsed_time * 2 ) + 2;
 
-engine.start();
+        light2.position.x = sin(this.elapsed_time / 2) * 0.6 + mesh2.transform.translation.x + 3;
+        light2.position.z = cos(this.elapsed_time / 2) * 0.6 + mesh2.transform.translation.z + 3;
+        light2.position.y = cos(this.elapsed_time * 2 ) + 2;
+    }
+}
+
+globalThis.engine = new DemoRasterEngine(scene, camera);
